@@ -1,68 +1,79 @@
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
-import Link from 'next/link';
-import styles from '@/styles/Dashboard.module.css';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/router";
+import Link from "next/link";
+import styles from "../styles/dashboard.module.css";
 
-function Dashboard() {
+export default function Dashboard() {
   const router = useRouter();
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    const token = localStorage.getItem('userToken');
-    const userData = localStorage.getItem('userData');
-
-    if (!token) {
-      router.push('/login');
-    } else {
-      try {
-        const parsedUser = JSON.parse(userData);
-        setUser(parsedUser);
-      } catch (error) {
-        console.error('Lỗi khi parse userData:', error);
-        localStorage.removeItem('userToken');
-        localStorage.removeItem('userData');
-        router.push('/login');
-      }
-    }
+    checkAuth();
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem('userToken');
-    localStorage.removeItem('userData');
-    router.push('/login');
+  const checkAuth = async () => {
+    const token = localStorage.getItem("userToken");
+
+    if (!token) {
+      router.push("/login");
+      return;
+    }
+
+    try {
+      const userData = localStorage.getItem("userData");
+      setUser(JSON.parse(userData));
+    } catch (err) {
+      localStorage.removeItem("userToken");
+      localStorage.removeItem("userData");
+      router.push("/login");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  if (!user) {
-    return <div>Đang tải...</div>;
+  const handleLogout = () => {
+    localStorage.removeItem("userToken");
+    localStorage.removeItem("userData");
+    router.push("/login");
+  };
+
+  if (loading) {
+    return <div className={styles.loading}>Đang tải...</div>;
   }
 
   return (
     <div className={styles.dashboardContainer}>
       <nav className={styles.navbar}>
-        <h1>Dashboard</h1>
-        <div className={styles.userSection}>
-          <span>Xin chào, {user.displayName || user.username}</span>
+        <div className={styles.navbarContent}>
+          <h1>Dashboard</h1>
           <button onClick={handleLogout} className={styles.logoutButton}>
             Đăng xuất
           </button>
         </div>
       </nav>
 
-      <main className={styles.main}>
-        <div className={styles.userInfo}>
-          <h2>Thông tin tài khoản</h2>
-          <p><strong>Tên hiển thị:</strong> {user.displayName || user.username}</p>
-          <p><strong>Tên đăng nhập:</strong> {user.username}</p>
-        </div>
-
-        <div className={styles.actions}>
-          <Link href="/delete-account" className={styles.deleteButton}>
-            Xóa tài khoản
-          </Link>
-        </div>
-      </main>
+      <div className={styles.content}>
+        <aside className={styles.sidebar}>
+          <div className={styles.userInfo}>
+            <h3>{user?.username}</h3>
+            <p>{user?.email}</p>
+          </div>
+          <nav className={styles.sidebarNav}>
+            <ul>
+              <li>
+                <Link className="home-text" href="/dashboard">Trang chủ</Link>
+              </li>
+              <li>
+                <Link href="/delete-account" className={styles.deleteAccountButton}>
+                  Xóa tài khoản
+                </Link>
+              </li>
+            </ul>
+          </nav>
+        </aside>
+      </div>
     </div>
   );
 }
-
-export default Dashboard;
