@@ -1,14 +1,72 @@
-# 💰 Financial Management API
+# 💰 Budget Flow - Financial Management Application
 
-This is a **Financial Management API** built with **Spring Boot, MySQL, and JWT Authentication**. It allows users to manage financial accounts, track income/expenses, set budgets, and generate reports.
+A comprehensive financial management application with a **Spring Boot backend** and a **React frontend** using **Material UI**. This application allows users to manage financial accounts, track income/expenses, set budgets, and generate reports.
 
 ## 🚀 Features
 - ✅ **User Authentication & Authorization** (JWT-based)
+- ✅ **Modern Material UI Interface**
+- ✅ **Responsive Design** for all devices
 - ✅ **Accounts Management** (Checking, Savings, Investment)
 - ✅ **Transactions Tracking** (Income, Expenses, Transfers)
 - ✅ **Budgeting & Savings Goals**
 - ✅ **Financial Reports & Audit Logs**
-- ✅ **Secure API with Spring Security**
+- ✅ **Contact Form** with EmailJS integration
+- ✅ **User Profile Management**
+
+---
+
+## 📦 Project Structure
+
+### 📱 Frontend Structure
+```
+financial-management-frontend/financeapp/
+├── public/                  # Static files
+├── src/
+│   ├── config/              # Configuration files
+│   │   └── emailjs.config.js
+│   ├── pages/               # Application pages
+│   │   ├── account/         # Account management
+│   │   │   └── DeleteAccount.jsx
+│   │   ├── api/             # API related components
+│   │   ├── auth/            # Authentication pages
+│   │   │   ├── ActivateAccount.jsx
+│   │   │   ├── ForgotPassword.jsx
+│   │   │   ├── Login.jsx
+│   │   │   ├── Register.jsx
+│   │   │   └── ResetPassword.jsx
+│   │   ├── user/            # User management
+│   │   │   ├── DeleteUser.jsx
+│   │   │   └── Profile.jsx
+│   │   ├── Contact.jsx      # Contact page
+│   │   ├── dashboard.jsx    # Dashboard page
+│   │   ├── home.jsx         # Home page
+│   │   └── Index.jsx        # Index page
+│   ├── services/            # Service files
+│   │   └── emailjs.js
+│   ├── App.jsx              # Main application component
+│   └── main.jsx             # Entry point
+└── package.json             # Dependencies and scripts
+```
+
+### 🖥️ Backend Structure
+```
+financial-management-backend/
+├── src/main/
+│   ├── java/com/budgetflow/
+│   │   ├── config/          # Configuration files
+│   │   ├── controller/      # REST controllers
+│   │   ├── dto/             # Data Transfer Objects
+│   │   ├── exception/       # Custom exceptions
+│   │   ├── model/           # Entity models
+│   │   ├── repository/      # Data repositories
+│   │   ├── security/        # Security configuration
+│   │   ├── service/         # Business logic
+│   │   └── util/            # Utility classes
+│   └── resources/
+│       ├── application.properties  # Application configuration
+│       └── db/                     # Database migrations
+└── pom.xml                         # Dependencies and build config
+```
 
 ---
 
@@ -16,17 +74,18 @@ This is a **Financial Management API** built with **Spring Boot, MySQL, and JWT 
 
 ### 🛠 **1. Prerequisites**
 - **Java 17**
-- **Spring Boot**
+- **Node.js 18+**
 - **MySQL**
-- **Postman / cURL (for testing)**
+- **Git**
 
 ### 📥 **2. Clone the repository**
 ```sh
-git clone https://github.com/yourusername/financial-management-api.git
-cd financial-management-api
+git clone https://github.com/yourusername/Budget-Flow.git
+cd Budget-Flow
 ```
 
-### ⚙️ **3. Configure MySQL**
+### ⚙️ **3. Backend Setup**
+#### Configure MySQL
 Create a database named **`finance_db`** and update the **`application.properties`** file:
 ```properties
 spring.datasource.url=jdbc:mysql://localhost:3306/finance_db
@@ -36,14 +95,20 @@ spring.jpa.hibernate.ddl-auto=update
 spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQL8Dialect
 ```
 
-### ▶ **4. Run the Application**
+#### Run the Backend
 ```sh
+cd financial-management-backend
 ./mvnw spring-boot:run
 ```
-or
+
+### 🎨 **4. Frontend Setup**
 ```sh
-mvn spring-boot:run
+cd financial-management-frontend/financeapp
+npm install
+npm run dev
 ```
+
+The application will be available at **`http://localhost:3000`**
 
 ---
 
@@ -53,20 +118,9 @@ mvn spring-boot:run
 | `POST` | `/api/auth/register` | Register a new user |
 | `POST` | `/api/auth/login` | Login & get JWT token |
 | `POST` | `/api/auth/logout` | Logout user |
-
-📌 **Login Example:**
-```json
-{
-  "email": "user1@finance.com",
-  "password": "password123"
-}
-```
-📌 **Response (JWT Token)**
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6..."
-}
-```
+| `POST` | `/api/auth/forgot-password` | Request password reset |
+| `POST` | `/api/auth/reset-password` | Reset password with token |
+| `POST` | `/api/auth/activate-account` | Activate account with token |
 
 ---
 
@@ -80,8 +134,6 @@ mvn spring-boot:run
 | `PUT` | `/api/users/{id}` | Update user profile |
 | `DELETE` | `/api/users/{id}` | Delete user account |
 
----
-
 ### 💳 **Accounts API (`/api/accounts`)**
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -90,18 +142,6 @@ mvn spring-boot:run
 | `GET` | `/api/accounts/{id}` | Get account details |
 | `PUT` | `/api/accounts/{id}` | Update account balance |
 | `DELETE` | `/api/accounts/{id}` | Delete account |
-
-📌 **Example Request:**
-```json
-{
-  "accountName": "Checking Account",
-  "accountType": "Checking",
-  "balance": 5000.00,
-  "currency": "USD"
-}
-```
-
----
 
 ### 💰 **Transactions API (`/api/transactions`)**
 | Method | Endpoint | Description |
@@ -112,60 +152,43 @@ mvn spring-boot:run
 | `PUT` | `/api/transactions/{id}` | Update transaction |
 | `DELETE` | `/api/transactions/{id}` | Delete transaction |
 
-📌 **Example Request (Add Transaction):**
-```json
-{
-  "accountId": 1,
-  "transactionType": "Expense",
-  "amount": 200.00,
-  "categoryId": 2,
-  "description": "Groceries"
-}
-```
-
----
-
 ### 📊 **Reports API (`/api/reports`)**
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/api/reports/monthly-summary?userId=2&month=3&year=2024` | Get user’s monthly financial summary |
+| `GET` | `/api/reports/monthly-summary?userId=2&month=3&year=2024` | Get user's monthly financial summary |
 
-📌 **Response Example:**
-```json
-{
-  "total_income": 3000.00,
-  "total_expense": 1000.00,
-  "net_savings": 2000.00
-}
-```
+---
+
+## 📱 **Frontend Routes**
+| Route | Description | Access |
+|-------|-------------|--------|
+| `/` | Home page | Public |
+| `/login` | Login page | Public |
+| `/register` | Registration page | Public |
+| `/forgot-password` | Forgot password page | Public |
+| `/reset-password` | Reset password page | Public |
+| `/activate-account` | Account activation page | Public |
+| `/dashboard` | User dashboard | Authenticated |
+| `/profile` | User profile | Authenticated |
+| `/contact` | Contact page | Public |
+| `/admin/users` | User management | Admin |
+| `/account/delete` | Delete account | Authenticated |
 
 ---
 
 ## 🔐 **Security & Authentication**
 - **Spring Security** is used to secure API endpoints.
-- Users must log in to obtain a **JWT token**.
-- Each request must include an `Authorization: Bearer <token>` header.
-
----
-
-## 📝 **Stored Procedures**
-📌 **Get Monthly Summary**
-```sql
-CALL GetMonthlySummary(2, 3, 2024);
-```
-
-📌 **Get User Transactions**
-```sql
-CALL GetUserTransactions(2);
-```
+- **JWT Authentication** for secure user sessions.
+- **EmailJS Integration** for account activation and password reset.
 
 ---
 
 ## 🛠 **Tech Stack**
 - **Backend:** Spring Boot, Spring Security, Hibernate, MySQL
-- **Auth:** JWT-based authentication
+- **Frontend:** React, Vite, Material UI, React Router
+- **Authentication:** JWT-based authentication
+- **Email Service:** EmailJS
 - **Database:** MySQL
-- **API Documentation:** Postman / Swagger (TBD)
 
 ---
 
