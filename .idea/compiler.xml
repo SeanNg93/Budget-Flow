@@ -10,5 +10,10 @@
         <module name="quanlitaichinh.main" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="financial-management" target="17" />
+      <module name="financial-management.main" target="17" />
+      <module name="financial-management.test" target="17" />
+    </bytecodeTargetLevel>
   </component>
 </project>

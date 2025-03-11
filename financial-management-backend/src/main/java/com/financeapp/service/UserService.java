@@ -19,11 +19,10 @@ import java.util.UUID;
 public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final EmailService emailService;
-    
+
     @Value("${app.frontend.url}")
     private String frontendUrl;
-    
+
     @Value("${app.token.expiry.minutes}")
     private int tokenExpiryMinutes;
 
@@ -41,92 +40,87 @@ public class UserService {
         if (userOptional.isEmpty()) {
             return Map.of("success", "false", "message", "Email not found");
         }
-        
+
         User user = userOptional.get();
         String token = UUID.randomUUID().toString();
         user.setResetPasswordToken(token);
         user.setResetPasswordTokenExpiry(LocalDateTime.now().plusMinutes(tokenExpiryMinutes));
         userRepository.save(user);
-        
+
         String resetLink = frontendUrl + "/reset-password?token=" + token;
-        
-        // For testing purposes, return the token instead of sending an email
+
         Map<String, String> response = new HashMap<>();
         response.put("success", "true");
         response.put("message", "Password reset link generated successfully");
-        response.put("token", token);
         response.put("resetLink", resetLink);
-        
-        // Comment out the email sending for now
-        // try {
-        //     emailService.sendPasswordResetEmail(email, resetLink);
-        // } catch (Exception e) {
-        //     response.put("emailError", e.getMessage());
-        // }
-        
+
         return response;
     }
-    
+
     public boolean confirmPasswordReset(String token, String newPassword) {
         Optional<User> userOptional = userRepository.findByResetPasswordToken(token);
         if (userOptional.isEmpty()) {
             return false;
         }
-        
+
         User user = userOptional.get();
         if (user.getResetPasswordTokenExpiry().isBefore(LocalDateTime.now())) {
             return false;
         }
-        
+
         user.setPassword(passwordEncoder.encode(newPassword));
         user.setResetPasswordToken(null);
         user.setResetPasswordTokenExpiry(null);
         userRepository.save(user);
-        
+
         return true;
     }
-    
+
     public Map<String, String> createActivationToken(User user) {
         String token = UUID.randomUUID().toString();
         user.setActivationToken(token);
         user.setActivationTokenExpiry(LocalDateTime.now().plusMinutes(tokenExpiryMinutes));
         userRepository.save(user);
-        
+
         String activationLink = frontendUrl + "/activate-account?token=" + token;
-        
-        // For testing purposes, return the token instead of sending an email
+
         Map<String, String> response = new HashMap<>();
         response.put("success", "true");
-        response.put("message", "Activation link generated successfully");
-        response.put("token", token);
+        response.put("message", "Registration successful, but failed to send activation email");
         response.put("activationLink", activationLink);
-        
-        // Comment out the email sending for now
-        // try {
-        //     emailService.sendActivationEmail(user.getEmail(), activationLink);
-        // } catch (Exception e) {
-        //     response.put("emailError", e.getMessage());
-        // }
-        
+
         return response;
     }
-    
+
     public boolean activateAccount(String token) {
         Optional<User> userOptional = userRepository.findByActivationToken(token);
         if (userOptional.isEmpty()) {
             return false;
         }
-        
+
         User user = userOptional.get();
         if (user.getActivationTokenExpiry().isBefore(LocalDateTime.now())) {
             return false;
         }
-        
+
         user.setEnabled(true);
         user.setActivationToken(null);
         user.setActivationTokenExpiry(null);
         userRepository.save(user);
-        
+
         return true;
+    }
+
+    @Transactional
+    public boolean deleteUserAccount(String username, String rawPassword) {
+        Optional<User> userOpt = userRepository.findByUsername(username);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            if (passwordEncoder.matches(rawPassword, user.getPassword())) {
+                userRepository.delete(user);
+                return true;
+            }
+        }
+        return false;
     }
 }

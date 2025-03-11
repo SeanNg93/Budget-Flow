@@ -1,30 +1,37 @@
-import React, { useRef, useState } from 'react';
-import { sendForm } from '@emailjs/browser';
+import { useState, useRef } from 'react';
+import { useForm } from 'react-hook-form';
 import Link from 'next/link';
+import { sendForm } from '@emailjs/browser';
 import { EMAILJS_CONFIG } from '../config/emailjs.config';
 
 export default function Contact() {
-  const form = useRef();
+  const formRef = useRef();
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const { 
+    register, 
+    handleSubmit, 
+    formState: { errors },
+    reset
+  } = useForm();
+
+  const onSubmit = async (data) => {
     setIsLoading(true);
     setMessage('');
 
     try {
       const result = await sendForm(
         EMAILJS_CONFIG.serviceId,
-        EMAILJS_CONFIG.activationTemplateId,
-        form.current,
+        EMAILJS_CONFIG.contactTemplateId,
+        formRef.current,
         EMAILJS_CONFIG.publicKey
       );
       
       setIsSuccess(true);
       setMessage('Thank you for your message! We will get back to you soon.');
-      form.current.reset();
+      reset();
     } catch (error) {
       setIsSuccess(false);
       setMessage(error.text || 'Failed to send message. Please try again.');
@@ -53,34 +60,48 @@ export default function Contact() {
             </div>
           )}
 
-          <form ref={form} onSubmit={handleSubmit} className="space-y-6">
+          <form ref={formRef} onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div>
-              <label htmlFor="user_name" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="from_name" className="block text-sm font-medium text-gray-700">
                 Name
               </label>
               <div className="mt-1">
                 <input
-                  id="user_name"
-                  name="user_name"
+                  id="from_name"
+                  name="from_name"
                   type="text"
                   required
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  {...register('from_name', { required: 'Name is required' })}
                 />
+                {errors.from_name && (
+                  <p className="mt-1 text-sm text-red-600">{errors.from_name.message}</p>
+                )}
               </div>
             </div>
 
             <div>
-              <label htmlFor="user_email" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="from_email" className="block text-sm font-medium text-gray-700">
                 Email
               </label>
               <div className="mt-1">
                 <input
-                  id="user_email"
-                  name="user_email"
+                  id="from_email"
+                  name="from_email"
                   type="email"
                   required
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  {...register('from_email', { 
+                    required: 'Email is required',
+                    pattern: {
+                      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                      message: 'Invalid email address'
+                    }
+                  })}
                 />
+                {errors.from_email && (
+                  <p className="mt-1 text-sm text-red-600">{errors.from_email.message}</p>
+                )}
               </div>
             </div>
 
@@ -95,7 +116,11 @@ export default function Contact() {
                   type="text"
                   required
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  {...register('subject', { required: 'Subject is required' })}
                 />
+                {errors.subject && (
+                  <p className="mt-1 text-sm text-red-600">{errors.subject.message}</p>
+                )}
               </div>
             </div>
 
@@ -110,7 +135,11 @@ export default function Contact() {
                   rows={4}
                   required
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  {...register('message', { required: 'Message is required' })}
                 />
+                {errors.message && (
+                  <p className="mt-1 text-sm text-red-600">{errors.message.message}</p>
+                )}
               </div>
             </div>
 

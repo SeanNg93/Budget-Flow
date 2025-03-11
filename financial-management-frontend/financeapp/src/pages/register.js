@@ -1,14 +1,19 @@
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { register as registerUser } from '../services/api';
-import Link from 'next/link';
+import { useState, useRef, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { register as registerUser } from "../services/api";
+import { sendForm } from "@emailjs/browser";
+import { EMAILJS_CONFIG } from "../config/emailjs.config";
+import Link from "next/link";
+import styles from "../styles/register.module.css";
 
 export default function Register() {
+  const activationFormRef = useRef();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
-  const [activationLink, setActivationLink] = useState('');
-  
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [activationData, setActivationData] = useState(null);
+
   const { 
     register, 
     handleSubmit, 
@@ -16,179 +21,158 @@ export default function Register() {
     formState: { errors } 
   } = useForm();
   
-  const password = watch('password', '');
+  const password = watch("password", "");
 
+  // Xử lý đăng ký tài khoản
   const onSubmit = async (data) => {
     setIsSubmitting(true);
-    setMessage('');
-    setActivationLink('');
-    
+    setMessage("");
+
     try {
       const response = await registerUser(data.username, data.email, data.password);
       setIsSuccess(true);
-      
-      // Check if the response contains an activation link
+
       if (response.data && response.data.activationLink) {
-        setActivationLink(response.data.activationLink);
-        setMessage('Registration successful! Use the activation link below to activate your account.');
+        setMessage(`Đăng ký thành công! Chuẩn bị gửi email kích hoạt tới ${data.email}...`);
+        setActivationData({
+          to_email: data.email,
+          activation_link: response.data.activationLink,
+        });
       } else {
-        setMessage('Registration successful! Please check your email to activate your account.');
+        setMessage("Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt tài khoản.");
       }
     } catch (error) {
       setIsSuccess(false);
-      const errorMessage = error.response?.data 
-        ? (typeof error.response.data === 'string' 
-            ? error.response.data 
-            : error.response.data.message || JSON.stringify(error.response.data))
-        : 'Registration failed. Please try again.';
+      const errorMessage =
+        error.response?.data?.message || "Đăng ký thất bại. Vui lòng thử lại.";
       setMessage(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Gửi email kích hoạt tài khoản
+  const sendActivationEmail = async () => {
+    if (!activationData) return;
+    
+    setIsSendingEmail(true);
+    setMessage(`Đang gửi email kích hoạt tới ${activationData.to_email}...`);
+
+    try {
+      await sendForm(
+        EMAILJS_CONFIG.serviceId,
+        EMAILJS_CONFIG.activationTemplateId,
+        activationFormRef.current,
+        EMAILJS_CONFIG.publicKey
+      );
+
+      setMessage(`Email kích hoạt đã được gửi tới ${activationData.to_email}.`);
+    } catch (error) {
+      console.error("Gửi email thất bại:", error);
+      setMessage(`Không thể gửi email kích hoạt. Vui lòng thử lại.`);
+      setIsSuccess(false);
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activationData) {
+      sendActivationEmail();
+    }
+  }, [activationData]);
+
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-      <div style={{ maxWidth: '400px', width: '100%' }}>
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <h2 style={{ fontSize: '1.875rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-            Create a new account
-          </h2>
-          <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-            Or{' '}
-            <Link href="/login" style={{ color: '#4f46e5', fontWeight: '500' }}>
-              sign in to your existing account
+    <div className={styles.registerContainer}>
+      <div className={styles.registerFormWrapper}>
+        <div className={styles.registerHeader}>
+          <h2>Đăng ký tài khoản</h2>
+          <p>
+            Hoặc{" "}
+            <Link href="/login" className={styles.loginLink}>
+              đăng nhập vào tài khoản của bạn
             </Link>
           </p>
         </div>
-        
+
         {message && (
-          <div className={isSuccess ? 'alert alert-success' : 'alert alert-danger'}>
+          <div className={isSuccess ? styles.alertSuccess : styles.alertDanger}>
             <p>{message}</p>
           </div>
         )}
-        
-        {activationLink && (
-          <div className="alert alert-info" style={{ marginTop: '1rem', marginBottom: '1rem' }}>
-            <p>Activation Link (for testing):</p>
-            <a href={activationLink} style={{ wordBreak: 'break-all', color: '#4f46e5' }}>
-              {activationLink}
-            </a>
-          </div>
-        )}
-        
+
+        {/* Form ẩn để gửi email kích hoạt */}
+        <form ref={activationFormRef} style={{ display: "none" }}>
+          <input type="hidden" name="to_email" value={activationData?.to_email || ""} />
+          <input type="hidden" name="activation_link" value={activationData?.activation_link || ""} />
+        </form>
+
         {!isSuccess && (
           <form onSubmit={handleSubmit(onSubmit)}>
-            <div className="form-group">
-              <label htmlFor="username" style={{ display: 'block', marginBottom: '0.5rem' }}>Username</label>
+            <div className={styles.formGroup}>
+              <label htmlFor="username">Tên đăng nhập</label>
               <input
                 id="username"
                 name="username"
                 type="text"
-                autoComplete="username"
-                required
-                className="form-control"
-                placeholder="Username"
-                {...register('username', { 
-                  required: 'Username is required',
-                  minLength: {
-                    value: 3,
-                    message: 'Username must be at least 3 characters'
-                  }
-                })}
+                className={styles.formInput}
+                placeholder="Tên đăng nhập"
+                {...register("username", { required: "Tên đăng nhập không được để trống", minLength: { value: 3, message: "Tên đăng nhập phải có ít nhất 3 ký tự" } })}
               />
-              {errors.username && (
-                <p style={{ color: '#b91c1c', fontSize: '0.875rem', marginTop: '0.5rem' }}>{errors.username.message}</p>
-              )}
+              {errors.username && <p className={styles.errorMessage}>{errors.username.message}</p>}
             </div>
-            
-            <div className="form-group">
-              <label htmlFor="email" style={{ display: 'block', marginBottom: '0.5rem' }}>Email address</label>
+
+            <div className={styles.formGroup}>
+              <label htmlFor="email">Email</label>
               <input
                 id="email"
                 name="email"
                 type="email"
-                autoComplete="email"
-                required
-                className="form-control"
-                placeholder="Email address"
-                {...register('email', { 
-                  required: 'Email is required',
-                  pattern: {
-                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                    message: 'Invalid email address'
-                  }
-                })}
+                className={styles.formInput}
+                placeholder="Nhập email của bạn"
+                {...register("email", { required: "Email không được để trống", pattern: { value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i, message: "Email không hợp lệ" } })}
               />
-              {errors.email && (
-                <p style={{ color: '#b91c1c', fontSize: '0.875rem', marginTop: '0.5rem' }}>{errors.email.message}</p>
-              )}
+              {errors.email && <p className={styles.errorMessage}>{errors.email.message}</p>}
             </div>
-            
-            <div className="form-group">
-              <label htmlFor="password" style={{ display: 'block', marginBottom: '0.5rem' }}>Password</label>
+
+            <div className={styles.formGroup}>
+              <label htmlFor="password">Mật khẩu</label>
               <input
                 id="password"
                 name="password"
                 type="password"
-                autoComplete="new-password"
-                required
-                className="form-control"
-                placeholder="Password"
-                {...register('password', { 
-                  required: 'Password is required',
-                  minLength: {
-                    value: 8,
-                    message: 'Password must be at least 8 characters'
-                  }
-                })}
+                className={styles.formInput}
+                placeholder="Nhập mật khẩu"
+                {...register("password", { required: "Mật khẩu không được để trống", minLength: { value: 8, message: "Mật khẩu phải có ít nhất 8 ký tự" } })}
               />
-              {errors.password && (
-                <p style={{ color: '#b91c1c', fontSize: '0.875rem', marginTop: '0.5rem' }}>{errors.password.message}</p>
-              )}
+              {errors.password && <p className={styles.errorMessage}>{errors.password.message}</p>}
             </div>
-            
-            <div className="form-group">
-              <label htmlFor="confirmPassword" style={{ display: 'block', marginBottom: '0.5rem' }}>Confirm Password</label>
+
+            <div className={styles.formGroup}>
+              <label htmlFor="confirmPassword">Nhập lại mật khẩu</label>
               <input
                 id="confirmPassword"
                 name="confirmPassword"
                 type="password"
-                autoComplete="new-password"
-                required
-                className="form-control"
-                placeholder="Confirm password"
-                {...register('confirmPassword', { 
-                  required: 'Please confirm your password',
-                  validate: value => value === password || 'Passwords do not match'
-                })}
+                className={styles.formInput}
+                placeholder="Xác nhận mật khẩu"
+                {...register("confirmPassword", { required: "Vui lòng nhập lại mật khẩu", validate: value => value === password || "Mật khẩu không khớp" })}
               />
-              {errors.confirmPassword && (
-                <p style={{ color: '#b91c1c', fontSize: '0.875rem', marginTop: '0.5rem' }}>{errors.confirmPassword.message}</p>
-              )}
+              {errors.confirmPassword && <p className={styles.errorMessage}>{errors.confirmPassword.message}</p>}
             </div>
 
-            <div style={{ marginTop: '1.5rem' }}>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="btn"
-                style={{ width: '100%' }}
-              >
-                {isSubmitting ? 'Registering...' : 'Register'}
-              </button>
-            </div>
+            <button type="submit" disabled={isSubmitting || isSendingEmail} className={styles.registerButton}>
+              {isSubmitting ? "Đang đăng ký..." : isSendingEmail ? "Đang gửi email..." : "Đăng ký"}
+            </button>
           </form>
         )}
-        
-        {isSuccess && !activationLink && (
-          <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
-            <Link href="/login" style={{ color: '#4f46e5', fontWeight: '500' }}>
-              Go to login
-            </Link>
+
+        {isSuccess && (
+          <div className={styles.loginLink}>
+            <Link href="/login">Quay lại trang đăng nhập</Link>
           </div>
         )}
       </div>
     </div>
   );
-} 
+}

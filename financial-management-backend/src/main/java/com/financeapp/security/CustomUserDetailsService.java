@@ -3,14 +3,15 @@ package com.financeapp.security;
 import com.financeapp.model.User;
 import com.financeapp.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -19,47 +20,22 @@ public class CustomUserDetailsService implements UserDetailsService {
     private final UserRepository userRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy người dùng với username: " + username));
+    public UserDetails loadUserByUsername(String usernameOrEmail) throws UsernameNotFoundException {
+        User user = userRepository.findByUsername(usernameOrEmail)
+                .or(() -> userRepository.findByEmail(usernameOrEmail))
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         if (!user.isEnabled()) {
-            throw new UsernameNotFoundException("Tài khoản chưa được kích hoạt. Vui lòng kiểm tra email để kích hoạt.");
+            throw new UsernameNotFoundException("User account is not activated. Please check your email for activation link.");
         }
 
-        Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
-        // Thêm quyền mặc định cho user
-        authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
-        
-        // Nếu user đăng nhập qua OAuth, cho phép đăng nhập không cần mật khẩu
-        String password = user.getOauthProvider() != null ? "" : user.getPassword();
+        List<GrantedAuthority> authorities = user.getRoles().stream()
+                .map(role -> new SimpleGrantedAuthority(role.getName().name()))
+                .collect(Collectors.toList());
 
         return new org.springframework.security.core.userdetails.User(
-                user.getUsername(),
-                password,
-                user.isEnabled(),
-                true, // account non-expired
-                true, // credentials non-expired
-                true, // account non-locked
-                authorities
-        );
-    }
-
-    // Phương thức hỗ trợ tìm user bằng email (cho OAuth2)
-    public UserDetails loadUserByEmail(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy người dùng với email: " + email));
-
-        Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
-        authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
-
-        return new org.springframework.security.core.userdetails.User(
-                user.getUsername(),
+                user.getUsername(),   // luôn trả về username để đảm bảo JWT đúng định dạng
                 user.getPassword(),
-                user.isEnabled(),
-                true,
-                true,
-                true,
                 authorities
         );
     }

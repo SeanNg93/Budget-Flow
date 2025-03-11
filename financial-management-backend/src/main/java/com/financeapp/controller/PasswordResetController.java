@@ -19,7 +19,7 @@ public class PasswordResetController {
     @PostMapping("/reset-request")
     public ResponseEntity<?> requestPasswordReset(@RequestBody PasswordResetRequest request) {
         Map<String, String> result = userService.requestPasswordReset(request.getEmail());
-        
+
         if ("true".equals(result.get("success"))) {
             return ResponseEntity.ok(result);
         } else {

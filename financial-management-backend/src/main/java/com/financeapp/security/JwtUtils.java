@@ -26,13 +26,13 @@ public class JwtUtils {
 
     // We'll use a static key for consistency across application restarts
     private static final SecretKey SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS512);
-    
+
     @Value("${app.jwt.expiration}")
     private long jwtExpirationMs;
 
     public String generateToken(Authentication authentication) {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        
+
         return Jwts.builder()
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date())
@@ -91,14 +91,5 @@ public class JwtUtils {
                 .parseClaimsJws(token)
                 .getBody()
                 .getExpiration();
-    }
-
-    public String generateTokenFromUsername(String username) {
-        return Jwts.builder()
-                .setSubject(username)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
-                .signWith(SECRET_KEY, SignatureAlgorithm.HS512)
-                .compact();
     }
 }
