@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useRouter } from "next/router";
+import Cookies from "js-cookie";
 
 export default function OAuth2RedirectHandler() {
   const router = useRouter();
@@ -11,9 +12,10 @@ export default function OAuth2RedirectHandler() {
       .then((response) => { return response.json(); })
       .then(response => {
         if(response.access_token) {
+          Cookies.set("access_token", response.access_token);
           router.push('/dashboard')
         }
-      } )
+      });
       // todo: luu access_token vao cookie 
     } 
   }, [code]);
