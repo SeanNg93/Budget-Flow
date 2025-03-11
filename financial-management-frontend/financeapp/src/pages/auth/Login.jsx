@@ -24,7 +24,7 @@ import {
   Typography,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
+import { Visibility, VisibilityOff, Google, Facebook } from '@mui/icons-material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 
 // Validation schema
@@ -49,7 +49,7 @@ const Card = styled(Paper)(({ theme }) => ({
 }));
 
 const LoginContainer = styled(Stack)(({ theme }) => ({
-  height: '100vh',
+  height: 'calc(100dvh)',
   minHeight: '100%',
   padding: theme.spacing(2),
   [theme.breakpoints.up('sm')]: {
@@ -66,6 +66,32 @@ const LoginContainer = styled(Stack)(({ theme }) => ({
     backgroundRepeat: 'no-repeat',
   },
 }));
+
+// Logo component
+const SitemarkIcon = () => (
+  <Box
+    sx={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      mb: 2,
+    }}
+  >
+    <Box
+      sx={{
+        backgroundColor: 'primary.main',
+        borderRadius: '50%',
+        p: 1,
+        color: 'white',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <LockOutlinedIcon />
+    </Box>
+  </Box>
+);
 
 export default function Login() {
   const navigate = useNavigate();
@@ -105,35 +131,17 @@ export default function Login() {
     <CssBaseline>
       <LoginContainer direction="column" justifyContent="space-between">
         <Card elevation={3}>
-          <Box
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-            }}
+          <SitemarkIcon />
+          <Typography
+            component="h1"
+            variant="h4"
+            sx={{ width: '100%', fontSize: 'clamp(2rem, 10vw, 2.15rem)', textAlign: 'center', mb: 2 }}
           >
-            <Box
-              sx={{
-                backgroundColor: 'primary.main',
-                borderRadius: '50%',
-                p: 1,
-                mb: 1,
-                color: 'white',
-              }}
-            >
-              <LockOutlinedIcon />
-            </Box>
-            <Typography
-              component="h1"
-              variant="h4"
-              sx={{ width: '100%', fontSize: 'clamp(2rem, 10vw, 2.15rem)', textAlign: 'center' }}
-            >
-              Đăng nhập
-            </Typography>
-          </Box>
+            Đăng nhập
+          </Typography>
 
           {error && (
-            <Typography color="error" sx={{ mt: 1, textAlign: 'center' }}>
+            <Typography color="error" sx={{ mt: 1, textAlign: 'center', mb: 2 }}>
               {error}
             </Typography>
           )}
@@ -145,7 +153,7 @@ export default function Login() {
             validateOnChange={false}
             validateOnBlur={false}
           >
-            {({ errors, touched, isSubmitting }) => (
+            {({ errors, touched, isSubmitting, handleSubmit: formikSubmit }) => (
               <Form>
                 <Box
                   sx={{
@@ -166,6 +174,7 @@ export default function Login() {
                           autoComplete="username"
                           autoFocus
                           fullWidth
+                          variant="outlined"
                           error={meta.touched && Boolean(meta.error)}
                           helperText={meta.touched && meta.error}
                         />
@@ -184,6 +193,7 @@ export default function Login() {
                           type={showPassword ? 'text' : 'password'}
                           autoComplete="current-password"
                           fullWidth
+                          variant="outlined"
                           error={meta.touched && Boolean(meta.error)}
                           helperText={meta.touched && meta.error}
                           InputProps={{
@@ -215,6 +225,10 @@ export default function Login() {
                     fullWidth
                     variant="contained"
                     disabled={isSubmitting}
+                    sx={{ mt: 1 }}
+                    onClick={() => {
+                      formikSubmit();
+                    }}
                   >
                     {isSubmitting ? 'Đang đăng nhập...' : 'Đăng nhập'}
                   </Button>
@@ -223,7 +237,7 @@ export default function Login() {
                     component={RouterLink}
                     to="/forgot-password"
                     variant="body2"
-                    sx={{ alignSelf: 'center' }}
+                    sx={{ alignSelf: 'center', mt: 1 }}
                   >
                     Quên mật khẩu?
                   </Link>
@@ -235,7 +249,25 @@ export default function Login() {
           <Divider sx={{ my: 2 }}>hoặc</Divider>
 
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Typography sx={{ textAlign: 'center' }}>
+            <Button
+              fullWidth
+              variant="outlined"
+              startIcon={<Google />}
+              onClick={() => alert('Đăng nhập với Google')}
+            >
+              Đăng nhập với Google
+            </Button>
+            
+            <Button
+              fullWidth
+              variant="outlined"
+              startIcon={<Facebook />}
+              onClick={() => alert('Đăng nhập với Facebook')}
+            >
+              Đăng nhập với Facebook
+            </Button>
+            
+            <Typography sx={{ textAlign: 'center', mt: 1 }}>
               Chưa có tài khoản?{' '}
               <Link
                 component={RouterLink}
