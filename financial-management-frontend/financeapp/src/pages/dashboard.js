@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
-import Cookies from "js-cookie";
 import styles from "../styles/dashboard.module.css";
 
 export default function Dashboard() {
@@ -25,7 +24,7 @@ export default function Dashboard() {
 
     try {
       const userData = localStorage.getItem("userData");
-      console.log(userData)
+      console.log(userData);
       // setUser(JSON.parse(userData));
     } catch (err) {
       // Cookies.remove("access_token");
@@ -66,13 +65,18 @@ export default function Dashboard() {
           <nav className={styles.sidebarNav}>
             <ul>
               <li>
-                <Link className="home-text" href="/dashboard">Trang chủ</Link>
-              </li>
-              <li>
-                <Link href="/delete-account" className={styles.deleteAccountButton}>
-                  Xóa tài khoản
+                <Link className="home-text" href="/dashboard">
+                  Trang chủ
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/delete-account"
+                  className={styles.deleteAccountButton}
+                >
+                  Xóa tài khoản
+                </Link>
+              </li>              
             </ul>
           </nav>
         </aside>
