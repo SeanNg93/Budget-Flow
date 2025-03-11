@@ -1,8 +1,8 @@
 // EmailJS configuration
 export const EMAILJS_CONFIG = {
-  publicKey: '6xS7gVcnrNq7WUmDe',
   serviceId: 'service_fl181h7',
-  resetTemplateId: 'template_o8pq1a4',
+  publicKey: '6xS7gVcnrNq7WUmDe',
   activationTemplateId: 'template_p7zyifl',
-  contactTemplateId: 'template_p7zyifl'
+  resetPasswordTemplateId: 'template_o8pq1a4',
+  contactTemplateId: 'template_contact',
 }; 

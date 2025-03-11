@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
-import { useRouter } from "next/router";
-import Link from "next/link";
+import { useNavigate, Link } from "react-router-dom";
 import styles from "../styles/dashboard.module.css";
 
 export default function Dashboard() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -17,7 +16,7 @@ export default function Dashboard() {
     const token = localStorage.getItem("userToken");
 
     if (!token) {
-      router.push("/login");
+      navigate("/login");
       return;
     }
 
@@ -27,7 +26,7 @@ export default function Dashboard() {
     } catch (err) {
       localStorage.removeItem("userToken");
       localStorage.removeItem("userData");
-      router.push("/login");
+      navigate("/login");
     } finally {
       setLoading(false);
     }
@@ -36,7 +35,7 @@ export default function Dashboard() {
   const handleLogout = () => {
     localStorage.removeItem("userToken");
     localStorage.removeItem("userData");
-    router.push("/login");
+    navigate("/login");
   };
 
   if (loading) {
@@ -63,10 +62,10 @@ export default function Dashboard() {
           <nav className={styles.sidebarNav}>
             <ul>
               <li>
-                <Link className="home-text" href="/dashboard">Trang chủ</Link>
+                <Link to="/dashboard" className="home-text">Trang chủ</Link>
               </li>
               <li>
-                <Link href="/delete-account" className={styles.deleteAccountButton}>
+                <Link to="/delete-account" className={styles.deleteAccountButton}>
                   Xóa tài khoản
                 </Link>
               </li>
@@ -76,4 +75,4 @@ export default function Dashboard() {
       </div>
     </div>
   );
-}
+} 

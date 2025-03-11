@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
-import Link from 'next/link';
+import { useNavigate, Link } from 'react-router-dom';
 import styles from '../styles/home.module.css';
 
 function Home() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const router = useRouter();
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Kiểm tra trạng thái đăng nhập từ localStorage hoặc session
@@ -18,7 +17,7 @@ function Home() {
   const handleLogout = () => {
     localStorage.removeItem('userToken');
     setIsLoggedIn(false);
-    router.push('/login');
+    navigate('/login');
   };
 
   return (
@@ -27,10 +26,10 @@ function Home() {
       
       {!isLoggedIn ? (
         <div className={styles['auth-buttons']}>
-          <Link href="/login" className={`${styles.btn} ${styles['btn-primary']}`}>
+          <Link to="/login" className={`${styles.btn} ${styles['btn-primary']}`}>
             Đăng nhập
           </Link>
-          <Link href="/register" className={`${styles.btn} ${styles['btn-secondary']}`}>
+          <Link to="/register" className={`${styles.btn} ${styles['btn-secondary']}`}>
             Đăng ký
           </Link>
         </div>
@@ -39,8 +38,8 @@ function Home() {
           <button onClick={handleLogout} className={`${styles.btn} ${styles['btn-warning']}`}>
             Đăng xuất
           </button>
-          <Link href="/delete-account" className={`${styles.btn} ${styles['btn-danger']}`}>
-            Xóa tài khoản
+          <Link to="/dashboard" className={`${styles.btn} ${styles['btn-primary']}`}>
+            Dashboard
           </Link>
         </div>
       )}
@@ -48,4 +47,4 @@ function Home() {
   );
 }
 
-export default Home;
+export default Home; 

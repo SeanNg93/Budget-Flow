@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
-import Link from 'next/link';
+import { Link } from 'react-router-dom';
 import { sendForm } from '@emailjs/browser';
 import { EMAILJS_CONFIG } from '../config/emailjs.config';
 
@@ -161,7 +161,7 @@ export default function Contact() {
               </div>
               <div className="relative flex justify-center text-sm">
                 <span className="px-2 bg-white text-gray-500">
-                  <Link href="/" className="font-medium text-indigo-600 hover:text-indigo-500">
+                  <Link to="/" className="font-medium text-indigo-600 hover:text-indigo-500">
                     Back to Home
                   </Link>
                 </span>
