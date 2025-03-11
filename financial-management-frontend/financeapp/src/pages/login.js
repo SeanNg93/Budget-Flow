@@ -1,35 +1,38 @@
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { useRouter } from 'next/router';
-import { login } from '../services/api';
-import Link from 'next/link';
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { useRouter } from "next/router";
+import { login } from "../services/api";
+import Link from "next/link";
+import styles from "../styles/login.module.css";
 
 export default function Login() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState('');
-  
-  const { 
-    register, 
-    handleSubmit, 
-    formState: { errors } 
+  const [error, setError] = useState("");
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
   } = useForm();
 
   const onSubmit = async (data) => {
     setIsSubmitting(true);
-    setError('');
-    
+    setError("");
+
     try {
       const response = await login(data.username, data.password);
-      localStorage.setItem('token', response.data.token);
-      router.push('/dashboard');
+      console.log("Response from API:", response.data);
+
+      if (response.data.token) {
+        localStorage.setItem("userToken", response.data.token);
+        router.push("/dashboard"); // Chuyển hướng sau khi đăng nhập thành công
+      } else {
+        setError("Đăng nhập thất bại. Máy chủ không phản hồi hợp lệ.");
+      }
     } catch (error) {
-      // Ensure we're not trying to render an object directly
-      const errorMessage = error.response?.data 
-        ? (typeof error.response.data === 'string' 
-            ? error.response.data 
-            : JSON.stringify(error.response.data))
-        : 'Login failed. Please check your credentials.';
+      const errorMessage =
+        error.response?.data?.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.";
       setError(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -37,79 +40,60 @@ export default function Login() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-      <div style={{ maxWidth: '400px', width: '100%' }}>
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <h2 style={{ fontSize: '1.875rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-            Sign in to your account
-          </h2>
-          <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-            Or{' '}
-            <Link href="/register" style={{ color: '#4f46e5', fontWeight: '500' }}>
-              create a new account
+    <div className={styles.loginContainer}>
+      <div className={styles.loginFormWrapper}>
+        <div className={styles.loginHeader}>
+          <h2>Đăng nhập</h2>
+          <p>
+            Hoặc{" "}
+            <Link href="/register" className={styles.loginLink}>
+              tạo tài khoản mới
             </Link>
           </p>
         </div>
-        
+
         {error && (
-          <div className="alert alert-danger">
+          <div className={styles.alertDanger}>
             <p>{error}</p>
           </div>
         )}
-        
+
         <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="form-group">
-            <label htmlFor="username" style={{ display: 'block', marginBottom: '0.5rem' }}>Username</label>
+          <div className={styles.formGroup}>
+            <label htmlFor="username">Tên đăng nhập</label>
             <input
               id="username"
               name="username"
               type="text"
-              autoComplete="username"
-              required
-              className="form-control"
-              placeholder="Username"
-              {...register('username', { required: 'Username is required' })}
+              className={styles.formInput}
+              placeholder="Tên đăng nhập"
+              {...register("username", { required: "Tên đăng nhập không được để trống" })}
             />
-            {errors.username && (
-              <p style={{ color: '#b91c1c', fontSize: '0.875rem', marginTop: '0.5rem' }}>{errors.username.message}</p>
-            )}
+            {errors.username && <p className={styles.errorMessage}>{errors.username.message}</p>}
           </div>
-          
-          <div className="form-group">
-            <label htmlFor="password" style={{ display: 'block', marginBottom: '0.5rem' }}>Password</label>
+
+          <div className={styles.formGroup}>
+            <label htmlFor="password">Mật khẩu</label>
             <input
               id="password"
               name="password"
               type="password"
-              autoComplete="current-password"
-              required
-              className="form-control"
-              placeholder="Password"
-              {...register('password', { required: 'Password is required' })}
+              className={styles.formInput}
+              placeholder="Mật khẩu"
+              {...register("password", { required: "Mật khẩu không được để trống" })}
             />
-            {errors.password && (
-              <p style={{ color: '#b91c1c', fontSize: '0.875rem', marginTop: '0.5rem' }}>{errors.password.message}</p>
-            )}
+            {errors.password && <p className={styles.errorMessage}>{errors.password.message}</p>}
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-            <div>
-              <Link href="/forgot-password" style={{ color: '#4f46e5', fontWeight: '500', fontSize: '0.875rem' }}>
-                Forgot your password?
-              </Link>
-            </div>
+          <div className={styles.forgotPasswordLink}>
+            <Link href="/forgot-password">Quên mật khẩu?</Link>
           </div>
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="btn"
-            style={{ width: '100%' }}
-          >
-            {isSubmitting ? 'Signing in...' : 'Sign in'}
+          <button type="submit" disabled={isSubmitting} className={styles.loginButton}>
+            {isSubmitting ? "Đang đăng nhập..." : "Đăng nhập"}
           </button>
         </form>
       </div>
     </div>
   );
-} 
+}

@@ -110,4 +110,17 @@ public class UserService {
         
         return true;
     }
+
+    @Transactional
+    public boolean deleteUserAccount(String username, String rawPassword) {
+        Optional<User> userOpt = userRepository.findByUsername(username);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            if (passwordEncoder.matches(rawPassword, user.getPassword())) {
+                userRepository.delete(user);
+                return true;
+            }
+        }
+        return false;
+    }
 }
