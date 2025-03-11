@@ -192,6 +192,8 @@ export default function Register() {
             }}
             validationSchema={RegisterSchema}
             onSubmit={handleSubmit}
+            validateOnChange={false}
+            validateOnBlur={false}
           >
             {({ errors, touched, isSubmitting }) => (
               <Form style={{ width: "100%" }}>

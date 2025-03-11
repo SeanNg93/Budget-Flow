@@ -136,6 +136,8 @@ export default function ResetPassword() {
             initialValues={{ password: '', confirmPassword: '' }}
             validationSchema={ResetPasswordSchema}
             onSubmit={handleSubmit}
+            validateOnChange={false}
+            validateOnBlur={false}
           >
             {({ errors, touched, isSubmitting }) => (
               <Form style={{ width: '100%' }}>

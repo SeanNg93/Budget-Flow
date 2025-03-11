@@ -154,6 +154,8 @@ export default function ForgotPassword() {
             initialValues={{ email: '' }}
             validationSchema={ForgotPasswordSchema}
             onSubmit={handleSubmit}
+            validateOnChange={false}
+            validateOnBlur={false}
           >
             {({ errors, touched, isSubmitting }) => (
               <Form style={{ width: '100%' }}>

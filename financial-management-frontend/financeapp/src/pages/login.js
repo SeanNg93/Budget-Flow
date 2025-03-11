@@ -113,6 +113,8 @@ export default function Login() {
           initialValues={{ username: "", password: "" }}
           validationSchema={LoginSchema}
           onSubmit={handleSubmit}
+          validateOnChange={false}
+          validateOnBlur={false}
         >
           {({ errors, touched, isSubmitting }) => (
             <Form style={{ width: "100%" }}>
