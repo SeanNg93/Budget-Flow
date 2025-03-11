@@ -1,41 +1,80 @@
 import { useState, useRef, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useRouter } from "next/router";
+import Link from "next/link";
+import { Formik, Form, Field } from "formik";
+import * as Yup from "yup";
 import { register as registerUser } from "../services/api";
 import { sendForm } from "@emailjs/browser";
 import { EMAILJS_CONFIG } from "../config/emailjs.config";
-import Link from "next/link";
-import styles from "../styles/register.module.css";
+
+// Material UI imports
+import {
+  Box,
+  Button,
+  Container,
+  TextField,
+  Typography,
+  Paper,
+  Grid,
+  Alert,
+  InputAdornment,
+  IconButton,
+  CircularProgress,
+} from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
+
+// Validation schema
+const RegisterSchema = Yup.object().shape({
+  username: Yup.string()
+    .min(3, "Tên đăng nhập phải có ít nhất 3 ký tự")
+    .max(20, "Tên đăng nhập không được vượt quá 20 ký tự")
+    .required("Tên đăng nhập không được để trống"),
+  email: Yup.string()
+    .email("Email không hợp lệ")
+    .required("Email không được để trống"),
+  password: Yup.string()
+    .min(6, "Mật khẩu phải có ít nhất 6 ký tự")
+    .required("Mật khẩu không được để trống"),
+  confirmPassword: Yup.string()
+    .oneOf([Yup.ref("password"), null], "Mật khẩu xác nhận không khớp")
+    .required("Xác nhận mật khẩu không được để trống"),
+});
 
 export default function Register() {
+  const router = useRouter();
   const activationFormRef = useRef();
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [activationData, setActivationData] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const { 
-    register, 
-    handleSubmit, 
-    watch,
-    formState: { errors } 
-  } = useForm();
-  
-  const password = watch("password", "");
+  const handleClickShowPassword = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const handleClickShowConfirmPassword = () => {
+    setShowConfirmPassword(!showConfirmPassword);
+  };
+
+  const handleMouseDownPassword = (event) => {
+    event.preventDefault();
+  };
 
   // Xử lý đăng ký tài khoản
-  const onSubmit = async (data) => {
-    setIsSubmitting(true);
+  const handleSubmit = async (values, { setSubmitting }) => {
     setMessage("");
 
     try {
-      const response = await registerUser(data.username, data.email, data.password);
+      const response = await registerUser(values.username, values.email, values.password);
       setIsSuccess(true);
 
       if (response.data && response.data.activationLink) {
-        setMessage(`Đăng ký thành công! Chuẩn bị gửi email kích hoạt tới ${data.email}...`);
+        setMessage(`Đăng ký thành công! Chuẩn bị gửi email kích hoạt tới ${values.email}...`);
         setActivationData({
-          to_email: data.email,
+          to_email: values.email,
           activation_link: response.data.activationLink,
         });
       } else {
@@ -47,35 +86,41 @@ export default function Register() {
         error.response?.data?.message || "Đăng ký thất bại. Vui lòng thử lại.";
       setMessage(errorMessage);
     } finally {
-      setIsSubmitting(false);
+      setSubmitting(false);
     }
   };
 
-  // Gửi email kích hoạt tài khoản
+  // Gửi email kích hoạt
   const sendActivationEmail = async () => {
     if (!activationData) return;
-    
-    setIsSendingEmail(true);
-    setMessage(`Đang gửi email kích hoạt tới ${activationData.to_email}...`);
 
+    setIsSendingEmail(true);
     try {
-      await sendForm(
+      const result = await sendForm(
         EMAILJS_CONFIG.serviceId,
         EMAILJS_CONFIG.activationTemplateId,
         activationFormRef.current,
         EMAILJS_CONFIG.publicKey
       );
 
-      setMessage(`Email kích hoạt đã được gửi tới ${activationData.to_email}.`);
+      if (result.status === 200) {
+        setMessage(`Đăng ký thành công! Email kích hoạt đã được gửi tới ${activationData.to_email}`);
+      } else {
+        setMessage(
+          "Đăng ký thành công, nhưng không thể gửi email kích hoạt. Vui lòng liên hệ quản trị viên."
+        );
+      }
     } catch (error) {
-      console.error("Gửi email thất bại:", error);
-      setMessage(`Không thể gửi email kích hoạt. Vui lòng thử lại.`);
-      setIsSuccess(false);
+      console.error("Error sending activation email:", error);
+      setMessage(
+        "Đăng ký thành công, nhưng không thể gửi email kích hoạt. Vui lòng liên hệ quản trị viên."
+      );
     } finally {
       setIsSendingEmail(false);
     }
   };
 
+  // Gửi email kích hoạt khi có dữ liệu
   useEffect(() => {
     if (activationData) {
       sendActivationEmail();
@@ -83,96 +128,186 @@ export default function Register() {
   }, [activationData]);
 
   return (
-    <div className={styles.registerContainer}>
-      <div className={styles.registerFormWrapper}>
-        <div className={styles.registerHeader}>
-          <h2>Đăng ký tài khoản</h2>
-          <p>
-            Hoặc{" "}
-            <Link href="/login" className={styles.loginLink}>
-              đăng nhập vào tài khoản của bạn
+    <Container component="main" maxWidth="sm">
+      <Paper
+        elevation={3}
+        sx={{
+          marginTop: 8,
+          padding: 4,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+        }}
+      >
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            mb: 3,
+          }}
+        >
+          <Box
+            sx={{
+              backgroundColor: "primary.main",
+              borderRadius: "50%",
+              p: 1,
+              mb: 1,
+              color: "white",
+            }}
+          >
+            <PersonAddIcon />
+          </Box>
+          <Typography component="h1" variant="h5">
+            Đăng ký tài khoản
+          </Typography>
+          <Typography variant="body2" sx={{ mt: 1 }}>
+            Đã có tài khoản?{" "}
+            <Link href="/login" style={{ color: "primary.main" }}>
+              Đăng nhập
             </Link>
-          </p>
-        </div>
+          </Typography>
+        </Box>
 
         {message && (
-          <div className={isSuccess ? styles.alertSuccess : styles.alertDanger}>
-            <p>{message}</p>
-          </div>
+          <Alert severity={isSuccess ? "success" : "error"} sx={{ width: "100%", mb: 2 }}>
+            {message}
+          </Alert>
         )}
 
-        {/* Form ẩn để gửi email kích hoạt */}
-        <form ref={activationFormRef} style={{ display: "none" }}>
-          <input type="hidden" name="to_email" value={activationData?.to_email || ""} />
-          <input type="hidden" name="activation_link" value={activationData?.activation_link || ""} />
-        </form>
+        {isSendingEmail && (
+          <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+            <CircularProgress size={24} sx={{ mr: 1 }} />
+            <Typography>Đang gửi email kích hoạt...</Typography>
+          </Box>
+        )}
 
         {!isSuccess && (
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <div className={styles.formGroup}>
-              <label htmlFor="username">Tên đăng nhập</label>
-              <input
-                id="username"
-                name="username"
-                type="text"
-                className={styles.formInput}
-                placeholder="Tên đăng nhập"
-                {...register("username", { required: "Tên đăng nhập không được để trống", minLength: { value: 3, message: "Tên đăng nhập phải có ít nhất 3 ký tự" } })}
-              />
-              {errors.username && <p className={styles.errorMessage}>{errors.username.message}</p>}
-            </div>
+          <Formik
+            initialValues={{
+              username: "",
+              email: "",
+              password: "",
+              confirmPassword: "",
+            }}
+            validationSchema={RegisterSchema}
+            onSubmit={handleSubmit}
+          >
+            {({ errors, touched, isSubmitting }) => (
+              <Form style={{ width: "100%" }}>
+                <Field name="username">
+                  {({ field, meta }) => (
+                    <TextField
+                      {...field}
+                      margin="normal"
+                      fullWidth
+                      id="username"
+                      label="Tên đăng nhập"
+                      autoComplete="username"
+                      autoFocus
+                      error={meta.touched && Boolean(meta.error)}
+                      helperText={meta.touched && meta.error}
+                    />
+                  )}
+                </Field>
 
-            <div className={styles.formGroup}>
-              <label htmlFor="email">Email</label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                className={styles.formInput}
-                placeholder="Nhập email của bạn"
-                {...register("email", { required: "Email không được để trống", pattern: { value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i, message: "Email không hợp lệ" } })}
-              />
-              {errors.email && <p className={styles.errorMessage}>{errors.email.message}</p>}
-            </div>
+                <Field name="email">
+                  {({ field, meta }) => (
+                    <TextField
+                      {...field}
+                      margin="normal"
+                      fullWidth
+                      id="email"
+                      label="Email"
+                      autoComplete="email"
+                      error={meta.touched && Boolean(meta.error)}
+                      helperText={meta.touched && meta.error}
+                    />
+                  )}
+                </Field>
 
-            <div className={styles.formGroup}>
-              <label htmlFor="password">Mật khẩu</label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                className={styles.formInput}
-                placeholder="Nhập mật khẩu"
-                {...register("password", { required: "Mật khẩu không được để trống", minLength: { value: 8, message: "Mật khẩu phải có ít nhất 8 ký tự" } })}
-              />
-              {errors.password && <p className={styles.errorMessage}>{errors.password.message}</p>}
-            </div>
+                <Field name="password">
+                  {({ field, meta }) => (
+                    <TextField
+                      {...field}
+                      margin="normal"
+                      fullWidth
+                      label="Mật khẩu"
+                      type={showPassword ? "text" : "password"}
+                      id="password"
+                      error={meta.touched && Boolean(meta.error)}
+                      helperText={meta.touched && meta.error}
+                      InputProps={{
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              aria-label="toggle password visibility"
+                              onClick={handleClickShowPassword}
+                              onMouseDown={handleMouseDownPassword}
+                              edge="end"
+                            >
+                              {showPassword ? <VisibilityOff /> : <Visibility />}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
+                  )}
+                </Field>
 
-            <div className={styles.formGroup}>
-              <label htmlFor="confirmPassword">Nhập lại mật khẩu</label>
-              <input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                className={styles.formInput}
-                placeholder="Xác nhận mật khẩu"
-                {...register("confirmPassword", { required: "Vui lòng nhập lại mật khẩu", validate: value => value === password || "Mật khẩu không khớp" })}
-              />
-              {errors.confirmPassword && <p className={styles.errorMessage}>{errors.confirmPassword.message}</p>}
-            </div>
+                <Field name="confirmPassword">
+                  {({ field, meta }) => (
+                    <TextField
+                      {...field}
+                      margin="normal"
+                      fullWidth
+                      label="Xác nhận mật khẩu"
+                      type={showConfirmPassword ? "text" : "password"}
+                      id="confirmPassword"
+                      error={meta.touched && Boolean(meta.error)}
+                      helperText={meta.touched && meta.error}
+                      InputProps={{
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              aria-label="toggle password visibility"
+                              onClick={handleClickShowConfirmPassword}
+                              onMouseDown={handleMouseDownPassword}
+                              edge="end"
+                            >
+                              {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
+                  )}
+                </Field>
 
-            <button type="submit" disabled={isSubmitting || isSendingEmail} className={styles.registerButton}>
-              {isSubmitting ? "Đang đăng ký..." : isSendingEmail ? "Đang gửi email..." : "Đăng ký"}
-            </button>
-          </form>
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  disabled={isSubmitting}
+                  sx={{ mt: 3, mb: 2, py: 1.5 }}
+                >
+                  {isSubmitting ? "Đang đăng ký..." : "Đăng ký"}
+                </Button>
+              </Form>
+            )}
+          </Formik>
         )}
 
-        {isSuccess && (
-          <div className={styles.loginLink}>
-            <Link href="/login">Quay lại trang đăng nhập</Link>
-          </div>
-        )}
-      </div>
-    </div>
+        {/* Hidden form for EmailJS */}
+        <form ref={activationFormRef} style={{ display: "none" }}>
+          <input type="text" name="to_email" defaultValue={activationData?.to_email || ""} />
+          <input
+            type="text"
+            name="activation_link"
+            defaultValue={activationData?.activation_link || ""}
+          />
+        </form>
+      </Paper>
+    </Container>
   );
 }

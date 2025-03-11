@@ -1,41 +1,56 @@
 import { useState, useRef, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useRouter } from 'next/router';
+import Link from 'next/link';
+import { Formik, Form, Field } from 'formik';
+import * as Yup from 'yup';
 import { requestPasswordReset } from '../services/api';
 import { sendForm } from '@emailjs/browser';
 import { EMAILJS_CONFIG } from '../config/emailjs.config';
-import Link from 'next/link';
+
+// Material UI imports
+import {
+  Box,
+  Button,
+  Container,
+  TextField,
+  Typography,
+  Paper,
+  Alert,
+  CircularProgress,
+} from '@mui/material';
+import LockResetIcon from '@mui/icons-material/LockReset';
+
+// Validation schema
+const ForgotPasswordSchema = Yup.object().shape({
+  email: Yup.string()
+    .email('Email không hợp lệ')
+    .required('Email không được để trống'),
+});
 
 export default function ForgotPassword() {
+  const router = useRouter();
   const resetFormRef = useRef();
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [resetData, setResetData] = useState(null);
   
-  const { 
-    register, 
-    handleSubmit, 
-    formState: { errors } 
-  } = useForm();
-
-  const onSubmit = async (data) => {
-    setIsSubmitting(true);
+  const handleSubmit = async (values, { setSubmitting }) => {
     setMessage('');
     
     try {
-      const response = await requestPasswordReset(data.email);
+      const response = await requestPasswordReset(values.email);
       setIsSuccess(true);
       
       // If the response contains a reset link, prepare to send an email
       if (response.data && response.data.resetLink) {
-        setMessage('Password reset request received! Preparing email...');
+        setMessage('Yêu cầu đặt lại mật khẩu đã được ghi nhận! Đang chuẩn bị gửi email...');
         setResetData({
-          to_email: data.email,
+          to_email: values.email,
           reset_link: response.data.resetLink
         });
       } else {
-        setMessage(response.data.message || 'Password reset instructions sent to your email.');
+        setMessage(response.data.message || 'Hướng dẫn đặt lại mật khẩu đã được gửi đến email của bạn.');
       }
     } catch (error) {
       setIsSuccess(false);
@@ -43,119 +58,155 @@ export default function ForgotPassword() {
         ? (typeof error.response.data === 'string' 
             ? error.response.data 
             : error.response.data.message || JSON.stringify(error.response.data))
-        : 'Failed to request password reset. Please try again.';
+        : 'Không thể yêu cầu đặt lại mật khẩu. Vui lòng thử lại.';
       setMessage(errorMessage);
     } finally {
-      setIsSubmitting(false);
+      setSubmitting(false);
     }
   };
-
+  
   const sendResetEmail = async () => {
     if (!resetData) return;
     
     setIsSendingEmail(true);
-    setMessage('Sending password reset email...');
-    
     try {
       const result = await sendForm(
         EMAILJS_CONFIG.serviceId,
-        EMAILJS_CONFIG.resetTemplateId,
+        EMAILJS_CONFIG.resetPasswordTemplateId,
         resetFormRef.current,
         EMAILJS_CONFIG.publicKey
       );
       
-      setMessage('Password reset instructions sent to your email.');
-      
-      // For development/testing, still show the reset link
-      if (process.env.NODE_ENV === 'development') {
-        setMessage(prevMessage => prevMessage + '\n\nReset Link (for testing): ' + resetData.reset_link);
+      if (result.status === 200) {
+        setMessage(`Email hướng dẫn đặt lại mật khẩu đã được gửi đến ${resetData.to_email}`);
+      } else {
+        setMessage('Không thể gửi email đặt lại mật khẩu. Vui lòng liên hệ quản trị viên.');
       }
     } catch (error) {
-      console.error('Failed to send password reset email:', error);
-      setMessage('Password reset request received! However, we could not send the email. Please use the reset link below.');
-      
-      // Always show the reset link if email sending fails
-      setMessage(prevMessage => prevMessage + '\n\nReset Link: ' + resetData.reset_link);
+      console.error('Error sending reset email:', error);
+      setMessage('Không thể gửi email đặt lại mật khẩu. Vui lòng liên hệ quản trị viên.');
     } finally {
       setIsSendingEmail(false);
     }
   };
-
-  // Send reset email when resetData is set
+  
+  // Send reset email when data is available
   useEffect(() => {
     if (resetData) {
       sendResetEmail();
     }
   }, [resetData]);
-
+  
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-      <div style={{ maxWidth: '400px', width: '100%' }}>
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <h2 style={{ fontSize: '1.875rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-            Reset your password
-          </h2>
-          <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-            Enter your email address and we'll send you a link to reset your password
-          </p>
-        </div>
-        
-        {message && (
-          <div className={isSuccess ? 'alert alert-success' : 'alert alert-danger'}>
-            <p style={{ whiteSpace: 'pre-wrap' }}>{message}</p>
-          </div>
-        )}
-        
-        {/* Hidden form for reset email */}
-        <form ref={resetFormRef} style={{ display: 'none' }}>
-          <input type="hidden" name="to_email" value={resetData?.to_email || ''} />
-          <input type="hidden" name="reset_link" value={resetData?.reset_link || ''} />
-        </form>
-        
-        {!isSuccess && (
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <div className="form-group">
-              <label htmlFor="email" style={{ display: 'block', marginBottom: '0.5rem' }}>Email address</label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                className="form-control"
-                placeholder="Email address"
-                {...register('email', { 
-                  required: 'Email is required',
-                  pattern: {
-                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                    message: 'Invalid email address'
-                  }
-                })}
-              />
-              {errors.email && (
-                <p style={{ color: '#b91c1c', fontSize: '0.875rem', marginTop: '0.5rem' }}>{errors.email.message}</p>
-              )}
-            </div>
+    <Container component="main" maxWidth="xs">
+      <Paper
+        elevation={3}
+        sx={{
+          marginTop: 8,
+          padding: 4,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            mb: 3,
+          }}
+        >
+          <Box
+            sx={{
+              backgroundColor: 'primary.main',
+              borderRadius: '50%',
+              p: 1,
+              mb: 1,
+              color: 'white',
+            }}
+          >
+            <LockResetIcon />
+          </Box>
+          <Typography component="h1" variant="h5">
+            Quên mật khẩu
+          </Typography>
+          <Typography variant="body2" sx={{ mt: 1 }}>
+            Nhập email của bạn để nhận liên kết đặt lại mật khẩu
+          </Typography>
+        </Box>
 
-            <div style={{ marginTop: '1.5rem' }}>
-              <button
-                type="submit"
-                disabled={isSubmitting || isSendingEmail}
-                className="btn"
-                style={{ width: '100%' }}
-              >
-                {isSubmitting ? 'Sending...' : isSendingEmail ? 'Sending Email...' : 'Send reset link'}
-              </button>
-            </div>
-          </form>
+        {message && (
+          <Alert severity={isSuccess ? 'success' : 'error'} sx={{ width: '100%', mb: 2 }}>
+            {message}
+          </Alert>
         )}
-        
-        <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
-          <Link href="/login" style={{ color: '#4f46e5', fontWeight: '500' }}>
-            Back to login
-          </Link>
-        </div>
-      </div>
-    </div>
+
+        {isSendingEmail && (
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+            <CircularProgress size={24} sx={{ mr: 1 }} />
+            <Typography>Đang gửi email đặt lại mật khẩu...</Typography>
+          </Box>
+        )}
+
+        {!isSuccess && (
+          <Formik
+            initialValues={{ email: '' }}
+            validationSchema={ForgotPasswordSchema}
+            onSubmit={handleSubmit}
+          >
+            {({ errors, touched, isSubmitting }) => (
+              <Form style={{ width: '100%' }}>
+                <Field name="email">
+                  {({ field, meta }) => (
+                    <TextField
+                      {...field}
+                      margin="normal"
+                      fullWidth
+                      id="email"
+                      label="Email"
+                      autoComplete="email"
+                      autoFocus
+                      error={meta.touched && Boolean(meta.error)}
+                      helperText={meta.touched && meta.error}
+                    />
+                  )}
+                </Field>
+
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  disabled={isSubmitting}
+                  sx={{ mt: 3, mb: 2, py: 1.5 }}
+                >
+                  {isSubmitting ? 'Đang gửi yêu cầu...' : 'Gửi yêu cầu đặt lại mật khẩu'}
+                </Button>
+
+                <Box sx={{ textAlign: 'center', mt: 2 }}>
+                  <Link href="/login" style={{ color: 'primary.main' }}>
+                    Quay lại trang đăng nhập
+                  </Link>
+                </Box>
+              </Form>
+            )}
+          </Formik>
+        )}
+
+        {isSuccess && (
+          <Box sx={{ textAlign: 'center', mt: 2 }}>
+            <Link href="/login" style={{ color: 'primary.main' }}>
+              Quay lại trang đăng nhập
+            </Link>
+          </Box>
+        )}
+
+        {/* Hidden form for EmailJS */}
+        <form ref={resetFormRef} style={{ display: 'none' }}>
+          <input type="text" name="to_email" defaultValue={resetData?.to_email || ''} />
+          <input type="text" name="reset_link" defaultValue={resetData?.reset_link || ''} />
+        </form>
+      </Paper>
+    </Container>
   );
 } 

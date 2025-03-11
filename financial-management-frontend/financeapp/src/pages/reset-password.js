@@ -1,149 +1,222 @@
 import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/router';
-import { confirmPasswordReset } from '../services/api';
 import Link from 'next/link';
+import { Formik, Form, Field } from 'formik';
+import * as Yup from 'yup';
+import { confirmPasswordReset } from '../services/api';
+
+// Material UI imports
+import {
+  Box,
+  Button,
+  Container,
+  TextField,
+  Typography,
+  Paper,
+  Alert,
+  InputAdornment,
+  IconButton,
+} from '@mui/material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+
+// Validation schema
+const ResetPasswordSchema = Yup.object().shape({
+  password: Yup.string()
+    .min(6, 'Mật khẩu phải có ít nhất 6 ký tự')
+    .required('Mật khẩu không được để trống'),
+  confirmPassword: Yup.string()
+    .oneOf([Yup.ref('password'), null], 'Mật khẩu xác nhận không khớp')
+    .required('Xác nhận mật khẩu không được để trống'),
+});
 
 export default function ResetPassword() {
   const router = useRouter();
   const { token } = router.query;
   
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
-  
-  const { 
-    register, 
-    handleSubmit, 
-    watch,
-    formState: { errors } 
-  } = useForm();
-  
-  const password = watch('password', '');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const handleClickShowPassword = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const handleClickShowConfirmPassword = () => {
+    setShowConfirmPassword(!showConfirmPassword);
+  };
+
+  const handleMouseDownPassword = (event) => {
+    event.preventDefault();
+  };
 
   useEffect(() => {
     if (!token && router.isReady) {
-      setMessage('Invalid or missing reset token. Please request a new password reset link.');
+      setMessage('Mã đặt lại mật khẩu không hợp lệ hoặc bị thiếu. Vui lòng yêu cầu liên kết đặt lại mật khẩu mới.');
       setIsSuccess(false);
     }
   }, [token, router.isReady]);
 
-  const onSubmit = async (data) => {
+  const handleSubmit = async (values, { setSubmitting }) => {
     if (!token) {
-      setMessage('Invalid or missing reset token. Please request a new password reset link.');
+      setMessage('Mã đặt lại mật khẩu không hợp lệ hoặc bị thiếu. Vui lòng yêu cầu liên kết đặt lại mật khẩu mới.');
       setIsSuccess(false);
+      setSubmitting(false);
       return;
     }
     
-    setIsSubmitting(true);
     setMessage('');
     
     try {
-      await confirmPasswordReset(token, data.password);
+      await confirmPasswordReset(token, values.password);
       setIsSuccess(true);
-      setMessage('Password reset successful! You can now login with your new password.');
+      setMessage('Đặt lại mật khẩu thành công! Bạn có thể đăng nhập bằng mật khẩu mới.');
     } catch (error) {
       setIsSuccess(false);
       // Ensure we're not trying to render an object directly
       const errorMessage = error.response?.data 
         ? (typeof error.response.data === 'string' 
             ? error.response.data 
-            : JSON.stringify(error.response.data))
-        : 'Failed to reset password. The link may be expired or invalid.';
+            : error.response.data.message || JSON.stringify(error.response.data))
+        : 'Không thể đặt lại mật khẩu. Liên kết có thể đã hết hạn hoặc không hợp lệ.';
       setMessage(errorMessage);
     } finally {
-      setIsSubmitting(false);
+      setSubmitting(false);
     }
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-      <div style={{ maxWidth: '400px', width: '100%' }}>
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <h2 style={{ fontSize: '1.875rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-            Reset your password
-          </h2>
-          <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-            Enter your new password below
-          </p>
-        </div>
-        
-        {message && (
-          <div className={isSuccess ? 'alert alert-success' : 'alert alert-danger'}>
-            <p>{message}</p>
-          </div>
-        )}
-        
-        {isSuccess ? (
-          <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
-            <Link href="/login" style={{ color: '#4f46e5', fontWeight: '500' }}>
-              Go to login
-            </Link>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <div className="form-group">
-              <label htmlFor="password" style={{ display: 'block', marginBottom: '0.5rem' }}>New Password</label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="new-password"
-                required
-                className="form-control"
-                placeholder="New password"
-                {...register('password', { 
-                  required: 'Password is required',
-                  minLength: {
-                    value: 8,
-                    message: 'Password must be at least 8 characters'
-                  }
-                })}
-              />
-              {errors.password && (
-                <p style={{ color: '#b91c1c', fontSize: '0.875rem', marginTop: '0.5rem' }}>{errors.password.message}</p>
-              )}
-            </div>
-            
-            <div className="form-group">
-              <label htmlFor="confirmPassword" style={{ display: 'block', marginBottom: '0.5rem' }}>Confirm Password</label>
-              <input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                autoComplete="new-password"
-                required
-                className="form-control"
-                placeholder="Confirm new password"
-                {...register('confirmPassword', { 
-                  required: 'Please confirm your password',
-                  validate: value => value === password || 'Passwords do not match'
-                })}
-              />
-              {errors.confirmPassword && (
-                <p style={{ color: '#b91c1c', fontSize: '0.875rem', marginTop: '0.5rem' }}>{errors.confirmPassword.message}</p>
-              )}
-            </div>
+    <Container component="main" maxWidth="xs">
+      <Paper
+        elevation={3}
+        sx={{
+          marginTop: 8,
+          padding: 4,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            mb: 3,
+          }}
+        >
+          <Box
+            sx={{
+              backgroundColor: 'primary.main',
+              borderRadius: '50%',
+              p: 1,
+              mb: 1,
+              color: 'white',
+            }}
+          >
+            <LockOutlinedIcon />
+          </Box>
+          <Typography component="h1" variant="h5">
+            Đặt lại mật khẩu
+          </Typography>
+          <Typography variant="body2" sx={{ mt: 1 }}>
+            Nhập mật khẩu mới của bạn
+          </Typography>
+        </Box>
 
-            <div style={{ marginTop: '1.5rem' }}>
-              <button
-                type="submit"
-                disabled={isSubmitting || !token}
-                className="btn"
-                style={{ width: '100%' }}
-              >
-                {isSubmitting ? 'Resetting...' : 'Reset Password'}
-              </button>
-            </div>
-            
-            <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-              <Link href="/login" style={{ color: '#4f46e5', fontWeight: '500', fontSize: '0.875rem' }}>
-                Back to login
-              </Link>
-            </div>
-          </form>
+        {message && (
+          <Alert severity={isSuccess ? 'success' : 'error'} sx={{ width: '100%', mb: 2 }}>
+            {message}
+          </Alert>
         )}
-      </div>
-    </div>
+
+        {!isSuccess && token && (
+          <Formik
+            initialValues={{ password: '', confirmPassword: '' }}
+            validationSchema={ResetPasswordSchema}
+            onSubmit={handleSubmit}
+          >
+            {({ errors, touched, isSubmitting }) => (
+              <Form style={{ width: '100%' }}>
+                <Field name="password">
+                  {({ field, meta }) => (
+                    <TextField
+                      {...field}
+                      margin="normal"
+                      fullWidth
+                      label="Mật khẩu mới"
+                      type={showPassword ? 'text' : 'password'}
+                      id="password"
+                      error={meta.touched && Boolean(meta.error)}
+                      helperText={meta.touched && meta.error}
+                      InputProps={{
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              aria-label="toggle password visibility"
+                              onClick={handleClickShowPassword}
+                              onMouseDown={handleMouseDownPassword}
+                              edge="end"
+                            >
+                              {showPassword ? <VisibilityOff /> : <Visibility />}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
+                  )}
+                </Field>
+
+                <Field name="confirmPassword">
+                  {({ field, meta }) => (
+                    <TextField
+                      {...field}
+                      margin="normal"
+                      fullWidth
+                      label="Xác nhận mật khẩu mới"
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      id="confirmPassword"
+                      error={meta.touched && Boolean(meta.error)}
+                      helperText={meta.touched && meta.error}
+                      InputProps={{
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              aria-label="toggle password visibility"
+                              onClick={handleClickShowConfirmPassword}
+                              onMouseDown={handleMouseDownPassword}
+                              edge="end"
+                            >
+                              {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
+                  )}
+                </Field>
+
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  disabled={isSubmitting}
+                  sx={{ mt: 3, mb: 2, py: 1.5 }}
+                >
+                  {isSubmitting ? 'Đang xử lý...' : 'Đặt lại mật khẩu'}
+                </Button>
+              </Form>
+            )}
+          </Formik>
+        )}
+
+        <Box sx={{ textAlign: 'center', mt: 2 }}>
+          <Link href="/login" style={{ color: 'primary.main' }}>
+            {isSuccess ? 'Đăng nhập với mật khẩu mới' : 'Quay lại trang đăng nhập'}
+          </Link>
+        </Box>
+      </Paper>
+    </Container>
   );
 } 
