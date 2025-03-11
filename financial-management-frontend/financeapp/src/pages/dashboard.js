@@ -15,7 +15,8 @@ export default function Dashboard() {
   }, []);
 
   const checkAuth = async () => {
-    const token = Cookies.get("access_token");
+    // const token = Cookies.get("access_token");
+    const token = window.localStorage.getItem("token");
 
     if (!token) {
       router.push("/login");
@@ -24,11 +25,12 @@ export default function Dashboard() {
 
     try {
       const userData = localStorage.getItem("userData");
-      setUser(JSON.parse(userData));
+      console.log(userData)
+      // setUser(JSON.parse(userData));
     } catch (err) {
-      Cookies.remove("access_token");
-      localStorage.removeItem("userData");
-      router.push("/login");
+      // Cookies.remove("access_token");
+      // localStorage.removeItem("userData");
+      // router.push("/login");
     } finally {
       setLoading(false);
     }

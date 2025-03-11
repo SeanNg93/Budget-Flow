@@ -20,7 +20,7 @@ export default function DeleteAccount() {
         setIsLoading(true);
         try {
             // Lấy token từ localStorage và kiểm tra
-            const token = localStorage.getItem('userToken');
+            const token = localStorage.getItem('token');
             if (!token) {
                 alert("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
                 router.push('/login');
