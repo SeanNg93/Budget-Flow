@@ -93,7 +93,6 @@ export default function Dashboard() {
     netSavings: 0
   });
   const [transactions, setTransactions] = useState([]);
-  const [dataLoading, setDataLoading] = useState(true);
   const [transactionFormOpen, setTransactionFormOpen] = useState(false);
   const [accountFormOpen, setAccountFormOpen] = useState(false);
   const [categoryFormOpen, setCategoryFormOpen] = useState(false);
@@ -135,12 +134,6 @@ export default function Dashboard() {
     try {
       // Fetch financial summary
       const summaryResponse = await FinanceService.getFinancialSummary();
-      setFinancialData({
-        totalBalance: summaryResponse.data.totalBalance || 0,
-        totalIncome: summaryResponse.data.totalIncome || 0,
-        totalExpense: summaryResponse.data.totalExpense || 0,
-        netSavings: summaryResponse.data.netSavings || 0
-      });
       
       // Fetch accounts
       const accountsResponse = await FinanceService.getAccounts();
@@ -148,11 +141,26 @@ export default function Dashboard() {
       // Fetch recent transactions
       const transactionsResponse = await FinanceService.getTransactions();
       
-      setTransactions(transactionsResponse.data.slice(0, 5)); // Get only the 5 most recent
+      // Update financial data
+      setFinancialData({
+        totalBalance: summaryResponse.data.totalBalance || 0,
+        totalIncome: summaryResponse.data.totalIncome || 0,
+        totalExpense: summaryResponse.data.totalExpense || 0,
+        netSavings: summaryResponse.data.netSavings || 0
+      });
       
-      setLoading(false);
+      // Update transactions
+      setTransactions(transactionsResponse.data.slice(0, 5)); // Get only the 5 most recent
     } catch (error) {
       setError('Failed to load financial data. Please try again later.');
+      // Use placeholder data if API fails
+      setFinancialData({
+        totalBalance: 0,
+        totalIncome: 0,
+        totalExpense: 0,
+        netSavings: 0
+      });
+    } finally {
       setLoading(false);
     }
   };
@@ -281,7 +289,7 @@ export default function Dashboard() {
                 <Card>
                   <CardHeader title="Total Balance" />
                   <CardContent>
-                    {dataLoading ? (
+                    {loading ? (
                       <CircularProgress size={24} />
                     ) : (
                       <Typography variant="h4">{formatCurrency(financialData.totalBalance)}</Typography>
@@ -293,7 +301,7 @@ export default function Dashboard() {
                 <Card>
                   <CardHeader title="Income" />
                   <CardContent>
-                    {dataLoading ? (
+                    {loading ? (
                       <CircularProgress size={24} />
                     ) : (
                       <Typography variant="h4" color="success.main">{formatCurrency(financialData.totalIncome)}</Typography>
@@ -305,7 +313,7 @@ export default function Dashboard() {
                 <Card>
                   <CardHeader title="Expenses" />
                   <CardContent>
-                    {dataLoading ? (
+                    {loading ? (
                       <CircularProgress size={24} />
                     ) : (
                       <Typography variant="h4" color="error.main">{formatCurrency(financialData.totalExpense)}</Typography>
@@ -317,7 +325,7 @@ export default function Dashboard() {
                 <Card>
                   <CardHeader title="Net Savings" />
                   <CardContent>
-                    {dataLoading ? (
+                    {loading ? (
                       <CircularProgress size={24} />
                     ) : (
                       <Typography 
@@ -348,7 +356,7 @@ export default function Dashboard() {
                     </Button>
                   </Box>
                   
-                  {dataLoading ? (
+                  {loading ? (
                     <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
                       <CircularProgress />
                     </Box>

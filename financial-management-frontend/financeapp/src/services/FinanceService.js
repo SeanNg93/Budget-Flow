@@ -76,11 +76,23 @@ export const getFinancialSummary = () => {
 
 // Category services
 export const getCategories = () => {
-  return axiosInstance.get('/categories');
+  return axiosInstance.get('/categories').catch(error => {
+    // If we get a 403 or 404, return an empty array instead of throwing an error
+    if (error.response && (error.response.status === 403 || error.response.status === 404)) {
+      return { data: [] };
+    }
+    throw error;
+  });
 };
 
 export const getCategoryById = (id) => {
-  return axiosInstance.get(`/categories/${id}`);
+  return axiosInstance.get(`/categories/${id}`).catch(error => {
+    // If we get a 403 or 404, return null instead of throwing an error
+    if (error.response && (error.response.status === 403 || error.response.status === 404)) {
+      return { data: null };
+    }
+    throw error;
+  });
 };
 
 export const createCategory = (categoryData) => {
@@ -96,7 +108,13 @@ export const deleteCategory = (id) => {
 };
 
 export const getCategoriesByType = (type) => {
-  return axiosInstance.get(`/categories/type/${type}`);
+  return axiosInstance.get(`/categories/type/${type}`).catch(error => {
+    // If we get a 403 or 404, return an empty array instead of throwing an error
+    if (error.response && (error.response.status === 403 || error.response.status === 404)) {
+      return { data: [] };
+    }
+    throw error;
+  });
 };
 
 // Export the service as a default object

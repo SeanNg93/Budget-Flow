@@ -13,7 +13,8 @@ import {
   FormHelperText,
   Grid,
   Box,
-  CircularProgress
+  CircularProgress,
+  Alert
 } from '@mui/material';
 import FinanceService from '../../services/FinanceService';
 
@@ -64,6 +65,7 @@ const CategoryForm = ({ open, handleClose, onCategoryAdded }) => {
     }
     
     setSubmitting(true);
+    setError('');
     
     try {
       // Format the data for the API
@@ -76,10 +78,7 @@ const CategoryForm = ({ open, handleClose, onCategoryAdded }) => {
       await FinanceService.createCategory(categoryData);
       
       // Reset form and close dialog
-      setFormData({
-        categoryName: '',
-        type: 'EXPENSE'
-      });
+      resetForm();
       handleClose();
       
       // Notify parent component
@@ -87,7 +86,12 @@ const CategoryForm = ({ open, handleClose, onCategoryAdded }) => {
         onCategoryAdded();
       }
     } catch (error) {
-      setError('Failed to create category. Please try again.');
+      // Check if it's a 403 error (Forbidden)
+      if (error.response && error.response.status === 403) {
+        setError('You do not have permission to create categories. Please contact your administrator.');
+      } else {
+        setError('Failed to create category. Please try again.');
+      }
     } finally {
       setSubmitting(false);
     }
@@ -110,6 +114,12 @@ const CategoryForm = ({ open, handleClose, onCategoryAdded }) => {
           <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}>
             <CircularProgress />
           </Box>
+        )}
+        
+        {error && (
+          <Alert severity="error" sx={{ mt: 2, mb: 2 }}>
+            {error}
+          </Alert>
         )}
         
         {!loading && (
@@ -152,9 +162,9 @@ const CategoryForm = ({ open, handleClose, onCategoryAdded }) => {
           onClick={handleSubmit} 
           color="primary" 
           variant="contained"
-          disabled={loading}
+          disabled={submitting}
         >
-          {loading ? 'Saving...' : 'Save'}
+          {submitting ? 'Saving...' : 'Save'}
         </Button>
       </DialogActions>
     </Dialog>

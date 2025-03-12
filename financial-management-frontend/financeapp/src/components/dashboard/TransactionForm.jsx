@@ -14,7 +14,8 @@ import {
   Grid,
   Box,
   InputAdornment,
-  CircularProgress
+  CircularProgress,
+  Alert
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers';
 import FinanceService from '../../services/FinanceService';
@@ -34,17 +35,21 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded }) => {
   const [errors, setErrors] = useState({});
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [categoriesError, setCategoriesError] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
+      setError('');
+      setCategoriesError(false);
+      
       try {
         // Fetch accounts
         const accountsResponse = await FinanceService.getAccounts();
-        setAccounts(accountsResponse.data);
+        setAccounts(accountsResponse.data || []);
         
         // Set default account if available
-        if (accountsResponse.data.length > 0) {
+        if (accountsResponse.data && accountsResponse.data.length > 0) {
           setFormData(prev => ({
             ...prev,
             accountId: accountsResponse.data[0].id
@@ -52,8 +57,13 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded }) => {
         }
         
         // Fetch categories
-        const categoriesResponse = await FinanceService.getCategories();
-        setCategories(categoriesResponse.data);
+        try {
+          const categoriesResponse = await FinanceService.getCategories();
+          setCategories(categoriesResponse.data || []);
+        } catch (categoryError) {
+          setCategoriesError(true);
+          // Continue with the form even if categories can't be fetched
+        }
       } catch (error) {
         setError('Failed to load data. Please try again.');
       } finally {
@@ -120,7 +130,8 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded }) => {
       newErrors.description = 'Description is required';
     }
     
-    if (!formData.categoryId) {
+    // Only validate category if categories are available
+    if (!categoriesError && !formData.categoryId) {
       newErrors.categoryId = 'Category is required';
     }
     
@@ -145,9 +156,13 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded }) => {
         transactionType: formData.transactionType,
         amount: parseFloat(formData.amount),
         description: formData.description,
-        transactionDate: formData.transactionDate,
-        category: { id: formData.categoryId }
+        transactionDate: formData.transactionDate
       };
+      
+      // Only include category if it's selected and categories are available
+      if (!categoriesError && formData.categoryId) {
+        transactionData.category = { id: formData.categoryId };
+      }
       
       // Call the API to create the transaction
       await FinanceService.createTransaction(transactionData, formData.accountId);
@@ -176,6 +191,8 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded }) => {
       categoryId: '',
       transactionDate: new Date()
     });
+    setErrors({});
+    setError('');
   };
 
   const filteredCategories = categories.filter(
@@ -190,6 +207,18 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded }) => {
           <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}>
             <CircularProgress />
           </Box>
+        )}
+        
+        {error && (
+          <Alert severity="error" sx={{ mt: 2, mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+        
+        {categoriesError && (
+          <Alert severity="warning" sx={{ mt: 2, mb: 2 }}>
+            Categories could not be loaded. You can still create a transaction without a category.
+          </Alert>
         )}
         
         {!loading && (
@@ -248,14 +277,6 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded }) => {
                 label="Transaction Date"
                 value={formData.transactionDate}
                 onChange={handleDateChange}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    fullWidth
-                    error={!!errors.transactionDate}
-                    helperText={errors.transactionDate}
-                  />
-                )}
                 slotProps={{
                   textField: {
                     fullWidth: true,
@@ -266,24 +287,26 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded }) => {
               />
             </Grid>
             
-            <Grid item xs={12}>
-              <FormControl fullWidth error={!!errors.categoryId}>
-                <InputLabel>Category</InputLabel>
-                <Select
-                  name="categoryId"
-                  value={formData.categoryId}
-                  onChange={handleChange}
-                  label="Category"
-                >
-                  {filteredCategories.map(category => (
-                    <MenuItem key={category.id} value={category.id}>
-                      {category.categoryName}
-                    </MenuItem>
-                  ))}
-                </Select>
-                {errors.categoryId && <FormHelperText>{errors.categoryId}</FormHelperText>}
-              </FormControl>
-            </Grid>
+            {!categoriesError && (
+              <Grid item xs={12}>
+                <FormControl fullWidth error={!!errors.categoryId}>
+                  <InputLabel>Category</InputLabel>
+                  <Select
+                    name="categoryId"
+                    value={formData.categoryId}
+                    onChange={handleChange}
+                    label="Category"
+                  >
+                    {filteredCategories.map(category => (
+                      <MenuItem key={category.id} value={category.id}>
+                        {category.categoryName}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {errors.categoryId && <FormHelperText>{errors.categoryId}</FormHelperText>}
+                </FormControl>
+              </Grid>
+            )}
             
             <Grid item xs={12}>
               <TextField
