@@ -16,8 +16,7 @@ import {
   InputAdornment,
   CircularProgress
 } from '@mui/material';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
+import { DatePicker } from '@mui/x-date-pickers';
 import FinanceService from '../../services/FinanceService';
 
 const TransactionForm = ({ open, handleClose, onTransactionAdded }) => {
@@ -231,21 +230,18 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded }) => {
             </Grid>
             
             <Grid item xs={12} sm={6}>
-              <LocalizationProvider dateAdapter={AdapterDateFns}>
-                <DatePicker
-                  label="Transaction Date"
-                  value={formData.transactionDate}
-                  onChange={handleDateChange}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      fullWidth
-                      error={!!errors.transactionDate}
-                      helperText={errors.transactionDate}
-                    />
-                  )}
-                />
-              </LocalizationProvider>
+              <DatePicker
+                label="Transaction Date"
+                value={formData.transactionDate}
+                onChange={handleDateChange}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    error: !!errors.transactionDate,
+                    helperText: errors.transactionDate
+                  }
+                }}
+              />
             </Grid>
             
             <Grid item xs={12}>
