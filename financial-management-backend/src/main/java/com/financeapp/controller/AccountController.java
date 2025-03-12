@@ -1,6 +1,8 @@
 package com.financeapp.controller;
 
 import com.financeapp.model.Account;
+import com.financeapp.model.User;
+import com.financeapp.repository.UserRepository;
 import com.financeapp.service.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -11,23 +13,25 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/accounts")
 public class AccountController {
 
     private final AccountService accountService;
+    private final UserRepository userRepository;
 
     @Autowired
-    public AccountController(AccountService accountService) {
+    public AccountController(AccountService accountService, UserRepository userRepository) {
         this.accountService = accountService;
+        this.userRepository = userRepository;
     }
 
     @GetMapping
     public ResponseEntity<List<Account>> getAllAccounts() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String username = auth.getName();
-        // Assuming you have a method to get user ID from username
         Long userId = getUserIdFromUsername(username);
         List<Account> accounts = accountService.getAllAccountsByUserId(userId);
         return ResponseEntity.ok(accounts);
@@ -70,9 +74,11 @@ public class AccountController {
     }
 
     // Helper method to get user ID from username
-    // This should be replaced with your actual implementation
     private Long getUserIdFromUsername(String username) {
-        // Implement this based on your user service
-        return 1L; // Placeholder
+        Optional<User> userOptional = userRepository.findByUsername(username);
+        if (!userOptional.isPresent()) {
+            throw new RuntimeException("User not found with username: " + username);
+        }
+        return userOptional.get().getId();
     }
 } 

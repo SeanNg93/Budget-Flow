@@ -1,6 +1,8 @@
 package com.financeapp.controller;
 
 import com.financeapp.model.Transaction;
+import com.financeapp.model.User;
+import com.financeapp.repository.UserRepository;
 import com.financeapp.service.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -13,16 +15,19 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/transactions")
 public class TransactionController {
 
     private final TransactionService transactionService;
+    private final UserRepository userRepository;
 
     @Autowired
-    public TransactionController(TransactionService transactionService) {
+    public TransactionController(TransactionService transactionService, UserRepository userRepository) {
         this.transactionService = transactionService;
+        this.userRepository = userRepository;
     }
 
     @GetMapping
@@ -83,9 +88,11 @@ public class TransactionController {
     }
 
     // Helper method to get user ID from username
-    // This should be replaced with your actual implementation
     private Long getUserIdFromUsername(String username) {
-        // Implement this based on your user service
-        return 1L; // Placeholder
+        Optional<User> userOptional = userRepository.findByUsername(username);
+        if (!userOptional.isPresent()) {
+            throw new RuntimeException("User not found with username: " + username);
+        }
+        return userOptional.get().getId();
     }
 } 
