@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link as RouterLink } from 'react-router-dom';
-import { activateAccount } from '../../services/api';
+import { activateAccount } from '../../config/axiosInstance';
 
 // Material UI imports
 import {

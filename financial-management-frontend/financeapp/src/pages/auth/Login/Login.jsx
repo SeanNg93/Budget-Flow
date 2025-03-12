@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
-import { login } from '../../services/api';
+import { login } from '../../../config/axiosInstance';
 
 // Material UI imports
 import {
@@ -24,8 +24,11 @@ import {
   Typography,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { Visibility, VisibilityOff, Google, Facebook } from '@mui/icons-material';
+import {Visibility, VisibilityOff, Google, Facebook, GitHub} from '@mui/icons-material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import AuthService from "@/services/auth.service";
+import {GoogleOAuthProvider, useGoogleLogin} from "@react-oauth/google";
+import { jwtDecode } from "jwt-decode";
 
 // Validation schema
 const LoginSchema = Yup.object().shape({
@@ -110,7 +113,8 @@ export default function Login() {
     setError('');
 
     try {
-      const response = await login(values.username, values.password);
+
+      const response = await AuthService.login(values);
       
       if (response.data.token) {
         localStorage.setItem('userToken', response.data.token);
@@ -126,6 +130,20 @@ export default function Login() {
       setSubmitting(false);
     }
   };
+
+  const handleSuccessLoginGoogle = async (response) => {
+   // const decoded = jwtDecode(response.access_token);
+    console.log(response);
+    const userInfo = await AuthService.getUserInfoGoogle(response.access_token);
+    // call api login backend
+    console.log(userInfo);
+  }
+
+
+  const loginGoogle = useGoogleLogin({
+    onSuccess: handleSuccessLoginGoogle,
+    scope: "profile email",
+  });
 
   return (
     <CssBaseline>
@@ -249,14 +267,17 @@ export default function Login() {
           <Divider sx={{ my: 2 }}>hoặc</Divider>
 
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Button
-              fullWidth
-              variant="outlined"
-              startIcon={<Google />}
-              onClick={() => alert('Đăng nhập với Google')}
-            >
-              Đăng nhập với Google
-            </Button>
+
+              <Button
+                  fullWidth
+                  variant="outlined"
+                  startIcon={<Google />}
+                  onClick={() => loginGoogle()}
+              >
+                Đăng nhập với Google
+              </Button>
+
+
             
             <Button
               fullWidth
@@ -265,6 +286,15 @@ export default function Login() {
               onClick={() => alert('Đăng nhập với Facebook')}
             >
               Đăng nhập với Facebook
+            </Button>
+
+            <Button
+                fullWidth
+                variant="outlined"
+                startIcon={<GitHub/>}
+                onClick={() => window.location.href = `https://github.com/login/oauth/authorize?client_id=Ov23lik6g6WygAhPnsUc`}
+            >
+              Đăng nhập với Github
             </Button>
             
             <Typography sx={{ textAlign: 'center', mt: 1 }}>

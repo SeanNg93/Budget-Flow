@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { initEmailJS } from './services/emailjs';
+import { initEmailJS } from './config/emailjs';
 
 // Auth Pages
-import Login from './pages/auth/Login';
+
 import Register from './pages/auth/Register';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import ResetPassword from './pages/auth/ResetPassword';
@@ -21,6 +21,7 @@ import DeleteUser from './pages/user/DeleteUser.jsx';
 
 // Account Pages
 import DeleteAccount from './pages/account/DeleteAccount.jsx';
+import Login from "@/pages/auth/Login/Login";
 
 function App() {
   useEffect(() => {

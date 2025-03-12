@@ -3,7 +3,7 @@ import axios from 'axios';
 const API_URL = 'http://localhost:8080/api';
 
 // Create axios instance
-const api = axios.create({
+const axiosInstance = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
@@ -11,7 +11,7 @@ const api = axios.create({
 });
 
 // Add request interceptor to add auth token
-api.interceptors.request.use(
+axiosInstance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
@@ -23,7 +23,7 @@ api.interceptors.request.use(
 );
 
 // Add response interceptor to handle error objects
-api.interceptors.response.use(
+axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
     // If the error has a response with data
@@ -39,25 +39,25 @@ api.interceptors.response.use(
 
 // Auth services
 export const login = (username, password) => {
-  return api.post('/auth/login', { username, password });
+  return axiosInstance.post('/auth/login', { username, password });
 };
 
 export const register = (username, email, password) => {
-  return api.post('/auth/register', { username, email, password });
+  return axiosInstance.post('/auth/register', { username, email, password });
 };
 
 // Password reset services
 export const requestPasswordReset = (email) => {
-  return api.post('/password/reset-request', { email });
+  return axiosInstance.post('/password/reset-request', { email });
 };
 
 export const confirmPasswordReset = (token, newPassword) => {
-  return api.post('/password/reset-confirm', { token, newPassword });
+  return axiosInstance.post('/password/reset-confirm', { token, newPassword });
 };
 
 // Account activation service
 export const activateAccount = (token) => {
-  return api.post('/account/activate', { token });
+  return axiosInstance.post('/account/activate', { token });
 };
 
-export default api; 
+export default axiosInstance;
