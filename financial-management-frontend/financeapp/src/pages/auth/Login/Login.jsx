@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
@@ -100,6 +100,14 @@ export default function Login() {
   const navigate = useNavigate();
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const token = localStorage.getItem('userToken');
+    if (token) {
+      navigate('/dashboard');
+    }
+  }, [navigate]);
 
   const handleClickShowPassword = () => {
     setShowPassword(!showPassword);

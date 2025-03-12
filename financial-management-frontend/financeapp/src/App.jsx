@@ -22,6 +22,9 @@ import DeleteUser from './pages/user/DeleteUser.jsx';
 // Account Pages
 import DeleteAccount from './pages/account/DeleteAccount.jsx';
 
+// Components
+import ProtectedRoute from './components/ProtectedRoute';
+
 function App() {
   useEffect(() => {
     // Initialize EmailJS
@@ -31,7 +34,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Redirect root to login */}
+        {/* Public Routes */}
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/index" element={<Index />} />
         <Route path="/login" element={<Login />} />
@@ -39,15 +42,33 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/activate-account" element={<ActivateAccount />} />
-        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/contact" element={<Contact />} />
         
+        {/* Protected Routes */}
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        } />
+        
         {/* User Routes */}
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/admin/users" element={<DeleteUser />} />
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/users" element={
+          <ProtectedRoute>
+            <DeleteUser />
+          </ProtectedRoute>
+        } />
         
         {/* Account Routes */}
-        <Route path="/account/delete" element={<DeleteAccount />} />
+        <Route path="/account/delete" element={
+          <ProtectedRoute>
+            <DeleteAccount />
+          </ProtectedRoute>
+        } />
         
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
