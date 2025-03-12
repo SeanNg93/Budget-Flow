@@ -7,6 +7,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import App from './App';
 import './styles/globals.css';
 import {GoogleOAuthProvider} from "@react-oauth/google";
+import { datePickersCustomizations } from './theme/customizations/datePickers';
 
 // Create a theme instance
 const theme = createTheme({
@@ -37,6 +38,7 @@ const theme = createTheme({
         },
       },
     },
+    ...datePickersCustomizations,
   },
 });
 

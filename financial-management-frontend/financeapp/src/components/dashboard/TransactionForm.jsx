@@ -93,6 +93,14 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded }) => {
       ...formData,
       transactionDate: date
     });
+    
+    // Clear error for this field
+    if (errors.transactionDate) {
+      setErrors({
+        ...errors,
+        transactionDate: ''
+      });
+    }
   };
 
   const validateForm = () => {
@@ -234,6 +242,14 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded }) => {
                 label="Transaction Date"
                 value={formData.transactionDate}
                 onChange={handleDateChange}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    fullWidth
+                    error={!!errors.transactionDate}
+                    helperText={errors.transactionDate}
+                  />
+                )}
                 slotProps={{
                   textField: {
                     fullWidth: true,
