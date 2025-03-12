@@ -47,6 +47,13 @@ public class SecurityConfig {
                         .requestMatchers("/api/password/**").permitAll()
                         .requestMatchers("/api/account/activate").permitAll()
                         .requestMatchers("/api/categories/**").authenticated()
+                        .requestMatchers("/api/user/delete-account").authenticated()
+                        .requestMatchers("/api/accounts/**").permitAll()
+                        .requestMatchers("/api/transactions/**").permitAll()
+                        .requestMatchers("/api/transaction-categories/**").permitAll()
+                        .requestMatchers("/api/transaction-types/**").permitAll()
+                        .requestMatchers("/api/user/delete/").permitAll()
+
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
