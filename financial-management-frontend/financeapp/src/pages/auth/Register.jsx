@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
-import { register as registerUser } from '../../services/api';
+import { register as registerUser } from '../../config/axiosInstance';
 import { sendForm } from '@emailjs/browser';
 import { EMAILJS_CONFIG } from '../../config/emailjs.config';
 
@@ -357,7 +357,7 @@ export default function Register() {
             <Box sx={{ textAlign: 'center', mt: 2 }}>
               <Link
                 component={RouterLink}
-                to="/login"
+                to="/financial-management-frontend/financeapp/src/pages/login"
                 variant="body2"
               >
                 Quay lại trang đăng nhập
@@ -371,7 +371,7 @@ export default function Register() {
                   Đã có tài khoản?{' '}
                   <Link
                     component={RouterLink}
-                    to="/login"
+                    to="/financial-management-frontend/financeapp/src/pages/login"
                     variant="body2"
                   >
                     Đăng nhập

@@ -4,6 +4,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import App from './App';
 import './styles/globals.css';
+import {GoogleOAuthProvider} from "@react-oauth/google";
 
 // Create a theme instance
 const theme = createTheme({
@@ -38,10 +39,10 @@ const theme = createTheme({
 });
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
+    <GoogleOAuthProvider clientId="266978972332-k0oi6ke433g6ei92nsuu3nav44utlpvn.apps.googleusercontent.com">
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <App />
     </ThemeProvider>
-  </React.StrictMode>,
-); 
+    </GoogleOAuthProvider>
+);

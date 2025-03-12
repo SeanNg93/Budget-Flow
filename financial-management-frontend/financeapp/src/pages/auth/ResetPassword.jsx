@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link as RouterLink } from 'react-router-dom';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
-import { confirmPasswordReset } from '../../services/api';
+import { confirmPasswordReset } from '../../config/axiosInstance';
 
 // Material UI imports
 import {
@@ -269,7 +269,7 @@ export default function ResetPassword() {
           <Box sx={{ textAlign: 'center', mt: 2 }}>
             <Link
               component={RouterLink}
-              to="/login"
+              to="/financial-management-frontend/financeapp/src/pages/login"
               variant="body2"
             >
               {isSuccess ? 'Đăng nhập với mật khẩu mới' : 'Quay lại trang đăng nhập'}
