@@ -45,7 +45,7 @@ public class AuthController {
         if (userExists.isPresent()) {
             return ResponseEntity.badRequest().body(Map.of("success", "false", "message", "Username already exists!"));
         }
-        
+
         // Check if email already exists
         Optional<User> emailExists = userRepository.findByEmail(registerRequest.getEmail());
         if (emailExists.isPresent()) {
@@ -59,10 +59,10 @@ public class AuthController {
         user.setEnabled(false); // User is disabled until activation
 
         userRepository.save(user);
-        
+
         // Generate activation token and return it
         Map<String, String> activationResult = userService.createActivationToken(user);
-        
+
         return ResponseEntity.ok(activationResult);
     }
 }

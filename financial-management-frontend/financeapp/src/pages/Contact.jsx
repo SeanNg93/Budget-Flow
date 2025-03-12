@@ -48,7 +48,7 @@ export default function Contact() {
           Contact Us
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
-          Have a question? We'd love to hear from you.
+          Have a question? We&apos;d love to hear from you.
         </p>
       </div>
 

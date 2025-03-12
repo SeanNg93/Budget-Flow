@@ -42,3 +42,4 @@ next-env.d.ts
 
 # Ignore the material-ui-master folder
 material-ui-master/
+package-lock.json

@@ -13,7 +13,8 @@ export default function Dashboard() {
   }, []);
 
   const checkAuth = async () => {
-    const token = localStorage.getItem("userToken");
+    // const token = Cookies.get("access_token");
+    const token = window.localStorage.getItem("token");
 
     if (!token) {
       navigate("/login");
@@ -75,4 +76,4 @@ export default function Dashboard() {
       </div>
     </div>
   );
-} 
+}
