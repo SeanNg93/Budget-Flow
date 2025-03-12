@@ -11,26 +11,40 @@ export default function Profile() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Kiểm tra localStorage có dữ liệu không
-    const storedProfile = localStorage.getItem("profile");
-    if (storedProfile) {
-      const parsedProfile = JSON.parse(storedProfile);
-      setProfile(parsedProfile);
-      setEditedProfile(parsedProfile);
-      setAvatarPreview(parsedProfile.avatar);
-    } else {
-      // Nếu không có, lấy từ JSON file mặc định
-      fetch("/profile.json")
-        .then((res) => res.json())
-        .then((data) => {
-          setProfile(data);
-          setEditedProfile(data);
-          setAvatarPreview(data.avatar);
-          localStorage.setItem("profile", JSON.stringify(data)); // Lưu vào localStorage
-        })
-        .catch((error) => console.error("Lỗi tải dữ liệu:", error));
+    // Lấy thông tin profile từ localStorage
+    const userData = localStorage.getItem('userData');
+    if (userData) {
+      const parsedProfile = JSON.parse(userData);
+      // Đảm bảo các trường có giá trị mặc định nếu không tồn tại
+      const defaultProfile = {
+        fullName: '',
+        email: parsedProfile.email || '',
+        phone: '',
+        joinDate: new Date().toISOString(),
+        dateOfBirth: '',
+        bio: '',
+        avatar: '/default-avatar.png',
+        role: 'User',
+        ...parsedProfile
+      };
+      setProfile(defaultProfile);
+      setEditedProfile(defaultProfile);
+      setAvatarPreview(defaultProfile.avatar);
     }
   }, []);
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Chưa cập nhật';
+    try {
+      return new Date(dateString).toLocaleDateString('vi-VN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch (error) {
+      return 'Chưa cập nhật';
+    }
+  };
 
   const handleEditToggle = () => {
     setIsEditing(!isEditing);
@@ -67,12 +81,28 @@ export default function Profile() {
   const handleSave = () => {
     // Cập nhật profile
     setProfile(editedProfile);
+    
+    // Lấy thông tin hiện tại từ localStorage để giữ lại các thông tin quan trọng
+    const currentUserData = JSON.parse(localStorage.getItem('userData') || '{}');
+    
+    // Kết hợp thông tin hiện tại với thông tin đã chỉnh sửa
+    const updatedProfile = {
+      ...currentUserData,
+      ...editedProfile,
+      // Đảm bảo các trường quan trọng không bị mất
+      id: currentUserData.id,
+      username: currentUserData.username,
+      email: currentUserData.email,
+      role: currentUserData.role,
+    };
+    
     // Lưu vào localStorage
-    localStorage.setItem("profile", JSON.stringify(editedProfile));
+    localStorage.setItem('userData', JSON.stringify(updatedProfile));
+    
     // Tắt chế độ chỉnh sửa
     setIsEditing(false);
     // Hiển thị thông báo thành công
-    alert("Thông tin cá nhân đã được cập nhật!");
+    alert('Thông tin cá nhân đã được cập nhật!');
   };
 
   if (!profile) {
@@ -133,12 +163,13 @@ export default function Profile() {
                   <input
                     type="text"
                     name="fullName"
-                    value={editedProfile.fullName}
+                    value={editedProfile.fullName || ''}
                     onChange={handleInputChange}
                     className="w-full border border-gray-300 rounded px-3 py-2"
+                    placeholder="Nhập họ và tên"
                   />
                 ) : (
-                  <p className="text-gray-800">{profile.fullName}</p>
+                  <p className="text-gray-800">{profile.fullName || 'Chưa cập nhật'}</p>
                 )}
               </div>
 
@@ -157,12 +188,13 @@ export default function Profile() {
                   <input
                     type="tel"
                     name="phone"
-                    value={editedProfile.phone}
+                    value={editedProfile.phone || ''}
                     onChange={handleInputChange}
                     className="w-full border border-gray-300 rounded px-3 py-2"
+                    placeholder="Nhập số điện thoại"
                   />
                 ) : (
-                  <p className="text-gray-800">{profile.phone}</p>
+                  <p className="text-gray-800">{profile.phone || 'Chưa cập nhật'}</p>
                 )}
               </div>
 
@@ -170,24 +202,47 @@ export default function Profile() {
                 <label className="block text-gray-700 font-medium mb-1">
                   Ngày tham gia
                 </label>
-                <p className="text-gray-800">{profile.joinDate}</p>
+                <p className="text-gray-800">
+                  {formatDate(profile.joinDate)}
+                </p>
               </div>
-            </div>
 
-            <div className="mt-6">
-              <label className="block text-gray-700 font-medium mb-1">
-                Giới thiệu
-              </label>
-              {isEditing ? (
-                <textarea
-                  name="bio"
-                  value={editedProfile.bio}
-                  onChange={handleInputChange}
-                  className="w-full border border-gray-300 rounded px-3 py-2 h-24"
-                ></textarea>
-              ) : (
-                <p className="text-gray-800">{profile.bio}</p>
-              )}
+              <div>
+                <label className="block text-gray-700 font-medium mb-1">
+                  Ngày sinh
+                </label>
+                {isEditing ? (
+                  <input
+                    type="date"
+                    name="dateOfBirth"
+                    value={editedProfile.dateOfBirth || ''}
+                    onChange={handleInputChange}
+                    className="w-full border border-gray-300 rounded px-3 py-2"
+                    placeholder="YYYY-MM-DD"
+                  />
+                ) : (
+                  <p className="text-gray-800">
+                    {formatDate(profile.dateOfBirth)}
+                  </p>
+                )}
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-gray-700 font-medium mb-1">
+                  Giới thiệu
+                </label>
+                {isEditing ? (
+                  <textarea
+                    name="bio"
+                    value={editedProfile.bio || ''}
+                    onChange={handleInputChange}
+                    className="w-full border border-gray-300 rounded px-3 py-2 h-24"
+                    placeholder="Viết một vài điều về bản thân..."
+                  ></textarea>
+                ) : (
+                  <p className="text-gray-800">{profile.bio || 'Chưa có thông tin giới thiệu'}</p>
+                )}
+              </div>
             </div>
 
             <div className="mt-6 flex justify-between">

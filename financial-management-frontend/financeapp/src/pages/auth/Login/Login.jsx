@@ -148,15 +148,26 @@ export default function Login() {
         const token = response.data.token || response.data.accessToken;
         localStorage.setItem('userToken', token);
         
-        // Also store basic user info if available
-        if (response.data.username) {
-          localStorage.setItem('userData', JSON.stringify({
-            id: response.data.id,
-            username: response.data.username,
-            email: response.data.email,
-            roles: response.data.roles || []
-          }));
-        }
+        // Lấy thông tin cũ từ localStorage nếu có
+        const oldUserData = JSON.parse(localStorage.getItem('userData') || '{}');
+        
+        // Kết hợp thông tin từ response với thông tin cũ
+        const userProfile = {
+          ...oldUserData, // Giữ lại thông tin cũ
+          id: response.data.id || oldUserData.id,
+          username: values.username,
+          email: response.data.email,
+          fullName: response.data.fullName || values.username,
+          joinDate: response.data.joinDate || oldUserData.joinDate || new Date().toISOString(),
+          avatar: response.data.avatar || oldUserData.avatar || '/default-avatar.png',
+          role: response.data.roles?.[0] || oldUserData.role || 'User',
+          // Giữ lại thông tin phone và dateOfBirth từ dữ liệu cũ nếu có
+          phone: response.data.phone || oldUserData.phone || '',
+          dateOfBirth: response.data.dateOfBirth || oldUserData.dateOfBirth || '',
+          bio: response.data.bio || oldUserData.bio || ''
+        };
+        
+        localStorage.setItem('userData', JSON.stringify(userProfile));
         
         navigate('/dashboard');
       } else {
