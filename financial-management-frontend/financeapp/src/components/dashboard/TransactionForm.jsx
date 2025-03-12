@@ -15,15 +15,22 @@ import {
   Box,
   InputAdornment,
   CircularProgress,
-  Alert
+  Alert,
+  IconButton,
+  Typography
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers';
+import AddIcon from '@mui/icons-material/Add';
 import FinanceService from '../../services/FinanceService';
+import AccountForm from './AccountForm';
+import CategoryForm from './CategoryForm';
 
 const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = false }) => {
   const [accounts, setAccounts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [accountFormOpen, setAccountFormOpen] = useState(false);
+  const [categoryFormOpen, setCategoryFormOpen] = useState(false);
   const [formData, setFormData] = useState({
     accountId: '',
     transactionType: 'EXPENSE',
@@ -184,6 +191,28 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
     category => category.type === formData.transactionType
   );
 
+  const handleAccountAdded = async () => {
+    setAccountFormOpen(false);
+    // Refresh accounts list
+    try {
+      const accountsResponse = await FinanceService.getAccounts();
+      setAccounts(accountsResponse.data || []);
+    } catch (err) {
+      console.error('Error refreshing accounts:', err);
+    }
+  };
+
+  const handleCategoryAdded = async () => {
+    setCategoryFormOpen(false);
+    // Refresh categories list
+    try {
+      const categoriesResponse = await FinanceService.getCategories();
+      setCategories(categoriesResponse.data || []);
+    } catch (err) {
+      console.error('Error refreshing categories:', err);
+    }
+  };
+
   // Form content that will be used in both embedded and non-embedded modes
   const formContent = (
     <>
@@ -191,38 +220,50 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
       
       <Grid container spacing={2}>
         <Grid item xs={12} sm={6}>
+          <Typography variant="caption" sx={{ mb: 1, display: 'block' }}>
+            Account
+          </Typography>
           <FormControl fullWidth error={!!errors.accountId}>
-            <InputLabel id="account-label">Account</InputLabel>
-            <Select
-              labelId="account-label"
-              name="accountId"
-              value={formData.accountId}
-              onChange={handleChange}
-              label="Account"
-              disabled={loading || accounts.length === 0}
-            >
-              {accounts.map(account => (
-                <MenuItem key={account.id} value={account.id}>
-                  {account.accountName} ({account.accountType})
-                </MenuItem>
-              ))}
-            </Select>
-            {errors.accountId && <FormHelperText>{errors.accountId}</FormHelperText>}
-            {accounts.length === 0 && !loading && (
-              <FormHelperText>No accounts available. Please create an account first.</FormHelperText>
-            )}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <FormControl fullWidth error={!!errors.accountId}>
+                <Select
+                  labelId="account-label"
+                  name="accountId"
+                  value={formData.accountId}
+                  onChange={handleChange}
+                  disabled={loading || accounts.length === 0}
+                >
+                  {accounts.map(account => (
+                    <MenuItem key={account.id} value={account.id}>
+                      {account.accountName} ({account.accountType})
+                    </MenuItem>
+                  ))}
+                </Select>
+                {errors.accountId && <FormHelperText>{errors.accountId}</FormHelperText>}
+                {accounts.length === 0 && !loading && (
+                  <FormHelperText>No accounts available. Please create an account first.</FormHelperText>
+                )}
+              </FormControl>
+              <IconButton 
+                size="small" 
+                onClick={() => setAccountFormOpen(true)}
+              >
+                <AddIcon />
+              </IconButton>
+            </Box>
           </FormControl>
         </Grid>
         
         <Grid item xs={12} sm={6}>
+          <Typography variant="caption" sx={{ mb: 1, display: 'block' }}>
+            Type
+          </Typography>
           <FormControl fullWidth>
-            <InputLabel id="transaction-type-label">Type</InputLabel>
             <Select
               labelId="transaction-type-label"
               name="transactionType"
               value={formData.transactionType}
               onChange={handleChange}
-              label="Type"
               disabled={loading}
             >
               <MenuItem value="EXPENSE">Expense</MenuItem>
@@ -232,9 +273,11 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
         </Grid>
         
         <Grid item xs={12} sm={6}>
+          <Typography variant="caption" sx={{ mb: 1, display: 'block' }}>
+            Amount
+          </Typography>
           <TextField
             fullWidth
-            label="Amount"
             name="amount"
             value={formData.amount}
             onChange={handleChange}
@@ -248,8 +291,10 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
         </Grid>
         
         <Grid item xs={12} sm={6}>
+          <Typography variant="caption" sx={{ mb: 1, display: 'block' }}>
+            Date
+          </Typography>
           <DatePicker
-            label="Date"
             value={formData.transactionDate}
             onChange={handleDateChange}
             slotProps={{
@@ -264,9 +309,11 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
         </Grid>
         
         <Grid item xs={12}>
+          <Typography variant="caption" sx={{ mb: 1, display: 'block' }}>
+            Description
+          </Typography>
           <TextField
             fullWidth
-            label="Description"
             name="description"
             value={formData.description}
             onChange={handleChange}
@@ -277,33 +324,44 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
         </Grid>
         
         <Grid item xs={12}>
+          <Typography variant="caption" sx={{ mb: 1, display: 'block' }}>
+            Category
+          </Typography>
           <FormControl fullWidth>
-            <InputLabel id="category-label">Category</InputLabel>
-            <Select
-              labelId="category-label"
-              name="categoryId"
-              value={formData.categoryId}
-              onChange={handleChange}
-              label="Category"
-              disabled={loading || categoriesError || filteredCategories.length === 0}
-            >
-              <MenuItem value="">None</MenuItem>
-              {filteredCategories.map(category => (
-                <MenuItem key={category.id} value={category.id}>
-                  {category.categoryName}
-                </MenuItem>
-              ))}
-            </Select>
-            {categoriesError && (
-              <FormHelperText error>
-                Unable to load categories. Please check your permissions.
-              </FormHelperText>
-            )}
-            {filteredCategories.length === 0 && !categoriesError && !loading && (
-              <FormHelperText>
-                No {formData.transactionType.toLowerCase()} categories available. Please create a category first.
-              </FormHelperText>
-            )}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <FormControl fullWidth>
+                <Select
+                  labelId="category-label"
+                  name="categoryId"
+                  value={formData.categoryId}
+                  onChange={handleChange}
+                  disabled={loading || categoriesError || filteredCategories.length === 0}
+                >
+                  <MenuItem value="">None</MenuItem>
+                  {filteredCategories.map(category => (
+                    <MenuItem key={category.id} value={category.id}>
+                      {category.categoryName}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {categoriesError && (
+                  <FormHelperText error>
+                    Unable to load categories. Please check your permissions.
+                  </FormHelperText>
+                )}
+                {filteredCategories.length === 0 && !categoriesError && !loading && (
+                  <FormHelperText>
+                    No {formData.transactionType.toLowerCase()} categories available. Please create a category first.
+                  </FormHelperText>
+                )}
+              </FormControl>
+              <IconButton 
+                size="small" 
+                onClick={() => setCategoryFormOpen(true)}
+              >
+                <AddIcon />
+              </IconButton>
+            </Box>
           </FormControl>
         </Grid>
       </Grid>
@@ -324,6 +382,20 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
           {submitting ? 'Saving...' : 'Save Transaction'}
         </Button>
       </Box>
+
+      {/* Account Form Dialog */}
+      <AccountForm
+        open={accountFormOpen}
+        handleClose={() => setAccountFormOpen(false)}
+        onAccountAdded={handleAccountAdded}
+      />
+
+      {/* Category Form Dialog */}
+      <CategoryForm
+        open={categoryFormOpen}
+        handleClose={() => setCategoryFormOpen(false)}
+        onCategoryAdded={handleCategoryAdded}
+      />
     </>
   );
 

@@ -97,7 +97,6 @@ export default function Dashboard() {
 
   // New state for the unified finance action panel
   const [financeActionPanelOpen, setFinanceActionPanelOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState(0);
 
   useEffect(() => {
     checkAuth();
@@ -200,9 +199,8 @@ export default function Dashboard() {
     fetchFinancialData();
   };
 
-  // New function to open the finance action panel with a specific tab
-  const openFinanceActionPanel = (tabIndex) => {
-    setActiveTab(tabIndex);
+  // Function to open the finance action panel
+  const openFinanceActionPanel = () => {
     setFinanceActionPanelOpen(true);
   };
 
@@ -243,7 +241,7 @@ export default function Dashboard() {
                         variant="contained" 
                         color="primary" 
                         startIcon={<AddIcon />}
-                        onClick={() => openFinanceActionPanel(0)}
+                        onClick={openFinanceActionPanel}
                       >
                         Add Transaction
                       </Button>
@@ -321,7 +319,7 @@ export default function Dashboard() {
                       variant="text" 
                       color="primary" 
                       startIcon={<AddIcon />}
-                      onClick={() => openFinanceActionPanel(0)}
+                      onClick={openFinanceActionPanel}
                     >
                       Add New
                     </Button>
@@ -376,10 +374,7 @@ export default function Dashboard() {
       <FinanceActionPanel 
         open={financeActionPanelOpen} 
         handleClose={() => setFinanceActionPanelOpen(false)} 
-        initialTab={activeTab}
         onTransactionAdded={handleTransactionAdded}
-        onAccountAdded={handleAccountAdded}
-        onCategoryAdded={handleCategoryAdded}
       />
       
       {/* Keep the individual forms for backward compatibility if needed */}
