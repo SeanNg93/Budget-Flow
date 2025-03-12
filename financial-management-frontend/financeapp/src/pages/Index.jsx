@@ -1,12 +1,12 @@
 import { useEffect } from 'react';
-import { useRouter } from 'next/router';
+import { useNavigate } from 'react-router-dom';
 
-export default function Home() {
-  const router = useRouter();
+export default function Index() {
+  const navigate = useNavigate();
 
   useEffect(() => {
-    router.push('/login');
-  }, [router]);
+    navigate('/login');
+  }, [navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center">

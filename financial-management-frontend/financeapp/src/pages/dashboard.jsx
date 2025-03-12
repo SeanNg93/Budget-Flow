@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
-import { useRouter } from "next/router";
-import Link from "next/link";
+import { useNavigate, Link } from "react-router-dom";
 import styles from "../styles/dashboard.module.css";
 
 export default function Dashboard() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -18,27 +17,26 @@ export default function Dashboard() {
     const token = window.localStorage.getItem("token");
 
     if (!token) {
-      router.push("/login");
+      navigate("/login");
       return;
     }
 
-    // try {
-    //   const userData = localStorage.getItem("userData");
-    //   console.log(userData);
-    //   // setUser(JSON.parse(userData));
-    // } catch (err) {
-    //   // Cookies.remove("access_token");
-    //   // localStorage.removeItem("userData");
-    //   // router.push("/login");
-    // } finally {
-    //   setLoading(false);
-    // }
+    try {
+      const userData = localStorage.getItem("userData");
+      setUser(JSON.parse(userData));
+    } catch (err) {
+      localStorage.removeItem("userToken");
+      localStorage.removeItem("userData");
+      navigate("/login");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleLogout = () => {
-    Cookies.remove("access_token");
-    localStorage.removeItem("token");
-    router.push("/login");
+    localStorage.removeItem("userToken");
+    localStorage.removeItem("userData");
+    navigate("/login");
   };
 
   if (loading) {
@@ -65,18 +63,13 @@ export default function Dashboard() {
           <nav className={styles.sidebarNav}>
             <ul>
               <li>
-                <Link className="home-text" href="/dashboard">
-                  Trang chủ
-                </Link>
+                <Link to="/dashboard" className="home-text">Trang chủ</Link>
               </li>
               <li>
-                <Link
-                  href="/delete-account"
-                  className={styles.deleteAccountButton}
-                >
+                <Link to="/delete-account" className={styles.deleteAccountButton}>
                   Xóa tài khoản
                 </Link>
-              </li>              
+              </li>
             </ul>
           </nav>
         </aside>
