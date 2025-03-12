@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { initEmailJS } from './config/emailjs';
 
 // Auth Pages
-
+import Login from "./pages/auth/Login/Login";
 import Register from './pages/auth/Register';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import ResetPassword from './pages/auth/ResetPassword';
@@ -21,7 +21,6 @@ import DeleteUser from './pages/user/DeleteUser.jsx';
 
 // Account Pages
 import DeleteAccount from './pages/account/DeleteAccount.jsx';
-import Login from "@/pages/auth/Login/Login";
 
 function App() {
   useEffect(() => {
@@ -32,7 +31,8 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Home />} />
+        {/* Redirect root to login */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/index" element={<Index />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -49,7 +49,7 @@ function App() {
         {/* Account Routes */}
         <Route path="/account/delete" element={<DeleteAccount />} />
         
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>
   );
