@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
@@ -101,6 +101,32 @@ export default function Login() {
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
+  // Check if user is already logged in
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const token = localStorage.getItem('userToken');
+        if (token) {
+          // Verify token validity
+          const userData = localStorage.getItem('userData');
+          if (userData) {
+            // If token exists and we have user data, redirect to dashboard
+            navigate('/dashboard');
+          } else {
+            // If token exists but no user data, clear token
+            localStorage.removeItem('userToken');
+          }
+        }
+      } catch (error) {
+        // Clear any invalid tokens
+        localStorage.removeItem('userToken');
+        localStorage.removeItem('userData');
+      }
+    };
+    
+    checkAuth();
+  }, [navigate]);
+
   const handleClickShowPassword = () => {
     setShowPassword(!showPassword);
   };
@@ -113,32 +139,67 @@ export default function Login() {
     setError('');
 
     try {
-
-      const response = await AuthService.login(values);
+      // Try using the direct login function from axiosInstance
+      const response = await login(values.username, values.password);
       
-      if (response.data.token) {
-        localStorage.setItem('userToken', response.data.token);
+      // Check for token in the response - the backend returns it as 'token' in a JwtResponse
+      if (response.data && (response.data.token || response.data.accessToken)) {
+        // Store the token with the key 'userToken' to match what's used in axiosInstance.js
+        const token = response.data.token || response.data.accessToken;
+        localStorage.setItem('userToken', token);
+        
+        // Also store basic user info if available
+        if (response.data.username) {
+          localStorage.setItem('userData', JSON.stringify({
+            id: response.data.id,
+            username: response.data.username,
+            email: response.data.email,
+            roles: response.data.roles || []
+          }));
+        }
+        
         navigate('/dashboard');
       } else {
-        setError('Đăng nhập thất bại. Máy chủ không phản hồi hợp lệ.');
+        setError('Login failed: No token received from server');
       }
     } catch (error) {
-      const errorMessage =
-        error.response?.data?.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.';
-      setError(errorMessage);
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        setError(`Login failed: ${error.response.data.message || error.response.statusText || 'Server error'}`);
+      } else if (error.request) {
+        // The request was made but no response was received
+        setError('Login failed: No response from server. Please try again later.');
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        setError(`Login failed: ${error.message}`);
+      }
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleSuccessLoginGoogle = async (response) => {
-   // const decoded = jwtDecode(response.access_token);
-    console.log(response);
-    const userInfo = await AuthService.getUserInfoGoogle(response.access_token);
-    // call api login backend
-    console.log(userInfo);
-  }
-
+    try {
+      const userInfo = await AuthService.getUserInfoGoogle(response.access_token);
+      
+      // Here you would typically send this info to your backend to verify
+      // and create a session or JWT token
+      
+      // For now, we'll just store the Google info and redirect
+      localStorage.setItem('userToken', response.access_token);
+      localStorage.setItem('userData', JSON.stringify({
+        id: userInfo.sub,
+        username: userInfo.name,
+        email: userInfo.email,
+        picture: userInfo.picture
+      }));
+      
+      navigate('/dashboard');
+    } catch (error) {
+      setError('Google login failed. Please try again.');
+    }
+  };
 
   const loginGoogle = useGoogleLogin({
     onSuccess: handleSuccessLoginGoogle,

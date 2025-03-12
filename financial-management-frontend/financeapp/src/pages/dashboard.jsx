@@ -11,10 +11,24 @@ import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import CardHeader from '@mui/material/CardHeader';
 import { alpha } from '@mui/material/styles';
+import CircularProgress from '@mui/material/CircularProgress';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Button from '@mui/material/Button';
+import AddIcon from '@mui/icons-material/Add';
+import Stack from '@mui/material/Stack';
 
 // Import dashboard components
 import SideMenu from '../components/dashboard/SideMenu';
 import AppNavbar from '../components/dashboard/AppNavbar';
+import TransactionForm from '../components/dashboard/TransactionForm';
+import AccountForm from '../components/dashboard/AccountForm';
+import CategoryForm from '../components/dashboard/CategoryForm';
+import FinanceActionPanel from '../components/dashboard/FinanceActionPanel';
 
 // Import theme
 import AppTheme from '../shared-theme/AppTheme';
@@ -24,6 +38,9 @@ import {
   datePickersCustomizations,
   treeViewCustomizations,
 } from '../theme/customizations';
+
+// Import services
+import FinanceService from '../services/FinanceService';
 
 const drawerWidth = 240;
 
@@ -66,10 +83,30 @@ export default function Dashboard() {
   const [open, setOpen] = useState(true);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [financialData, setFinancialData] = useState({
+    totalBalance: 0,
+    totalIncome: 0,
+    totalExpense: 0,
+    netSavings: 0
+  });
+  const [transactions, setTransactions] = useState([]);
+  const [transactionFormOpen, setTransactionFormOpen] = useState(false);
+  const [accountFormOpen, setAccountFormOpen] = useState(false);
+  const [categoryFormOpen, setCategoryFormOpen] = useState(false);
+  const [error, setError] = useState(null);
+
+  // New state for the unified finance action panel
+  const [financeActionPanelOpen, setFinanceActionPanelOpen] = useState(false);
 
   useEffect(() => {
     checkAuth();
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      fetchFinancialData();
+    }
+  }, [user]);
 
   const checkAuth = async () => {
     const token = localStorage.getItem('userToken');
@@ -91,6 +128,42 @@ export default function Dashboard() {
     }
   };
 
+  const fetchFinancialData = async () => {
+    setLoading(true);
+    try {
+      // Fetch financial summary
+      const summaryResponse = await FinanceService.getFinancialSummary();
+      
+      // Fetch accounts
+      const accountsResponse = await FinanceService.getAccounts();
+      
+      // Fetch recent transactions
+      const transactionsResponse = await FinanceService.getTransactions();
+      
+      // Update financial data
+      setFinancialData({
+        totalBalance: summaryResponse.data.totalBalance || 0,
+        totalIncome: summaryResponse.data.totalIncome || 0,
+        totalExpense: summaryResponse.data.totalExpense || 0,
+        netSavings: summaryResponse.data.netSavings || 0
+      });
+      
+      // Update transactions
+      setTransactions(transactionsResponse.data.slice(0, 5)); // Get only the 5 most recent
+    } catch (error) {
+      setError('Failed to load financial data. Please try again later.');
+      // Use placeholder data if API fails
+      setFinancialData({
+        totalBalance: 0,
+        totalIncome: 0,
+        totalExpense: 0,
+        netSavings: 0
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleDrawerOpen = () => {
     setOpen(true);
   };
@@ -99,10 +172,42 @@ export default function Dashboard() {
     setOpen(false);
   };
 
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount);
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  const handleTransactionAdded = () => {
+    fetchFinancialData();
+  };
+
+  const handleAccountAdded = () => {
+    fetchFinancialData();
+  };
+
+  const handleCategoryAdded = () => {
+    fetchFinancialData();
+  };
+
+  // Function to open the finance action panel
+  const openFinanceActionPanel = () => {
+    setFinanceActionPanelOpen(true);
+  };
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <Typography>Loading...</Typography>
+        <CircularProgress />
       </Box>
     );
   }
@@ -127,9 +232,21 @@ export default function Dashboard() {
                     backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.1),
                   }}
                 >
-                  <Typography component="h1" variant="h4" color="primary" gutterBottom>
-                    Welcome, {user?.username || 'User'}!
-                  </Typography>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography component="h1" variant="h4" color="primary" gutterBottom>
+                      Welcome, {user?.username || 'User'}!
+                    </Typography>
+                    <Stack direction="row" spacing={2}>
+                      <Button 
+                        variant="contained" 
+                        color="primary" 
+                        startIcon={<AddIcon />}
+                        onClick={openFinanceActionPanel}
+                      >
+                        Add Transaction
+                      </Button>
+                    </Stack>
+                  </Box>
                   <Typography variant="body1">
                     This is your financial dashboard. Here you can manage your finances, track expenses, and plan your budget.
                   </Typography>
@@ -137,27 +254,56 @@ export default function Dashboard() {
               </Grid>
               
               {/* Summary Cards */}
-              <Grid item xs={12} md={4}>
+              <Grid item xs={12} md={3}>
                 <Card>
                   <CardHeader title="Total Balance" />
                   <CardContent>
-                    <Typography variant="h4">$5,240.00</Typography>
+                    {loading ? (
+                      <CircularProgress size={24} />
+                    ) : (
+                      <Typography variant="h4">{formatCurrency(financialData.totalBalance)}</Typography>
+                    )}
                   </CardContent>
                 </Card>
               </Grid>
-              <Grid item xs={12} md={4}>
+              <Grid item xs={12} md={3}>
                 <Card>
                   <CardHeader title="Income" />
                   <CardContent>
-                    <Typography variant="h4" color="success.main">$8,350.00</Typography>
+                    {loading ? (
+                      <CircularProgress size={24} />
+                    ) : (
+                      <Typography variant="h4" color="success.main">{formatCurrency(financialData.totalIncome)}</Typography>
+                    )}
                   </CardContent>
                 </Card>
               </Grid>
-              <Grid item xs={12} md={4}>
+              <Grid item xs={12} md={3}>
                 <Card>
                   <CardHeader title="Expenses" />
                   <CardContent>
-                    <Typography variant="h4" color="error.main">$3,110.00</Typography>
+                    {loading ? (
+                      <CircularProgress size={24} />
+                    ) : (
+                      <Typography variant="h4" color="error.main">{formatCurrency(financialData.totalExpense)}</Typography>
+                    )}
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <Card>
+                  <CardHeader title="Net Savings" />
+                  <CardContent>
+                    {loading ? (
+                      <CircularProgress size={24} />
+                    ) : (
+                      <Typography 
+                        variant="h4" 
+                        color={financialData.netSavings >= 0 ? "success.main" : "error.main"}
+                      >
+                        {formatCurrency(financialData.netSavings)}
+                      </Typography>
+                    )}
                   </CardContent>
                 </Card>
               </Grid>
@@ -165,18 +311,90 @@ export default function Dashboard() {
               {/* Recent Transactions */}
               <Grid item xs={12}>
                 <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
-                  <Typography component="h2" variant="h6" color="primary" gutterBottom>
-                    Recent Transactions
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    No transactions to display. Start adding your financial data to see it here.
-                  </Typography>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                    <Typography component="h2" variant="h6" color="primary" gutterBottom>
+                      Recent Transactions
+                    </Typography>
+                    <Button 
+                      variant="text" 
+                      color="primary" 
+                      startIcon={<AddIcon />}
+                      onClick={openFinanceActionPanel}
+                    >
+                      Add New
+                    </Button>
+                  </Box>
+                  
+                  {loading ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+                      <CircularProgress />
+                    </Box>
+                  ) : transactions.length > 0 ? (
+                    <TableContainer>
+                      <Table>
+                        <TableHead>
+                          <TableRow>
+                            <TableCell>Date</TableCell>
+                            <TableCell>Description</TableCell>
+                            <TableCell>Category</TableCell>
+                            <TableCell>Type</TableCell>
+                            <TableCell align="right">Amount</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {transactions.map((transaction) => (
+                            <TableRow key={transaction.id}>
+                              <TableCell>{formatDate(transaction.transactionDate)}</TableCell>
+                              <TableCell>{transaction.description}</TableCell>
+                              <TableCell>{transaction.category?.categoryName || 'Uncategorized'}</TableCell>
+                              <TableCell>{transaction.transactionType}</TableCell>
+                              <TableCell align="right" sx={{ 
+                                color: transaction.transactionType === 'INCOME' ? 'success.main' : 'error.main' 
+                              }}>
+                                {formatCurrency(transaction.amount)}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>
+                      No transactions to display. Start adding your financial data to see it here.
+                    </Typography>
+                  )}
                 </Paper>
               </Grid>
             </Grid>
           </Container>
         </Main>
       </Box>
+      
+      {/* Finance Action Panel */}
+      <FinanceActionPanel 
+        open={financeActionPanelOpen} 
+        handleClose={() => setFinanceActionPanelOpen(false)} 
+        onTransactionAdded={handleTransactionAdded}
+      />
+      
+      {/* Keep the individual forms for backward compatibility if needed */}
+      <TransactionForm 
+        open={transactionFormOpen} 
+        handleClose={() => setTransactionFormOpen(false)} 
+        onTransactionAdded={handleTransactionAdded}
+      />
+      
+      <AccountForm 
+        open={accountFormOpen} 
+        handleClose={() => setAccountFormOpen(false)} 
+        onAccountAdded={handleAccountAdded}
+      />
+      
+      <CategoryForm 
+        open={categoryFormOpen} 
+        handleClose={() => setCategoryFormOpen(false)} 
+        onCategoryAdded={handleCategoryAdded}
+      />
     </AppTheme>
   );
 }

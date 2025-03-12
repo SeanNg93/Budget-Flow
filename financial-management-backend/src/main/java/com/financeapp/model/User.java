@@ -5,6 +5,7 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "users")
@@ -17,8 +18,13 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, unique = true)
     private String username;
+    
+    @Column(nullable = false, unique = true)
     private String email;
+    
+    @Column(name = "password_hash", nullable = false)
     private String password;
 
     private String resetPasswordToken;
@@ -34,4 +40,15 @@ public class User {
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Set<Role> roles;
+    
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", username='" + username + '\'' +
+                ", email='" + email + '\'' +
+                ", enabled=" + enabled +
+                ", roles=" + (roles != null ? roles.stream().map(role -> role.getName().name()).collect(Collectors.joining(", ")) : "null") +
+                '}';
+    }
 }

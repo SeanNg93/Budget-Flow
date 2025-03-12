@@ -46,7 +46,7 @@ CREATE TABLE transaction_categories (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     category_name VARCHAR(100) NOT NULL,
-    type ENUM('Income', 'Expense') NOT NULL,
+    type ENUM('INCOME', 'EXPENSE') NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
@@ -55,7 +55,7 @@ CREATE TABLE transactions (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     account_id INT NOT NULL,
-    transaction_type ENUM('Income', 'Expense', 'Transfer') NOT NULL,
+    transaction_type ENUM('INCOME', 'EXPENSE', 'TRANSFER') NOT NULL,
     amount DECIMAL(15,2) NOT NULL CHECK (amount > 0),
     category_id INT,
     transaction_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

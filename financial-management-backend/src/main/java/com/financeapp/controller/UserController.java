@@ -46,10 +46,10 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You can only delete your own account");
         }
 
-        // Ngăn Admin xóa Admin khác nếu cần (tùy chọn)
-        if (isAdmin && user.getRoles().stream().anyMatch(role -> role.getName() == RoleName.ROLE_ADMIN)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Admins cannot delete other admins");
-        }
+//        // Ngăn Admin xóa Admin khác nếu cần (tùy chọn)
+//        if (isAdmin && user.getRoles().stream().anyMatch(role -> role.getName() == RoleName.ROLE_ADMIN)) {
+//            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Admins cannot delete other admins");
+//        }
 
 
         userRepository.delete(user);
