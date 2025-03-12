@@ -32,6 +32,8 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded }) => {
     transactionDate: new Date()
   });
   const [errors, setErrors] = useState({});
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -39,10 +41,10 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded }) => {
       try {
         // Fetch accounts
         const accountsResponse = await FinanceService.getAccounts();
-        setAccounts(accountsResponse.data || []);
+        setAccounts(accountsResponse.data);
         
         // Set default account if available
-        if (accountsResponse.data && accountsResponse.data.length > 0) {
+        if (accountsResponse.data.length > 0) {
           setFormData(prev => ({
             ...prev,
             accountId: accountsResponse.data[0].id
@@ -51,9 +53,9 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded }) => {
         
         // Fetch categories
         const categoriesResponse = await FinanceService.getCategories();
-        setCategories(categoriesResponse.data || []);
+        setCategories(categoriesResponse.data);
       } catch (error) {
-        console.error('Error fetching data for transaction form:', error);
+        setError('Failed to load data. Please try again.');
       } finally {
         setLoading(false);
       }
@@ -135,8 +137,10 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded }) => {
       return;
     }
     
-    setLoading(true);
+    setSubmitting(true);
+    
     try {
+      // Format the data for the API
       const transactionData = {
         transactionType: formData.transactionType,
         amount: parseFloat(formData.amount),
@@ -145,31 +149,33 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded }) => {
         category: { id: formData.categoryId }
       };
       
+      // Call the API to create the transaction
       await FinanceService.createTransaction(transactionData, formData.accountId);
       
-      // Reset form
-      setFormData({
-        accountId: accounts.length > 0 ? accounts[0].id : '',
-        transactionType: 'EXPENSE',
-        amount: '',
-        description: '',
-        categoryId: '',
-        transactionDate: new Date()
-      });
+      // Reset form and close dialog
+      resetForm();
+      handleClose();
       
       // Notify parent component
       if (onTransactionAdded) {
         onTransactionAdded();
       }
-      
-      // Close dialog
-      handleClose();
     } catch (error) {
-      console.error('Error creating transaction:', error);
-      // You could set a form error here to display to the user
+      setError('Failed to create transaction. Please try again.');
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      accountId: accounts.length > 0 ? accounts[0].id : '',
+      transactionType: 'EXPENSE',
+      amount: '',
+      description: '',
+      categoryId: '',
+      transactionDate: new Date()
+    });
   };
 
   const filteredCategories = categories.filter(
@@ -303,9 +309,9 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded }) => {
           onClick={handleSubmit} 
           color="primary" 
           variant="contained"
-          disabled={loading}
+          disabled={submitting}
         >
-          {loading ? 'Saving...' : 'Save'}
+          {submitting ? 'Saving...' : 'Save'}
         </Button>
       </DialogActions>
     </Dialog>

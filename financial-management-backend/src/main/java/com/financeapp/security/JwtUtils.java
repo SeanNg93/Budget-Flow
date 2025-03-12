@@ -24,27 +24,43 @@ import java.util.Date;
 public class JwtUtils {
     private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
 
-    // We'll use a static key for consistency across application restarts
-    private static final SecretKey SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS512);
+    @Value("${app.jwt.secret}")
+    private String jwtSecret;
 
     @Value("${app.jwt.expiration}")
     private long jwtExpirationMs;
 
+    private SecretKey getSigningKey() {
+        // Use Keys.secretKeyFor to generate a secure key for HS512
+        // This ensures the key is the correct size for the algorithm
+        try {
+            // First try to decode the secret if it's Base64 encoded
+            byte[] decodedKey = Base64.getDecoder().decode(jwtSecret);
+            return Keys.hmacShaKeyFor(decodedKey);
+        } catch (IllegalArgumentException e) {
+            // If not Base64 encoded, use the raw bytes
+            logger.warn("JWT secret is not Base64 encoded, using raw bytes");
+            return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+        }
+    }
+
     public String generateToken(Authentication authentication) {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        
+        logger.info("Generating JWT token for user: {}", userDetails.getUsername());
 
         return Jwts.builder()
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
-                .signWith(SECRET_KEY, SignatureAlgorithm.HS512)
+                .signWith(getSigningKey(), SignatureAlgorithm.HS512)
                 .compact();
     }
 
     public String extractUsername(String token) {
         try {
             return Jwts.parserBuilder()
-                    .setSigningKey(SECRET_KEY)
+                    .setSigningKey(getSigningKey())
                     .build()
                     .parseClaimsJws(token)
                     .getBody()
@@ -86,7 +102,7 @@ public class JwtUtils {
 
     private Date extractExpiration(String token) {
         return Jwts.parserBuilder()
-                .setSigningKey(SECRET_KEY)
+                .setSigningKey(getSigningKey())
                 .build()
                 .parseClaimsJws(token)
                 .getBody()

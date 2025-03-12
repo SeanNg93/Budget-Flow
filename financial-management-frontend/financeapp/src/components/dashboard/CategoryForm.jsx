@@ -24,6 +24,8 @@ const CategoryForm = ({ open, handleClose, onCategoryAdded }) => {
     type: 'EXPENSE'
   });
   const [errors, setErrors] = useState({});
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -61,34 +63,43 @@ const CategoryForm = ({ open, handleClose, onCategoryAdded }) => {
       return;
     }
     
-    setLoading(true);
+    setSubmitting(true);
+    
     try {
+      // Format the data for the API
       const categoryData = {
         categoryName: formData.categoryName,
         type: formData.type
       };
       
+      // Call the API to create the category
       await FinanceService.createCategory(categoryData);
       
-      // Reset form
+      // Reset form and close dialog
       setFormData({
         categoryName: '',
         type: 'EXPENSE'
       });
+      handleClose();
       
       // Notify parent component
       if (onCategoryAdded) {
         onCategoryAdded();
       }
-      
-      // Close dialog
-      handleClose();
     } catch (error) {
-      console.error('Error creating category:', error);
-      // You could set a form error here to display to the user
+      setError('Failed to create category. Please try again.');
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      categoryName: '',
+      type: 'EXPENSE'
+    });
+    setErrors({});
+    setError('');
   };
 
   return (

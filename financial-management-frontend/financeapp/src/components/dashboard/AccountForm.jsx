@@ -27,6 +27,7 @@ const AccountForm = ({ open, handleClose, onAccountAdded }) => {
     currency: 'USD'
   });
   const [errors, setErrors] = useState({});
+  const [error, setError] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -73,7 +74,9 @@ const AccountForm = ({ open, handleClose, onAccountAdded }) => {
     }
     
     setLoading(true);
+    
     try {
+      // Format the data for the API
       const accountData = {
         accountName: formData.accountName,
         accountType: formData.accountType,
@@ -81,26 +84,24 @@ const AccountForm = ({ open, handleClose, onAccountAdded }) => {
         currency: formData.currency
       };
       
+      // Call the API to create the account
       await FinanceService.createAccount(accountData);
       
-      // Reset form
+      // Reset form and close dialog
       setFormData({
         accountName: '',
         accountType: 'Checking',
         balance: '',
         currency: 'USD'
       });
+      handleClose();
       
       // Notify parent component
       if (onAccountAdded) {
         onAccountAdded();
       }
-      
-      // Close dialog
-      handleClose();
     } catch (error) {
-      console.error('Error creating account:', error);
-      // You could set a form error here to display to the user
+      setError('Failed to create account. Please try again.');
     } finally {
       setLoading(false);
     }

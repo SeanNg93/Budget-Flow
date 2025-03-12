@@ -24,6 +24,7 @@ import DeleteAccount from './pages/account/DeleteAccount.jsx';
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
+import TestConnection from './components/TestConnection';
 
 function App() {
   useEffect(() => {
@@ -43,6 +44,7 @@ function App() {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/activate-account" element={<ActivateAccount />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/test-connection" element={<TestConnection />} />
         
         {/* Protected Routes */}
         <Route path="/dashboard" element={

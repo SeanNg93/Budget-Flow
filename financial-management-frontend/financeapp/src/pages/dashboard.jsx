@@ -98,6 +98,7 @@ export default function Dashboard() {
   const [accountFormOpen, setAccountFormOpen] = useState(false);
   const [categoryFormOpen, setCategoryFormOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     checkAuth();
@@ -130,41 +131,29 @@ export default function Dashboard() {
   };
 
   const fetchFinancialData = async () => {
-    setDataLoading(true);
+    setLoading(true);
     try {
       // Fetch financial summary
       const summaryResponse = await FinanceService.getFinancialSummary();
-      
-      // Fetch total balance
-      const balanceResponse = await FinanceService.getTotalBalance();
-      
-      // Fetch recent transactions
-      const transactionsResponse = await FinanceService.getTransactions();
-      
       setFinancialData({
-        totalBalance: balanceResponse.data || 0,
+        totalBalance: summaryResponse.data.totalBalance || 0,
         totalIncome: summaryResponse.data.totalIncome || 0,
         totalExpense: summaryResponse.data.totalExpense || 0,
         netSavings: summaryResponse.data.netSavings || 0
       });
       
-      // Get the 5 most recent transactions
-      const recentTransactions = transactionsResponse.data
-        .sort((a, b) => new Date(b.transactionDate) - new Date(a.transactionDate))
-        .slice(0, 5);
+      // Fetch accounts
+      const accountsResponse = await FinanceService.getAccounts();
       
-      setTransactions(recentTransactions);
+      // Fetch recent transactions
+      const transactionsResponse = await FinanceService.getTransactions();
+      
+      setTransactions(transactionsResponse.data.slice(0, 5)); // Get only the 5 most recent
+      
+      setLoading(false);
     } catch (error) {
-      console.error('Error fetching financial data:', error);
-      // Use placeholder data if API fails
-      setFinancialData({
-        totalBalance: 5240.00,
-        totalIncome: 8350.00,
-        totalExpense: 3110.00,
-        netSavings: 5240.00
-      });
-    } finally {
-      setDataLoading(false);
+      setError('Failed to load financial data. Please try again later.');
+      setLoading(false);
     }
   };
 
