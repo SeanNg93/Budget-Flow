@@ -54,12 +54,12 @@ public class TransactionService {
 
         transaction.setUser(user);
         transaction.setAccount(account);
-        transaction.setStatus(Transaction.TransactionStatus.Completed);
+        transaction.setStatus(Transaction.TransactionStatus.COMPLETED);
 
         // Update account balance based on transaction type
-        if (transaction.getTransactionType() == Transaction.TransactionType.Income) {
+        if (transaction.getTransactionType() == Transaction.TransactionType.INCOME) {
             accountService.addToBalance(accountId, transaction.getAmount());
-        } else if (transaction.getTransactionType() == Transaction.TransactionType.Expense) {
+        } else if (transaction.getTransactionType() == Transaction.TransactionType.EXPENSE) {
             accountService.subtractFromBalance(accountId, transaction.getAmount());
         }
 
@@ -71,9 +71,9 @@ public class TransactionService {
         Transaction transaction = getTransactionById(transactionId);
         
         // Revert the old transaction's effect on the account balance
-        if (transaction.getTransactionType() == Transaction.TransactionType.Income) {
+        if (transaction.getTransactionType() == Transaction.TransactionType.INCOME) {
             accountService.subtractFromBalance(transaction.getAccount().getId(), transaction.getAmount());
-        } else if (transaction.getTransactionType() == Transaction.TransactionType.Expense) {
+        } else if (transaction.getTransactionType() == Transaction.TransactionType.EXPENSE) {
             accountService.addToBalance(transaction.getAccount().getId(), transaction.getAmount());
         }
         
@@ -85,9 +85,9 @@ public class TransactionService {
         transaction.setTransactionDate(transactionDetails.getTransactionDate());
         
         // Apply the new transaction's effect on the account balance
-        if (transaction.getTransactionType() == Transaction.TransactionType.Income) {
+        if (transaction.getTransactionType() == Transaction.TransactionType.INCOME) {
             accountService.addToBalance(transaction.getAccount().getId(), transaction.getAmount());
-        } else if (transaction.getTransactionType() == Transaction.TransactionType.Expense) {
+        } else if (transaction.getTransactionType() == Transaction.TransactionType.EXPENSE) {
             accountService.subtractFromBalance(transaction.getAccount().getId(), transaction.getAmount());
         }
         
@@ -99,9 +99,9 @@ public class TransactionService {
         Transaction transaction = getTransactionById(transactionId);
         
         // Revert the transaction's effect on the account balance
-        if (transaction.getTransactionType() == Transaction.TransactionType.Income) {
+        if (transaction.getTransactionType() == Transaction.TransactionType.INCOME) {
             accountService.subtractFromBalance(transaction.getAccount().getId(), transaction.getAmount());
-        } else if (transaction.getTransactionType() == Transaction.TransactionType.Expense) {
+        } else if (transaction.getTransactionType() == Transaction.TransactionType.EXPENSE) {
             accountService.addToBalance(transaction.getAccount().getId(), transaction.getAmount());
         }
         

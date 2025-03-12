@@ -44,7 +44,7 @@ public class Transaction {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private TransactionStatus status = TransactionStatus.Pending;
+    private TransactionStatus status = TransactionStatus.PENDING;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -67,10 +67,10 @@ public class Transaction {
     }
 
     public enum TransactionType {
-        Income, Expense, Transfer
+        INCOME, EXPENSE, TRANSFER
     }
 
     public enum TransactionStatus {
-        Pending, Completed, Failed
+        PENDING, COMPLETED, FAILED
     }
 } 

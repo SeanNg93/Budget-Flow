@@ -27,6 +27,6 @@ public class TransactionCategory {
     private CategoryType type;
 
     public enum CategoryType {
-        Income, Expense
+        INCOME, EXPENSE
     }
 } 

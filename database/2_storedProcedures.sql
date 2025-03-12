@@ -3,10 +3,10 @@ DELIMITER //
 CREATE PROCEDURE GetMonthlySummary(IN userId INT, IN reportMonth INT, IN reportYear INT)
 BEGIN
     SELECT 
-        SUM(CASE WHEN transaction_type = 'Income' THEN amount ELSE 0 END) AS total_income,
-        SUM(CASE WHEN transaction_type = 'Expense' THEN amount ELSE 0 END) AS total_expense,
-        (SUM(CASE WHEN transaction_type = 'Income' THEN amount ELSE 0 END) - 
-         SUM(CASE WHEN transaction_type = 'Expense' THEN amount ELSE 0 END)) AS net_savings
+        SUM(CASE WHEN transaction_type = 'INCOME' THEN amount ELSE 0 END) AS total_income,
+        SUM(CASE WHEN transaction_type = 'EXPENSE' THEN amount ELSE 0 END) AS total_expense,
+        (SUM(CASE WHEN transaction_type = 'INCOME' THEN amount ELSE 0 END) - 
+         SUM(CASE WHEN transaction_type = 'EXPENSE' THEN amount ELSE 0 END)) AS net_savings
     FROM transactions
     WHERE user_id = userId AND MONTH(transaction_date) = reportMonth AND YEAR(transaction_date) = reportYear;
 END //

@@ -383,7 +383,7 @@ export default function Dashboard() {
                               <TableCell>{transaction.category?.categoryName || 'Uncategorized'}</TableCell>
                               <TableCell>{transaction.transactionType}</TableCell>
                               <TableCell align="right" sx={{ 
-                                color: transaction.transactionType === 'Income' ? 'success.main' : 'error.main' 
+                                color: transaction.transactionType === 'INCOME' ? 'success.main' : 'error.main' 
                               }}>
                                 {formatCurrency(transaction.amount)}
                               </TableCell>

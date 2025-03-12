@@ -28,19 +28,19 @@ INSERT INTO accounts (user_id, account_name, account_type, balance, currency) VA
 
 -- Insert Transaction Categories
 INSERT INTO transaction_categories (user_id, category_name, type) VALUES 
-(2, 'Salary', 'Income'),
-(2, 'Groceries', 'Expense'),
-(2, 'Rent', 'Expense'),
-(3, 'Stock Earnings', 'Income'),
-(3, 'Dining Out', 'Expense');
+(2, 'Salary', 'INCOME'),
+(2, 'Groceries', 'EXPENSE'),
+(2, 'Rent', 'EXPENSE'),
+(3, 'Stock Earnings', 'INCOME'),
+(3, 'Dining Out', 'EXPENSE');
 
 -- Insert Transactions
 INSERT INTO transactions (user_id, account_id, transaction_type, amount, category_id, transaction_date, description, status) VALUES 
-(2, 1, 'Income', 3000.00, 1, '2024-03-01 10:00:00', 'Monthly Salary', 'Completed'),
-(2, 1, 'Expense', 200.00, 2, '2024-03-02 14:30:00', 'Grocery Shopping', 'Completed'),
-(2, 1, 'Expense', 800.00, 3, '2024-03-03 12:00:00', 'March Rent', 'Completed'),
-(3, 3, 'Income', 500.00, 4, '2024-03-05 11:45:00', 'Stock Investment Profit', 'Completed'),
-(3, 3, 'Expense', 100.00, 5, '2024-03-06 19:00:00', 'Dinner at Restaurant', 'Completed');
+(2, 1, 'INCOME', 3000.00, 1, '2024-03-01 10:00:00', 'Monthly Salary', 'COMPLETED'),
+(2, 1, 'EXPENSE', 200.00, 2, '2024-03-02 14:30:00', 'Grocery Shopping', 'COMPLETED'),
+(2, 1, 'EXPENSE', 800.00, 3, '2024-03-03 12:00:00', 'March Rent', 'COMPLETED'),
+(3, 3, 'INCOME', 500.00, 4, '2024-03-05 11:45:00', 'Stock Investment Profit', 'COMPLETED'),
+(3, 3, 'EXPENSE', 100.00, 5, '2024-03-06 19:00:00', 'Dinner at Restaurant', 'COMPLETED');
 
 -- Insert Budgets
 INSERT INTO budgets (user_id, category_id, amount, start_date, end_date, status) VALUES 
