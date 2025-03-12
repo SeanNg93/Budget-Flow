@@ -357,7 +357,7 @@ export default function Register() {
             <Box sx={{ textAlign: 'center', mt: 2 }}>
               <Link
                 component={RouterLink}
-                to="/financial-management-frontend/financeapp/src/pages/login"
+                to="/login"
                 variant="body2"
               >
                 Quay lại trang đăng nhập
@@ -371,7 +371,7 @@ export default function Register() {
                   Đã có tài khoản?{' '}
                   <Link
                     component={RouterLink}
-                    to="/financial-management-frontend/financeapp/src/pages/login"
+                    to="/login"
                     variant="body2"
                   >
                     Đăng nhập

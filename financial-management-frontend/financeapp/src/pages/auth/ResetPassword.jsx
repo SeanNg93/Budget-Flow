@@ -269,7 +269,7 @@ export default function ResetPassword() {
           <Box sx={{ textAlign: 'center', mt: 2 }}>
             <Link
               component={RouterLink}
-              to="/financial-management-frontend/financeapp/src/pages/login"
+              to="/login"
               variant="body2"
             >
               {isSuccess ? 'Đăng nhập với mật khẩu mới' : 'Quay lại trang đăng nhập'}

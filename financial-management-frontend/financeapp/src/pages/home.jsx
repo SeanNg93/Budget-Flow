@@ -26,7 +26,7 @@ function Home() {
       
       {!isLoggedIn ? (
         <div className={styles['auth-buttons']}>
-          <Link to="/financial-management-frontend/financeapp/src/pages/login" className={`${styles.btn} ${styles['btn-primary']}`}>
+          <Link to="/login" className={`${styles.btn} ${styles['btn-primary']}`}>
             Đăng nhập
           </Link>
           <Link to="/register" className={`${styles.btn} ${styles['btn-secondary']}`}>

@@ -238,7 +238,7 @@ export default function ForgotPassword() {
           <Box sx={{ textAlign: 'center', mt: 2 }}>
             <Link
               component={RouterLink}
-              to="/financial-management-frontend/financeapp/src/pages/login"
+              to="/login"
               variant="body2"
             >
               Quay lại trang đăng nhập
