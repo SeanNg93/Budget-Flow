@@ -74,6 +74,31 @@ export const getFinancialSummary = () => {
   return axiosInstance.get('/transactions/summary');
 };
 
+// Category services
+export const getCategories = () => {
+  return axiosInstance.get('/categories');
+};
+
+export const getCategoryById = (id) => {
+  return axiosInstance.get(`/categories/${id}`);
+};
+
+export const createCategory = (categoryData) => {
+  return axiosInstance.post('/categories', categoryData);
+};
+
+export const updateCategory = (id, categoryData) => {
+  return axiosInstance.put(`/categories/${id}`, categoryData);
+};
+
+export const deleteCategory = (id) => {
+  return axiosInstance.delete(`/categories/${id}`);
+};
+
+export const getCategoriesByType = (type) => {
+  return axiosInstance.get(`/categories/type/${type}`);
+};
+
 // Export the service as a default object
 const FinanceService = {
   getAccounts,
@@ -88,6 +113,12 @@ const FinanceService = {
   updateTransaction,
   deleteTransaction,
   getFinancialSummary,
+  getCategories,
+  getCategoryById,
+  createCategory,
+  updateCategory,
+  deleteCategory,
+  getCategoriesByType,
 };
 
 export default FinanceService; 

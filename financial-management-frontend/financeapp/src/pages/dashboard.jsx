@@ -18,10 +18,20 @@ import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
+import Button from '@mui/material/Button';
+import AddIcon from '@mui/icons-material/Add';
+import Stack from '@mui/material/Stack';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import IconButton from '@mui/material/IconButton';
 
 // Import dashboard components
 import SideMenu from '../components/dashboard/SideMenu';
 import AppNavbar from '../components/dashboard/AppNavbar';
+import TransactionForm from '../components/dashboard/TransactionForm';
+import AccountForm from '../components/dashboard/AccountForm';
+import CategoryForm from '../components/dashboard/CategoryForm';
 
 // Import theme
 import AppTheme from '../shared-theme/AppTheme';
@@ -84,6 +94,10 @@ export default function Dashboard() {
   });
   const [transactions, setTransactions] = useState([]);
   const [dataLoading, setDataLoading] = useState(true);
+  const [transactionFormOpen, setTransactionFormOpen] = useState(false);
+  const [accountFormOpen, setAccountFormOpen] = useState(false);
+  const [categoryFormOpen, setCategoryFormOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
 
   useEffect(() => {
     checkAuth();
@@ -177,6 +191,26 @@ export default function Dashboard() {
     });
   };
 
+  const handleTransactionAdded = () => {
+    fetchFinancialData();
+  };
+
+  const handleAccountAdded = () => {
+    fetchFinancialData();
+  };
+
+  const handleCategoryAdded = () => {
+    // Refresh data if needed
+  };
+
+  const handleMenuClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+  
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -205,9 +239,48 @@ export default function Dashboard() {
                     backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.1),
                   }}
                 >
-                  <Typography component="h1" variant="h4" color="primary" gutterBottom>
-                    Welcome, {user?.username || 'User'}!
-                  </Typography>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography component="h1" variant="h4" color="primary" gutterBottom>
+                      Welcome, {user?.username || 'User'}!
+                    </Typography>
+                    <Stack direction="row" spacing={2}>
+                      <Button 
+                        variant="contained" 
+                        color="primary" 
+                        startIcon={<AddIcon />}
+                        onClick={() => setTransactionFormOpen(true)}
+                      >
+                        Add Transaction
+                      </Button>
+                      <Button 
+                        variant="outlined" 
+                        color="primary" 
+                        startIcon={<AddIcon />}
+                        onClick={() => setAccountFormOpen(true)}
+                      >
+                        Add Account
+                      </Button>
+                      <IconButton 
+                        color="primary"
+                        onClick={handleMenuClick}
+                        aria-label="more options"
+                      >
+                        <MoreVertIcon />
+                      </IconButton>
+                      <Menu
+                        anchorEl={anchorEl}
+                        open={Boolean(anchorEl)}
+                        onClose={handleMenuClose}
+                      >
+                        <MenuItem onClick={() => {
+                          setCategoryFormOpen(true);
+                          handleMenuClose();
+                        }}>
+                          Add Category
+                        </MenuItem>
+                      </Menu>
+                    </Stack>
+                  </Box>
                   <Typography variant="body1">
                     This is your financial dashboard. Here you can manage your finances, track expenses, and plan your budget.
                   </Typography>
@@ -272,9 +345,19 @@ export default function Dashboard() {
               {/* Recent Transactions */}
               <Grid item xs={12}>
                 <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
-                  <Typography component="h2" variant="h6" color="primary" gutterBottom>
-                    Recent Transactions
-                  </Typography>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                    <Typography component="h2" variant="h6" color="primary">
+                      Recent Transactions
+                    </Typography>
+                    <Button 
+                      variant="text" 
+                      color="primary" 
+                      startIcon={<AddIcon />}
+                      onClick={() => setTransactionFormOpen(true)}
+                    >
+                      Add New
+                    </Button>
+                  </Box>
                   
                   {dataLoading ? (
                     <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
@@ -320,6 +403,27 @@ export default function Dashboard() {
           </Container>
         </Main>
       </Box>
+      
+      {/* Transaction Form Dialog */}
+      <TransactionForm 
+        open={transactionFormOpen} 
+        handleClose={() => setTransactionFormOpen(false)} 
+        onTransactionAdded={handleTransactionAdded}
+      />
+      
+      {/* Account Form Dialog */}
+      <AccountForm 
+        open={accountFormOpen} 
+        handleClose={() => setAccountFormOpen(false)} 
+        onAccountAdded={handleAccountAdded}
+      />
+      
+      {/* Category Form Dialog */}
+      <CategoryForm 
+        open={categoryFormOpen} 
+        handleClose={() => setCategoryFormOpen(false)} 
+        onCategoryAdded={handleCategoryAdded}
+      />
     </AppTheme>
   );
 }
