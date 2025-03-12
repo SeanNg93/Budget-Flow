@@ -22,22 +22,22 @@ export default function Dashboard() {
       return;
     }
 
-    try {
-      const userData = localStorage.getItem("userData");
-      console.log(userData);
-      // setUser(JSON.parse(userData));
-    } catch (err) {
-      // Cookies.remove("access_token");
-      // localStorage.removeItem("userData");
-      // router.push("/login");
-    } finally {
-      setLoading(false);
-    }
+    // try {
+    //   const userData = localStorage.getItem("userData");
+    //   console.log(userData);
+    //   // setUser(JSON.parse(userData));
+    // } catch (err) {
+    //   // Cookies.remove("access_token");
+    //   // localStorage.removeItem("userData");
+    //   // router.push("/login");
+    // } finally {
+    //   setLoading(false);
+    // }
   };
 
   const handleLogout = () => {
     Cookies.remove("access_token");
-    localStorage.removeItem("userData");
+    localStorage.removeItem("token");
     router.push("/login");
   };
 
