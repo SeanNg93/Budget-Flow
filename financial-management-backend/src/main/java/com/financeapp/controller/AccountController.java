@@ -84,6 +84,16 @@ public class AccountController {
         return ResponseEntity.ok(newTotalBalance);
     }
 
+    @PutMapping("/update-balance")
+    public ResponseEntity<BigDecimal> updateTotalBalance(@RequestBody AddBalanceRequest request) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        Long userId = getUserIdFromUsername(username);
+        
+        BigDecimal newTotalBalance = accountService.updateTotalBalance(userId, request.getAmount());
+        return ResponseEntity.ok(newTotalBalance);
+    }
+
     // Helper method to get user ID from username
     private Long getUserIdFromUsername(String username) {
         Optional<User> userOptional = userRepository.findByUsername(username);
