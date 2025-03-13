@@ -11,8 +11,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -66,5 +68,12 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("success", "false", "message", "Xác thực thất bại hoặc không thể xoá tài khoản."));
         }
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<Map<String, Object>> getUser(Authentication authentication) {
+        OAuth2User user = (OAuth2User) authentication.getPrincipal();
+        Map<String, Object> response = new HashMap<>(user.getAttributes());
+        return ResponseEntity.ok(response);
     }
 }
