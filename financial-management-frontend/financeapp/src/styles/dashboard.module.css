@@ -111,7 +111,7 @@
     background-color: #c82333;
   }
   
-  /* --- Hiển thị trạng thái tải dữ liệu --- */
+  /* --- Loading state display --- */
   .loading {
     text-align: center;
     font-size: 1.2rem;

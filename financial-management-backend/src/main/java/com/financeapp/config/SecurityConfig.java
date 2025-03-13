@@ -49,6 +49,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/account/activate").permitAll()
                         .requestMatchers("/api/public/**").permitAll()
                         .requestMatchers("/api/user/change-password").permitAll()
+                        .requestMatchers("/api/accounts/add-to-balance").authenticated()
+                        .requestMatchers("/api/accounts/update-balance").authenticated()
                         .requestMatchers("/api/categories/**").authenticated()
                         .requestMatchers("/api/user/delete-account").authenticated()
                         .requestMatchers("/api/accounts/**").authenticated()

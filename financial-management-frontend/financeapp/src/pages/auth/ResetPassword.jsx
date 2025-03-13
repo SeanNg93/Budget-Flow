@@ -155,10 +155,10 @@ export default function ResetPassword() {
               variant="h4"
               sx={{ width: '100%', fontSize: 'clamp(2rem, 10vw, 2.15rem)', textAlign: 'center' }}
             >
-              Đặt lại mật khẩu
+              Reset Password
             </Typography>
             <Typography variant="body2" sx={{ mt: 1, textAlign: 'center' }}>
-              Nhập mật khẩu mới của bạn
+              Enter your new password
             </Typography>
           </Box>
 
@@ -258,7 +258,7 @@ export default function ResetPassword() {
                       disabled={isSubmitting}
                       sx={{ mt: 1 }}
                     >
-                      {isSubmitting ? 'Đang xử lý...' : 'Đặt lại mật khẩu'}
+                      {isSubmitting ? 'Processing...' : 'Reset Password'}
                     </Button>
                   </Box>
                 </Form>
@@ -272,7 +272,7 @@ export default function ResetPassword() {
               to="/login"
               variant="body2"
             >
-              {isSuccess ? 'Đăng nhập với mật khẩu mới' : 'Quay lại trang đăng nhập'}
+              {isSuccess ? 'Login with your new password' : 'Back to login page'}
             </Link>
           </Box>
         </Card>

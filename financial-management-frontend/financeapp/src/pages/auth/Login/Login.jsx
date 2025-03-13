@@ -30,8 +30,8 @@ import { Visibility, VisibilityOff, Google, Facebook, GitHub } from '@mui/icons-
 
 // Validation schema
 const LoginSchema = Yup.object().shape({
-  username: Yup.string().required('Tên đăng nhập không được để trống'),
-  password: Yup.string().required('Mật khẩu không được để trống'),
+  username: Yup.string().required('Username is required'),
+  password: Yup.string().required('Password is required'),
 });
 
 const Card = styled(Paper)(({ theme }) => ({
@@ -174,7 +174,7 @@ const Login = () => {
             variant="h4"
             sx={{ width: '100%', fontSize: 'clamp(2rem, 10vw, 2.15rem)', textAlign: 'center', mb: 2 }}
           >
-            Đăng nhập
+            Login
           </Typography>
 
           {error && (
@@ -201,13 +201,13 @@ const Login = () => {
                   }}
                 >
                   <FormControl>
-                    <FormLabel htmlFor="username">Tên đăng nhập</FormLabel>
+                    <FormLabel htmlFor="username">Username</FormLabel>
                     <Field name="username">
                       {({ field, meta }) => (
                         <TextField
                           {...field}
                           id="username"
-                          placeholder="Tên đăng nhập"
+                          placeholder="Username"
                           autoComplete="username"
                           autoFocus
                           fullWidth
@@ -220,7 +220,7 @@ const Login = () => {
                   </FormControl>
 
                   <FormControl>
-                    <FormLabel htmlFor="password">Mật khẩu</FormLabel>
+                    <FormLabel htmlFor="password">Password</FormLabel>
                     <Field name="password">
                       {({ field, meta }) => (
                         <TextField
@@ -254,7 +254,7 @@ const Login = () => {
 
                   <FormControlLabel
                     control={<Checkbox value="remember" color="primary" />}
-                    label="Ghi nhớ đăng nhập"
+                    label="Remember me"
                   />
 
                   <Button
@@ -267,7 +267,7 @@ const Login = () => {
                       formikSubmit();
                     }}
                   >
-                    {isSubmitting ? 'Đang đăng nhập...' : 'Đăng nhập'}
+                    {isSubmitting ? 'Logging in...' : 'Login'}
                   </Button>
 
                   <Link
@@ -276,14 +276,14 @@ const Login = () => {
                     variant="body2"
                     sx={{ alignSelf: 'center', mt: 1 }}
                   >
-                    Quên mật khẩu?
+                    Forgot password?
                   </Link>
                 </Box>
               </Form>
             )}
           </Formik>
 
-          <Divider sx={{ my: 2 }}>hoặc</Divider>
+          <Divider sx={{ my: 2 }}>or</Divider>
 
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
 
@@ -293,7 +293,7 @@ const Login = () => {
                   startIcon={<Google />}
                   onClick={() => loginGoogle()}
               >
-                Đăng nhập với Google
+                Login with Google
               </Button>
 
 
