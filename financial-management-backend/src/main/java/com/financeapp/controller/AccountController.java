@@ -1,5 +1,6 @@
 package com.financeapp.controller;
 
+import com.financeapp.dto.AddBalanceRequest;
 import com.financeapp.model.Account;
 import com.financeapp.model.User;
 import com.financeapp.repository.UserRepository;
@@ -71,6 +72,16 @@ public class AccountController {
         Long userId = getUserIdFromUsername(username);
         BigDecimal totalBalance = accountService.getTotalBalance(userId);
         return ResponseEntity.ok(totalBalance);
+    }
+
+    @PostMapping("/add-to-balance")
+    public ResponseEntity<BigDecimal> addToTotalBalance(@RequestBody AddBalanceRequest request) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        Long userId = getUserIdFromUsername(username);
+        
+        BigDecimal newTotalBalance = accountService.addToTotalBalance(userId, request.getAmount());
+        return ResponseEntity.ok(newTotalBalance);
     }
 
     // Helper method to get user ID from username

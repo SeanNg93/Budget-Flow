@@ -49,6 +49,10 @@ export const getTotalBalance = () => {
   return axiosInstance.get('/accounts/total-balance');
 };
 
+export const addToTotalBalance = (amount) => {
+  return axiosInstance.post('/accounts/add-to-balance', { amount });
+};
+
 // Transaction services
 export const getTransactions = () => {
   return axiosInstance.get('/transactions');
@@ -125,6 +129,7 @@ const FinanceService = {
   updateAccount,
   deleteAccount,
   getTotalBalance,
+  addToTotalBalance,
   getTransactions,
   getTransactionById,
   createTransaction,

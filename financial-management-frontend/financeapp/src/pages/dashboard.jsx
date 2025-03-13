@@ -20,6 +20,7 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Button from '@mui/material/Button';
 import AddIcon from '@mui/icons-material/Add';
+import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
 
 // Import dashboard components
@@ -29,6 +30,7 @@ import TransactionForm from '../components/dashboard/TransactionForm';
 import AccountForm from '../components/dashboard/AccountForm';
 import CategoryForm from '../components/dashboard/CategoryForm';
 import FinanceActionPanel from '../components/dashboard/FinanceActionPanel';
+import AddBalanceForm from '../components/dashboard/AddBalanceForm';
 
 // Import theme
 import AppTheme from '../shared-theme/AppTheme';
@@ -93,6 +95,7 @@ export default function Dashboard() {
   const [transactionFormOpen, setTransactionFormOpen] = useState(false);
   const [accountFormOpen, setAccountFormOpen] = useState(false);
   const [categoryFormOpen, setCategoryFormOpen] = useState(false);
+  const [addBalanceFormOpen, setAddBalanceFormOpen] = useState(false);
   const [error, setError] = useState(null);
 
   // New state for the unified finance action panel
@@ -140,6 +143,8 @@ export default function Dashboard() {
       // Fetch recent transactions
       const transactionsResponse = await FinanceService.getTransactions();
       
+      console.log('Financial summary data:', summaryResponse.data);
+      
       // Update financial data
       setFinancialData({
         totalBalance: summaryResponse.data.totalBalance || 0,
@@ -151,6 +156,7 @@ export default function Dashboard() {
       // Update transactions
       setTransactions(transactionsResponse.data.slice(0, 5)); // Get only the 5 most recent
     } catch (error) {
+      console.error('Error fetching financial data:', error);
       setError('Failed to load financial data. Please try again later.');
       // Use placeholder data if API fails
       setFinancialData({
@@ -196,6 +202,11 @@ export default function Dashboard() {
   };
 
   const handleCategoryAdded = () => {
+    fetchFinancialData();
+  };
+
+  const handleBalanceAdded = () => {
+    console.log('Balance added, refreshing data...');
     fetchFinancialData();
   };
 
@@ -256,7 +267,21 @@ export default function Dashboard() {
               {/* Summary Cards */}
               <Grid item xs={12} md={3}>
                 <Card>
-                  <CardHeader title="Total Balance" />
+                  <CardHeader 
+                    title={
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Typography variant="h6" component="div">Total Balance</Typography>
+                        <IconButton 
+                          color="primary" 
+                          size="small" 
+                          onClick={() => setAddBalanceFormOpen(true)}
+                          sx={{ ml: 1 }}
+                        >
+                          <AddIcon />
+                        </IconButton>
+                      </Box>
+                    } 
+                  />
                   <CardContent>
                     {loading ? (
                       <CircularProgress size={24} />
@@ -394,6 +419,13 @@ export default function Dashboard() {
         open={categoryFormOpen} 
         handleClose={() => setCategoryFormOpen(false)} 
         onCategoryAdded={handleCategoryAdded}
+      />
+      
+      {/* Add Balance Form */}
+      <AddBalanceForm 
+        open={addBalanceFormOpen}
+        handleClose={() => setAddBalanceFormOpen(false)}
+        onBalanceAdded={handleBalanceAdded}
       />
     </AppTheme>
   );

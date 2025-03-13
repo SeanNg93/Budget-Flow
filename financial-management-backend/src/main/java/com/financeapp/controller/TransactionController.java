@@ -3,6 +3,7 @@ package com.financeapp.controller;
 import com.financeapp.model.Transaction;
 import com.financeapp.model.User;
 import com.financeapp.repository.UserRepository;
+import com.financeapp.service.AccountService;
 import com.financeapp.service.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -23,11 +24,13 @@ public class TransactionController {
 
     private final TransactionService transactionService;
     private final UserRepository userRepository;
+    private final AccountService accountService;
 
     @Autowired
-    public TransactionController(TransactionService transactionService, UserRepository userRepository) {
+    public TransactionController(TransactionService transactionService, UserRepository userRepository, AccountService accountService) {
         this.transactionService = transactionService;
         this.userRepository = userRepository;
+        this.accountService = accountService;
     }
 
     @GetMapping
@@ -77,6 +80,7 @@ public class TransactionController {
         Long userId = getUserIdFromUsername(username);
         
         Map<String, BigDecimal> summary = new HashMap<>();
+        summary.put("totalBalance", accountService.getTotalBalance(userId));
         summary.put("totalIncome", transactionService.getTotalIncome(userId));
         summary.put("totalExpense", transactionService.getTotalExpense(userId));
         summary.put("netSavings", transactionService.getNetSavings(userId));
