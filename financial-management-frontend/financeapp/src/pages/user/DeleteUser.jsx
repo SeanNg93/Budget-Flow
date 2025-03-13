@@ -46,7 +46,7 @@ export default function DeleteUser() {
   };
 
   const deleteUser = async (username) => {
-    if (!confirm(`Bạn có chắc chắn muốn xóa người dùng ${username}?`)) {
+    if (!confirm(`Are you sure you want to delete user ${username}?`)) {
       return;
     }
 
@@ -59,16 +59,16 @@ export default function DeleteUser() {
       });
 
       if (response.ok) {
-        // Cập nhật danh sách người dùng sau khi xóa
+        // Update user list after deletion
         setUsers(users.filter((user) => user.username !== username));
-        alert(`Đã xóa người dùng ${username} thành công!`);
+        alert(`User ${username} has been deleted successfully!`);
       } else {
         const errorData = await response.json();
-        alert(`Lỗi: ${errorData.message || "Không thể xóa người dùng"}`);
+        alert(`Error: ${errorData.message || "Could not delete user"}`);
       }
     } catch (error) {
       console.error("Error deleting user:", error);
-      alert("Đã xảy ra lỗi khi xóa người dùng");
+      alert("An error occurred while deleting the user");
     }
   };
 
@@ -84,10 +84,10 @@ export default function DeleteUser() {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
-          <strong className="font-bold">Lỗi!</strong>
+          <strong className="font-bold">Error!</strong>
           <span className="block sm:inline">
             {" "}
-            Bạn không có quyền truy cập trang này.
+            You do not have permission to access this page.
           </span>
         </div>
         <div className="mt-4">
@@ -104,16 +104,16 @@ export default function DeleteUser() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">Quản lý người dùng</h1>
+      <h1 className="text-3xl font-bold mb-6">User Management</h1>
 
       <div className="bg-white shadow-md rounded-lg overflow-hidden">
         <div className="p-4 border-b">
-          <h2 className="text-xl font-semibold">Danh sách người dùng</h2>
+          <h2 className="text-xl font-semibold">User List</h2>
         </div>
 
         {users.length === 0 ? (
           <div className="p-4 text-center text-gray-500">
-            Không có người dùng nào.
+            No users found.
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -121,19 +121,19 @@ export default function DeleteUser() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Tên người dùng
+                    Username
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Email
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Vai trò
+                    Role
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Trạng thái
+                    Status
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Hành động
+                    Actions
                   </th>
                 </tr>
               </thead>
@@ -167,7 +167,7 @@ export default function DeleteUser() {
                             : "bg-red-100 text-red-800"
                         }`}
                       >
-                        {user.active ? "Hoạt động" : "Bị khóa"}
+                        {user.active ? "Active" : "Inactive"}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -177,7 +177,7 @@ export default function DeleteUser() {
                           className="text-red-600 hover:text-red-900"
                           disabled={user.role === "ADMIN"}
                         >
-                          Xóa
+                          Delete
                         </button>
                       )}
                     </td>
@@ -194,7 +194,7 @@ export default function DeleteUser() {
           onClick={() => navigate('/dashboard')}
           className="bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300"
         >
-          Quay lại Dashboard
+          Back to Dashboard
         </button>
       </div>
     </div>

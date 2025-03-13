@@ -32,18 +32,18 @@ import PersonAddIcon from '@mui/icons-material/PersonAdd';
 // Validation schema
 const RegisterSchema = Yup.object().shape({
   username: Yup.string()
-    .min(3, 'Tên đăng nhập phải có ít nhất 3 ký tự')
-    .max(20, 'Tên đăng nhập không được vượt quá 20 ký tự')
-    .required('Tên đăng nhập không được để trống'),
+    .min(3, 'Username must be at least 3 characters')
+    .max(20, 'Username cannot exceed 20 characters')
+    .required('Username is required'),
   email: Yup.string()
-    .email('Email không hợp lệ')
-    .required('Email không được để trống'),
+    .email('Invalid email format')
+    .required('Email is required'),
   password: Yup.string()
-    .min(6, 'Mật khẩu phải có ít nhất 6 ký tự')
-    .required('Mật khẩu không được để trống'),
+    .min(6, 'Password must be at least 6 characters')
+    .required('Password is required'),
   confirmPassword: Yup.string()
-    .oneOf([Yup.ref('password'), null], 'Mật khẩu xác nhận không khớp')
-    .required('Xác nhận mật khẩu không được để trống'),
+    .oneOf([Yup.ref('password'), null], 'Passwords do not match')
+    .required('Confirm password is required'),
 });
 
 const Card = styled(Paper)(({ theme }) => ({
@@ -111,18 +111,18 @@ export default function Register() {
       setIsSuccess(true);
 
       if (response.data && response.data.activationLink) {
-        setMessage(`Đăng ký thành công! Chuẩn bị gửi email kích hoạt tới ${values.email}...`);
+        setMessage(`Registration successful! Preparing to send activation email to ${values.email}...`);
         setActivationData({
           to_email: values.email,
           activation_link: response.data.activationLink,
         });
       } else {
-        setMessage('Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt tài khoản.');
+        setMessage('Registration successful! Please check your email to activate your account.');
       }
     } catch (error) {
       setIsSuccess(false);
       const errorMessage =
-        error.response?.data?.message || 'Đăng ký thất bại. Vui lòng thử lại.';
+        error.response?.data?.message || 'Registration failed. Please try again.';
       setMessage(errorMessage);
     } finally {
       setSubmitting(false);
@@ -143,16 +143,16 @@ export default function Register() {
       );
 
       if (result.status === 200) {
-        setMessage(`Đăng ký thành công! Email kích hoạt đã được gửi tới ${activationData.to_email}`);
+        setMessage(`Registration successful! Activation email has been sent to ${activationData.to_email}`);
       } else {
         setMessage(
-          'Đăng ký thành công, nhưng không thể gửi email kích hoạt. Vui lòng liên hệ quản trị viên.'
+          'Registration successful, but unable to send activation email. Please contact the administrator.'
         );
       }
     } catch (error) {
       console.error('Error sending activation email:', error);
       setMessage(
-        'Đăng ký thành công, nhưng không thể gửi email kích hoạt. Vui lòng liên hệ quản trị viên.'
+        'Registration successful, but unable to send activation email. Please contact the administrator.'
       );
     } finally {
       setIsSendingEmail(false);
@@ -193,7 +193,7 @@ export default function Register() {
               variant="h4"
               sx={{ width: '100%', fontSize: 'clamp(2rem, 10vw, 2.15rem)', textAlign: 'center' }}
             >
-              Đăng ký tài khoản
+              Register Account
             </Typography>
           </Box>
 
@@ -206,7 +206,7 @@ export default function Register() {
           {isSendingEmail && (
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mt: 2 }}>
               <CircularProgress size={24} sx={{ mr: 1 }} />
-              <Typography>Đang gửi email kích hoạt...</Typography>
+              <Typography>Sending activation email...</Typography>
             </Box>
           )}
 
@@ -235,13 +235,13 @@ export default function Register() {
                     }}
                   >
                     <FormControl>
-                      <FormLabel htmlFor="username">Tên đăng nhập</FormLabel>
+                      <FormLabel htmlFor="username">Username</FormLabel>
                       <Field name="username">
                         {({ field, meta }) => (
                           <TextField
                             {...field}
                             id="username"
-                            placeholder="Tên đăng nhập"
+                            placeholder="Username"
                             autoComplete="username"
                             autoFocus
                             fullWidth
@@ -271,7 +271,7 @@ export default function Register() {
                     </FormControl>
 
                     <FormControl>
-                      <FormLabel htmlFor="password">Mật khẩu</FormLabel>
+                      <FormLabel htmlFor="password">Password</FormLabel>
                       <Field name="password">
                         {({ field, meta }) => (
                           <TextField
@@ -303,7 +303,7 @@ export default function Register() {
                     </FormControl>
 
                     <FormControl>
-                      <FormLabel htmlFor="confirmPassword">Xác nhận mật khẩu</FormLabel>
+                      <FormLabel htmlFor="confirmPassword">Confirm Password</FormLabel>
                       <Field name="confirmPassword">
                         {({ field, meta }) => (
                           <TextField
@@ -336,7 +336,7 @@ export default function Register() {
 
                     <FormControlLabel
                       control={<Checkbox value="allowExtraEmails" color="primary" />}
-                      label="Tôi muốn nhận thông báo qua email."
+                      label="I want to receive notifications via email."
                     />
 
                     <Button
@@ -345,7 +345,7 @@ export default function Register() {
                       variant="contained"
                       disabled={isSubmitting}
                     >
-                      {isSubmitting ? 'Đang đăng ký...' : 'Đăng ký'}
+                      {isSubmitting ? 'Registering...' : 'Register'}
                     </Button>
                   </Box>
                 </Form>
@@ -360,21 +360,21 @@ export default function Register() {
                 to="/login"
                 variant="body2"
               >
-                Quay lại trang đăng nhập
+                Back to login page
               </Link>
             </Box>
           ) : (
             <>
-              <Divider sx={{ my: 2 }}>hoặc</Divider>
+              <Divider sx={{ my: 2 }}>or</Divider>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 <Typography sx={{ textAlign: 'center' }}>
-                  Đã có tài khoản?{' '}
+                  Already have an account?{' '}
                   <Link
                     component={RouterLink}
                     to="/login"
                     variant="body2"
                   >
-                    Đăng nhập
+                    Login
                   </Link>
                 </Typography>
               </Box>

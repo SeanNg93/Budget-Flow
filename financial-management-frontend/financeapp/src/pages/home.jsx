@@ -22,21 +22,21 @@ function Home() {
 
   return (
     <div className={styles['home-container']}>
-      <h1>Trang Chủ</h1>
+      <h1>Home</h1>
       
       {!isLoggedIn ? (
         <div className={styles['auth-buttons']}>
           <Link to="/login" className={`${styles.btn} ${styles['btn-primary']}`}>
-            Đăng nhập
+            Login
           </Link>
           <Link to="/register" className={`${styles.btn} ${styles['btn-secondary']}`}>
-            Đăng ký
+            Register
           </Link>
         </div>
       ) : (
         <div className={styles['user-actions']}>
           <button onClick={handleLogout} className={`${styles.btn} ${styles['btn-warning']}`}>
-            Đăng xuất
+            Logout
           </button>
           <Link to="/dashboard" className={`${styles.btn} ${styles['btn-primary']}`}>
             Dashboard
