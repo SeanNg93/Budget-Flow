@@ -18,4 +18,9 @@ public class Role {
     @Column(length = 20, unique = true)
     private ERole name;
 
+    public enum ERole {
+        ROLE_USER,
+        ROLE_ADMIN,
+        ROLE_ACCOUNTANT
+    }
 }

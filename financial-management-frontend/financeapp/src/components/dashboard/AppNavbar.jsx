@@ -13,6 +13,7 @@ import AccountCircle from '@mui/icons-material/AccountCircle';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import MoreIcon from '@mui/icons-material/MoreVert';
 import { useNavigate } from 'react-router-dom';
+import ChangePassword from '../user/ChangePassword';
 
 const drawerWidth = 240;
 
@@ -37,6 +38,7 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = useState(null);
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
 
   const isMenuOpen = Boolean(anchorEl);
   const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
@@ -75,6 +77,15 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
     navigate('/account/delete'); // 🔥 Đúng với đường dẫn trong App.jsx
   };
 
+  const handleChangePassword = () => {
+    handleMenuClose();
+    setChangePasswordOpen(true);
+  };
+
+  const handleChangePasswordClose = () => {
+    setChangePasswordOpen(false);
+  };
+
   const menuId = 'primary-search-account-menu';
   const renderMenu = (
     <Menu
@@ -93,6 +104,7 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
       onClose={handleMenuClose}
     >
       <MenuItem onClick={handleProfile}>Profile</MenuItem>
+      <MenuItem onClick={handleChangePassword}>Change Password</MenuItem>
       <MenuItem onClick={handleDeleteAccount} style={{ color: 'red' }}>Delete Account</MenuItem>
       <MenuItem onClick={handleLogout}>Logout</MenuItem>
     </Menu>
@@ -202,6 +214,7 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
       </AppBarStyled>
       {renderMobileMenu}
       {renderMenu}
+      <ChangePassword open={changePasswordOpen} onClose={handleChangePasswordClose} />
     </>
   );
 };

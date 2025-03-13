@@ -3,6 +3,8 @@ import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
 import { login } from '../../../config/axiosInstance';
+import AuthService from "@/services/auth.service";
+import { useGoogleLogin } from "@react-oauth/google";
 
 // Material UI imports
 import {
@@ -24,11 +26,7 @@ import {
   Typography,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import {Visibility, VisibilityOff, Google, Facebook, GitHub} from '@mui/icons-material';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import AuthService from "@/services/auth.service";
-import {GoogleOAuthProvider, useGoogleLogin} from "@react-oauth/google";
-import { jwtDecode } from "jwt-decode";
+import { Visibility, VisibilityOff, Google, Facebook, GitHub } from '@mui/icons-material';
 
 // Validation schema
 const LoginSchema = Yup.object().shape({
@@ -55,48 +53,9 @@ const LoginContainer = styled(Stack)(({ theme }) => ({
   height: 'calc(100dvh)',
   minHeight: '100%',
   padding: theme.spacing(2),
-  [theme.breakpoints.up('sm')]: {
-    padding: theme.spacing(4),
-  },
-  '&::before': {
-    content: '""',
-    display: 'block',
-    position: 'absolute',
-    zIndex: -1,
-    inset: 0,
-    backgroundImage:
-      'radial-gradient(ellipse at 50% 50%, hsl(210, 100%, 97%), hsl(0, 0%, 100%))',
-    backgroundRepeat: 'no-repeat',
-  },
 }));
 
-// Logo component
-const SitemarkIcon = () => (
-  <Box
-    sx={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      mb: 2,
-    }}
-  >
-    <Box
-      sx={{
-        backgroundColor: 'primary.main',
-        borderRadius: '50%',
-        p: 1,
-        color: 'white',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
-      <LockOutlinedIcon />
-    </Box>
-  </Box>
-);
-
-export default function Login() {
+const Login = () => {
   const navigate = useNavigate();
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -210,7 +169,6 @@ export default function Login() {
     <CssBaseline>
       <LoginContainer direction="column" justifyContent="space-between">
         <Card elevation={3}>
-          <SitemarkIcon />
           <Typography
             component="h1"
             variant="h4"
@@ -353,7 +311,7 @@ export default function Login() {
                 fullWidth
                 variant="outlined"
                 startIcon={<GitHub/>}
-                onClick={() => window.location.href = `https://github.com/login/oauth/authorize?client_id=Ov23lik6g6WygAhPnsUc`}
+                onClick={() => window.location.href = `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}`}
             >
               Đăng nhập với Github
             </Button>
@@ -374,4 +332,6 @@ export default function Login() {
       </LoginContainer>
     </CssBaseline>
   );
-} 
+};
+
+export default Login;

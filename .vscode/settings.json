@@ -14,5 +14,6 @@
             "database": "finance_db",
             "username": "root"
         }
-    ]
+    ],
+    "java.configuration.updateBuildConfiguration": "interactive"
 }

@@ -1,6 +1,5 @@
 package com.financeapp.service;
 
-import com.financeapp.model.ERole;
 import com.financeapp.model.Role;
 import com.financeapp.model.User;
 import com.financeapp.repository.RoleRepository;
@@ -12,7 +11,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.HashSet;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +33,10 @@ public class UserService {
 
     public Optional<User> getUserById(Long id) {
         return userRepository.findById(id);
+    }
+
+    public Optional<User> getUserByUsername(String username) {
+        return userRepository.findByUsername(username);
     }
 
     @Transactional
@@ -69,7 +77,7 @@ public class UserService {
             return false;
         }
 
-        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        user.setPassword(passwordEncoder.encode(newPassword));
         user.setResetPasswordToken(null);
         user.setResetPasswordTokenExpiry(null);
         userRepository.save(user);
@@ -104,6 +112,13 @@ public class UserService {
             return false;
         }
 
+        // Ensure user has the default ROLE_USER role
+        if (user.getRoles() == null || user.getRoles().isEmpty()) {
+            Role userRole = roleRepository.findByName(Role.ERole.ROLE_USER)
+                    .orElseThrow(() -> new RuntimeException("Error: Role ROLE_USER not found"));
+            user.setRoles(new HashSet<>(Collections.singletonList(userRole)));
+        }
+
         user.setEnabled(true);
         user.setActivationToken(null);
         user.setActivationTokenExpiry(null);
@@ -117,7 +132,7 @@ public class UserService {
         Optional<User> userOpt = userRepository.findByUsername(username);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
-            if (passwordEncoder.matches(rawPassword, user.getPasswordHash())) {
+            if (passwordEncoder.matches(rawPassword, user.getPassword())) {
                 userRepository.delete(user);
                 return true;
             }
@@ -125,27 +140,27 @@ public class UserService {
         return false;
     }
 
+    /**
+     * Change a user's password
+     * @param username the username of the user
+     * @param currentPassword the current password for verification
+     * @param newPassword the new password to set
+     * @return true if password was changed successfully, false otherwise
+     */
     @Transactional
-    public User registerNewUser(String username, String email, String password) {
-        if (userRepository.existsByUsername(username) || userRepository.existsByEmail(email)) {
-            throw new IllegalArgumentException("Username or email already exists.");
+    public boolean changePassword(String username, String currentPassword, String newPassword) {
+        Optional<User> userOpt = userRepository.findByUsername(username);
+        if (userOpt.isEmpty()) {
+            return false;
         }
 
-        User user = new User();
-        user.setUsername(username);
-        user.setEmail(email);
-        user.setPasswordHash(passwordEncoder.encode(password));
-        user.setEnabled(false);
+        User user = userOpt.get();
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            return false;
+        }
 
-        Role userRole = roleRepository.findByName(ERole.ROLE_USER)
-                .orElseThrow(() -> new RuntimeException("ROLE_USER not found"));
-        user.setRoles(Set.of(userRole));
-
-        return userRepository.save(user);
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        return true;
     }
-
-    public Optional<User> getUserByUsername(String username) {
-        return userRepository.findByUsername(username);
-    }
-
 }

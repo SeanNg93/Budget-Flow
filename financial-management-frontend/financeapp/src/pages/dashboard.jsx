@@ -20,7 +20,12 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Button from '@mui/material/Button';
 import AddIcon from '@mui/icons-material/Add';
+import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import EditIcon from '@mui/icons-material/Edit';
 
 // Import dashboard components
 import SideMenu from '../components/dashboard/SideMenu';
@@ -29,6 +34,8 @@ import TransactionForm from '../components/dashboard/TransactionForm';
 import AccountForm from '../components/dashboard/AccountForm';
 import CategoryForm from '../components/dashboard/CategoryForm';
 import FinanceActionPanel from '../components/dashboard/FinanceActionPanel';
+import AddBalanceForm from '../components/dashboard/AddBalanceForm';
+import EditBalanceForm from '../components/dashboard/EditBalanceForm';
 
 // Import theme
 import AppTheme from '../shared-theme/AppTheme';
@@ -93,6 +100,9 @@ export default function Dashboard() {
   const [transactionFormOpen, setTransactionFormOpen] = useState(false);
   const [accountFormOpen, setAccountFormOpen] = useState(false);
   const [categoryFormOpen, setCategoryFormOpen] = useState(false);
+  const [addBalanceFormOpen, setAddBalanceFormOpen] = useState(false);
+  const [editBalanceFormOpen, setEditBalanceFormOpen] = useState(false);
+  const [balanceMenuAnchorEl, setBalanceMenuAnchorEl] = useState(null);
   const [error, setError] = useState(null);
 
   // New state for the unified finance action panel
@@ -199,9 +209,26 @@ export default function Dashboard() {
     fetchFinancialData();
   };
 
+  const handleBalanceAdded = () => {
+    fetchFinancialData();
+  };
+
   // Function to open the finance action panel
   const openFinanceActionPanel = () => {
     setFinanceActionPanelOpen(true);
+  };
+
+  const handleBalanceMenuOpen = (event) => {
+    setBalanceMenuAnchorEl(event.currentTarget);
+  };
+
+  const handleBalanceMenuClose = () => {
+    setBalanceMenuAnchorEl(null);
+  };
+
+  const handleEditBalance = () => {
+    handleBalanceMenuClose();
+    setEditBalanceFormOpen(true);
   };
 
   if (loading) {
@@ -256,7 +283,44 @@ export default function Dashboard() {
               {/* Summary Cards */}
               <Grid item xs={12} md={3}>
                 <Card>
-                  <CardHeader title="Total Balance" />
+                  <CardHeader 
+                    title={
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <Typography variant="h6" component="div">Total Balance</Typography>
+                          <IconButton 
+                            color="primary" 
+                            size="small" 
+                            onClick={() => setAddBalanceFormOpen(true)}
+                            sx={{ ml: 1 }}
+                          >
+                            <AddIcon />
+                          </IconButton>
+                        </Box>
+                        <IconButton
+                          aria-label="more options"
+                          aria-controls="balance-menu"
+                          aria-haspopup="true"
+                          onClick={handleBalanceMenuOpen}
+                          size="small"
+                        >
+                          <MoreVertIcon />
+                        </IconButton>
+                      </Box>
+                    } 
+                  />
+                  <Menu
+                    id="balance-menu"
+                    anchorEl={balanceMenuAnchorEl}
+                    keepMounted
+                    open={Boolean(balanceMenuAnchorEl)}
+                    onClose={handleBalanceMenuClose}
+                  >
+                    <MenuItem onClick={handleEditBalance}>
+                      <EditIcon fontSize="small" sx={{ mr: 1 }} />
+                      Edit Balance
+                    </MenuItem>
+                  </Menu>
                   <CardContent>
                     {loading ? (
                       <CircularProgress size={24} />
@@ -394,6 +458,21 @@ export default function Dashboard() {
         open={categoryFormOpen} 
         handleClose={() => setCategoryFormOpen(false)} 
         onCategoryAdded={handleCategoryAdded}
+      />
+      
+      {/* Add Balance Form */}
+      <AddBalanceForm 
+        open={addBalanceFormOpen}
+        handleClose={() => setAddBalanceFormOpen(false)}
+        onBalanceAdded={handleBalanceAdded}
+      />
+      
+      {/* Edit Balance Form */}
+      <EditBalanceForm 
+        open={editBalanceFormOpen}
+        handleClose={() => setEditBalanceFormOpen(false)}
+        onBalanceUpdated={handleBalanceAdded}
+        currentBalance={financialData.totalBalance}
       />
     </AppTheme>
   );
