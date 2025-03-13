@@ -108,4 +108,36 @@ public class WalletController {
         }
     }
 
+    @PutMapping("/reset/{id}")
+    @PreAuthorize("hasAuthority('ROLE_USER')")
+    public ResponseEntity<?> resetWalletBalance(@PathVariable Long id, Authentication authentication) {
+        String username = authentication.getName();
+        Optional<User> userOptional = userService.getUserByUsername(username);
+
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "User not found"));
+        }
+
+        User user = userOptional.get();
+
+        // Kiểm tra ví có thuộc về user không
+        Optional<Wallet> walletOptional = walletRepository.findByIdAndUser(id, user);
+        if (walletOptional.isEmpty()) {
+            return ResponseEntity.status(403).body(Map.of("success", false, "message", "Wallet not found or unauthorized"));
+        }
+
+        Wallet wallet = walletOptional.get();
+
+        // Reset số dư về 0
+        wallet.setBalance(BigDecimal.ZERO);
+
+        // Xóa tất cả giao dịch liên quan đến ví
+        walletService.deleteALLTransactionsByWalletId(wallet.getId());
+
+        // Lưu thay đổi vào database
+        walletRepository.save(wallet);
+
+        return ResponseEntity.ok(Map.of("success", true, "message", "Wallet balance reset successfully", "wallet", wallet));
+    }
+
 }

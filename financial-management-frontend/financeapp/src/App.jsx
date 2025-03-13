@@ -30,6 +30,7 @@ import TestConnection from './components/TestConnection';
 import WalletList from "./pages/wallet/WalletList";
 import EditWallet from './pages/wallet/EditWallet';
 import CreateWallet from "./pages/wallet/CreateWallet"; 
+import WalletDetails from './pages/wallet/WalletDetails';
 
 function App() {
   useEffect(() => {
@@ -80,6 +81,7 @@ function App() {
         <Route path="/wallets" element={<WalletList />} />
         <Route path="/create-wallet" element={<CreateWallet />} /> {/* 🔥 Fix lỗi */}
         <Route path="/wallets/edit/:id" element={<EditWallet />} />
+        <Route path="/wallets/details/:id" element={<WalletDetails />} />
         
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
