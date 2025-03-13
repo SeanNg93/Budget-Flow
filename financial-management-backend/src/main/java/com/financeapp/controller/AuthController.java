@@ -4,6 +4,7 @@ import com.financeapp.dto.LoginRequest;
 import com.financeapp.dto.JwtResponse;
 import com.financeapp.model.Role;
 import com.financeapp.model.User;
+import com.financeapp.repository.RoleRepository;
 import com.financeapp.repository.UserRepository;
 import com.financeapp.security.JwtUtils;
 import com.financeapp.service.UserService;
@@ -23,6 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.HashSet;
+import java.util.Collections;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -32,6 +35,7 @@ public class AuthController {
     
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
     private final UserService userService;
@@ -102,6 +106,11 @@ public class AuthController {
             user.setEmail(registerRequest.getEmail());
             user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
             user.setEnabled(false); // User is disabled until activation
+
+            // Assign default ROLE_USER role
+            Role userRole = roleRepository.findByName(Role.ERole.ROLE_USER)
+                    .orElseThrow(() -> new RuntimeException("Error: Role ROLE_USER not found"));
+            user.setRoles(new HashSet<>(Collections.singletonList(userRole)));
 
             userRepository.save(user);
             logger.info("User registered successfully: {}", registerRequest.getUsername());

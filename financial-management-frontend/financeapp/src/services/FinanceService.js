@@ -49,6 +49,32 @@ export const getTotalBalance = () => {
   return axiosInstance.get('/accounts/total-balance');
 };
 
+export const addToTotalBalance = (amount) => {
+  const token = localStorage.getItem('userToken');
+  return axios.post(`${API_URL}/accounts/add-to-balance`, 
+    { amount }, 
+    { 
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      } 
+    }
+  );
+};
+
+export const updateTotalBalance = (amount) => {
+  const token = localStorage.getItem('userToken');
+  return axios.put(`${API_URL}/accounts/update-balance`, 
+    { amount }, 
+    { 
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      } 
+    }
+  );
+};
+
 // Transaction services
 export const getTransactions = () => {
   return axiosInstance.get('/transactions');
@@ -125,6 +151,8 @@ const FinanceService = {
   updateAccount,
   deleteAccount,
   getTotalBalance,
+  addToTotalBalance,
+  updateTotalBalance,
   getTransactions,
   getTransactionById,
   createTransaction,

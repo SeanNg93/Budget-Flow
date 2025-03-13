@@ -1,30 +1,32 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 
-export default function handler(req, res) {
-  const data = new FormData();
+export default async function handler(req, res) {
+  const { code } = req.query;
 
-  data.append("client_id", process.env.GITHUB_CLIENT_ID);
-  data.append("client_secret", process.env.GITHUB_CLIENT_SECRET);
-  data.append("code", req.query.code);
-  fetch(`https://github.com/login/oauth/access_token`, {
-    method: "POST",
-    body: data,
+  const params = new URLSearchParams();
+  params.append("client_id", process.env.GITHUB_CLIENT_ID);
+  params.append("client_secret", process.env.GITHUB_CLIENT_SECRET);
+  params.append("code", code);
 
-    // mode: "no-cors",
-  })
-    .then((response) => {
-      console.log("response", response);
-      return response.text();
-    })
-    .then((paramsString) => {
-      console.log("paramsString", paramsString);
-      let params = new URLSearchParams(paramsString);
-      console.log("access_token", params.get("access_token"));
-      res.status(200).json({ access_token: params.get("access_token") });
-    })
-    .catch((error) => {
-      console.error("Error fetching access token:", error);
+  try {
+    const response = await fetch(`https://github.com/login/oauth/access_token`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Accept": "application/json",
+      },
+      body: params,
     });
-    // todo doi ten api 
-    // cho client_id va client_secret vao env
+
+    const data = await response.json();
+
+    if (data.error) {
+      return res.status(400).json({ error: data.error });
+    }
+
+    res.status(200).json({ access_token: data.access_token });
+  } catch (error) {
+    console.error("Error fetching access token:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 }

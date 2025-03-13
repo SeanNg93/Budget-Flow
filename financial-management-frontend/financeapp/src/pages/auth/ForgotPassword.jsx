@@ -162,10 +162,10 @@ export default function ForgotPassword() {
               variant="h4"
               sx={{ width: '100%', fontSize: 'clamp(2rem, 10vw, 2.15rem)', textAlign: 'center' }}
             >
-              Quên mật khẩu
+              Forgot Password
             </Typography>
             <Typography variant="body2" sx={{ mt: 1, textAlign: 'center' }}>
-              Nhập email của bạn để nhận liên kết đặt lại mật khẩu
+              Enter your email to receive a password reset link
             </Typography>
           </Box>
 
@@ -178,7 +178,7 @@ export default function ForgotPassword() {
           {isSendingEmail && (
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mt: 2 }}>
               <CircularProgress size={24} sx={{ mr: 1 }} />
-              <Typography>Đang gửi email đặt lại mật khẩu...</Typography>
+              <Typography>Sending password reset email...</Typography>
             </Box>
           )}
 
@@ -227,7 +227,7 @@ export default function ForgotPassword() {
                       disabled={isSubmitting}
                       sx={{ mt: 1 }}
                     >
-                      {isSubmitting ? 'Đang gửi yêu cầu...' : 'Gửi yêu cầu đặt lại mật khẩu'}
+                      {isSubmitting ? 'Sending request...' : 'Send Password Reset Request'}
                     </Button>
                   </Box>
                 </Form>

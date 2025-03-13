@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -46,7 +47,17 @@ public class SecurityConfig {
                         .requestMatchers("/api/test/**").permitAll()
                         .requestMatchers("/api/password/**").permitAll()
                         .requestMatchers("/api/account/activate").permitAll()
+                        .requestMatchers("/api/public/**").permitAll()
+                        .requestMatchers("/api/user/change-password").permitAll()
+                        .requestMatchers("/api/accounts/add-to-balance").authenticated()
+                        .requestMatchers("/api/accounts/update-balance").authenticated()
                         .requestMatchers("/api/categories/**").authenticated()
+                        .requestMatchers("/api/user/delete-account").authenticated()
+                        .requestMatchers("/api/accounts/**").authenticated()
+                        .requestMatchers("/api/transactions/**").authenticated()
+                        .requestMatchers("/api/transaction-categories/**").authenticated()
+                        .requestMatchers("/api/transaction-types/**").authenticated()
+                        .requestMatchers("/api/user/delete/").authenticated()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

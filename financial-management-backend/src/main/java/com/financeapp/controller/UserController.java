@@ -1,5 +1,6 @@
 package com.financeapp.controller;
 
+import com.financeapp.dto.ChangePasswordRequest;
 import com.financeapp.model.RoleName;
 import com.financeapp.model.User;
 import com.financeapp.repository.UserRepository;
@@ -11,8 +12,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -61,10 +64,33 @@ public class UserController {
         String username = authentication.getName();
         boolean deleted = userService.deleteUserAccount(username, password);
         if (deleted) {
-            return ResponseEntity.ok(Map.of("success", "true", "message", "Tài khoản đã được xoá thành công."));
+            return ResponseEntity.ok(Map.of("success", "true", "message", "Account has been successfully deleted."));
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("success", "false", "message", "Xác thực thất bại hoặc không thể xoá tài khoản."));
+                    .body(Map.of("success", "false", "message", "Authentication failed or account could not be deleted."));
+        }
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<Map<String, Object>> getUser(Authentication authentication) {
+        OAuth2User user = (OAuth2User) authentication.getPrincipal();
+        Map<String, Object> response = new HashMap<>(user.getAttributes());
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(@RequestBody ChangePasswordRequest request) {
+        // Extract username from the request
+        String username = request.getCurrentPassword().split(":")[0];
+        String currentPassword = request.getCurrentPassword().split(":")[1];
+        
+        boolean changed = userService.changePassword(username, currentPassword, request.getNewPassword());
+        
+        if (changed) {
+            return ResponseEntity.ok(Map.of("success", "true", "message", "Password changed successfully"));
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("success", "false", "message", "Current password is incorrect or user not found"));
         }
     }
 }

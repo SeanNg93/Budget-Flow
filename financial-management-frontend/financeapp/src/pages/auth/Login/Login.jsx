@@ -3,6 +3,8 @@ import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
 import { login } from '../../../config/axiosInstance';
+import AuthService from "@/services/auth.service";
+import { useGoogleLogin } from "@react-oauth/google";
 
 // Material UI imports
 import {
@@ -24,16 +26,12 @@ import {
   Typography,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import {Visibility, VisibilityOff, Google, Facebook, GitHub} from '@mui/icons-material';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import AuthService from "@/services/auth.service";
-import {GoogleOAuthProvider, useGoogleLogin} from "@react-oauth/google";
-import { jwtDecode } from "jwt-decode";
+import { Visibility, VisibilityOff, Google, Facebook, GitHub } from '@mui/icons-material';
 
 // Validation schema
 const LoginSchema = Yup.object().shape({
-  username: Yup.string().required('Tên đăng nhập không được để trống'),
-  password: Yup.string().required('Mật khẩu không được để trống'),
+  username: Yup.string().required('Username is required'),
+  password: Yup.string().required('Password is required'),
 });
 
 const Card = styled(Paper)(({ theme }) => ({
@@ -55,48 +53,9 @@ const LoginContainer = styled(Stack)(({ theme }) => ({
   height: 'calc(100dvh)',
   minHeight: '100%',
   padding: theme.spacing(2),
-  [theme.breakpoints.up('sm')]: {
-    padding: theme.spacing(4),
-  },
-  '&::before': {
-    content: '""',
-    display: 'block',
-    position: 'absolute',
-    zIndex: -1,
-    inset: 0,
-    backgroundImage:
-      'radial-gradient(ellipse at 50% 50%, hsl(210, 100%, 97%), hsl(0, 0%, 100%))',
-    backgroundRepeat: 'no-repeat',
-  },
 }));
 
-// Logo component
-const SitemarkIcon = () => (
-  <Box
-    sx={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      mb: 2,
-    }}
-  >
-    <Box
-      sx={{
-        backgroundColor: 'primary.main',
-        borderRadius: '50%',
-        p: 1,
-        color: 'white',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
-      <LockOutlinedIcon />
-    </Box>
-  </Box>
-);
-
-export default function Login() {
+const Login = () => {
   const navigate = useNavigate();
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -221,13 +180,12 @@ export default function Login() {
     <CssBaseline>
       <LoginContainer direction="column" justifyContent="space-between">
         <Card elevation={3}>
-          <SitemarkIcon />
           <Typography
             component="h1"
             variant="h4"
             sx={{ width: '100%', fontSize: 'clamp(2rem, 10vw, 2.15rem)', textAlign: 'center', mb: 2 }}
           >
-            Đăng nhập
+            Login
           </Typography>
 
           {error && (
@@ -254,13 +212,13 @@ export default function Login() {
                   }}
                 >
                   <FormControl>
-                    <FormLabel htmlFor="username">Tên đăng nhập</FormLabel>
+                    <FormLabel htmlFor="username">Username</FormLabel>
                     <Field name="username">
                       {({ field, meta }) => (
                         <TextField
                           {...field}
                           id="username"
-                          placeholder="Tên đăng nhập"
+                          placeholder="Username"
                           autoComplete="username"
                           autoFocus
                           fullWidth
@@ -273,7 +231,7 @@ export default function Login() {
                   </FormControl>
 
                   <FormControl>
-                    <FormLabel htmlFor="password">Mật khẩu</FormLabel>
+                    <FormLabel htmlFor="password">Password</FormLabel>
                     <Field name="password">
                       {({ field, meta }) => (
                         <TextField
@@ -307,7 +265,7 @@ export default function Login() {
 
                   <FormControlLabel
                     control={<Checkbox value="remember" color="primary" />}
-                    label="Ghi nhớ đăng nhập"
+                    label="Remember me"
                   />
 
                   <Button
@@ -320,7 +278,7 @@ export default function Login() {
                       formikSubmit();
                     }}
                   >
-                    {isSubmitting ? 'Đang đăng nhập...' : 'Đăng nhập'}
+                    {isSubmitting ? 'Logging in...' : 'Login'}
                   </Button>
 
                   <Link
@@ -329,14 +287,14 @@ export default function Login() {
                     variant="body2"
                     sx={{ alignSelf: 'center', mt: 1 }}
                   >
-                    Quên mật khẩu?
+                    Forgot password?
                   </Link>
                 </Box>
               </Form>
             )}
           </Formik>
 
-          <Divider sx={{ my: 2 }}>hoặc</Divider>
+          <Divider sx={{ my: 2 }}>or</Divider>
 
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
 
@@ -346,7 +304,7 @@ export default function Login() {
                   startIcon={<Google />}
                   onClick={() => loginGoogle()}
               >
-                Đăng nhập với Google
+                Login with Google
               </Button>
 
 
@@ -364,7 +322,7 @@ export default function Login() {
                 fullWidth
                 variant="outlined"
                 startIcon={<GitHub/>}
-                onClick={() => window.location.href = `https://github.com/login/oauth/authorize?client_id=Ov23lik6g6WygAhPnsUc`}
+                onClick={() => window.location.href = `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}`}
             >
               Đăng nhập với Github
             </Button>
@@ -385,4 +343,6 @@ export default function Login() {
       </LoginContainer>
     </CssBaseline>
   );
-} 
+};
+
+export default Login;

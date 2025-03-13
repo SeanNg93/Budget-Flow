@@ -20,7 +20,12 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Button from '@mui/material/Button';
 import AddIcon from '@mui/icons-material/Add';
+import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import EditIcon from '@mui/icons-material/Edit';
 
 // Import dashboard components
 import SideMenu from '../components/dashboard/SideMenu';
@@ -29,6 +34,8 @@ import TransactionForm from '../components/dashboard/TransactionForm';
 import AccountForm from '../components/dashboard/AccountForm';
 import CategoryForm from '../components/dashboard/CategoryForm';
 import FinanceActionPanel from '../components/dashboard/FinanceActionPanel';
+import AddBalanceForm from '../components/dashboard/AddBalanceForm';
+import EditBalanceForm from '../components/dashboard/EditBalanceForm';
 
 // Import theme
 import AppTheme from '../shared-theme/AppTheme';
@@ -53,6 +60,8 @@ const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(
       duration: theme.transitions.duration.leavingScreen,
     }),
     marginLeft: `-${drawerWidth}px`,
+    backgroundColor: theme.palette.background.default,
+    minHeight: '100vh',
     ...(open && {
       transition: theme.transitions.create('margin', {
         easing: theme.transitions.easing.easeOut,
@@ -93,6 +102,9 @@ export default function Dashboard() {
   const [transactionFormOpen, setTransactionFormOpen] = useState(false);
   const [accountFormOpen, setAccountFormOpen] = useState(false);
   const [categoryFormOpen, setCategoryFormOpen] = useState(false);
+  const [addBalanceFormOpen, setAddBalanceFormOpen] = useState(false);
+  const [editBalanceFormOpen, setEditBalanceFormOpen] = useState(false);
+  const [balanceMenuAnchorEl, setBalanceMenuAnchorEl] = useState(null);
   const [error, setError] = useState(null);
 
   // New state for the unified finance action panel
@@ -199,9 +211,26 @@ export default function Dashboard() {
     fetchFinancialData();
   };
 
+  const handleBalanceAdded = () => {
+    fetchFinancialData();
+  };
+
   // Function to open the finance action panel
   const openFinanceActionPanel = () => {
     setFinanceActionPanelOpen(true);
+  };
+
+  const handleBalanceMenuOpen = (event) => {
+    setBalanceMenuAnchorEl(event.currentTarget);
+  };
+
+  const handleBalanceMenuClose = () => {
+    setBalanceMenuAnchorEl(null);
+  };
+
+  const handleEditBalance = () => {
+    handleBalanceMenuClose();
+    setEditBalanceFormOpen(true);
   };
 
   if (loading) {
@@ -226,28 +255,47 @@ export default function Dashboard() {
               <Grid item xs={12}>
                 <Paper
                   sx={{
-                    p: 2,
+                    p: 3,
                     display: 'flex',
                     flexDirection: 'column',
-                    backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.1),
+                    backgroundColor: 'background.paper',
+                    borderRadius: 4,
+                    boxShadow: '0px 2px 12px rgba(0, 0, 0, 0.08)',
                   }}
                 >
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography component="h1" variant="h4" color="primary" gutterBottom>
+                    <Typography 
+                      component="h1" 
+                      variant="h4" 
+                      color="text.primary" 
+                      sx={{ 
+                        fontWeight: 700,
+                        letterSpacing: '-0.02em',
+                      }}
+                    >
                       Welcome, {user?.username || 'User'}!
                     </Typography>
-                    <Stack direction="row" spacing={2}>
-                      <Button 
-                        variant="contained" 
-                        color="primary" 
-                        startIcon={<AddIcon />}
-                        onClick={openFinanceActionPanel}
-                      >
-                        Add Transaction
-                      </Button>
-                    </Stack>
+                    <Button 
+                      variant="contained" 
+                      color="primary" 
+                      startIcon={<AddIcon />}
+                      onClick={openFinanceActionPanel}
+                      sx={{
+                        borderRadius: 3,
+                        px: 3,
+                        py: 1.2,
+                        fontWeight: 600,
+                        boxShadow: 'none',
+                      }}
+                    >
+                      Add Transaction
+                    </Button>
                   </Box>
-                  <Typography variant="body1">
+                  <Typography 
+                    variant="body1" 
+                    color="text.secondary"
+                    sx={{ mt: 1, fontSize: '1.05rem' }}
+                  >
                     This is your financial dashboard. Here you can manage your finances, track expenses, and plan your budget.
                   </Typography>
                 </Paper>
@@ -255,51 +303,186 @@ export default function Dashboard() {
               
               {/* Summary Cards */}
               <Grid item xs={12} md={3}>
-                <Card>
-                  <CardHeader title="Total Balance" />
-                  <CardContent>
+                <Card sx={{ height: '100%', position: 'relative' }}>
+                  <CardHeader 
+                    title={
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <Typography 
+                            variant="h6" 
+                            component="div" 
+                            sx={{ 
+                              fontWeight: 600,
+                              color: 'text.primary',
+                            }}
+                          >
+                            Total Balance
+                          </Typography>
+                          <IconButton 
+                            color="primary" 
+                            size="small" 
+                            onClick={() => setAddBalanceFormOpen(true)}
+                            sx={{ 
+                              ml: 1,
+                              backgroundColor: 'rgba(0, 122, 255, 0.1)',
+                              '&:hover': {
+                                backgroundColor: 'rgba(0, 122, 255, 0.2)',
+                              }
+                            }}
+                          >
+                            <AddIcon fontSize="small" />
+                          </IconButton>
+                        </Box>
+                        <IconButton
+                          aria-label="more options"
+                          aria-controls="balance-menu"
+                          aria-haspopup="true"
+                          onClick={handleBalanceMenuOpen}
+                          size="small"
+                          sx={{ 
+                            color: 'text.secondary',
+                            '&:hover': {
+                              backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                            }
+                          }}
+                        >
+                          <MoreVertIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    } 
+                  />
+                  <Menu
+                    id="balance-menu"
+                    anchorEl={balanceMenuAnchorEl}
+                    keepMounted
+                    open={Boolean(balanceMenuAnchorEl)}
+                    onClose={handleBalanceMenuClose}
+                    PaperProps={{
+                      sx: {
+                        borderRadius: 3,
+                        boxShadow: '0px 5px 15px rgba(0, 0, 0, 0.15)',
+                        minWidth: 180,
+                      }
+                    }}
+                  >
+                    <MenuItem onClick={handleEditBalance} sx={{ py: 1.5 }}>
+                      <EditIcon fontSize="small" sx={{ mr: 1.5, color: 'primary.main' }} />
+                      Edit Balance
+                    </MenuItem>
+                  </Menu>
+                  <CardContent sx={{ pt: 0 }}>
                     {loading ? (
                       <CircularProgress size={24} />
                     ) : (
-                      <Typography variant="h4">{formatCurrency(financialData.totalBalance)}</Typography>
+                      <Typography 
+                        variant="h4" 
+                        sx={{ 
+                          fontWeight: 700,
+                          color: 'text.primary',
+                          letterSpacing: '-0.02em',
+                        }}
+                      >
+                        {formatCurrency(financialData.totalBalance)}
+                      </Typography>
                     )}
                   </CardContent>
                 </Card>
               </Grid>
               <Grid item xs={12} md={3}>
-                <Card>
-                  <CardHeader title="Income" />
-                  <CardContent>
+                <Card sx={{ height: '100%' }}>
+                  <CardHeader 
+                    title={
+                      <Typography 
+                        variant="h6" 
+                        component="div" 
+                        sx={{ 
+                          fontWeight: 600,
+                          color: 'text.primary',
+                        }}
+                      >
+                        Income
+                      </Typography>
+                    } 
+                  />
+                  <CardContent sx={{ pt: 0 }}>
                     {loading ? (
                       <CircularProgress size={24} />
                     ) : (
-                      <Typography variant="h4" color="success.main">{formatCurrency(financialData.totalIncome)}</Typography>
+                      <Typography 
+                        variant="h4" 
+                        color="success.main"
+                        sx={{ 
+                          fontWeight: 700,
+                          letterSpacing: '-0.02em',
+                        }}
+                      >
+                        {formatCurrency(financialData.totalIncome)}
+                      </Typography>
                     )}
                   </CardContent>
                 </Card>
               </Grid>
               <Grid item xs={12} md={3}>
-                <Card>
-                  <CardHeader title="Expenses" />
-                  <CardContent>
+                <Card sx={{ height: '100%' }}>
+                  <CardHeader 
+                    title={
+                      <Typography 
+                        variant="h6" 
+                        component="div" 
+                        sx={{ 
+                          fontWeight: 600,
+                          color: 'text.primary',
+                        }}
+                      >
+                        Expenses
+                      </Typography>
+                    } 
+                  />
+                  <CardContent sx={{ pt: 0 }}>
                     {loading ? (
                       <CircularProgress size={24} />
                     ) : (
-                      <Typography variant="h4" color="error.main">{formatCurrency(financialData.totalExpense)}</Typography>
+                      <Typography 
+                        variant="h4" 
+                        color="error.main"
+                        sx={{ 
+                          fontWeight: 700,
+                          letterSpacing: '-0.02em',
+                        }}
+                      >
+                        {formatCurrency(financialData.totalExpense)}
+                      </Typography>
                     )}
                   </CardContent>
                 </Card>
               </Grid>
               <Grid item xs={12} md={3}>
-                <Card>
-                  <CardHeader title="Net Savings" />
-                  <CardContent>
+                <Card sx={{ height: '100%' }}>
+                  <CardHeader 
+                    title={
+                      <Typography 
+                        variant="h6" 
+                        component="div" 
+                        sx={{ 
+                          fontWeight: 600,
+                          color: 'text.primary',
+                        }}
+                      >
+                        Net Savings
+                      </Typography>
+                    } 
+                  />
+                  <CardContent sx={{ pt: 0 }}>
                     {loading ? (
                       <CircularProgress size={24} />
                     ) : (
                       <Typography 
                         variant="h4" 
                         color={financialData.netSavings >= 0 ? "success.main" : "error.main"}
+                        sx={{ 
+                          fontWeight: 700,
+                          letterSpacing: '-0.02em',
+                        }}
                       >
                         {formatCurrency(financialData.netSavings)}
                       </Typography>
@@ -310,16 +493,37 @@ export default function Dashboard() {
               
               {/* Recent Transactions */}
               <Grid item xs={12}>
-                <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                    <Typography component="h2" variant="h6" color="primary" gutterBottom>
+                <Paper 
+                  sx={{ 
+                    p: 3, 
+                    display: 'flex', 
+                    flexDirection: 'column',
+                    borderRadius: 4,
+                    boxShadow: '0px 2px 12px rgba(0, 0, 0, 0.08)',
+                  }}
+                >
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                    <Typography 
+                      component="h2" 
+                      variant="h5" 
+                      color="text.primary" 
+                      sx={{ 
+                        fontWeight: 600,
+                        letterSpacing: '-0.01em',
+                      }}
+                    >
                       Recent Transactions
                     </Typography>
                     <Button 
-                      variant="text" 
+                      variant="outlined" 
                       color="primary" 
                       startIcon={<AddIcon />}
                       onClick={openFinanceActionPanel}
+                      sx={{
+                        borderRadius: 3,
+                        fontWeight: 600,
+                        borderWidth: '1.5px',
+                      }}
                     >
                       Add New
                     </Button>
@@ -330,27 +534,58 @@ export default function Dashboard() {
                       <CircularProgress />
                     </Box>
                   ) : transactions.length > 0 ? (
-                    <TableContainer>
+                    <TableContainer sx={{ borderRadius: 3, overflow: 'hidden' }}>
                       <Table>
                         <TableHead>
                           <TableRow>
-                            <TableCell>Date</TableCell>
-                            <TableCell>Description</TableCell>
-                            <TableCell>Category</TableCell>
-                            <TableCell>Type</TableCell>
-                            <TableCell align="right">Amount</TableCell>
+                            <TableCell sx={{ fontWeight: 600, color: 'text.secondary', fontSize: '0.875rem' }}>Date</TableCell>
+                            <TableCell sx={{ fontWeight: 600, color: 'text.secondary', fontSize: '0.875rem' }}>Description</TableCell>
+                            <TableCell sx={{ fontWeight: 600, color: 'text.secondary', fontSize: '0.875rem' }}>Category</TableCell>
+                            <TableCell sx={{ fontWeight: 600, color: 'text.secondary', fontSize: '0.875rem' }}>Type</TableCell>
+                            <TableCell align="right" sx={{ fontWeight: 600, color: 'text.secondary', fontSize: '0.875rem' }}>Amount</TableCell>
                           </TableRow>
                         </TableHead>
                         <TableBody>
                           {transactions.map((transaction) => (
-                            <TableRow key={transaction.id}>
-                              <TableCell>{formatDate(transaction.transactionDate)}</TableCell>
-                              <TableCell>{transaction.description}</TableCell>
-                              <TableCell>{transaction.category?.categoryName || 'Uncategorized'}</TableCell>
-                              <TableCell>{transaction.transactionType}</TableCell>
-                              <TableCell align="right" sx={{ 
-                                color: transaction.transactionType === 'INCOME' ? 'success.main' : 'error.main' 
-                              }}>
+                            <TableRow 
+                              key={transaction.id}
+                              sx={{ 
+                                '&:hover': { 
+                                  backgroundColor: 'rgba(0, 0, 0, 0.02)' 
+                                } 
+                              }}
+                            >
+                              <TableCell sx={{ fontSize: '0.95rem' }}>{formatDate(transaction.transactionDate)}</TableCell>
+                              <TableCell sx={{ fontSize: '0.95rem', fontWeight: 500 }}>{transaction.description}</TableCell>
+                              <TableCell sx={{ fontSize: '0.95rem' }}>{transaction.category?.categoryName || 'Uncategorized'}</TableCell>
+                              <TableCell sx={{ fontSize: '0.95rem' }}>
+                                <Box
+                                  sx={{
+                                    display: 'inline-block',
+                                    px: 1.5,
+                                    py: 0.5,
+                                    borderRadius: 2,
+                                    fontSize: '0.8rem',
+                                    fontWeight: 600,
+                                    backgroundColor: transaction.transactionType === 'INCOME' 
+                                      ? 'rgba(52, 199, 89, 0.1)' 
+                                      : 'rgba(255, 59, 48, 0.1)',
+                                    color: transaction.transactionType === 'INCOME' 
+                                      ? 'success.main' 
+                                      : 'error.main',
+                                  }}
+                                >
+                                  {transaction.transactionType}
+                                </Box>
+                              </TableCell>
+                              <TableCell 
+                                align="right" 
+                                sx={{ 
+                                  color: transaction.transactionType === 'INCOME' ? 'success.main' : 'error.main',
+                                  fontSize: '0.95rem',
+                                  fontWeight: 600
+                                }}
+                              >
                                 {formatCurrency(transaction.amount)}
                               </TableCell>
                             </TableRow>
@@ -359,9 +594,34 @@ export default function Dashboard() {
                       </Table>
                     </TableContainer>
                   ) : (
-                    <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>
-                      No transactions to display. Start adding your financial data to see it here.
-                    </Typography>
+                    <Box 
+                      sx={{ 
+                        p: 4, 
+                        textAlign: 'center', 
+                        backgroundColor: 'rgba(0, 0, 0, 0.02)',
+                        borderRadius: 3
+                      }}
+                    >
+                      <Typography variant="body1" color="text.secondary">
+                        No transactions to display. Start adding your financial data to see it here.
+                      </Typography>
+                      <Button 
+                        variant="contained" 
+                        color="primary" 
+                        startIcon={<AddIcon />}
+                        onClick={openFinanceActionPanel}
+                        sx={{
+                          mt: 2,
+                          borderRadius: 3,
+                          px: 3,
+                          py: 1,
+                          fontWeight: 600,
+                          boxShadow: 'none',
+                        }}
+                      >
+                        Add First Transaction
+                      </Button>
+                    </Box>
                   )}
                 </Paper>
               </Grid>
@@ -394,6 +654,21 @@ export default function Dashboard() {
         open={categoryFormOpen} 
         handleClose={() => setCategoryFormOpen(false)} 
         onCategoryAdded={handleCategoryAdded}
+      />
+      
+      {/* Add Balance Form */}
+      <AddBalanceForm 
+        open={addBalanceFormOpen}
+        handleClose={() => setAddBalanceFormOpen(false)}
+        onBalanceAdded={handleBalanceAdded}
+      />
+      
+      {/* Edit Balance Form */}
+      <EditBalanceForm 
+        open={editBalanceFormOpen}
+        handleClose={() => setEditBalanceFormOpen(false)}
+        onBalanceUpdated={handleBalanceAdded}
+        currentBalance={financialData.totalBalance}
       />
     </AppTheme>
   );

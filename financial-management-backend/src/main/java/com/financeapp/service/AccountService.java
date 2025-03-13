@@ -83,4 +83,73 @@ public class AccountService {
                 .map(Account::getBalance)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
+
+    @Transactional
+    public BigDecimal addToTotalBalance(Long userId, BigDecimal amount) {
+        List<Account> accounts = accountRepository.findByUserId(userId);
+        
+        if (accounts.isEmpty()) {
+            // If user has no accounts, create a default one
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
+            
+            Account defaultAccount = new Account();
+            defaultAccount.setAccountName("Default Account");
+            defaultAccount.setAccountType(Account.AccountType.Checking);
+            defaultAccount.setCurrency("USD");
+            defaultAccount.setBalance(amount);
+            defaultAccount.setUser(user);
+            accountRepository.save(defaultAccount);
+            
+            return amount;
+        } else {
+            // Add to the first account
+            Account firstAccount = accounts.get(0);
+            firstAccount.setBalance(firstAccount.getBalance().add(amount));
+            accountRepository.save(firstAccount);
+            
+            // Return the new total balance
+            return getTotalBalance(userId);
+        }
+    }
+    
+    @Transactional
+    public BigDecimal updateTotalBalance(Long userId, BigDecimal newAmount) {
+        List<Account> accounts = accountRepository.findByUserId(userId);
+        
+        if (accounts.isEmpty()) {
+            // If user has no accounts, create a default one
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
+            
+            Account defaultAccount = new Account();
+            defaultAccount.setAccountName("Default Account");
+            defaultAccount.setAccountType(Account.AccountType.Checking);
+            defaultAccount.setCurrency("USD");
+            defaultAccount.setBalance(newAmount);
+            defaultAccount.setUser(user);
+            accountRepository.save(defaultAccount);
+            
+            return newAmount;
+        } else {
+            // Calculate the current total balance
+            BigDecimal currentTotalBalance = getTotalBalance(userId);
+            
+            // Calculate the difference to distribute
+            BigDecimal difference = newAmount.subtract(currentTotalBalance);
+            
+            if (difference.compareTo(BigDecimal.ZERO) == 0) {
+                // No change needed
+                return currentTotalBalance;
+            }
+            
+            // Apply the entire difference to the first account
+            Account firstAccount = accounts.get(0);
+            firstAccount.setBalance(firstAccount.getBalance().add(difference));
+            accountRepository.save(firstAccount);
+            
+            // Return the new total balance
+            return getTotalBalance(userId);
+        }
+    }
 } 

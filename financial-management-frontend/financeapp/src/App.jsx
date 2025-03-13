@@ -65,7 +65,7 @@ function App() {
           </ProtectedRoute>
         } />
         
-        {/* Account Routes */}
+        {/* ✅ Fix đường dẫn cho Delete Account */}
         <Route path="/account/delete" element={
           <ProtectedRoute>
             <DeleteAccount />
@@ -78,4 +78,4 @@ function App() {
   );
 }
 
-export default App; 
+export default App;
