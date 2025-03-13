@@ -45,8 +45,15 @@ const AddBalanceForm = ({ open, handleClose, onBalanceAdded }) => {
     setSuccess('');
     
     try {
+      // Make sure we have a token in localStorage
+      const token = localStorage.getItem('userToken');
+      if (!token) {
+        setError('You must be logged in to add to your balance');
+        setLoading(false);
+        return;
+      }
+      
       const response = await FinanceService.addToTotalBalance(parseFloat(amount));
-      console.log('Balance update response:', response.data);
       
       // Notify parent component to refresh data
       if (onBalanceAdded) {
@@ -56,8 +63,11 @@ const AddBalanceForm = ({ open, handleClose, onBalanceAdded }) => {
       // Close the dialog immediately
       handleClose();
     } catch (err) {
-      console.error('Error updating balance:', err);
-      setError(err.response?.data?.message || 'Failed to update balance. Please try again.');
+      if (err.response && err.response.status === 403) {
+        setError('You are not authorized to add to the balance. Please log in again.');
+      } else {
+        setError(err.response?.data?.message || 'Failed to update balance. Please try again.');
+      }
       setLoading(false);
     }
   };

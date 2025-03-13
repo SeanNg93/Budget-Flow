@@ -150,8 +150,6 @@ export default function Dashboard() {
       // Fetch recent transactions
       const transactionsResponse = await FinanceService.getTransactions();
       
-      console.log('Financial summary data:', summaryResponse.data);
-      
       // Update financial data
       setFinancialData({
         totalBalance: summaryResponse.data.totalBalance || 0,
@@ -163,7 +161,6 @@ export default function Dashboard() {
       // Update transactions
       setTransactions(transactionsResponse.data.slice(0, 5)); // Get only the 5 most recent
     } catch (error) {
-      console.error('Error fetching financial data:', error);
       setError('Failed to load financial data. Please try again later.');
       // Use placeholder data if API fails
       setFinancialData({
@@ -213,7 +210,6 @@ export default function Dashboard() {
   };
 
   const handleBalanceAdded = () => {
-    console.log('Balance added, refreshing data...');
     fetchFinancialData();
   };
 

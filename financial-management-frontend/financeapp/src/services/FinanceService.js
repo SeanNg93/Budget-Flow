@@ -50,11 +50,29 @@ export const getTotalBalance = () => {
 };
 
 export const addToTotalBalance = (amount) => {
-  return axiosInstance.post('/accounts/add-to-balance', { amount });
+  const token = localStorage.getItem('userToken');
+  return axios.post(`${API_URL}/accounts/add-to-balance`, 
+    { amount }, 
+    { 
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      } 
+    }
+  );
 };
 
 export const updateTotalBalance = (amount) => {
-  return axiosInstance.put('/accounts/update-balance', { amount });
+  const token = localStorage.getItem('userToken');
+  return axios.put(`${API_URL}/accounts/update-balance`, 
+    { amount }, 
+    { 
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      } 
+    }
+  );
 };
 
 // Transaction services

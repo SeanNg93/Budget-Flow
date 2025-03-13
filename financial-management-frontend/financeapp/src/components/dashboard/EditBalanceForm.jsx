@@ -51,9 +51,15 @@ const EditBalanceForm = ({ open, handleClose, onBalanceUpdated, currentBalance }
     setSuccess('');
     
     try {
-      // We'll implement this method in FinanceService
+      // Make sure we have a token in localStorage
+      const token = localStorage.getItem('userToken');
+      if (!token) {
+        setError('You must be logged in to update your balance');
+        setLoading(false);
+        return;
+      }
+      
       const response = await FinanceService.updateTotalBalance(parseFloat(amount));
-      console.log('Balance update response:', response.data);
       
       // Notify parent component to refresh data
       if (onBalanceUpdated) {
@@ -63,8 +69,11 @@ const EditBalanceForm = ({ open, handleClose, onBalanceUpdated, currentBalance }
       // Close the dialog immediately
       handleClose();
     } catch (err) {
-      console.error('Error updating balance:', err);
-      setError(err.response?.data?.message || 'Failed to update balance. Please try again.');
+      if (err.response && err.response.status === 403) {
+        setError('You are not authorized to update the balance. Please log in again.');
+      } else {
+        setError(err.response?.data?.message || 'Failed to update balance. Please try again.');
+      }
       setLoading(false);
     }
   };
