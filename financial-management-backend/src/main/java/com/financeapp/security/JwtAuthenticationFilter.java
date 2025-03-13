@@ -35,6 +35,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String jwt = parseJwt(request);
 
             if (jwt != null) {
+                logger.info("JWT Token received: {}", jwt);  // Debug log token
+
                 String username = jwtUtils.extractUsername(jwt);
 
                 if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -52,10 +54,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                            logger.info("Authenticated user: {}", username);
+                            logger.info("Authenticated user: {} with roles: {}", username, userDetails.getAuthorities());  // Debug roles
+                        } else {
+                            logger.warn("Invalid JWT Token for user: {}", username);
                         }
                     } catch (UsernameNotFoundException e) {
                         logger.error("User not found: {}", username);
+                        return;  // 🔹 Nếu user không tồn tại, dừng filter
                     } catch (Exception e) {
                         logger.error("Cannot set user authentication: {}", e.getMessage());
                     }
@@ -72,9 +77,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String headerAuth = request.getHeader("Authorization");
 
         if (StringUtils.hasText(headerAuth) && headerAuth.startsWith("Bearer ")) {
-            return headerAuth.substring(7);
+            String token = headerAuth.substring(7);
+            logger.info("Extracted JWT Token: {}", token);  // Debug log token extract
+            return token;
         }
 
+        logger.warn("Authorization header missing or invalid");
         return null;
     }
 }

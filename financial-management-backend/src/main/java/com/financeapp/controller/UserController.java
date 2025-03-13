@@ -1,6 +1,5 @@
 package com.financeapp.controller;
 
-import com.financeapp.model.RoleName;
 import com.financeapp.model.User;
 import com.financeapp.repository.UserRepository;
 import com.financeapp.security.JwtUtils;
@@ -12,6 +11,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.Optional;
@@ -20,7 +21,7 @@ import java.util.Optional;
 @RequestMapping("/api/user")
 @RequiredArgsConstructor
 public class UserController {
-
+    private static final Logger logger = LoggerFactory.getLogger(UserController.class);
     private final UserRepository userRepository;
     private final JwtUtils jwtUtils;
     private final UserService userService;
@@ -57,14 +58,19 @@ public class UserController {
     }
 
     @DeleteMapping("/delete-account")
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     public ResponseEntity<?> deleteOwnAccount(Authentication authentication, @RequestParam("password") String password) {
         String username = authentication.getName();
+        logger.info("Deleting account for user: " + username);
+
         boolean deleted = userService.deleteUserAccount(username, password);
         if (deleted) {
-            return ResponseEntity.ok(Map.of("success", "true", "message", "Tài khoản đã được xoá thành công."));
+            return ResponseEntity.ok(Map.of("success", "true", "message", "Account deleted successfully."));
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("success", "false", "message", "Xác thực thất bại hoặc không thể xoá tài khoản."));
+                    .body(Map.of("success", "false", "message", "Authentication failed or unable to delete account."));
         }
     }
+
+
 }

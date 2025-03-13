@@ -1,6 +1,9 @@
 package com.financeapp.service;
 
+import com.financeapp.model.ERole;
+import com.financeapp.model.Role;
 import com.financeapp.model.User;
+import com.financeapp.repository.RoleRepository;
 import com.financeapp.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -9,15 +12,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Value("${app.frontend.url}")
@@ -68,7 +69,7 @@ public class UserService {
             return false;
         }
 
-        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
         user.setResetPasswordToken(null);
         user.setResetPasswordTokenExpiry(null);
         userRepository.save(user);
@@ -116,11 +117,35 @@ public class UserService {
         Optional<User> userOpt = userRepository.findByUsername(username);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
-            if (passwordEncoder.matches(rawPassword, user.getPassword())) {
+            if (passwordEncoder.matches(rawPassword, user.getPasswordHash())) {
                 userRepository.delete(user);
                 return true;
             }
         }
         return false;
     }
+
+    @Transactional
+    public User registerNewUser(String username, String email, String password) {
+        if (userRepository.existsByUsername(username) || userRepository.existsByEmail(email)) {
+            throw new IllegalArgumentException("Username or email already exists.");
+        }
+
+        User user = new User();
+        user.setUsername(username);
+        user.setEmail(email);
+        user.setPasswordHash(passwordEncoder.encode(password));
+        user.setEnabled(false);
+
+        Role userRole = roleRepository.findByName(ERole.ROLE_USER)
+                .orElseThrow(() -> new RuntimeException("ROLE_USER not found"));
+        user.setRoles(Set.of(userRole));
+
+        return userRepository.save(user);
+    }
+
+    public Optional<User> getUserByUsername(String username) {
+        return userRepository.findByUsername(username);
+    }
+
 }

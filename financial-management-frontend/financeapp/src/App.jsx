@@ -26,6 +26,11 @@ import DeleteAccount from './pages/account/DeleteAccount.jsx';
 import ProtectedRoute from './components/ProtectedRoute';
 import TestConnection from './components/TestConnection';
 
+// Wallet Pages
+import WalletList from "./pages/wallet/WalletList";
+import EditWallet from "./pages/wallet/EditWallet";
+import CreateWallet from "./pages/wallet/CreateWallet"; 
+
 function App() {
   useEffect(() => {
     // Initialize EmailJS
@@ -71,6 +76,10 @@ function App() {
             <DeleteAccount />
           </ProtectedRoute>
         } />
+
+        <Route path="/wallets" element={<WalletList />} />
+        <Route path="/create-wallet" element={<CreateWallet />} /> {/* 🔥 Fix lỗi */}
+        <Route path="/edit-wallet/:id" element={<EditWallet />} />
         
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>

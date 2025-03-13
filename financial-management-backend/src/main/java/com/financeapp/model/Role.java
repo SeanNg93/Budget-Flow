@@ -15,20 +15,7 @@ public class Role {
     private Long id;
 
     @Enumerated(EnumType.STRING)
-    @Column(length = 20)
+    @Column(length = 20, unique = true)
     private ERole name;
 
-    public enum ERole {
-        ROLE_USER,
-        ROLE_ADMIN,
-        ROLE_ACCOUNTANT
-    }
-    
-    @Override
-    public String toString() {
-        return "Role{" +
-                "id=" + id +
-                ", name=" + name +
-                '}';
-    }
 }

@@ -18,6 +18,7 @@ import BarChartIcon from '@mui/icons-material/BarChart';
 import SettingsIcon from '@mui/icons-material/Settings';
 import PersonIcon from '@mui/icons-material/Person';
 import LogoutIcon from '@mui/icons-material/Logout';
+import WalletIcon from '@mui/icons-material/AccountBalance'; // 🔹 Thêm icon cho Wallets
 
 const drawerWidth = 240;
 
@@ -41,6 +42,7 @@ const SideMenu = ({ open, handleDrawerClose }) => {
   const menuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
     { text: 'Transactions', icon: <AccountBalanceWalletIcon />, path: '/transactions' },
+    { text: 'Wallets', icon: <WalletIcon />, path: '/wallets' },  // 🔹 Thêm mục Wallets
     { text: 'Reports', icon: <BarChartIcon />, path: '/reports' },
     { text: 'Profile', icon: <PersonIcon />, path: '/profile' },
     { text: 'Settings', icon: <SettingsIcon />, path: '/settings' },
@@ -96,4 +98,4 @@ const SideMenu = ({ open, handleDrawerClose }) => {
   );
 };
 
-export default SideMenu; 
+export default SideMenu;

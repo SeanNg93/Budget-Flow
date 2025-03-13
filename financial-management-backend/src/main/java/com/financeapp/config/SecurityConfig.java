@@ -47,13 +47,14 @@ public class SecurityConfig {
                         .requestMatchers("/api/password/**").permitAll()
                         .requestMatchers("/api/account/activate").permitAll()
                         .requestMatchers("/api/categories/**").authenticated()
-                        .requestMatchers("/api/user/delete-account").authenticated()
-                        .requestMatchers("/api/accounts/**").permitAll()
-                        .requestMatchers("/api/transactions/**").permitAll()
-                        .requestMatchers("/api/transaction-categories/**").permitAll()
-                        .requestMatchers("/api/transaction-types/**").permitAll()
-                        .requestMatchers("/api/user/delete/").permitAll()
-
+                        .requestMatchers("/api/user/delete-account").hasAuthority("ROLE_USER")
+                        .requestMatchers("/api/user/delete/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers("/api/accounts/**").authenticated()
+                        .requestMatchers("/api/transactions/**").authenticated()
+                        .requestMatchers("/api/transaction-categories/**").authenticated()
+                        .requestMatchers("/api/transaction-types/**").authenticated()
+                        .requestMatchers("/api/wallets/**").authenticated()
+                        .requestMatchers("/api/wallets/create").hasAuthority("ROLE_USER")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -61,17 +62,21 @@ public class SecurityConfig {
         return http.build();
     }
 
+
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("*"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        configuration.setAllowedOrigins(List.of("http://localhost:3000"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Auth-Token"));
-        configuration.setExposedHeaders(Arrays.asList("X-Auth-Token"));
+        configuration.setAllowCredentials(true); // Quan trọng!
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+
+
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
