@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -47,9 +48,18 @@ public class SecurityConfig {
                         .requestMatchers("/api/password/**").permitAll()
                         .requestMatchers("/api/account/activate").permitAll()
                         .requestMatchers("/api/categories/**").authenticated()
+                        .requestMatchers("/api/user/delete-account").authenticated()
+                        .requestMatchers("/api/accounts/**").permitAll()
+                        .requestMatchers("/api/transactions/**").permitAll()
+                        .requestMatchers("/api/transaction-categories/**").permitAll()
+                        .requestMatchers("/api/transaction-types/**").permitAll()
+                        .requestMatchers("/api/user/delete/").permitAll()
+                        .requestMatchers("/api/public/**").permitAll()
+
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
 
         return http.build();
     }

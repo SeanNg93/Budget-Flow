@@ -7,17 +7,21 @@ export default function OAuth2RedirectHandler() {
   const { code } = router.query;
 
   useEffect(() => {
-    if(code) {
-      fetch(`/api/gh_access_token?code=${code}` , {method: "POST"})
-      .then((response) => { return response.json(); })
-      .then(response => {
-        if(response.access_token) {
-          Cookies.set("access_token", response.access_token);
-          router.push('/dashboard')
-        }
-      });
-      // todo: luu access_token vao cookie 
-    } 
+    if (code) {
+      fetch(`/api/gh_access_token?code=${code}`, { method: "POST" })
+        .then((response) => response.json())
+        .then((response) => {
+          if (response.access_token) {
+            Cookies.set("access_token", response.access_token);
+            router.push("/dashboard");
+          } else {
+            console.error("Failed to obtain access token:", response.error);
+          }
+        })
+        .catch((error) => {
+          console.error("Error during token exchange:", error);
+        });
+    }
   }, [code]);
 
   return (

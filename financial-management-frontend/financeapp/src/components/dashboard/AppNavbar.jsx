@@ -70,6 +70,11 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
     navigate('/login');
   };
 
+  const handleDeleteAccount = () => {
+    handleMenuClose();
+    navigate('/account/delete'); // 🔥 Đúng với đường dẫn trong App.jsx
+  };
+
   const menuId = 'primary-search-account-menu';
   const renderMenu = (
     <Menu
@@ -88,6 +93,7 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
       onClose={handleMenuClose}
     >
       <MenuItem onClick={handleProfile}>Profile</MenuItem>
+      <MenuItem onClick={handleDeleteAccount} style={{ color: 'red' }}>Delete Account</MenuItem>
       <MenuItem onClick={handleLogout}>Logout</MenuItem>
     </Menu>
   );
@@ -200,4 +206,4 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
   );
 };
 
-export default AppNavbar; 
+export default AppNavbar;
