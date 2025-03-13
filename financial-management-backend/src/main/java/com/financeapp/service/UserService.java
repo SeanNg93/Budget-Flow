@@ -1,6 +1,8 @@
 package com.financeapp.service;
 
+import com.financeapp.model.Role;
 import com.financeapp.model.User;
+import com.financeapp.repository.RoleRepository;
 import com.financeapp.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -9,15 +11,18 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.HashSet;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Value("${app.frontend.url}")
@@ -101,6 +106,13 @@ public class UserService {
         User user = userOptional.get();
         if (user.getActivationTokenExpiry().isBefore(LocalDateTime.now())) {
             return false;
+        }
+
+        // Ensure user has the default ROLE_USER role
+        if (user.getRoles() == null || user.getRoles().isEmpty()) {
+            Role userRole = roleRepository.findByName(Role.ERole.ROLE_USER)
+                    .orElseThrow(() -> new RuntimeException("Error: Role ROLE_USER not found"));
+            user.setRoles(new HashSet<>(Collections.singletonList(userRole)));
         }
 
         user.setEnabled(true);
