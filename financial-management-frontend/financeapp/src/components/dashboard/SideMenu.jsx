@@ -19,6 +19,8 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import PersonIcon from '@mui/icons-material/Person';
 import LogoutIcon from '@mui/icons-material/Logout';
 import Avatar from '@mui/material/Avatar';
+import WalletIcon from '@mui/icons-material/Wallet';
+
 
 const drawerWidth = 280;
 
@@ -46,11 +48,14 @@ const StyledListItemButton = styled(ListItemButton)(({ theme }) => ({
   },
 }));
 
-const SideMenu = ({ open, handleDrawerClose }) => {
+const SideMenu = ({ open, handleDrawerClose, onWalletsToggle, onTransactionsToggle }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const userData = JSON.parse(localStorage.getItem('userData') || '{}');
   
+  // State to manage wallet list visibility
+  const [showWallets, setShowWallets] = useState(false);
+
   const handleLogout = () => {
     localStorage.removeItem('userToken');
     localStorage.removeItem('userData');
@@ -60,10 +65,19 @@ const SideMenu = ({ open, handleDrawerClose }) => {
   const menuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
     { text: 'Transactions', icon: <AccountBalanceWalletIcon />, path: '/transactions' },
+    { text: 'Wallets', icon: <WalletIcon />, path: '/wallets' }, 
     { text: 'Reports', icon: <BarChartIcon />, path: '/reports' },
     { text: 'Profile', icon: <PersonIcon />, path: '/profile' },
     { text: 'Settings', icon: <SettingsIcon />, path: '/settings' },
   ];
+
+  const handleWalletClick = () => {
+    onWalletsToggle();
+  };
+
+  const handleTransactionsClick = () => {
+    onTransactionsToggle();
+  };
 
   return (
     <Drawer
@@ -128,8 +142,13 @@ const SideMenu = ({ open, handleDrawerClose }) => {
           {menuItems.map((item) => (
             <ListItem key={item.text} disablePadding>
               <StyledListItemButton 
-                onClick={() => navigate(item.path)}
+                onClick={item.text === 'Wallets' ? handleWalletClick : item.text === 'Transactions' ? handleTransactionsClick : () => navigate(item.path)}
                 selected={location.pathname === item.path}
+                sx={{
+                  '&:hover': {
+                    backgroundColor: 'rgba(0, 122, 255, 0.15)',
+                  },
+                }}
               >
                 <ListItemIcon sx={{ minWidth: 40 }}>
                   {item.icon}
@@ -145,6 +164,15 @@ const SideMenu = ({ open, handleDrawerClose }) => {
             </ListItem>
           ))}
         </List>
+        
+        {showWallets && (
+          <Box sx={{ mt: 2, px: 2 }}>
+            <Typography variant="body2" color="text.secondary">
+              Danh sách ví của bạn sẽ hiển thị ở đây.
+            </Typography>
+            {/* Thêm mã để hiển thị danh sách ví ở đây */}
+          </Box>
+        )}
       </Box>
       
       <Box sx={{ flexGrow: 1 }} />

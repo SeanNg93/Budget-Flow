@@ -1,7 +1,7 @@
 package com.financeapp.controller;
 
 import com.financeapp.dto.ChangePasswordRequest;
-import com.financeapp.model.RoleName;
+//import com.financeapp.model.RoleName;
 import com.financeapp.model.User;
 import com.financeapp.repository.UserRepository;
 import com.financeapp.security.JwtUtils;

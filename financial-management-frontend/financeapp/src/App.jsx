@@ -10,7 +10,7 @@ import ResetPassword from './pages/auth/ResetPassword';
 import ActivateAccount from './pages/auth/ActivateAccount';
 
 // Main Pages
-import Dashboard from './pages/dashboard.jsx';
+import Dashboard from './pages/dashboard';
 import Home from './pages/home.jsx';
 import Contact from './pages/Contact.jsx';
 import Index from './pages/Index.jsx';
@@ -25,6 +25,11 @@ import DeleteAccount from './pages/account/DeleteAccount.jsx';
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
 import TestConnection from './components/TestConnection';
+
+// Wallet Pages
+import WalletList from "./pages/wallet/WalletList";
+import EditWallet from './pages/wallet/EditWallet';
+import CreateWallet from "./pages/wallet/CreateWallet"; 
 
 function App() {
   useEffect(() => {
@@ -71,6 +76,10 @@ function App() {
             <DeleteAccount />
           </ProtectedRoute>
         } />
+
+        <Route path="/wallets" element={<WalletList />} />
+        <Route path="/create-wallet" element={<CreateWallet />} /> {/* 🔥 Fix lỗi */}
+        <Route path="/wallets/edit/:id" element={<EditWallet />} />
         
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>

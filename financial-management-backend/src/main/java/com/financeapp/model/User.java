@@ -20,12 +20,12 @@ public class User {
 
     @Column(nullable = false, unique = true)
     private String username;
-    
+
     @Column(nullable = false, unique = true)
     private String email;
-    
+
     @Column(name = "password_hash", nullable = false)
-    private String password;
+    private String passwordHash;
 
     private String resetPasswordToken;
     private LocalDateTime resetPasswordTokenExpiry;
@@ -40,7 +40,16 @@ public class User {
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Set<Role> roles;
-    
+
+
+    public String getPassword() {
+        return passwordHash;
+    }
+
+    public void setPassword(String encodedPassword) {
+        this.passwordHash = encodedPassword;
+    }
+
     @Override
     public String toString() {
         return "User{" +
