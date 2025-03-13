@@ -47,19 +47,18 @@ public class SecurityConfig {
                         .requestMatchers("/api/test/**").permitAll()
                         .requestMatchers("/api/password/**").permitAll()
                         .requestMatchers("/api/account/activate").permitAll()
+                        .requestMatchers("/api/public/**").permitAll()
+                        .requestMatchers("/api/user/change-password").permitAll()
                         .requestMatchers("/api/categories/**").authenticated()
                         .requestMatchers("/api/user/delete-account").authenticated()
-                        .requestMatchers("/api/accounts/**").permitAll()
-                        .requestMatchers("/api/transactions/**").permitAll()
-                        .requestMatchers("/api/transaction-categories/**").permitAll()
-                        .requestMatchers("/api/transaction-types/**").permitAll()
-                        .requestMatchers("/api/user/delete/").permitAll()
-                        .requestMatchers("/api/public/**").permitAll()
-
+                        .requestMatchers("/api/accounts/**").authenticated()
+                        .requestMatchers("/api/transactions/**").authenticated()
+                        .requestMatchers("/api/transaction-categories/**").authenticated()
+                        .requestMatchers("/api/transaction-types/**").authenticated()
+                        .requestMatchers("/api/user/delete/").authenticated()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
 
         return http.build();
     }

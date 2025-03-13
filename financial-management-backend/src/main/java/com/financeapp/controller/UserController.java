@@ -1,5 +1,6 @@
 package com.financeapp.controller;
 
+import com.financeapp.dto.ChangePasswordRequest;
 import com.financeapp.model.RoleName;
 import com.financeapp.model.User;
 import com.financeapp.repository.UserRepository;
@@ -75,5 +76,21 @@ public class UserController {
         OAuth2User user = (OAuth2User) authentication.getPrincipal();
         Map<String, Object> response = new HashMap<>(user.getAttributes());
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(@RequestBody ChangePasswordRequest request) {
+        // Extract username from the request
+        String username = request.getCurrentPassword().split(":")[0];
+        String currentPassword = request.getCurrentPassword().split(":")[1];
+        
+        boolean changed = userService.changePassword(username, currentPassword, request.getNewPassword());
+        
+        if (changed) {
+            return ResponseEntity.ok(Map.of("success", "true", "message", "Password changed successfully"));
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("success", "false", "message", "Current password is incorrect or user not found"));
+        }
     }
 }
