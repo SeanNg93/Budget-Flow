@@ -107,54 +107,47 @@ INSERT INTO roles (name) VALUES
 ('ROLE_USER'), 
 ('ROLE_ACCOUNTANT');
 
--- Insert test users with BCrypt encoded passwords
--- Password for all users is 'password'
+-- Insert admin and testuser with BCrypt encoded passwords (123123123)
 INSERT INTO users (username, email, password_hash, enabled) VALUES 
-('user', 'user@example.com', '$2a$10$ixlPY3AAd4ty1l6E2IsQ9OFZi2ba9ZQE0bP7RFcGIWNhyFrrT3YUi', true),
 ('admin', 'admin@example.com', '$2a$10$ixlPY3AAd4ty1l6E2IsQ9OFZi2ba9ZQE0bP7RFcGIWNhyFrrT3YUi', true),
-('sean_test1', 'sean@example.com', '$2a$10$ixlPY3AAd4ty1l6E2IsQ9OFZi2ba9ZQE0bP7RFcGIWNhyFrrT3YUi', true);
+('testuser', 'testuser@example.com', '$2a$10$ixlPY3AAd4ty1l6E2IsQ9OFZi2ba9ZQE0bP7RFcGIWNhyFrrT3YUi', true);
 
 -- Assign roles to users
 INSERT INTO user_roles (user_id, role_id) VALUES 
-(1, 2),  -- user -> ROLE_USER
-(2, 1),  -- admin -> ROLE_ADMIN
-(3, 2);  -- sean_test1 -> ROLE_USER
+(1, 1),  -- admin -> ROLE_ADMIN
+(2, 2);  -- testuser -> ROLE_USER
 
 -- Insert test accounts
 INSERT INTO accounts (user_id, account_name, account_type, balance, currency) VALUES 
-(1, 'Checking Account', 'Checking', 1000.00, 'USD'),
-(1, 'Savings Account', 'Savings', 5000.00, 'USD'),
-(2, 'Admin Account', 'Checking', 2500.00, 'USD'),
-(3, 'Sean Checking', 'Checking', 3000.00, 'USD'),
-(3, 'Sean Savings', 'Savings', 7500.00, 'USD');
+(1, 'Admin Account', 'Checking', 2500.00, 'USD'),
+(2, 'Checking Account', 'Checking', 1000.00, 'USD'),
+(2, 'Savings Account', 'Savings', 5000.00, 'USD');
 
 -- Insert test categories
 INSERT INTO transaction_categories (user_id, category_name, type) VALUES 
-(1, 'Salary', 'INCOME'),
-(1, 'Groceries', 'EXPENSE'),
-(1, 'Rent', 'EXPENSE'),
-(1, 'Entertainment', 'EXPENSE'),
-(1, 'Freelance', 'INCOME'),
-(2, 'Admin Salary', 'INCOME'),
-(2, 'Office Expenses', 'EXPENSE'),
-(3, 'Salary', 'INCOME'),
-(3, 'Food', 'EXPENSE'),
-(3, 'Housing', 'EXPENSE'),
-(3, 'Transportation', 'EXPENSE');
+(1, 'Admin Salary', 'INCOME'),
+(1, 'Office Expenses', 'EXPENSE'),
+(2, 'Salary', 'INCOME'),
+(2, 'Groceries', 'EXPENSE'),
+(2, 'Rent', 'EXPENSE'),
+(2, 'Entertainment', 'EXPENSE');
 
 -- Insert test transactions
 INSERT INTO transactions (user_id, account_id, transaction_type, amount, category_id, transaction_date, description, status) VALUES 
-(1, 1, 'INCOME', 2000.00, 1, DATE_SUB(NOW(), INTERVAL 15 DAY), 'Monthly Salary', 'COMPLETED'),
-(1, 1, 'EXPENSE', 150.00, 2, DATE_SUB(NOW(), INTERVAL 10 DAY), 'Weekly Groceries', 'COMPLETED'),
-(1, 1, 'EXPENSE', 800.00, 3, DATE_SUB(NOW(), INTERVAL 5 DAY), 'Monthly Rent', 'COMPLETED'),
-(1, 1, 'EXPENSE', 50.00, 4, DATE_SUB(NOW(), INTERVAL 3 DAY), 'Movie Night', 'COMPLETED'),
-(1, 2, 'INCOME', 500.00, 5, DATE_SUB(NOW(), INTERVAL 2 DAY), 'Freelance Project', 'COMPLETED'),
-(2, 3, 'INCOME', 3000.00, 6, DATE_SUB(NOW(), INTERVAL 7 DAY), 'Admin Salary', 'COMPLETED'),
-(2, 3, 'EXPENSE', 200.00, 7, DATE_SUB(NOW(), INTERVAL 1 DAY), 'Office Supplies', 'COMPLETED'),
-(3, 4, 'INCOME', 2500.00, 8, DATE_SUB(NOW(), INTERVAL 14 DAY), 'Monthly Salary', 'COMPLETED'),
-(3, 4, 'EXPENSE', 200.00, 9, DATE_SUB(NOW(), INTERVAL 8 DAY), 'Grocery Shopping', 'COMPLETED'),
-(3, 4, 'EXPENSE', 1000.00, 10, DATE_SUB(NOW(), INTERVAL 6 DAY), 'Rent Payment', 'COMPLETED'),
-(3, 4, 'EXPENSE', 100.00, 11, DATE_SUB(NOW(), INTERVAL 4 DAY), 'Gas', 'COMPLETED');
+(1, 1, 'INCOME', 3000.00, 1, DATE_SUB(NOW(), INTERVAL 7 DAY), 'Admin Salary', 'COMPLETED'),
+(1, 1, 'EXPENSE', 200.00, 2, DATE_SUB(NOW(), INTERVAL 1 DAY), 'Office Supplies', 'COMPLETED'),
+(2, 2, 'INCOME', 2000.00, 3, DATE_SUB(NOW(), INTERVAL 15 DAY), 'Monthly Salary', 'COMPLETED'),
+(2, 2, 'EXPENSE', 150.00, 4, DATE_SUB(NOW(), INTERVAL 10 DAY), 'Weekly Groceries', 'COMPLETED'),
+(2, 2, 'EXPENSE', 800.00, 5, DATE_SUB(NOW(), INTERVAL 5 DAY), 'Monthly Rent', 'COMPLETED'),
+(2, 2, 'EXPENSE', 50.00, 6, DATE_SUB(NOW(), INTERVAL 3 DAY), 'Movie Night', 'COMPLETED');
+
+-- Ensure all users have at least the ROLE_USER role (safety check)
+INSERT INTO user_roles (user_id, role_id)
+SELECT u.id, r.id
+FROM users u
+CROSS JOIN roles r
+LEFT JOIN user_roles ur ON u.id = ur.user_id AND ur.role_id = r.id
+WHERE ur.user_id IS NULL AND r.name = 'ROLE_USER';
 
 -- Verify the database setup
 SELECT 'Database setup completed successfully!' AS message;
