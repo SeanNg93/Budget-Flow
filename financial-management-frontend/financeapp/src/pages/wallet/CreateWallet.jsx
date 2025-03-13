@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Box, Button, TextField, Typography, Select, MenuItem, CircularProgress } from "@mui/material";
+import { Box, Button, TextField, Typography, Select, MenuItem, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle } from "@mui/material";
 
-const CreateWallet = () => {
+const CreateWallet = ({ open, handleClose, onWalletCreated }) => {
   const navigate = useNavigate();
   const [walletName, setWalletName] = useState("");
   const [balance, setBalance] = useState("");
@@ -32,7 +32,7 @@ const CreateWallet = () => {
       );
 
       alert("Wallet created successfully!");
-      navigate("/wallets/list"); // 🔥 Chuyển đúng route danh sách ví
+      onWalletCreated(); // Gọi hàm callback khi tạo ví thành công
     } catch (error) {
       console.error("Error creating wallet:", error);
 
@@ -61,7 +61,7 @@ const CreateWallet = () => {
         } else {
           alert("Bạn chưa đăng nhập! Vui lòng đăng nhập lại.");
           localStorage.removeItem("userToken");
-          navigate("/login");
+          navigate('/login');
         }
       } else if (error.response?.status === 403) {
         setError("Bạn không có quyền tạo ví.");
@@ -74,35 +74,41 @@ const CreateWallet = () => {
   };
 
   return (
-    <Box sx={{ maxWidth: 400, mx: "auto", mt: 5, p: 3, border: "1px solid #ddd", borderRadius: 2 }}>
-      <Typography variant="h5">Create Wallet</Typography>
-      {error && <Typography color="error">{error}</Typography>}
+    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
+      <DialogTitle>Tạo Ví Mới</DialogTitle>
+      <DialogContent>
+        {error && <Typography color="error">{error}</Typography>}
 
-      <TextField
-        fullWidth
-        label="Wallet Name"
-        value={walletName}
-        onChange={(e) => setWalletName(e.target.value)}
-        sx={{ my: 2 }}
-      />
-      <TextField
-        fullWidth
-        type="number"
-        label="Balance"
-        value={balance}
-        onChange={(e) => setBalance(e.target.value)}
-        sx={{ my: 2 }}
-      />
-      <Select fullWidth value={currency} onChange={(e) => setCurrency(e.target.value)} sx={{ my: 2 }}>
-        <MenuItem value="VND">VND</MenuItem>
-        <MenuItem value="USD">USD</MenuItem>
-        <MenuItem value="EUR">EUR</MenuItem>
-      </Select>
-
-      <Button variant="contained" color="primary" onClick={handleCreateWallet} disabled={loading}>
-        {loading ? <CircularProgress size={20} /> : "Create Wallet"}
-      </Button>
-    </Box>
+        <TextField
+          fullWidth
+          label="Tên Ví"
+          value={walletName}
+          onChange={(e) => setWalletName(e.target.value)}
+          sx={{ my: 2 }}
+        />
+        <TextField
+          fullWidth
+          type="number"
+          label="Balance"
+          value={balance}
+          onChange={(e) => setBalance(e.target.value)}
+          sx={{ my: 2 }}
+        />
+        <Select fullWidth value={currency} onChange={(e) => setCurrency(e.target.value)} sx={{ my: 2 }}>
+          <MenuItem value="VND">VND</MenuItem>
+          <MenuItem value="USD">USD</MenuItem>
+          <MenuItem value="EUR">EUR</MenuItem>
+        </Select>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={handleClose} color="secondary">
+          Hủy
+        </Button>
+        <Button variant="contained" color="primary" onClick={handleCreateWallet} disabled={loading}>
+          {loading ? <CircularProgress size={20} /> : "Tạo Ví"}
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 };
 

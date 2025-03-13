@@ -75,4 +75,20 @@ public class WalletService {
         walletRepository.save(wallet);
     }
 
+    @Transactional
+    public boolean deleteWallet(Long walletId, String username) {
+        Optional<User> user = userRepository.findByUsername(username);
+        if (user.isEmpty()) return false;
+
+        Optional<Wallet> walletOpt = walletRepository.findById(walletId);
+        if (walletOpt.isPresent()) {
+            Wallet wallet = walletOpt.get();
+            if (wallet.getUser().equals(user.get())) {
+                walletRepository.delete(wallet);
+                return true;
+            }
+        }
+        return false;
+    }
+
 }

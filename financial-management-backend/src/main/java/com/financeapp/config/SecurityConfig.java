@@ -5,6 +5,7 @@ import com.financeapp.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
@@ -58,6 +59,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/transaction-categories/**").authenticated()
                         .requestMatchers("/api/transaction-types/**").authenticated()
                         .requestMatchers("/api/user/delete/").authenticated()
+                        .requestMatchers("/api/wallets/**").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/wallets/update/**").hasAuthority("ROLE_USER")
+                        .requestMatchers(HttpMethod.DELETE, "/api/wallets/delete/**").hasAuthority("ROLE_USER")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

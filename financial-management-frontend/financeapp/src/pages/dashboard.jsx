@@ -26,6 +26,10 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import EditIcon from '@mui/icons-material/Edit';
+import axios from 'axios';
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import DeleteIcon from '@mui/icons-material/Delete';
+import MoneyOffIcon from '@mui/icons-material/MoneyOff';
 
 // Import dashboard components
 import SideMenu from '../components/dashboard/SideMenu';
@@ -36,6 +40,13 @@ import CategoryForm from '../components/dashboard/CategoryForm';
 import FinanceActionPanel from '../components/dashboard/FinanceActionPanel';
 import AddBalanceForm from '../components/dashboard/AddBalanceForm';
 import EditBalanceForm from '../components/dashboard/EditBalanceForm';
+import CreateWallet from '../pages/wallet/CreateWallet';
+import WelcomeCard from '../components/dashboard/WelcomeCard';
+import SummaryCards from '../components/dashboard/SummaryCards';
+import WalletList from '../components/dashboard/WalletList';
+import SelectedWalletDetails from '../components/dashboard/SelectedWalletDetails';
+import RecentTransactions from '../components/dashboard/RecentTransactions';
+import EditWallet from '../pages/wallet/EditWallet';
 
 // Import theme
 import AppTheme from '../shared-theme/AppTheme';
@@ -99,6 +110,8 @@ export default function Dashboard() {
     netSavings: 0
   });
   const [transactions, setTransactions] = useState([]);
+  const [wallets, setWallets] = useState([]);
+  const [selectedWallet, setSelectedWallet] = useState(null);
   const [transactionFormOpen, setTransactionFormOpen] = useState(false);
   const [accountFormOpen, setAccountFormOpen] = useState(false);
   const [categoryFormOpen, setCategoryFormOpen] = useState(false);
@@ -110,6 +123,48 @@ export default function Dashboard() {
   // New state for the unified finance action panel
   const [financeActionPanelOpen, setFinanceActionPanelOpen] = useState(false);
 
+  // State to manage wallet list visibility
+  const [showWallets, setShowWallets] = useState(false);
+
+  // State to manage add transaction button visibility
+  const [showAddTransaction, setShowAddTransaction] = useState(true);
+
+  // State to manage create wallet form visibility
+  const [createWalletFormOpen, setCreateWalletFormOpen] = useState(false);
+
+  // State to manage wallet menu anchor
+  const [walletMenuAnchorEl, setWalletMenuAnchorEl] = useState(null);
+
+  const toggleWallets = () => {
+    setShowWallets(true);
+    setShowAddTransaction(false);
+  };
+
+  const toggleTransactions = () => {
+    setShowWallets(false);
+    setShowAddTransaction(true);
+  };
+
+  const handleCreateWallet = () => {
+    setCreateWalletFormOpen(true);
+  };
+
+  const handleTransactionAdded = () => {
+    fetchFinancialData();
+  };
+
+  const handleWalletCreated = () => {
+    setCreateWalletFormOpen(false);
+    setShowWallets(true);
+    fetchWallets();
+  };
+
+  const handleWalletClick = (wallet) => {
+    setSelectedWallet(wallet);
+    setShowWallets(false);
+    setShowAddTransaction(false);
+  };
+
   useEffect(() => {
     checkAuth();
   }, []);
@@ -117,6 +172,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (user) {
       fetchFinancialData();
+      fetchWallets();
     }
   }, [user]);
 
@@ -176,6 +232,26 @@ export default function Dashboard() {
     }
   };
 
+  const fetchWallets = async () => {
+    try {
+      const token = localStorage.getItem('userToken');
+      if (!token) {
+        alert('Bạn chưa đăng nhập!');
+        navigate('/login');
+        return;
+      }
+
+      const response = await axios.get('http://localhost:8080/api/wallets', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setWallets(response.data);
+    } catch (error) {
+      console.error('Lỗi tải danh sách ví:', error);
+      alert('Không thể tải danh sách ví. Vui lòng thử lại.');
+    }
+  };
+
   const handleDrawerOpen = () => {
     setOpen(true);
   };
@@ -197,10 +273,6 @@ export default function Dashboard() {
       month: 'short',
       day: 'numeric'
     });
-  };
-
-  const handleTransactionAdded = () => {
-    fetchFinancialData();
   };
 
   const handleAccountAdded = () => {
@@ -233,6 +305,54 @@ export default function Dashboard() {
     setEditBalanceFormOpen(true);
   };
 
+  const handleWalletMenuOpen = (event, wallet) => {
+    setWalletMenuAnchorEl(event.currentTarget);
+    setSelectedWallet(wallet);
+  };
+
+  const handleWalletMenuClose = () => {
+    setWalletMenuAnchorEl(null);
+  };
+
+  // 🔄 **Reset số dư về 0**
+  const handleResetBalance = async (walletId) => {
+    try {
+      const token = localStorage.getItem('userToken');
+      await axios.put(`http://localhost:8080/api/wallets/${walletId}/reset`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      fetchWallets();
+      alert('Số dư đã được đặt lại về 0!');
+    } catch (error) {
+      console.error('Lỗi reset số dư:', error);
+      alert('Không thể đặt lại số dư. Vui lòng thử lại.');
+    }
+  };
+
+  // ❌ **Xóa ví và toàn bộ giao dịch**
+  const handleDeleteWallet = async (walletId) => {
+    const confirmDelete = window.confirm('Bạn có chắc chắn muốn xóa ví này không?');
+    if (!confirmDelete) return;
+
+    try {
+      const token = localStorage.getItem('userToken');
+      await axios.delete(`http://localhost:8080/api/wallets/${walletId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      fetchWallets();
+      alert('Ví và tất cả giao dịch liên quan đã bị xóa.');
+    } catch (error) {
+      console.error('Lỗi xóa ví:', error);
+      alert('Không thể xóa ví. Vui lòng thử lại.');
+    }
+  };
+
+  const handleEditWallet = (walletId) => {
+    navigate(`/wallets/edit/${walletId}`);
+  };
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -246,385 +366,60 @@ export default function Dashboard() {
       <Box sx={{ display: 'flex' }}>
         <CssBaseline />
         <AppNavbar open={open} handleDrawerOpen={handleDrawerOpen} />
-        <SideMenu open={open} handleDrawerClose={handleDrawerClose} />
+        <SideMenu 
+          open={open} 
+          handleDrawerClose={handleDrawerClose} 
+          onWalletsToggle={toggleWallets} 
+          onTransactionsToggle={toggleTransactions} 
+        />
         <Main open={open}>
           <DrawerHeader />
           <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
             <Grid container spacing={3}>
-              {/* Welcome Card */}
-              <Grid item xs={12}>
-                <Paper
-                  sx={{
-                    p: 3,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    backgroundColor: 'background.paper',
-                    borderRadius: 4,
-                    boxShadow: '0px 2px 12px rgba(0, 0, 0, 0.08)',
-                  }}
-                >
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography 
-                      component="h1" 
-                      variant="h4" 
-                      color="text.primary" 
-                      sx={{ 
-                        fontWeight: 700,
-                        letterSpacing: '-0.02em',
-                      }}
-                    >
-                      Welcome, {user?.username || 'User'}!
-                    </Typography>
-                    <Button 
-                      variant="contained" 
-                      color="primary" 
-                      startIcon={<AddIcon />}
-                      onClick={openFinanceActionPanel}
-                      sx={{
-                        borderRadius: 3,
-                        px: 3,
-                        py: 1.2,
-                        fontWeight: 600,
-                        boxShadow: 'none',
-                      }}
-                    >
-                      Add Transaction
-                    </Button>
-                  </Box>
-                  <Typography 
-                    variant="body1" 
-                    color="text.secondary"
-                    sx={{ mt: 1, fontSize: '1.05rem' }}
-                  >
-                    This is your financial dashboard. Here you can manage your finances, track expenses, and plan your budget.
-                  </Typography>
-                </Paper>
-              </Grid>
-              
-              {/* Summary Cards */}
-              <Grid item xs={12} md={3}>
-                <Card sx={{ height: '100%', position: 'relative' }}>
-                  <CardHeader 
-                    title={
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <Typography 
-                            variant="h6" 
-                            component="div" 
-                            sx={{ 
-                              fontWeight: 600,
-                              color: 'text.primary',
-                            }}
-                          >
-                            Total Balance
-                          </Typography>
-                          <IconButton 
-                            color="primary" 
-                            size="small" 
-                            onClick={() => setAddBalanceFormOpen(true)}
-                            sx={{ 
-                              ml: 1,
-                              backgroundColor: 'rgba(0, 122, 255, 0.1)',
-                              '&:hover': {
-                                backgroundColor: 'rgba(0, 122, 255, 0.2)',
-                              }
-                            }}
-                          >
-                            <AddIcon fontSize="small" />
-                          </IconButton>
-                        </Box>
-                        <IconButton
-                          aria-label="more options"
-                          aria-controls="balance-menu"
-                          aria-haspopup="true"
-                          onClick={handleBalanceMenuOpen}
-                          size="small"
-                          sx={{ 
-                            color: 'text.secondary',
-                            '&:hover': {
-                              backgroundColor: 'rgba(0, 0, 0, 0.04)',
-                            }
-                          }}
-                        >
-                          <MoreVertIcon fontSize="small" />
-                        </IconButton>
-                      </Box>
-                    } 
+              <WelcomeCard 
+                user={user} 
+                showAddTransaction={showAddTransaction} 
+                openFinanceActionPanel={openFinanceActionPanel} 
+              />
+              <SummaryCards 
+                financialData={financialData} 
+                loading={loading} 
+                setAddBalanceFormOpen={setAddBalanceFormOpen} 
+                handleBalanceMenuOpen={handleBalanceMenuOpen} 
+                balanceMenuAnchorEl={balanceMenuAnchorEl} 
+                handleBalanceMenuClose={handleBalanceMenuClose} 
+                handleEditBalance={handleEditBalance} 
+              />
+              {showWallets && (
+                <WalletList 
+                  wallets={wallets} 
+                  setCreateWalletFormOpen={setCreateWalletFormOpen} 
+                  handleWalletMenuOpen={handleWalletMenuOpen} 
+                />
+              )}
+              {selectedWallet && (
+                <SelectedWalletDetails 
+                  selectedWallet={selectedWallet} 
+                  handleEditWallet={handleEditWallet} 
+                  handleDeleteWallet={handleDeleteWallet} 
+                />
+              )}
+              {createWalletFormOpen && (
+                <Grid item xs={12}>
+                  <CreateWallet 
+                    open={createWalletFormOpen} 
+                    handleClose={() => setCreateWalletFormOpen(false)} 
+                    onWalletCreated={handleWalletCreated}
                   />
-                  <Menu
-                    id="balance-menu"
-                    anchorEl={balanceMenuAnchorEl}
-                    keepMounted
-                    open={Boolean(balanceMenuAnchorEl)}
-                    onClose={handleBalanceMenuClose}
-                    PaperProps={{
-                      sx: {
-                        borderRadius: 3,
-                        boxShadow: '0px 5px 15px rgba(0, 0, 0, 0.15)',
-                        minWidth: 180,
-                      }
-                    }}
-                  >
-                    <MenuItem onClick={handleEditBalance} sx={{ py: 1.5 }}>
-                      <EditIcon fontSize="small" sx={{ mr: 1.5, color: 'primary.main' }} />
-                      Edit Balance
-                    </MenuItem>
-                  </Menu>
-                  <CardContent sx={{ pt: 0 }}>
-                    {loading ? (
-                      <CircularProgress size={24} />
-                    ) : (
-                      <Typography 
-                        variant="h4" 
-                        sx={{ 
-                          fontWeight: 700,
-                          color: 'text.primary',
-                          letterSpacing: '-0.02em',
-                        }}
-                      >
-                        {formatCurrency(financialData.totalBalance)}
-                      </Typography>
-                    )}
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} md={3}>
-                <Card sx={{ height: '100%' }}>
-                  <CardHeader 
-                    title={
-                      <Typography 
-                        variant="h6" 
-                        component="div" 
-                        sx={{ 
-                          fontWeight: 600,
-                          color: 'text.primary',
-                        }}
-                      >
-                        Income
-                      </Typography>
-                    } 
-                  />
-                  <CardContent sx={{ pt: 0 }}>
-                    {loading ? (
-                      <CircularProgress size={24} />
-                    ) : (
-                      <Typography 
-                        variant="h4" 
-                        color="success.main"
-                        sx={{ 
-                          fontWeight: 700,
-                          letterSpacing: '-0.02em',
-                        }}
-                      >
-                        {formatCurrency(financialData.totalIncome)}
-                      </Typography>
-                    )}
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} md={3}>
-                <Card sx={{ height: '100%' }}>
-                  <CardHeader 
-                    title={
-                      <Typography 
-                        variant="h6" 
-                        component="div" 
-                        sx={{ 
-                          fontWeight: 600,
-                          color: 'text.primary',
-                        }}
-                      >
-                        Expenses
-                      </Typography>
-                    } 
-                  />
-                  <CardContent sx={{ pt: 0 }}>
-                    {loading ? (
-                      <CircularProgress size={24} />
-                    ) : (
-                      <Typography 
-                        variant="h4" 
-                        color="error.main"
-                        sx={{ 
-                          fontWeight: 700,
-                          letterSpacing: '-0.02em',
-                        }}
-                      >
-                        {formatCurrency(financialData.totalExpense)}
-                      </Typography>
-                    )}
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} md={3}>
-                <Card sx={{ height: '100%' }}>
-                  <CardHeader 
-                    title={
-                      <Typography 
-                        variant="h6" 
-                        component="div" 
-                        sx={{ 
-                          fontWeight: 600,
-                          color: 'text.primary',
-                        }}
-                      >
-                        Net Savings
-                      </Typography>
-                    } 
-                  />
-                  <CardContent sx={{ pt: 0 }}>
-                    {loading ? (
-                      <CircularProgress size={24} />
-                    ) : (
-                      <Typography 
-                        variant="h4" 
-                        color={financialData.netSavings >= 0 ? "success.main" : "error.main"}
-                        sx={{ 
-                          fontWeight: 700,
-                          letterSpacing: '-0.02em',
-                        }}
-                      >
-                        {formatCurrency(financialData.netSavings)}
-                      </Typography>
-                    )}
-                  </CardContent>
-                </Card>
-              </Grid>
-              
-              {/* Recent Transactions */}
-              <Grid item xs={12}>
-                <Paper 
-                  sx={{ 
-                    p: 3, 
-                    display: 'flex', 
-                    flexDirection: 'column',
-                    borderRadius: 4,
-                    boxShadow: '0px 2px 12px rgba(0, 0, 0, 0.08)',
-                  }}
-                >
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                    <Typography 
-                      component="h2" 
-                      variant="h5" 
-                      color="text.primary" 
-                      sx={{ 
-                        fontWeight: 600,
-                        letterSpacing: '-0.01em',
-                      }}
-                    >
-                      Recent Transactions
-                    </Typography>
-                    <Button 
-                      variant="outlined" 
-                      color="primary" 
-                      startIcon={<AddIcon />}
-                      onClick={openFinanceActionPanel}
-                      sx={{
-                        borderRadius: 3,
-                        fontWeight: 600,
-                        borderWidth: '1.5px',
-                      }}
-                    >
-                      Add New
-                    </Button>
-                  </Box>
-                  
-                  {loading ? (
-                    <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
-                      <CircularProgress />
-                    </Box>
-                  ) : transactions.length > 0 ? (
-                    <TableContainer sx={{ borderRadius: 3, overflow: 'hidden' }}>
-                      <Table>
-                        <TableHead>
-                          <TableRow>
-                            <TableCell sx={{ fontWeight: 600, color: 'text.secondary', fontSize: '0.875rem' }}>Date</TableCell>
-                            <TableCell sx={{ fontWeight: 600, color: 'text.secondary', fontSize: '0.875rem' }}>Description</TableCell>
-                            <TableCell sx={{ fontWeight: 600, color: 'text.secondary', fontSize: '0.875rem' }}>Category</TableCell>
-                            <TableCell sx={{ fontWeight: 600, color: 'text.secondary', fontSize: '0.875rem' }}>Type</TableCell>
-                            <TableCell align="right" sx={{ fontWeight: 600, color: 'text.secondary', fontSize: '0.875rem' }}>Amount</TableCell>
-                          </TableRow>
-                        </TableHead>
-                        <TableBody>
-                          {transactions.map((transaction) => (
-                            <TableRow 
-                              key={transaction.id}
-                              sx={{ 
-                                '&:hover': { 
-                                  backgroundColor: 'rgba(0, 0, 0, 0.02)' 
-                                } 
-                              }}
-                            >
-                              <TableCell sx={{ fontSize: '0.95rem' }}>{formatDate(transaction.transactionDate)}</TableCell>
-                              <TableCell sx={{ fontSize: '0.95rem', fontWeight: 500 }}>{transaction.description}</TableCell>
-                              <TableCell sx={{ fontSize: '0.95rem' }}>{transaction.category?.categoryName || 'Uncategorized'}</TableCell>
-                              <TableCell sx={{ fontSize: '0.95rem' }}>
-                                <Box
-                                  sx={{
-                                    display: 'inline-block',
-                                    px: 1.5,
-                                    py: 0.5,
-                                    borderRadius: 2,
-                                    fontSize: '0.8rem',
-                                    fontWeight: 600,
-                                    backgroundColor: transaction.transactionType === 'INCOME' 
-                                      ? 'rgba(52, 199, 89, 0.1)' 
-                                      : 'rgba(255, 59, 48, 0.1)',
-                                    color: transaction.transactionType === 'INCOME' 
-                                      ? 'success.main' 
-                                      : 'error.main',
-                                  }}
-                                >
-                                  {transaction.transactionType}
-                                </Box>
-                              </TableCell>
-                              <TableCell 
-                                align="right" 
-                                sx={{ 
-                                  color: transaction.transactionType === 'INCOME' ? 'success.main' : 'error.main',
-                                  fontSize: '0.95rem',
-                                  fontWeight: 600
-                                }}
-                              >
-                                {formatCurrency(transaction.amount)}
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </TableContainer>
-                  ) : (
-                    <Box 
-                      sx={{ 
-                        p: 4, 
-                        textAlign: 'center', 
-                        backgroundColor: 'rgba(0, 0, 0, 0.02)',
-                        borderRadius: 3
-                      }}
-                    >
-                      <Typography variant="body1" color="text.secondary">
-                        No transactions to display. Start adding your financial data to see it here.
-                      </Typography>
-                      <Button 
-                        variant="contained" 
-                        color="primary" 
-                        startIcon={<AddIcon />}
-                        onClick={openFinanceActionPanel}
-                        sx={{
-                          mt: 2,
-                          borderRadius: 3,
-                          px: 3,
-                          py: 1,
-                          fontWeight: 600,
-                          boxShadow: 'none',
-                        }}
-                      >
-                        Add First Transaction
-                      </Button>
-                    </Box>
-                  )}
-                </Paper>
-              </Grid>
+                </Grid>
+              )}
+              {showAddTransaction && (
+                <RecentTransactions 
+                  transactions={transactions} 
+                  loading={loading} 
+                  openFinanceActionPanel={openFinanceActionPanel} 
+                />
+              )}
             </Grid>
           </Container>
         </Main>
@@ -670,6 +465,24 @@ export default function Dashboard() {
         onBalanceUpdated={handleBalanceAdded}
         currentBalance={financialData.totalBalance}
       />
+
+      {/* Wallet Actions Menu */}
+      <Menu
+        anchorEl={walletMenuAnchorEl}
+        keepMounted
+        open={Boolean(walletMenuAnchorEl)}
+        onClose={handleWalletMenuClose}
+      >
+        <MenuItem onClick={() => handleEditWallet(selectedWallet?.id)}>
+          <EditIcon sx={{ mr: 1 }} /> Edit Wallet
+        </MenuItem>
+        <MenuItem onClick={() => handleResetBalance(selectedWallet?.id)}>
+          <MoneyOffIcon sx={{ mr: 1 }} /> Reset Balance
+        </MenuItem>
+        <MenuItem onClick={() => handleDeleteWallet(selectedWallet?.id)}>
+          <DeleteIcon sx={{ mr: 1 }} color="error" /> Delete Wallet
+        </MenuItem>
+      </Menu>
     </AppTheme>
   );
 }

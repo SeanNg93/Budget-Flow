@@ -95,4 +95,17 @@ public class WalletController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @DeleteMapping("/delete/{id}")
+    @PreAuthorize("hasAuthority('ROLE_USER')")
+    public ResponseEntity<?> deleteWallet(@PathVariable Long id, Authentication authentication) {
+        String username = authentication.getName();
+        boolean deleted = walletService.deleteWallet(id, username);
+
+        if (deleted) {
+            return ResponseEntity.ok(Map.of("success", true, "message", "Wallet deleted successfully"));
+        } else {
+            return ResponseEntity.status(403).body(Map.of("success", false, "message", "Wallet not found or unauthorized"));
+        }
+    }
+
 }

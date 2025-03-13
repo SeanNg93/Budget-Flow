@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Box, Button, Typography, Card, CardContent, Grid } from "@mui/material";
+import { Box, Button, Typography, Card, CardContent, Grid, IconButton } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
+import DeleteIcon from "@mui/icons-material/Delete";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 
 const WalletList = () => {
@@ -11,35 +13,61 @@ const WalletList = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchWallets = async () => {
-      try {
-        const token = localStorage.getItem("userToken");
-        if (!token) {
-          alert("Bạn chưa đăng nhập!");
-          navigate("/login");
-          return;
-        }
-
-        const response = await axios.get("http://localhost:8080/api/wallets", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        setWallets(response.data);
-      } catch (error) {
-        console.error("Lỗi tải danh sách ví:", error);
-        alert("Không thể tải danh sách ví. Vui lòng thử lại.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchWallets();
   }, [navigate]);
 
+  const fetchWallets = async () => {
+    try {
+      const token = localStorage.getItem("userToken");
+      if (!token) {
+        alert("Bạn chưa đăng nhập!");
+        navigate("/login");
+        return;
+      }
+
+      const response = await axios.get("http://localhost:8080/api/wallets", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setWallets(response.data);
+    } catch (error) {
+      console.error("Lỗi tải danh sách ví:", error);
+      alert("Không thể tải danh sách ví. Vui lòng thử lại.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteWallet = async (walletId) => {
+    if (!window.confirm("Bạn có chắc chắn muốn xóa ví này không?")) return;
+
+    try {
+      const token = localStorage.getItem("userToken");
+      await axios.delete(`http://localhost:8080/api/wallets/delete/${walletId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      alert("Xóa ví thành công!");
+      fetchWallets(); // Refresh danh sách ví sau khi xóa
+    } catch (error) {
+      console.error("Lỗi khi xóa ví:", error);
+      alert("Không thể xóa ví, vui lòng thử lại.");
+    }
+  };
+
   return (
     <Box sx={{ p: 3 }}>
+      {/* 🔹 Nút Quay lại Dashboard */}
+      <Button
+        variant="outlined"
+        color="secondary"
+        startIcon={<ArrowBackIcon />}
+        onClick={() => navigate("/dashboard")}
+        sx={{ mb: 2 }}
+      >
+        Back to Dashboard
+      </Button>
+
       <Typography variant="h4" gutterBottom>
         Your Wallets
       </Typography>
@@ -68,7 +96,6 @@ const WalletList = () => {
                   transition: "0.3s",
                   "&:hover": { boxShadow: 6 },
                 }}
-                onClick={() => navigate(`/edit-wallet/${wallet.id}`)}
               >
                 <CardContent>
                   <Box display="flex" alignItems="center" gap={2}>
@@ -76,6 +103,11 @@ const WalletList = () => {
                     <Typography variant="h6">{wallet.walletName}</Typography>
                   </Box>
                   <Typography color="textSecondary">Balance: {wallet.balance} {wallet.currency}</Typography>
+
+                  {/* Nút Xóa Ví */}
+                  <IconButton color="error" onClick={() => handleDeleteWallet(wallet.id)}>
+                    <DeleteIcon />
+                  </IconButton>
                 </CardContent>
               </Card>
             </Grid>

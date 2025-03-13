@@ -2,10 +2,12 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Box, Button, TextField, Typography, CircularProgress, Select, MenuItem } from "@mui/material";
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 
-export default function EditWallet() {
-    const { id } = useParams(); // Lấy ID ví từ URL
+export default function EditWallet({ selectedWallet, handleEditWallet, handleDeleteWallet }) {
     const navigate = useNavigate();
+    const { id } = useParams();
     const [wallet, setWallet] = useState({
         walletName: "",
         balance: "",
@@ -16,17 +18,15 @@ export default function EditWallet() {
     const [error, setError] = useState("");
 
     useEffect(() => {
-        // 🔥 Fetch thông tin ví từ backend
         const fetchWallet = async () => {
             const token = localStorage.getItem("userToken");
             if (!token) {
-                alert("Bạn chưa đăng nhập!");
                 navigate("/login");
                 return;
             }
 
             try {
-                const response = await axios.get(`http://localhost:8080/api/wallets/${id}`, {
+                const response = await axios.get(`http://localhost:8080/api/wallets/${selectedWallet.id}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setWallet(response.data);
@@ -35,45 +35,36 @@ export default function EditWallet() {
             }
         };
 
-        fetchWallet();
-    }, [id, navigate]);
+        if (selectedWallet) {
+            fetchWallet();
+        }
+    }, [selectedWallet, navigate]);
 
     const handleChange = (e) => {
-        setWallet({ ...wallet, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        setWallet((prevWallet) => ({
+            ...prevWallet,
+            [name]: value,
+        }));
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const handleSubmit = async () => {
         setLoading(true);
-        setError("");
-
         try {
             const token = localStorage.getItem("userToken");
-            await axios.put(
-                `http://localhost:8080/api/wallets/update/${id}`,
-                {
-                    walletName: wallet.walletName,
-                    balance: wallet.balance,
-                    currency: wallet.currency,
-                    description: wallet.description,
-                },
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        "Content-Type": "application/json"
-                    }
-                }
-            );
+            await axios.put(`http://localhost:8080/api/wallets/update/${selectedWallet.id}`, {
+                walletName: wallet.walletName,
+                balance: wallet.balance,
+                currency: wallet.currency,
+                description: wallet.description,
+            }, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
 
-            alert("Cập nhật ví thành công");
-            navigate("/wallets");
+            handleEditWallet(selectedWallet.id);
         } catch (error) {
-            console.error("Lỗi khi cập nhật ví:", error);
-            if (error.response?.status === 403) {
-                alert("Bạn không có quyền sửa ví này!");
-            } else {
-                setError("Không thể cập nhật ví, vui lòng thử lại.");
-            }
+            console.error("Lỗi cập nhật ví:", error);
+            alert("Không thể cập nhật ví. Vui lòng thử lại.");
         } finally {
             setLoading(false);
         }
@@ -81,7 +72,9 @@ export default function EditWallet() {
 
     return (
         <Box sx={{ maxWidth: 400, mx: "auto", mt: 5, p: 3, border: "1px solid #ddd", borderRadius: 2, boxShadow: 3 }}>
-            <Typography variant="h5" textAlign="center">Chỉnh sửa Ví</Typography>
+            <Typography variant="h5" fontWeight={700} mb={2}>
+                Chỉnh sửa ví: {selectedWallet.walletName}
+            </Typography>
             {error && <Typography color="error" textAlign="center">{error}</Typography>}
             
             <TextField fullWidth label="Tên ví" name="walletName" value={wallet.walletName} onChange={handleChange} sx={{ mb: 2 }} />
@@ -103,4 +96,4 @@ export default function EditWallet() {
             </Box>
         </Box>
     );
-} 
+}
