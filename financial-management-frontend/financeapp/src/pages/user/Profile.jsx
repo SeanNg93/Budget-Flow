@@ -87,7 +87,7 @@ export default function Profile() {
     };
     localStorage.setItem("userData", JSON.stringify(updatedProfile));
     setIsEditing(false);
-    alert("Thông tin cá nhân đã được cập nhật!");
+    alert("Thông tin cá nhân đã được cập nhật thành công!");
   };
 
   if (!profile) {
