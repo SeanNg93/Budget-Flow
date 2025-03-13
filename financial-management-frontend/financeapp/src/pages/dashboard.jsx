@@ -21,10 +21,6 @@ import TableRow from '@mui/material/TableRow';
 import Button from '@mui/material/Button';
 import AddIcon from '@mui/icons-material/Add';
 import Stack from '@mui/material/Stack';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import IconButton from '@mui/material/IconButton';
 
 // Import dashboard components
 import SideMenu from '../components/dashboard/SideMenu';
@@ -32,6 +28,7 @@ import AppNavbar from '../components/dashboard/AppNavbar';
 import TransactionForm from '../components/dashboard/TransactionForm';
 import AccountForm from '../components/dashboard/AccountForm';
 import CategoryForm from '../components/dashboard/CategoryForm';
+import FinanceActionPanel from '../components/dashboard/FinanceActionPanel';
 
 // Import theme
 import AppTheme from '../shared-theme/AppTheme';
@@ -96,8 +93,10 @@ export default function Dashboard() {
   const [transactionFormOpen, setTransactionFormOpen] = useState(false);
   const [accountFormOpen, setAccountFormOpen] = useState(false);
   const [categoryFormOpen, setCategoryFormOpen] = useState(false);
-  const [anchorEl, setAnchorEl] = useState(null);
   const [error, setError] = useState(null);
+
+  // New state for the unified finance action panel
+  const [financeActionPanelOpen, setFinanceActionPanelOpen] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -197,15 +196,12 @@ export default function Dashboard() {
   };
 
   const handleCategoryAdded = () => {
-    // Refresh data if needed
+    fetchFinancialData();
   };
 
-  const handleMenuClick = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-  
-  const handleMenuClose = () => {
-    setAnchorEl(null);
+  // Function to open the finance action panel
+  const openFinanceActionPanel = () => {
+    setFinanceActionPanelOpen(true);
   };
 
   if (loading) {
@@ -245,37 +241,10 @@ export default function Dashboard() {
                         variant="contained" 
                         color="primary" 
                         startIcon={<AddIcon />}
-                        onClick={() => setTransactionFormOpen(true)}
+                        onClick={openFinanceActionPanel}
                       >
                         Add Transaction
                       </Button>
-                      <Button 
-                        variant="outlined" 
-                        color="primary" 
-                        startIcon={<AddIcon />}
-                        onClick={() => setAccountFormOpen(true)}
-                      >
-                        Add Account
-                      </Button>
-                      <IconButton 
-                        color="primary"
-                        onClick={handleMenuClick}
-                        aria-label="more options"
-                      >
-                        <MoreVertIcon />
-                      </IconButton>
-                      <Menu
-                        anchorEl={anchorEl}
-                        open={Boolean(anchorEl)}
-                        onClose={handleMenuClose}
-                      >
-                        <MenuItem onClick={() => {
-                          setCategoryFormOpen(true);
-                          handleMenuClose();
-                        }}>
-                          Add Category
-                        </MenuItem>
-                      </Menu>
                     </Stack>
                   </Box>
                   <Typography variant="body1">
@@ -343,14 +312,14 @@ export default function Dashboard() {
               <Grid item xs={12}>
                 <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                    <Typography component="h2" variant="h6" color="primary">
+                    <Typography component="h2" variant="h6" color="primary" gutterBottom>
                       Recent Transactions
                     </Typography>
                     <Button 
                       variant="text" 
                       color="primary" 
                       startIcon={<AddIcon />}
-                      onClick={() => setTransactionFormOpen(true)}
+                      onClick={openFinanceActionPanel}
                     >
                       Add New
                     </Button>
@@ -401,21 +370,26 @@ export default function Dashboard() {
         </Main>
       </Box>
       
-      {/* Transaction Form Dialog */}
+      {/* Finance Action Panel */}
+      <FinanceActionPanel 
+        open={financeActionPanelOpen} 
+        handleClose={() => setFinanceActionPanelOpen(false)} 
+        onTransactionAdded={handleTransactionAdded}
+      />
+      
+      {/* Keep the individual forms for backward compatibility if needed */}
       <TransactionForm 
         open={transactionFormOpen} 
         handleClose={() => setTransactionFormOpen(false)} 
         onTransactionAdded={handleTransactionAdded}
       />
       
-      {/* Account Form Dialog */}
       <AccountForm 
         open={accountFormOpen} 
         handleClose={() => setAccountFormOpen(false)} 
         onAccountAdded={handleAccountAdded}
       />
       
-      {/* Category Form Dialog */}
       <CategoryForm 
         open={categoryFormOpen} 
         handleClose={() => setCategoryFormOpen(false)} 

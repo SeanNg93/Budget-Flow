@@ -15,15 +15,22 @@ import {
   Box,
   InputAdornment,
   CircularProgress,
-  Alert
+  Alert,
+  IconButton,
+  Typography
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers';
+import AddIcon from '@mui/icons-material/Add';
 import FinanceService from '../../services/FinanceService';
+import AccountForm from './AccountForm';
+import CategoryForm from './CategoryForm';
 
-const TransactionForm = ({ open, handleClose, onTransactionAdded }) => {
+const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = false }) => {
   const [accounts, setAccounts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [accountFormOpen, setAccountFormOpen] = useState(false);
+  const [categoryFormOpen, setCategoryFormOpen] = useState(false);
   const [formData, setFormData] = useState({
     accountId: '',
     transactionType: 'EXPENSE',
@@ -48,6 +55,10 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded }) => {
         const accountsResponse = await FinanceService.getAccounts();
         setAccounts(accountsResponse.data || []);
         
+        // Fetch categories
+        const categoriesResponse = await FinanceService.getCategories();
+        setCategories(categoriesResponse.data || []);
+        
         // Set default account if available
         if (accountsResponse.data && accountsResponse.data.length > 0) {
           setFormData(prev => ({
@@ -55,17 +66,13 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded }) => {
             accountId: accountsResponse.data[0].id
           }));
         }
-        
-        // Fetch categories
-        try {
-          const categoriesResponse = await FinanceService.getCategories();
-          setCategories(categoriesResponse.data || []);
-        } catch (categoryError) {
+      } catch (err) {
+        console.error('Error fetching data:', err);
+        if (err.response && err.response.status === 403) {
           setCategoriesError(true);
-          // Continue with the form even if categories can't be fetched
+        } else {
+          setError('Failed to load data. Please try again later.');
         }
-      } catch (error) {
-        setError('Failed to load data. Please try again.');
       } finally {
         setLoading(false);
       }
@@ -75,7 +82,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded }) => {
       fetchData();
     }
   }, [open]);
-
+  
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -90,16 +97,8 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded }) => {
         [name]: ''
       });
     }
-    
-    // If transaction type changes, reset category
-    if (name === 'transactionType') {
-      setFormData(prev => ({
-        ...prev,
-        categoryId: ''
-      }));
-    }
   };
-
+  
   const handleDateChange = (date) => {
     setFormData({
       ...formData,
@@ -114,7 +113,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded }) => {
       });
     }
   };
-
+  
   const validateForm = () => {
     const newErrors = {};
     
@@ -130,11 +129,6 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded }) => {
       newErrors.description = 'Description is required';
     }
     
-    // Only validate category if categories are available
-    if (!categoriesError && !formData.categoryId) {
-      newErrors.categoryId = 'Category is required';
-    }
-    
     if (!formData.transactionDate) {
       newErrors.transactionDate = 'Date is required';
     }
@@ -142,46 +136,43 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded }) => {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
+  
   const handleSubmit = async () => {
     if (!validateForm()) {
       return;
     }
     
     setSubmitting(true);
+    setError('');
     
     try {
-      // Format the data for the API
       const transactionData = {
-        transactionType: formData.transactionType,
+        ...formData,
         amount: parseFloat(formData.amount),
-        description: formData.description,
-        transactionDate: formData.transactionDate
+        categoryId: formData.categoryId || null
       };
       
-      // Only include category if it's selected and categories are available
-      if (!categoriesError && formData.categoryId) {
-        transactionData.category = { id: formData.categoryId };
-      }
-      
-      // Call the API to create the transaction
       await FinanceService.createTransaction(transactionData, formData.accountId);
       
-      // Reset form and close dialog
+      // Reset form
       resetForm();
-      handleClose();
       
-      // Notify parent component
+      // Close dialog and notify parent
       if (onTransactionAdded) {
         onTransactionAdded();
       }
-    } catch (error) {
-      setError('Failed to create transaction. Please try again.');
+      
+      if (!embedded) {
+        handleClose();
+      }
+    } catch (err) {
+      console.error('Error creating transaction:', err);
+      setError(err.response?.data?.message || 'Failed to create transaction. Please try again.');
     } finally {
       setSubmitting(false);
     }
   };
-
+  
   const resetForm = () => {
     setFormData({
       accountId: accounts.length > 0 ? accounts[0].id : '',
@@ -195,42 +186,52 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded }) => {
     setError('');
   };
 
+  // Filter categories based on transaction type
   const filteredCategories = categories.filter(
     category => category.type === formData.transactionType
   );
 
-  return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Add New Transaction</DialogTitle>
-      <DialogContent>
-        {loading && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}>
-            <CircularProgress />
-          </Box>
-        )}
-        
-        {error && (
-          <Alert severity="error" sx={{ mt: 2, mb: 2 }}>
-            {error}
-          </Alert>
-        )}
-        
-        {categoriesError && (
-          <Alert severity="warning" sx={{ mt: 2, mb: 2 }}>
-            Categories could not be loaded. You can still create a transaction without a category.
-          </Alert>
-        )}
-        
-        {!loading && (
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12} sm={6}>
+  const handleAccountAdded = async () => {
+    setAccountFormOpen(false);
+    // Refresh accounts list
+    try {
+      const accountsResponse = await FinanceService.getAccounts();
+      setAccounts(accountsResponse.data || []);
+    } catch (err) {
+      console.error('Error refreshing accounts:', err);
+    }
+  };
+
+  const handleCategoryAdded = async () => {
+    setCategoryFormOpen(false);
+    // Refresh categories list
+    try {
+      const categoriesResponse = await FinanceService.getCategories();
+      setCategories(categoriesResponse.data || []);
+    } catch (err) {
+      console.error('Error refreshing categories:', err);
+    }
+  };
+
+  // Form content that will be used in both embedded and non-embedded modes
+  const formContent = (
+    <>
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      
+      <Grid container spacing={2}>
+        <Grid item xs={12} sm={6}>
+          <Typography variant="caption" sx={{ mb: 1, display: 'block' }}>
+            Account
+          </Typography>
+          <FormControl fullWidth error={!!errors.accountId}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <FormControl fullWidth error={!!errors.accountId}>
-                <InputLabel>Account</InputLabel>
                 <Select
+                  labelId="account-label"
                   name="accountId"
                   value={formData.accountId}
                   onChange={handleChange}
-                  label="Account"
+                  disabled={loading || accounts.length === 0}
                 >
                   {accounts.map(account => (
                     <MenuItem key={account.id} value={account.id}>
@@ -239,104 +240,177 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded }) => {
                   ))}
                 </Select>
                 {errors.accountId && <FormHelperText>{errors.accountId}</FormHelperText>}
+                {accounts.length === 0 && !loading && (
+                  <FormHelperText>No accounts available. Please create an account first.</FormHelperText>
+                )}
               </FormControl>
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
+              <IconButton 
+                size="small" 
+                onClick={() => setAccountFormOpen(true)}
+              >
+                <AddIcon />
+              </IconButton>
+            </Box>
+          </FormControl>
+        </Grid>
+        
+        <Grid item xs={12} sm={6}>
+          <Typography variant="caption" sx={{ mb: 1, display: 'block' }}>
+            Type
+          </Typography>
+          <FormControl fullWidth>
+            <Select
+              labelId="transaction-type-label"
+              name="transactionType"
+              value={formData.transactionType}
+              onChange={handleChange}
+              disabled={loading}
+            >
+              <MenuItem value="EXPENSE">Expense</MenuItem>
+              <MenuItem value="INCOME">Income</MenuItem>
+            </Select>
+          </FormControl>
+        </Grid>
+        
+        <Grid item xs={12} sm={6}>
+          <Typography variant="caption" sx={{ mb: 1, display: 'block' }}>
+            Amount
+          </Typography>
+          <TextField
+            fullWidth
+            name="amount"
+            value={formData.amount}
+            onChange={handleChange}
+            error={!!errors.amount}
+            helperText={errors.amount}
+            disabled={loading}
+            InputProps={{
+              startAdornment: <InputAdornment position="start">$</InputAdornment>,
+            }}
+          />
+        </Grid>
+        
+        <Grid item xs={12} sm={6}>
+          <Typography variant="caption" sx={{ mb: 1, display: 'block' }}>
+            Date
+          </Typography>
+          <DatePicker
+            value={formData.transactionDate}
+            onChange={handleDateChange}
+            slotProps={{
+              textField: {
+                fullWidth: true,
+                error: !!errors.transactionDate,
+                helperText: errors.transactionDate,
+                disabled: loading
+              }
+            }}
+          />
+        </Grid>
+        
+        <Grid item xs={12}>
+          <Typography variant="caption" sx={{ mb: 1, display: 'block' }}>
+            Description
+          </Typography>
+          <TextField
+            fullWidth
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            error={!!errors.description}
+            helperText={errors.description}
+            disabled={loading}
+          />
+        </Grid>
+        
+        <Grid item xs={12}>
+          <Typography variant="caption" sx={{ mb: 1, display: 'block' }}>
+            Category
+          </Typography>
+          <FormControl fullWidth>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <FormControl fullWidth>
-                <InputLabel>Transaction Type</InputLabel>
                 <Select
-                  name="transactionType"
-                  value={formData.transactionType}
+                  labelId="category-label"
+                  name="categoryId"
+                  value={formData.categoryId}
                   onChange={handleChange}
-                  label="Transaction Type"
+                  disabled={loading || categoriesError || filteredCategories.length === 0}
                 >
-                  <MenuItem value="INCOME">Income</MenuItem>
-                  <MenuItem value="EXPENSE">Expense</MenuItem>
+                  <MenuItem value="">None</MenuItem>
+                  {filteredCategories.map(category => (
+                    <MenuItem key={category.id} value={category.id}>
+                      {category.categoryName}
+                    </MenuItem>
+                  ))}
                 </Select>
+                {categoriesError && (
+                  <FormHelperText error>
+                    Unable to load categories. Please check your permissions.
+                  </FormHelperText>
+                )}
+                {filteredCategories.length === 0 && !categoriesError && !loading && (
+                  <FormHelperText>
+                    No {formData.transactionType.toLowerCase()} categories available. Please create a category first.
+                  </FormHelperText>
+                )}
               </FormControl>
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Amount"
-                name="amount"
-                value={formData.amount}
-                onChange={handleChange}
-                error={!!errors.amount}
-                helperText={errors.amount}
-                InputProps={{
-                  startAdornment: <InputAdornment position="start">$</InputAdornment>,
-                }}
-              />
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <DatePicker
-                label="Transaction Date"
-                value={formData.transactionDate}
-                onChange={handleDateChange}
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    error: !!errors.transactionDate,
-                    helperText: errors.transactionDate
-                  }
-                }}
-              />
-            </Grid>
-            
-            {!categoriesError && (
-              <Grid item xs={12}>
-                <FormControl fullWidth error={!!errors.categoryId}>
-                  <InputLabel>Category</InputLabel>
-                  <Select
-                    name="categoryId"
-                    value={formData.categoryId}
-                    onChange={handleChange}
-                    label="Category"
-                  >
-                    {filteredCategories.map(category => (
-                      <MenuItem key={category.id} value={category.id}>
-                        {category.categoryName}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  {errors.categoryId && <FormHelperText>{errors.categoryId}</FormHelperText>}
-                </FormControl>
-              </Grid>
-            )}
-            
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Description"
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                error={!!errors.description}
-                helperText={errors.description}
-                multiline
-                rows={2}
-              />
-            </Grid>
-          </Grid>
+              <IconButton 
+                size="small" 
+                onClick={() => setCategoryFormOpen(true)}
+              >
+                <AddIcon />
+              </IconButton>
+            </Box>
+          </FormControl>
+        </Grid>
+      </Grid>
+      
+      <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
+        {!embedded && (
+          <Button onClick={handleClose} disabled={submitting} sx={{ mr: 1 }}>
+            Cancel
+          </Button>
         )}
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose} color="primary">
-          Cancel
-        </Button>
         <Button 
-          onClick={handleSubmit} 
+          variant="contained" 
           color="primary" 
-          variant="contained"
-          disabled={submitting}
+          onClick={handleSubmit}
+          disabled={submitting || loading || (accounts.length === 0)}
+          startIcon={submitting ? <CircularProgress size={20} /> : null}
         >
-          {submitting ? 'Saving...' : 'Save'}
+          {submitting ? 'Saving...' : 'Save Transaction'}
         </Button>
-      </DialogActions>
+      </Box>
+
+      {/* Account Form Dialog */}
+      <AccountForm
+        open={accountFormOpen}
+        handleClose={() => setAccountFormOpen(false)}
+        onAccountAdded={handleAccountAdded}
+      />
+
+      {/* Category Form Dialog */}
+      <CategoryForm
+        open={categoryFormOpen}
+        handleClose={() => setCategoryFormOpen(false)}
+        onCategoryAdded={handleCategoryAdded}
+      />
+    </>
+  );
+
+  // If embedded, just return the form content
+  if (embedded) {
+    return formContent;
+  }
+
+  // Otherwise, wrap in a Dialog
+  return (
+    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+      <DialogTitle>Add Transaction</DialogTitle>
+      <DialogContent>
+        {formContent}
+      </DialogContent>
     </Dialog>
   );
 };

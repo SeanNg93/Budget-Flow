@@ -14,11 +14,12 @@ import {
   Grid,
   Box,
   InputAdornment,
-  CircularProgress
+  CircularProgress,
+  Alert
 } from '@mui/material';
 import FinanceService from '../../services/FinanceService';
 
-const AccountForm = ({ open, handleClose, onAccountAdded }) => {
+const AccountForm = ({ open, handleClose, onAccountAdded, embedded = false }) => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     accountName: '',
@@ -28,6 +29,7 @@ const AccountForm = ({ open, handleClose, onAccountAdded }) => {
   });
   const [errors, setErrors] = useState({});
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -73,139 +75,169 @@ const AccountForm = ({ open, handleClose, onAccountAdded }) => {
       return;
     }
     
-    setLoading(true);
+    setSubmitting(true);
+    setError('');
     
     try {
-      // Format the data for the API
       const accountData = {
-        accountName: formData.accountName,
-        accountType: formData.accountType,
-        balance: parseFloat(formData.balance),
-        currency: formData.currency
+        ...formData,
+        balance: parseFloat(formData.balance)
       };
       
-      // Call the API to create the account
       await FinanceService.createAccount(accountData);
       
-      // Reset form and close dialog
-      setFormData({
-        accountName: '',
-        accountType: 'Checking',
-        balance: '',
-        currency: 'USD'
-      });
-      handleClose();
+      // Reset form
+      resetForm();
       
-      // Notify parent component
+      // Close dialog and notify parent
       if (onAccountAdded) {
         onAccountAdded();
       }
-    } catch (error) {
-      setError('Failed to create account. Please try again.');
+      
+      if (!embedded) {
+        handleClose();
+      }
+    } catch (err) {
+      console.error('Error creating account:', err);
+      setError(err.response?.data?.message || 'Failed to create account. Please try again.');
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
+  
+  const resetForm = () => {
+    setFormData({
+      accountName: '',
+      accountType: 'Checking',
+      balance: '',
+      currency: 'USD'
+    });
+    setErrors({});
+    setError('');
+  };
 
-  return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Add New Account</DialogTitle>
-      <DialogContent>
-        {loading && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}>
-            <CircularProgress />
-          </Box>
-        )}
+  // Form content that will be used in both embedded and non-embedded modes
+  const formContent = (
+    <>
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      
+      <Grid container spacing={2}>
+        <Grid item xs={12}>
+          <TextField
+            fullWidth
+            label="Account Name"
+            name="accountName"
+            value={formData.accountName}
+            onChange={handleChange}
+            error={!!errors.accountName}
+            helperText={errors.accountName}
+            disabled={loading}
+          />
+        </Grid>
         
-        {!loading && (
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Account Name"
-                name="accountName"
-                value={formData.accountName}
-                onChange={handleChange}
-                error={!!errors.accountName}
-                helperText={errors.accountName}
-              />
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth error={!!errors.accountType}>
-                <InputLabel>Account Type</InputLabel>
-                <Select
-                  name="accountType"
-                  value={formData.accountType}
-                  onChange={handleChange}
-                  label="Account Type"
-                >
-                  <MenuItem value="Checking">Checking</MenuItem>
-                  <MenuItem value="Savings">Savings</MenuItem>
-                  <MenuItem value="Credit_Card">Credit Card</MenuItem>
-                  <MenuItem value="Investment">Investment</MenuItem>
-                </Select>
-                {errors.accountType && <FormHelperText>{errors.accountType}</FormHelperText>}
-              </FormControl>
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth error={!!errors.currency}>
-                <InputLabel>Currency</InputLabel>
-                <Select
-                  name="currency"
-                  value={formData.currency}
-                  onChange={handleChange}
-                  label="Currency"
-                >
-                  <MenuItem value="USD">USD</MenuItem>
-                  <MenuItem value="EUR">EUR</MenuItem>
-                  <MenuItem value="GBP">GBP</MenuItem>
-                  <MenuItem value="JPY">JPY</MenuItem>
-                  <MenuItem value="VND">VND</MenuItem>
-                </Select>
-                {errors.currency && <FormHelperText>{errors.currency}</FormHelperText>}
-              </FormControl>
-            </Grid>
-            
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Initial Balance"
-                name="balance"
-                value={formData.balance}
-                onChange={handleChange}
-                error={!!errors.balance}
-                helperText={errors.balance}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      {formData.currency === 'USD' ? '$' : 
-                       formData.currency === 'EUR' ? '€' : 
-                       formData.currency === 'GBP' ? '£' : 
-                       formData.currency === 'JPY' ? '¥' : 
-                       formData.currency === 'VND' ? '₫' : '$'}
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-          </Grid>
+        <Grid item xs={12} sm={6}>
+          <FormControl fullWidth error={!!errors.accountType}>
+            <InputLabel id="account-type-label">Account Type</InputLabel>
+            <Select
+              labelId="account-type-label"
+              name="accountType"
+              value={formData.accountType}
+              onChange={handleChange}
+              label="Account Type"
+              disabled={loading}
+            >
+              <MenuItem value="Checking">Checking</MenuItem>
+              <MenuItem value="Savings">Savings</MenuItem>
+              <MenuItem value="Credit_Card">Credit Card</MenuItem>
+              <MenuItem value="Investment">Investment</MenuItem>
+            </Select>
+            {errors.accountType && <FormHelperText>{errors.accountType}</FormHelperText>}
+          </FormControl>
+        </Grid>
+        
+        <Grid item xs={12} sm={6}>
+          <FormControl fullWidth error={!!errors.currency}>
+            <InputLabel id="currency-label">Currency</InputLabel>
+            <Select
+              labelId="currency-label"
+              name="currency"
+              value={formData.currency}
+              onChange={handleChange}
+              label="Currency"
+              disabled={loading}
+            >
+              <MenuItem value="USD">USD ($)</MenuItem>
+              <MenuItem value="EUR">EUR (€)</MenuItem>
+              <MenuItem value="GBP">GBP (£)</MenuItem>
+              <MenuItem value="JPY">JPY (¥)</MenuItem>
+              <MenuItem value="CAD">CAD ($)</MenuItem>
+              <MenuItem value="AUD">AUD ($)</MenuItem>
+              <MenuItem value="CHF">CHF (Fr)</MenuItem>
+              <MenuItem value="CNY">CNY (¥)</MenuItem>
+              <MenuItem value="INR">INR (₹)</MenuItem>
+              <MenuItem value="VND">VND (₫)</MenuItem>
+            </Select>
+            {errors.currency && <FormHelperText>{errors.currency}</FormHelperText>}
+          </FormControl>
+        </Grid>
+        
+        <Grid item xs={12}>
+          <TextField
+            fullWidth
+            label="Initial Balance"
+            name="balance"
+            value={formData.balance}
+            onChange={handleChange}
+            error={!!errors.balance}
+            helperText={errors.balance}
+            disabled={loading}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  {formData.currency === 'USD' ? '$' : 
+                   formData.currency === 'EUR' ? '€' : 
+                   formData.currency === 'GBP' ? '£' : 
+                   formData.currency === 'JPY' ? '¥' : 
+                   formData.currency === 'INR' ? '₹' : 
+                   formData.currency === 'VND' ? '₫' : ''}
+                </InputAdornment>
+              ),
+            }}
+          />
+        </Grid>
+      </Grid>
+      
+      <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
+        {!embedded && (
+          <Button onClick={handleClose} disabled={submitting} sx={{ mr: 1 }}>
+            Cancel
+          </Button>
         )}
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose} color="primary">
-          Cancel
-        </Button>
         <Button 
-          onClick={handleSubmit} 
+          variant="contained" 
           color="primary" 
-          variant="contained"
-          disabled={loading}
+          onClick={handleSubmit}
+          disabled={submitting || loading}
+          startIcon={submitting ? <CircularProgress size={20} /> : null}
         >
-          {loading ? 'Saving...' : 'Save'}
+          {submitting ? 'Saving...' : 'Save Account'}
         </Button>
-      </DialogActions>
+      </Box>
+    </>
+  );
+
+  // If embedded, just return the form content
+  if (embedded) {
+    return formContent;
+  }
+
+  // Otherwise, wrap in a Dialog
+  return (
+    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+      <DialogTitle>Add Account</DialogTitle>
+      <DialogContent>
+        {formContent}
+      </DialogContent>
     </Dialog>
   );
 };

@@ -18,7 +18,7 @@ import {
 } from '@mui/material';
 import FinanceService from '../../services/FinanceService';
 
-const CategoryForm = ({ open, handleClose, onCategoryAdded }) => {
+const CategoryForm = ({ open, handleClose, onCategoryAdded, embedded = false }) => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     categoryName: '',
@@ -68,35 +68,27 @@ const CategoryForm = ({ open, handleClose, onCategoryAdded }) => {
     setError('');
     
     try {
-      // Format the data for the API
-      const categoryData = {
-        categoryName: formData.categoryName,
-        type: formData.type
-      };
+      await FinanceService.createCategory(formData);
       
-      // Call the API to create the category
-      await FinanceService.createCategory(categoryData);
-      
-      // Reset form and close dialog
+      // Reset form
       resetForm();
-      handleClose();
       
-      // Notify parent component
+      // Close dialog and notify parent
       if (onCategoryAdded) {
         onCategoryAdded();
       }
-    } catch (error) {
-      // Check if it's a 403 error (Forbidden)
-      if (error.response && error.response.status === 403) {
-        setError('You do not have permission to create categories. Please contact your administrator.');
-      } else {
-        setError('Failed to create category. Please try again.');
+      
+      if (!embedded) {
+        handleClose();
       }
+    } catch (err) {
+      console.error('Error creating category:', err);
+      setError(err.response?.data?.message || 'Failed to create category. Please try again.');
     } finally {
       setSubmitting(false);
     }
   };
-
+  
   const resetForm = () => {
     setFormData({
       categoryName: '',
@@ -106,67 +98,75 @@ const CategoryForm = ({ open, handleClose, onCategoryAdded }) => {
     setError('');
   };
 
-  return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Add New Category</DialogTitle>
-      <DialogContent>
-        {loading && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}>
-            <CircularProgress />
-          </Box>
-        )}
+  // Form content that will be used in both embedded and non-embedded modes
+  const formContent = (
+    <>
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      
+      <Grid container spacing={2}>
+        <Grid item xs={12}>
+          <TextField
+            fullWidth
+            label="Category Name"
+            name="categoryName"
+            value={formData.categoryName}
+            onChange={handleChange}
+            error={!!errors.categoryName}
+            helperText={errors.categoryName}
+            disabled={loading}
+          />
+        </Grid>
         
-        {error && (
-          <Alert severity="error" sx={{ mt: 2, mb: 2 }}>
-            {error}
-          </Alert>
+        <Grid item xs={12}>
+          <FormControl fullWidth error={!!errors.type}>
+            <InputLabel id="category-type-label">Category Type</InputLabel>
+            <Select
+              labelId="category-type-label"
+              name="type"
+              value={formData.type}
+              onChange={handleChange}
+              label="Category Type"
+              disabled={loading}
+            >
+              <MenuItem value="EXPENSE">Expense</MenuItem>
+              <MenuItem value="INCOME">Income</MenuItem>
+            </Select>
+            {errors.type && <FormHelperText>{errors.type}</FormHelperText>}
+          </FormControl>
+        </Grid>
+      </Grid>
+      
+      <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
+        {!embedded && (
+          <Button onClick={handleClose} disabled={submitting} sx={{ mr: 1 }}>
+            Cancel
+          </Button>
         )}
-        
-        {!loading && (
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Category Name"
-                name="categoryName"
-                value={formData.categoryName}
-                onChange={handleChange}
-                error={!!errors.categoryName}
-                helperText={errors.categoryName}
-              />
-            </Grid>
-            
-            <Grid item xs={12}>
-              <FormControl fullWidth error={!!errors.type}>
-                <InputLabel>Category Type</InputLabel>
-                <Select
-                  name="type"
-                  value={formData.type}
-                  onChange={handleChange}
-                  label="Category Type"
-                >
-                  <MenuItem value="INCOME">Income</MenuItem>
-                  <MenuItem value="EXPENSE">Expense</MenuItem>
-                </Select>
-                {errors.type && <FormHelperText>{errors.type}</FormHelperText>}
-              </FormControl>
-            </Grid>
-          </Grid>
-        )}
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose} color="primary">
-          Cancel
-        </Button>
         <Button 
-          onClick={handleSubmit} 
+          variant="contained" 
           color="primary" 
-          variant="contained"
-          disabled={submitting}
+          onClick={handleSubmit}
+          disabled={submitting || loading}
+          startIcon={submitting ? <CircularProgress size={20} /> : null}
         >
-          {submitting ? 'Saving...' : 'Save'}
+          {submitting ? 'Saving...' : 'Save Category'}
         </Button>
-      </DialogActions>
+      </Box>
+    </>
+  );
+
+  // If embedded, just return the form content
+  if (embedded) {
+    return formContent;
+  }
+
+  // Otherwise, wrap in a Dialog
+  return (
+    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+      <DialogTitle>Add Category</DialogTitle>
+      <DialogContent>
+        {formContent}
+      </DialogContent>
     </Dialog>
   );
 };
