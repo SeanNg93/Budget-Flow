@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Drawer from '@mui/material/Drawer';
@@ -18,20 +18,40 @@ import BarChartIcon from '@mui/icons-material/BarChart';
 import SettingsIcon from '@mui/icons-material/Settings';
 import PersonIcon from '@mui/icons-material/Person';
 import LogoutIcon from '@mui/icons-material/Logout';
-import WalletIcon from '@mui/icons-material/AccountBalance'; // 🔹 Thêm icon cho Wallets
+import Avatar from '@mui/material/Avatar';
+import WalletIcon from '@mui/icons-material/Wallet';
 
-const drawerWidth = 240;
+
+const drawerWidth = 280;
 
 const DrawerHeader = styled('div')(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
-  padding: theme.spacing(0, 1),
+  padding: theme.spacing(3, 2),
   ...theme.mixins.toolbar,
-  justifyContent: 'flex-end',
+  justifyContent: 'space-between',
+}));
+
+const StyledListItemButton = styled(ListItemButton)(({ theme }) => ({
+  borderRadius: theme.shape.borderRadius,
+  margin: theme.spacing(0.5, 1),
+  padding: theme.spacing(1, 2),
+  '&.Mui-selected': {
+    backgroundColor: 'rgba(0, 122, 255, 0.1)',
+    color: theme.palette.primary.main,
+    '&:hover': {
+      backgroundColor: 'rgba(0, 122, 255, 0.15)',
+    },
+    '& .MuiListItemIcon-root': {
+      color: theme.palette.primary.main,
+    },
+  },
 }));
 
 const SideMenu = ({ open, handleDrawerClose }) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const userData = JSON.parse(localStorage.getItem('userData') || '{}');
   
   const handleLogout = () => {
     localStorage.removeItem('userToken');
@@ -42,7 +62,7 @@ const SideMenu = ({ open, handleDrawerClose }) => {
   const menuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
     { text: 'Transactions', icon: <AccountBalanceWalletIcon />, path: '/transactions' },
-    { text: 'Wallets', icon: <WalletIcon />, path: '/wallets' },  // 🔹 Thêm mục Wallets
+    { text: 'Wallets', icon: <WalletIcon />, path: '/wallets' }, 
     { text: 'Reports', icon: <BarChartIcon />, path: '/reports' },
     { text: 'Profile', icon: <PersonIcon />, path: '/profile' },
     { text: 'Settings', icon: <SettingsIcon />, path: '/settings' },
@@ -56,6 +76,8 @@ const SideMenu = ({ open, handleDrawerClose }) => {
         '& .MuiDrawer-paper': {
           width: drawerWidth,
           boxSizing: 'border-box',
+          border: 'none',
+          boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.05)',
         },
       }}
       variant="persistent"
@@ -63,39 +85,100 @@ const SideMenu = ({ open, handleDrawerClose }) => {
       open={open}
     >
       <DrawerHeader>
-        <Typography variant="h6" component="div" sx={{ flexGrow: 1, ml: 2 }}>
-          Budget Flow
-        </Typography>
-        <IconButton onClick={handleDrawerClose}>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Avatar 
+            sx={{ 
+              width: 40, 
+              height: 40, 
+              bgcolor: 'primary.main',
+              mr: 2,
+              fontWeight: 'bold'
+            }}
+          >
+            {userData.username ? userData.username.charAt(0).toUpperCase() : 'U'}
+          </Avatar>
+          <Box>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+              {userData.username || 'User'}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {userData.email || 'user@example.com'}
+            </Typography>
+          </Box>
+        </Box>
+        <IconButton onClick={handleDrawerClose} sx={{ color: 'text.secondary' }}>
           <ChevronLeftIcon />
         </IconButton>
       </DrawerHeader>
-      <Divider />
-      <List>
-        {menuItems.map((item) => (
-          <ListItem key={item.text} disablePadding>
-            <ListItemButton onClick={() => navigate(item.path)}>
-              <ListItemIcon>
-                {item.icon}
-              </ListItemIcon>
-              <ListItemText primary={item.text} />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
-      <Divider />
-      <List>
+      
+      <Divider sx={{ mx: 2 }} />
+      
+      <Box sx={{ px: 1, py: 2 }}>
+        <Typography 
+          variant="overline" 
+          color="text.secondary" 
+          sx={{ 
+            px: 2, 
+            fontSize: '0.75rem', 
+            fontWeight: 600,
+            letterSpacing: '0.05em'
+          }}
+        >
+          MENU
+        </Typography>
+        
+        <List sx={{ mt: 1 }}>
+          {menuItems.map((item) => (
+            <ListItem key={item.text} disablePadding>
+              <StyledListItemButton 
+                onClick={() => navigate(item.path)}
+                selected={location.pathname === item.path}
+              >
+                <ListItemIcon sx={{ minWidth: 40 }}>
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText 
+                  primary={item.text} 
+                  primaryTypographyProps={{ 
+                    fontSize: '0.95rem',
+                    fontWeight: location.pathname === item.path ? 600 : 500
+                  }} 
+                />
+              </StyledListItemButton>
+            </ListItem>
+          ))}
+        </List>
+      </Box>
+      
+      <Box sx={{ flexGrow: 1 }} />
+      
+      <Box sx={{ p: 2 }}>
+        <Divider sx={{ mb: 2 }} />
         <ListItem disablePadding>
-          <ListItemButton onClick={handleLogout}>
-            <ListItemIcon>
+          <StyledListItemButton 
+            onClick={handleLogout}
+            sx={{ 
+              color: 'error.main',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 59, 48, 0.08)',
+              },
+            }}
+          >
+            <ListItemIcon sx={{ minWidth: 40, color: 'error.main' }}>
               <LogoutIcon />
             </ListItemIcon>
-            <ListItemText primary="Logout" />
-          </ListItemButton>
+            <ListItemText 
+              primary="Logout" 
+              primaryTypographyProps={{ 
+                fontSize: '0.95rem',
+                fontWeight: 500
+              }} 
+            />
+          </StyledListItemButton>
         </ListItem>
-      </List>
+      </Box>
     </Drawer>
   );
 };
 
-export default SideMenu;
+export default SideMenu; 

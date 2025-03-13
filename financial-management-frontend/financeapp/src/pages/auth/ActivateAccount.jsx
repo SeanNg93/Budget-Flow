@@ -126,7 +126,7 @@ export default function ActivateAccount() {
               variant="h4"
               sx={{ width: '100%', fontSize: 'clamp(2rem, 10vw, 2.15rem)', textAlign: 'center' }}
             >
-              Kích hoạt tài khoản
+              Account Activation
             </Typography>
           </Box>
 
@@ -142,7 +142,7 @@ export default function ActivateAccount() {
               color={isSuccess ? 'primary' : 'secondary'}
               fullWidth
             >
-              {isSuccess ? 'Đăng nhập ngay' : 'Quay lại trang đăng nhập'}
+              {isSuccess ? 'Login Now' : 'Back to Login Page'}
             </Button>
           </Box>
         </Card>

@@ -64,10 +64,10 @@ public class UserController {
         String username = authentication.getName();
         boolean deleted = userService.deleteUserAccount(username, password);
         if (deleted) {
-            return ResponseEntity.ok(Map.of("success", "true", "message", "Tài khoản đã được xoá thành công."));
+            return ResponseEntity.ok(Map.of("success", "true", "message", "Account has been successfully deleted."));
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("success", "false", "message", "Xác thực thất bại hoặc không thể xoá tài khoản."));
+                    .body(Map.of("success", "false", "message", "Authentication failed or account could not be deleted."));
         }
     }
 

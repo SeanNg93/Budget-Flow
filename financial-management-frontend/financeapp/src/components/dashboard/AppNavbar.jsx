@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { styled } from '@mui/material/styles';
+import { styled, alpha } from '@mui/material/styles';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
@@ -12,10 +12,15 @@ import MenuIcon from '@mui/icons-material/Menu';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import MoreIcon from '@mui/icons-material/MoreVert';
+import SearchIcon from '@mui/icons-material/Search';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { useNavigate } from 'react-router-dom';
 import ChangePassword from '../user/ChangePassword';
+import Avatar from '@mui/material/Avatar';
+import InputBase from '@mui/material/InputBase';
+import Divider from '@mui/material/Divider';
 
-const drawerWidth = 240;
+const drawerWidth = 280;
 
 const AppBarStyled = styled(AppBar, {
   shouldForwardProp: (prop) => prop !== 'open',
@@ -24,6 +29,11 @@ const AppBarStyled = styled(AppBar, {
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.leavingScreen,
   }),
+  backdropFilter: 'blur(10px)',
+  backgroundColor: 'rgba(255, 255, 255, 0.8)',
+  color: theme.palette.text.primary,
+  boxShadow: 'none',
+  borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
   ...(open && {
     width: `calc(100% - ${drawerWidth}px)`,
     marginLeft: `${drawerWidth}px`,
@@ -34,11 +44,82 @@ const AppBarStyled = styled(AppBar, {
   }),
 }));
 
+const Search = styled('div')(({ theme }) => ({
+  position: 'relative',
+  borderRadius: 20,
+  backgroundColor: alpha(theme.palette.common.black, 0.05),
+  '&:hover': {
+    backgroundColor: alpha(theme.palette.common.black, 0.08),
+  },
+  marginRight: theme.spacing(2),
+  marginLeft: 0,
+  width: '100%',
+  [theme.breakpoints.up('sm')]: {
+    marginLeft: theme.spacing(3),
+    width: 'auto',
+  },
+}));
+
+const SearchIconWrapper = styled('div')(({ theme }) => ({
+  padding: theme.spacing(0, 2),
+  height: '100%',
+  position: 'absolute',
+  pointerEvents: 'none',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  color: theme.palette.text.secondary,
+}));
+
+const StyledInputBase = styled(InputBase)(({ theme }) => ({
+  color: theme.palette.text.primary,
+  '& .MuiInputBase-input': {
+    padding: theme.spacing(1, 1, 1, 0),
+    // vertical padding + font size from searchIcon
+    paddingLeft: `calc(1em + ${theme.spacing(4)})`,
+    transition: theme.transitions.create('width'),
+    width: '100%',
+    [theme.breakpoints.up('md')]: {
+      width: '20ch',
+    },
+  },
+}));
+
+const StyledBadge = styled(Badge)(({ theme }) => ({
+  '& .MuiBadge-badge': {
+    backgroundColor: theme.palette.error.main,
+    color: theme.palette.error.contrastText,
+    fontSize: 10,
+    height: 16,
+    minWidth: 16,
+    padding: '0 4px',
+  },
+}));
+
+const StyledMenu = styled(Menu)(({ theme }) => ({
+  '& .MuiPaper-root': {
+    borderRadius: 12,
+    marginTop: theme.spacing(1),
+    boxShadow: '0px 5px 15px rgba(0, 0, 0, 0.15)',
+    minWidth: 180,
+  },
+  '& .MuiMenuItem-root': {
+    padding: theme.spacing(1.5, 2),
+    '&:hover': {
+      backgroundColor: alpha(theme.palette.primary.main, 0.08),
+    },
+  },
+  '& .MuiDivider-root': {
+    margin: theme.spacing(1, 0),
+  },
+}));
+
 const AppNavbar = ({ open, handleDrawerOpen }) => {
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = useState(null);
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
+  const userData = JSON.parse(localStorage.getItem('userData') || '{}');
 
   const isMenuOpen = Boolean(anchorEl);
   const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
@@ -74,7 +155,7 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
 
   const handleDeleteAccount = () => {
     handleMenuClose();
-    navigate('/account/delete'); // 🔥 Đúng với đường dẫn trong App.jsx
+    navigate('/account/delete');
   };
 
   const handleChangePassword = () => {
@@ -88,10 +169,10 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
 
   const menuId = 'primary-search-account-menu';
   const renderMenu = (
-    <Menu
+    <StyledMenu
       anchorEl={anchorEl}
       anchorOrigin={{
-        vertical: 'top',
+        vertical: 'bottom',
         horizontal: 'right',
       }}
       id={menuId}
@@ -103,16 +184,28 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
       open={isMenuOpen}
       onClose={handleMenuClose}
     >
+      <Box sx={{ px: 2, py: 1 }}>
+        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+          {userData.username || 'User'}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          {userData.email || 'user@example.com'}
+        </Typography>
+      </Box>
+      <Divider />
       <MenuItem onClick={handleProfile}>Profile</MenuItem>
       <MenuItem onClick={handleChangePassword}>Change Password</MenuItem>
-      <MenuItem onClick={handleDeleteAccount} style={{ color: 'red' }}>Delete Account</MenuItem>
+      <Divider />
+      <MenuItem onClick={handleDeleteAccount} sx={{ color: 'error.main' }}>
+        Delete Account
+      </MenuItem>
       <MenuItem onClick={handleLogout}>Logout</MenuItem>
-    </Menu>
+    </StyledMenu>
   );
 
   const mobileMenuId = 'primary-search-account-menu-mobile';
   const renderMobileMenu = (
-    <Menu
+    <StyledMenu
       anchorEl={mobileMoreAnchorEl}
       anchorOrigin={{
         vertical: 'top',
@@ -129,29 +222,39 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
     >
       <MenuItem>
         <IconButton
-          size="large"
-          aria-label="show 17 new notifications"
+          size="medium"
+          aria-label="show new notifications"
           color="inherit"
         >
-          <Badge badgeContent={17} color="error">
+          <StyledBadge badgeContent={5} color="error">
             <NotificationsIcon />
-          </Badge>
+          </StyledBadge>
         </IconButton>
-        <p>Notifications</p>
+        <Typography variant="body1" sx={{ ml: 1 }}>Notifications</Typography>
       </MenuItem>
       <MenuItem onClick={handleProfileMenuOpen}>
         <IconButton
-          size="large"
+          size="medium"
           aria-label="account of current user"
           aria-controls="primary-search-account-menu"
           aria-haspopup="true"
           color="inherit"
         >
-          <AccountCircle />
+          <Avatar 
+            sx={{ 
+              width: 32, 
+              height: 32, 
+              bgcolor: 'primary.main',
+              fontWeight: 'bold',
+              fontSize: '0.9rem'
+            }}
+          >
+            {userData.username ? userData.username.charAt(0).toUpperCase() : 'U'}
+          </Avatar>
         </IconButton>
-        <p>Profile</p>
+        <Typography variant="body1" sx={{ ml: 1 }}>Profile</Typography>
       </MenuItem>
-    </Menu>
+    </StyledMenu>
   );
 
   return (
@@ -171,33 +274,73 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
             variant="h6"
             noWrap
             component="div"
-            sx={{ display: { xs: 'none', sm: 'block' } }}
+            sx={{ 
+              display: { xs: 'none', sm: 'block' },
+              fontWeight: 600,
+              letterSpacing: '-0.01em'
+            }}
           >
             Budget Flow
           </Typography>
+          
+          <Search>
+            <SearchIconWrapper>
+              <SearchIcon />
+            </SearchIconWrapper>
+            <StyledInputBase
+              placeholder="Search…"
+              inputProps={{ 'aria-label': 'search' }}
+            />
+          </Search>
+          
           <Box sx={{ flexGrow: 1 }} />
-          <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
+          
+          <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center' }}>
             <IconButton
               size="large"
-              aria-label="show 17 new notifications"
+              aria-label="show new notifications"
               color="inherit"
+              sx={{ 
+                borderRadius: 2,
+                mx: 1,
+                '&:hover': {
+                  backgroundColor: alpha('#000', 0.04)
+                }
+              }}
             >
-              <Badge badgeContent={17} color="error">
+              <StyledBadge badgeContent={5} color="error">
                 <NotificationsIcon />
-              </Badge>
+              </StyledBadge>
             </IconButton>
-            <IconButton
-              size="large"
-              edge="end"
-              aria-label="account of current user"
-              aria-controls={menuId}
-              aria-haspopup="true"
+            
+            <Box 
               onClick={handleProfileMenuOpen}
-              color="inherit"
+              sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                ml: 1,
+                cursor: 'pointer',
+                borderRadius: 2,
+                p: 0.5,
+                '&:hover': {
+                  backgroundColor: alpha('#000', 0.04)
+                }
+              }}
             >
-              <AccountCircle />
-            </IconButton>
+              <Avatar 
+                sx={{ 
+                  width: 36, 
+                  height: 36, 
+                  bgcolor: 'primary.main',
+                  fontWeight: 'bold'
+                }}
+              >
+                {userData.username ? userData.username.charAt(0).toUpperCase() : 'U'}
+              </Avatar>
+              <KeyboardArrowDownIcon sx={{ ml: 0.5, color: 'text.secondary', fontSize: 20 }} />
+            </Box>
           </Box>
+          
           <Box sx={{ display: { xs: 'flex', md: 'none' } }}>
             <IconButton
               size="large"
