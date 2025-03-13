@@ -107,10 +107,10 @@ INSERT INTO roles (name) VALUES
 ('ROLE_USER'), 
 ('ROLE_ACCOUNTANT');
 
--- Insert admin and testuser with BCrypt encoded passwords (123123123)
+-- Insert admin and testuser with BCrypt encoded passwords (123123)
 INSERT INTO users (username, email, password_hash, enabled) VALUES 
-('admin', 'admin@example.com', '$2a$10$ixlPY3AAd4ty1l6E2IsQ9OFZi2ba9ZQE0bP7RFcGIWNhyFrrT3YUi', true),
-('testuser', 'testuser@example.com', '$2a$10$ixlPY3AAd4ty1l6E2IsQ9OFZi2ba9ZQE0bP7RFcGIWNhyFrrT3YUi', true);
+('admin', 'admin@example.com', '$2a$10$dXJ3SW6G7P50lGmMkkmwe.20cQQubK3.HZWzG3YB1tlRy.fqvM/BG', true),
+('testuser', 'testuser@example.com', '$2a$10$dXJ3SW6G7P50lGmMkkmwe.20cQQubK3.HZWzG3YB1tlRy.fqvM/BG', true);
 
 -- Assign roles to users
 INSERT INTO user_roles (user_id, role_id) VALUES 
