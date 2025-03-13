@@ -75,6 +75,20 @@ export const confirmPasswordReset = (token, newPassword) => {
   return axiosInstance.post('/password/reset-confirm', { token, newPassword });
 };
 
+export const changePassword = (currentPassword, newPassword) => {
+  // Get the username from localStorage
+  const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+  const username = userData.username || '';
+  
+  // Format the currentPassword to include the username
+  const formattedCurrentPassword = `${username}:${currentPassword}`;
+  
+  return axiosInstance.post('/user/change-password', { 
+    currentPassword: formattedCurrentPassword, 
+    newPassword 
+  });
+};
+
 // Account activation service
 export const activateAccount = (token) => {
   return axiosInstance.post('/account/activate', { token });
