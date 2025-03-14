@@ -110,21 +110,6 @@ export default function Register() {
       const response = await registerUser(values.username, values.email, values.password);
       setIsSuccess(true);
 
-      // Lưu thông tin người dùng vào localStorage với nhiều thông tin hơn
-      const userProfile = {
-        id: response.data.id,
-        username: values.username,
-        email: values.email,
-        fullName: values.username, // Sử dụng username làm fullName ban đầu
-        joinDate: new Date().toISOString(),
-        avatar: '/default-avatar.png',
-        role: 'User',
-        phone: '',
-        dateOfBirth: '',
-        bio: ''
-      };
-      localStorage.setItem('userData', JSON.stringify(userProfile));
-
       if (response.data && response.data.activationLink) {
         setMessage(`Registration successful! Preparing to send activation email to ${values.email}...`);
         setActivationData({

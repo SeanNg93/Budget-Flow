@@ -20,10 +20,10 @@ public class User {
 
     @Column(nullable = false, unique = true)
     private String username;
-
+    
     @Column(nullable = false, unique = true)
     private String email;
-
+    
     @Column(name = "password_hash", nullable = false)
     private String password;
 
@@ -40,7 +40,7 @@ public class User {
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Set<Role> roles;
-
+    
     @Override
     public String toString() {
         return "User{" +

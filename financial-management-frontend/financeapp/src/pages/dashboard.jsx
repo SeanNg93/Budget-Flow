@@ -26,6 +26,7 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import EditIcon from '@mui/icons-material/Edit';
+import axios from 'axios';
 
 // Import dashboard components
 import SideMenu from '../components/dashboard/SideMenu';
@@ -48,6 +49,9 @@ import {
 
 // Import services
 import FinanceService from '../services/FinanceService';
+
+// Define the backend API base URL
+const API_BASE_URL = "http://localhost:8080";
 
 const drawerWidth = 240;
 
@@ -91,6 +95,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [open, setOpen] = useState(true);
   const [user, setUser] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [financialData, setFinancialData] = useState({
     totalBalance: 0,
@@ -117,6 +122,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (user) {
       fetchFinancialData();
+      fetchUserProfile();
     }
   }, [user]);
 
@@ -137,6 +143,25 @@ export default function Dashboard() {
       navigate('/login');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchUserProfile = async () => {
+    try {
+      const token = localStorage.getItem('userToken');
+      if (!token || !user || !user.id) return;
+
+      const response = await axios.get(`${API_BASE_URL}/api/user/profile/${user.id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.data) {
+        setUserProfile(response.data);
+      }
+    } catch (err) {
+      console.error("Error fetching user profile:", err);
     }
   };
 
@@ -273,7 +298,7 @@ export default function Dashboard() {
                         letterSpacing: '-0.02em',
                       }}
                     >
-                      Welcome, {user?.username || 'User'}!
+                      Welcome, {userProfile?.fullName || user?.username || 'User'}!
                     </Typography>
                     <Button 
                       variant="contained" 
