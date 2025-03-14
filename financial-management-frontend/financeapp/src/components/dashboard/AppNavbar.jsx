@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { styled, alpha } from '@mui/material/styles';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
@@ -9,7 +9,6 @@ import Badge from '@mui/material/Badge';
 import MenuItem from '@mui/material/MenuItem';
 import Menu from '@mui/material/Menu';
 import MenuIcon from '@mui/icons-material/Menu';
-import AccountCircle from '@mui/icons-material/AccountCircle';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import MoreIcon from '@mui/icons-material/MoreVert';
 import SearchIcon from '@mui/icons-material/Search';
@@ -19,6 +18,10 @@ import ChangePassword from '../user/ChangePassword';
 import Avatar from '@mui/material/Avatar';
 import InputBase from '@mui/material/InputBase';
 import Divider from '@mui/material/Divider';
+import axios from 'axios';
+
+const API_BASE_URL = "http://localhost:8080";
+const DEFAULT_AVATAR = "/default-avatar.svg";
 
 const drawerWidth = 280;
 
@@ -75,7 +78,6 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
   color: theme.palette.text.primary,
   '& .MuiInputBase-input': {
     padding: theme.spacing(1, 1, 1, 0),
-    // vertical padding + font size from searchIcon
     paddingLeft: `calc(1em + ${theme.spacing(4)})`,
     transition: theme.transitions.create('width'),
     width: '100%',
@@ -120,6 +122,41 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = useState(null);
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+  const [profilePicture, setProfilePicture] = useState(null);
+  const [fullName, setFullName] = useState(null);
+
+  useEffect(() => {
+    fetchUserProfile();
+  }, []);
+
+  const fetchUserProfile = async () => {
+    try {
+      const token = localStorage.getItem('userToken');
+      if (!token || !userData.id) return;
+
+      const response = await axios.get(`${API_BASE_URL}/api/user/profile/${userData.id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.data) {
+        if (response.data.fullName) {
+          setFullName(response.data.fullName);
+        }
+        
+        if (response.data.profilePictureUrl) {
+          let profilePicUrl = response.data.profilePictureUrl;
+          if (!profilePicUrl.startsWith('http')) {
+            profilePicUrl = `${API_BASE_URL}${profilePicUrl}`;
+          }
+          setProfilePicture(profilePicUrl);
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching profile picture:", err);
+    }
+  };
 
   const isMenuOpen = Boolean(anchorEl);
   const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
@@ -186,7 +223,7 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
     >
       <Box sx={{ px: 2, py: 1 }}>
         <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-          {userData.username || 'User'}
+          {fullName || userData.username || 'User'}
         </Typography>
         <Typography variant="body2" color="text.secondary">
           {userData.email || 'user@example.com'}
@@ -241,15 +278,17 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
           color="inherit"
         >
           <Avatar 
+            src={profilePicture || DEFAULT_AVATAR}
+            alt={fullName || userData.username || 'User'}
             sx={{ 
               width: 32, 
               height: 32, 
-              bgcolor: 'primary.main',
+              bgcolor: !profilePicture ? 'primary.main' : 'transparent',
               fontWeight: 'bold',
               fontSize: '0.9rem'
             }}
           >
-            {userData.username ? userData.username.charAt(0).toUpperCase() : 'U'}
+            {!profilePicture && (fullName || userData.username) ? (fullName || userData.username).charAt(0).toUpperCase() : null}
           </Avatar>
         </IconButton>
         <Typography variant="body1" sx={{ ml: 1 }}>Profile</Typography>
@@ -328,14 +367,16 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
               }}
             >
               <Avatar 
+                src={profilePicture || DEFAULT_AVATAR}
+                alt={fullName || userData.username || 'User'}
                 sx={{ 
                   width: 36, 
-                  height: 36, 
-                  bgcolor: 'primary.main',
+                  height: 36,
+                  bgcolor: !profilePicture ? 'primary.main' : 'transparent',
                   fontWeight: 'bold'
                 }}
               >
-                {userData.username ? userData.username.charAt(0).toUpperCase() : 'U'}
+                {!profilePicture && (fullName || userData.username) ? (fullName || userData.username).charAt(0).toUpperCase() : null}
               </Avatar>
               <KeyboardArrowDownIcon sx={{ ml: 0.5, color: 'text.secondary', fontSize: 20 }} />
             </Box>

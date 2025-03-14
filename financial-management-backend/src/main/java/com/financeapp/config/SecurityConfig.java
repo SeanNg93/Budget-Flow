@@ -50,6 +50,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/account/activate").permitAll()
                         .requestMatchers("/api/public/**").permitAll()
                         .requestMatchers("/api/user/change-password").permitAll()
+                        .requestMatchers("/uploads/**").permitAll()
+                        .requestMatchers("/api/user/profile").authenticated()
+                        .requestMatchers("/api/user/profile/**").authenticated()
                         .requestMatchers("/api/accounts/add-to-balance").authenticated()
                         .requestMatchers("/api/accounts/update-balance").authenticated()
                         .requestMatchers("/api/categories/**").authenticated()
@@ -74,10 +77,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("*"));
+        configuration.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:5173"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Auth-Token"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Auth-Token", "X-Requested-With"));
         configuration.setExposedHeaders(Arrays.asList("X-Auth-Token"));
+        configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
