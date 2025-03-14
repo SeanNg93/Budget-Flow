@@ -163,7 +163,6 @@ export default function Profile() {
         return;
       }
 
-      // Get user ID from profile or localStorage
       const userId = profile.userId || (getUserData() && getUserData().id);
       if (!userId) {
         toast.error("User ID not found. Please log in again.");
@@ -182,13 +181,13 @@ export default function Profile() {
       });
 
       const updatedProfile = response.data;
-      setProfile(updatedProfile);
-      setEditedProfile(updatedProfile);
-      
-      // Add a timestamp to the URL to prevent caching
+
+      // ✅ Chỉ cập nhật avatar, giữ nguyên dữ liệu khác
+      setProfile(prev => ({ ...prev, avatar: updatedProfile.profilePictureUrl }));
+      setEditedProfile(prev => ({ ...prev, avatar: updatedProfile.profilePictureUrl }));
+
       const timestamp = new Date().getTime();
       if (updatedProfile.profilePictureUrl) {
-        // Make sure the URL is absolute
         const profilePicUrl = updatedProfile.profilePictureUrl.startsWith('http') 
           ? `${updatedProfile.profilePictureUrl}?t=${timestamp}`
           : `${API_BASE_URL}${updatedProfile.profilePictureUrl}?t=${timestamp}`;
@@ -204,6 +203,7 @@ export default function Profile() {
       setIsLoading(false);
     }
   };
+
 
   const handleSave = async () => {
     try {
