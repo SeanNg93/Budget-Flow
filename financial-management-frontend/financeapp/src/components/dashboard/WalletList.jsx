@@ -30,25 +30,24 @@ export default function WalletList({ wallets, setCreateWalletFormOpen, handleWal
           minHeight: '125px',
         }}
       >
-        <Typography
+        <Box
           sx={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
           }}
         >
-        <Typography 
-          component="h2" 
-          variant="h5" 
-          color="text.primary" 
-          sx={{ 
-            fontWeight: 600,
-            letterSpacing: '-0.01em',
-          }}
-        >
-          Danh sách ví
-        </Typography>
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+          <Typography 
+            component="h2" 
+            variant="h5" 
+            color="text.primary" 
+            sx={{ 
+              fontWeight: 600,
+              letterSpacing: '-0.01em',
+            }}
+          >
+            Danh sách ví
+          </Typography>
           <Button 
             variant="contained" 
             color="primary" 
@@ -69,7 +68,6 @@ export default function WalletList({ wallets, setCreateWalletFormOpen, handleWal
             Create Wallet
           </Button>
         </Box>
-        </Typography>
 
         <Grid container spacing={3}>
           {wallets.map((wallet) => (
