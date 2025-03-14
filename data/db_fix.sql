@@ -21,6 +21,20 @@ CREATE TABLE users (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+CREATE TABLE user_profiles (
+                               id INT AUTO_INCREMENT PRIMARY KEY,
+                               user_id INT NOT NULL UNIQUE,
+                               full_name VARCHAR(100),
+                               phone VARCHAR(20),
+                               bio TEXT,
+                               join_date VARCHAR(50),
+                               profile_picture_path VARCHAR(255),
+                               role VARCHAR(50) DEFAULT 'User',
+                               created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                               updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                               FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 -- Create roles table for Spring Security
 CREATE TABLE roles (
     id INT AUTO_INCREMENT PRIMARY KEY,
