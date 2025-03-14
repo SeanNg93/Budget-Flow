@@ -4,6 +4,8 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import App from './App';
 import './styles/globals.css';
 import {GoogleOAuthProvider} from "@react-oauth/google";
@@ -48,6 +50,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <LocalizationProvider dateAdapter={AdapterDateFns}>
         <CssBaseline />
         <App />
+        <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} newestOnTop closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
       </LocalizationProvider>
     </ThemeProvider>
     </GoogleOAuthProvider>
