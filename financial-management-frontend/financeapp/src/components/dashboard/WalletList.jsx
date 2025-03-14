@@ -27,6 +27,7 @@ export default function WalletList({ wallets, setCreateWalletFormOpen, handleWal
           backgroundColor: 'background.paper',
           borderRadius: 4,
           boxShadow: '0px 2px 12px rgba(0, 0, 0, 0.08)',
+          minHeight: '125px',
         }}
       >
         <Typography
