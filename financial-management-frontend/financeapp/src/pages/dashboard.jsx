@@ -112,6 +112,7 @@ export default function Dashboard() {
   const [transactions, setTransactions] = useState([]);
   const [wallets, setWallets] = useState([]);
   const [selectedWallet, setSelectedWallet] = useState(null);
+  const [editWalletOpen, setEditWalletOpen] = useState(false);
   const [transactionFormOpen, setTransactionFormOpen] = useState(false);
   const [accountFormOpen, setAccountFormOpen] = useState(false);
   const [categoryFormOpen, setCategoryFormOpen] = useState(false);
@@ -316,19 +317,35 @@ export default function Dashboard() {
 
   // 🔄 **Reset số dư về 0**
   const handleResetBalance = async (walletId) => {
-    try {
-      const token = localStorage.getItem('userToken');
-      await axios.put(`http://localhost:8080/api/wallets/${walletId}/reset`, {}, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      fetchWallets();
-      alert('Số dư đã được đặt lại về 0!');
-    } catch (error) {
-      console.error('Lỗi reset số dư:', error);
-      alert('Không thể đặt lại số dư. Vui lòng thử lại.');
+    if (!walletId) {
+        alert("Không thể reset số dư. ID ví không hợp lệ!");
+        return;
     }
-  };
+
+    const confirmReset = window.confirm("Bạn có chắc chắn muốn đặt lại số dư về 0? Tất cả giao dịch liên quan sẽ bị xóa.");
+    if (!confirmReset) return;
+
+    try {
+        const token = localStorage.getItem("userToken");
+        const response = await axios.put(
+            `http://localhost:8080/api/wallets/reset/${walletId}`,
+            {},
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        if (response.status === 200) {
+            alert("Số dư đã được đặt lại về 0! Tất cả giao dịch liên quan cũng đã bị xóa.");
+            fetchWallets(); // Cập nhật danh sách ví sau khi reset
+            setSelectedWallet((prevWallet) => ({ ...prevWallet, balance: 0 })); // Cập nhật số dư của ví đã chọn
+        } else {
+            throw new Error("Không thể reset số dư.");
+        }
+    } catch (error) {
+        console.error("Lỗi reset số dư:", error);
+        alert("Không thể đặt lại số dư. Vui lòng thử lại.");
+    }
+};
+
 
   // ❌ **Xóa ví và toàn bộ giao dịch**
   const handleDeleteWallet = async (walletId) => {
@@ -337,7 +354,7 @@ export default function Dashboard() {
 
     try {
       const token = localStorage.getItem('userToken');
-      await axios.delete(`http://localhost:8080/api/wallets/${walletId}`, {
+      await axios.delete(`http://localhost:8080/api/wallets/delete/${walletId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -350,7 +367,17 @@ export default function Dashboard() {
   };
 
   const handleEditWallet = (walletId) => {
-    navigate(`/wallets/edit/${walletId}`);
+    const wallet = wallets.find(w => w.id === walletId);
+    if (wallet) {
+        setSelectedWallet(wallet);
+        setEditWalletOpen(true);
+    } else {
+        console.error("Wallet not found");
+    }
+  };
+
+  const handleEditWalletClose = () => {
+    setEditWalletOpen(false);
   };
 
   if (loading) {
@@ -397,12 +424,14 @@ export default function Dashboard() {
                   handleWalletMenuOpen={handleWalletMenuOpen} 
                 />
               )}
-              {selectedWallet && (
-                <SelectedWalletDetails 
-                  selectedWallet={selectedWallet} 
-                  handleEditWallet={handleEditWallet} 
-                  handleDeleteWallet={handleDeleteWallet} 
-                />
+              {selectedWallet && editWalletOpen && (
+                <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+                  <EditWallet 
+                    selectedWallet={selectedWallet} 
+                    handleEditWallet={handleEditWallet} 
+                    handleDeleteWallet={handleDeleteWallet} 
+                  />
+                </Grid>
               )}
               {createWalletFormOpen && (
                 <Grid item xs={12}>
@@ -473,9 +502,12 @@ export default function Dashboard() {
         open={Boolean(walletMenuAnchorEl)}
         onClose={handleWalletMenuClose}
       >
-        <MenuItem onClick={() => handleEditWallet(selectedWallet?.id)}>
+        {/* <MenuItem onClick={() => {
+          handleWalletMenuClose();
+          handleEditWallet(selectedWallet?.id);
+        }}>
           <EditIcon sx={{ mr: 1 }} /> Edit Wallet
-        </MenuItem>
+        </MenuItem> */}
         <MenuItem onClick={() => handleResetBalance(selectedWallet?.id)}>
           <MoneyOffIcon sx={{ mr: 1 }} /> Reset Balance
         </MenuItem>

@@ -48,6 +48,9 @@ const Wallets = () => {
         fetchWallets();
     }, [navigate]);
     
+    const handleWalletClick = (walletId) => {
+        navigate(`/wallets/details/${walletId}`);
+    };
 
     return (
         <Box sx={{ p: 3 }}>
@@ -76,7 +79,10 @@ const Wallets = () => {
                         ) : (
                             wallets.map((wallet) => (
                                 <Grid item xs={12} sm={6} md={4} key={wallet.id}>
-                                    <Card sx={{ boxShadow: 3 }}>
+                                    <Card
+                                        sx={{ boxShadow: 3, cursor: 'pointer' }}
+                                        onClick={() => handleWalletClick(wallet.id)}
+                                    >
                                         <CardContent>
                                             <Typography variant="h6">{wallet.walletName}</Typography>
                                             <Typography variant="body2" color="text.secondary">
@@ -86,7 +92,10 @@ const Wallets = () => {
                                             <Button
                                                 variant="outlined"
                                                 startIcon={<EditIcon />}
-                                                onClick={() => navigate(`/wallets/edit/${wallet.id}`)}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    navigate(`/wallets/edit/${wallet.id}`);
+                                                }}
                                                 sx={{ mt: 1 }}
                                             >
                                                 Edit Wallet

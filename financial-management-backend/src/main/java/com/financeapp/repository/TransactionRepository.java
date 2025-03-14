@@ -4,6 +4,7 @@ import com.financeapp.model.Account;
 import com.financeapp.model.Transaction;
 import com.financeapp.model.Transaction.TransactionType;
 import com.financeapp.model.User;
+import com.financeapp.model.Wallet;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -19,7 +20,11 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     List<Transaction> findByUserId(Long userId);
     List<Transaction> findByAccount(Account account);
     List<Transaction> findByAccountId(Long accountId);
-    
+    void deleteByWalletId(Long walletId);
+
+
+
+
     List<Transaction> findByUserAndTransactionDateBetween(User user, LocalDateTime startDate, LocalDateTime endDate);
     
     @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t WHERE t.user = :user AND t.transactionType = 'INCOME'")
@@ -45,4 +50,5 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             @Param("userId") Long userId,
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate);
+
 } 

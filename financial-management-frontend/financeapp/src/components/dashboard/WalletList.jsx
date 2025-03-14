@@ -13,6 +13,10 @@ export default function WalletList({ wallets, setCreateWalletFormOpen, handleWal
     navigate(`/wallets/edit/${walletId}`);
   };
 
+  const handleWalletClick = (walletId) => {
+    navigate(`/wallets/details/${walletId}`);
+  };
+
   return (
     <Grid item xs={12}>
       <Paper
@@ -23,8 +27,16 @@ export default function WalletList({ wallets, setCreateWalletFormOpen, handleWal
           backgroundColor: 'background.paper',
           borderRadius: 4,
           boxShadow: '0px 2px 12px rgba(0, 0, 0, 0.08)',
+          minHeight: '125px',
         }}
       >
+        <Typography
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
         <Typography 
           component="h2" 
           variant="h5" 
@@ -36,29 +48,36 @@ export default function WalletList({ wallets, setCreateWalletFormOpen, handleWal
         >
           Danh sách ví
         </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Danh sách ví của bạn sẽ hiển thị ở đây.
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+          <Button 
+            variant="contained" 
+            color="primary" 
+            startIcon={<AddIcon />}
+            onClick={() => setCreateWalletFormOpen(true)}
+            sx={{
+              borderRadius: 3,
+              width: '200px',
+              marginBottom: '20px',
+              fontWeight: 600,
+              boxShadow: 'none',
+              textTransform: 'none',
+              '&:hover': {
+                backgroundColor: 'rgba(25, 118, 210, 0.8)',
+              },
+            }}
+          >
+            Create Wallet
+          </Button>
+        </Box>
         </Typography>
-        <Button 
-          variant="contained" 
-          color="primary" 
-          startIcon={<AddIcon />}
-          onClick={() => setCreateWalletFormOpen(true)}
-          sx={{
-            mt: 2,
-            borderRadius: 3,
-            px: 3,
-            py: 1,
-            fontWeight: 600,
-            boxShadow: 'none',
-          }}
-        >
-          Create Wallet
-        </Button>
+
         <Grid container spacing={3}>
           {wallets.map((wallet) => (
             <Grid item xs={12} md={6} key={wallet.id}>
-              <Paper sx={{ p: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: 3 }}>
+              <Paper
+                sx={{ p: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: 3, cursor: 'pointer' }}
+                onClick={() => handleWalletClick(wallet.id)} // Thêm sự kiện onClick
+              >
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                   <AccountBalanceWalletIcon sx={{ mr: 2, fontSize: 30 }} />
                   <Box>
@@ -69,13 +88,19 @@ export default function WalletList({ wallets, setCreateWalletFormOpen, handleWal
                 <Box>
                   <IconButton
                     aria-label="wallet options"
-                    onClick={(event) => handleWalletMenuOpen(event, wallet)}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      handleWalletMenuOpen(event, wallet);
+                    }}
                   >
                     <MoreVertIcon />
                   </IconButton>
                   <IconButton
                     aria-label="edit wallet"
-                    onClick={() => handleEditWallet(wallet.id)}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      handleEditWallet(wallet.id);
+                    }}
                   >
                     <EditIcon />
                   </IconButton>

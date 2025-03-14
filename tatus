@@ -1,0 +1,90 @@
+[33mc2e3ea7[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mwallet/crud[m[33m)[m Merge branch 'dev' of https://github.com/CleanCodeCleanLifeThisCodeNotMine/Budget-Flow into wallet/crud
+[33m0ba7ce3[m[33m ([m[1;31morigin/wallet/crud[m[33m)[m ..
+[33m370a208[m[33m ([m[1;31morigin/manh_fix_wallet[m[33m, [m[1;32mmanh_fix_wallet[m[33m)[m fix wallet
+[33m8a49ed4[m[33m ([m[1;31morigin/dev[m[33m, [m[1;31morigin/HEAD[m[33m)[m Merge pull request #19 from CleanCodeCleanLifeThisCodeNotMine/manh_fix_wallet
+[33m551e3b7[m  update function wallet
+[33m5a92f0f[m db update
+[33m9c21198[m db update
+[33m73eddea[m fix UI
+[33md35c1fa[m pull function
+[33m67fc3ca[m Merge pull request #18 from CleanCodeCleanLifeThisCodeNotMine/feature/update-UI
+[33m870faed[m English for Manhdoggy
+[33m8a90b9a[m Update UI
+[33mbd16f9c[m fix del and wallet
+[33m2038ae2[m[33m ([m[1;31morigin/feature/user-wallet[m[33m)[m Fixed 403
+[33m0b0ac21[m Add three-dot menu to Total Balance with Edit Balance functionality
+[33ma2009b6[m Add user wallet feature
+[33m2be7af7[m Merge pull request #17 from CleanCodeCleanLifeThisCodeNotMine/feature/user-change-password
+[33mbbee412[m Add change password feature
+[33m7797742[m Merge pull request #16 from CleanCodeCleanLifeThisCodeNotMine/login_with_google
+[33md22efa3[m Merge pull request #15 from CleanCodeCleanLifeThisCodeNotMine/bugfix/user-role
+[33m25795aa[m fixed user role
+[33mca7ce09[m  login with google
+[33mbec223a[m  gitignore gg and github id
+[33me44a452[m login-with-google-success
+[33m741781e[m fix link update
+[33m18d6547[m[33m ([m[1;32mdev[m[33m)[m Merge pull request #14 from CleanCodeCleanLifeThisCodeNotMine/feature/user-panel
+[33mc0f4168[m[33m ([m[1;31morigin/feature/user-panel[m[33m)[m make panel great again 0.2
+[33mfa052db[m make panel great again
+[33m79f7f50[m make panel great again
+[33ma7e48f9[m fix 403 add category
+[33m1df5688[m Enhance CategoryController with logging and improve CORS configuration
+[33m59822eb[m Add CategoryController, CategoryService, and fix user ID retrieval in controllers
+[33mf12e249[m Fix dashboard and transaction form to handle missing categories endpoint
+[33md80ef74[m panel fixed
+[33mb44865c[m Fix date-fns compatibility issues and update React version
+[33m371ff58[m Fix Hibernate enum handling in JPQL queries and add database fix script
+[33m9a8f164[m temp fix
+[33m342d8c5[m Fix date picker implementation and add required dependencies
+[33m55dd066[m Add form components for transactions, accounts, and categories
+[33m03079fc[m Implement real user data integration in dashboard and authentication flow
+[33m736ac90[m Merge pull request #13 from CleanCodeCleanLifeThisCodeNotMine/feature/user-panel
+[33m60b74aa[m Added panel
+[33m516f8d5[m fix login redirect
+[33mca98759[m Merge pull request #12 from CleanCodeCleanLifeThisCodeNotMine/login_with_google
+[33mb9891e8[m[33m ([m[1;31morigin/login_with_google[m[33m)[m  update folder structure and login with google
+[33m015d3a9[m Merge pull request #9 from CleanCodeCleanLifeThisCodeNotMine/login-github
+[33m34910ba[m[33m ([m[1;31morigin/login-github[m[33m)[m login view done
+[33mad870b2[m update
+[33m0fbfefd[m fix validate
+[33m270c883[m update
+[33m1ada758[m Merge pull request #11 from CleanCodeCleanLifeThisCodeNotMine/feature/auth-ui
+[33mfeee65a[m Update README and add material-ui-master to gitignore
+[33m76530f4[m Merge pull request #10 from CleanCodeCleanLifeThisCodeNotMine/feature/auth-ui
+[33md07a935[m Refactor: better structure
+[33m0816a32[m Refactor: Reorganize pages structure
+[33m54937e7[m Merge remote-tracking branch 'origin/dev' into login-github
+[33mf5c2196[m Remove old authentication files replaced by Material UI versions
+[33m20e436c[m Implement Material UI authentication pages with Vite
+[33mdf2ee92[m[33m ([m[1;31morigin/login-with-github[m[33m)[m [update] final login with gihub
+[33m4e24715[m fix dashboard
+[33m7418691[m Update form validation to only show errors on submit
+[33m8912e35[m Implement authentication UI with Material UI and Formik
+[33m71667b7[m Remove Tailwind CSS and related dependencies
+[33m4af33a8[m merge with dev
+[33m50c652e[m Merge pull request #8 from CleanCodeCleanLifeThisCodeNotMine/fix-del-user
+[33ma802a0e[m[33m ([m[1;31morigin/fix-del-user[m[33m)[m [fix] login and delUser
+[33maa2d7ef[m [new] add login with github
+[33mea54e90[m [New]merge deleteUser and send active account
+[33m7c41dc9[m login with github
+[33m2521aeb[m Merge pull request #6 from CleanCodeCleanLifeThisCodeNotMine/feature/password-reset
+[33mee00a85[m[33m ([m[1;31morigin/feature/password-reset[m[33m)[m fixed mail verify
+[33mb50a5ff[m Merge pull request #5 from CleanCodeCleanLifeThisCodeNotMine/update-profile
+[33m17e789c[m update_profile
+[33m711a0b5[m Merge pull request #4 from CleanCodeCleanLifeThisCodeNotMine/feature/password-reset
+[33meab1e4f[m fix
+[33m020ba4e[m Merge pull request #3 from CleanCodeCleanLifeThisCodeNotMine/feature/password-reset
+[33m0e697c8[m token ready
+[33mef46457[m ERD_v1
+[33m75db441[m Add password reset and account activation features
+[33m1eae13b[m Merge pull request #2 from CleanCodeCleanLifeThisCodeNotMine/del-user
+[33m32eb137[m push frontend nextjs delUser
+[33mac916dd[m del frontend
+[33m35e12db[m push frontend
+[33m4f8c1f1[m Merge pull request #1 from CleanCodeCleanLifeThisCodeNotMine/del-user
+[33maaec4b9[m push data
+[33m477d172[m login delUser
+[33mb5219b6[m[33m ([m[1;31morigin/main[m[33m)[m prepare 0.002
+[33m6cd890b[m prepare 0.001
+[33m0549d52[m Update Readme.md
+[33m0c4a785[m update db, added Readme.md

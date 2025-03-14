@@ -2,8 +2,10 @@ package com.financeapp.service;
 
 import com.financeapp.dto.WalletRequest;
 import com.financeapp.dto.WalletUpdateRequest;
+import com.financeapp.model.TransactionCategory;
 import com.financeapp.model.User;
 import com.financeapp.model.Wallet;
+import com.financeapp.repository.TransactionRepository;
 import com.financeapp.repository.UserRepository;
 import com.financeapp.repository.WalletRepository;
 import jakarta.transaction.Transactional;
@@ -20,6 +22,7 @@ import java.util.Optional;
 public class WalletService {
     private final WalletRepository walletRepository;
     private final UserRepository userRepository;
+    private final TransactionRepository transactionRepository;
 
     @Transactional
     public Optional<Wallet> updateWallet(Long walletId, WalletUpdateRequest request, String username) {
@@ -90,5 +93,11 @@ public class WalletService {
         }
         return false;
     }
+
+    @Transactional
+    public void deleteALLTransactionsByWalletId(Long walletId) {
+        transactionRepository.deleteByWalletId(walletId);
+    }
+
 
 }

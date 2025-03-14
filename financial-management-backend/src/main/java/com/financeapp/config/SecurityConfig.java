@@ -62,6 +62,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/wallets/**").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/wallets/update/**").hasAuthority("ROLE_USER")
                         .requestMatchers(HttpMethod.DELETE, "/api/wallets/delete/**").hasAuthority("ROLE_USER")
+                        .requestMatchers(HttpMethod.PUT, "/api/wallets/reset/**").hasAuthority("ROLE_USER")
+
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

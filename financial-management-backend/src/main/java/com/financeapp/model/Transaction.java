@@ -52,6 +52,11 @@ public class Transaction {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @ManyToOne
+    @JoinColumn(name = "wallet_id", nullable = false) // 🔥 Đảm bảo cột wallet_id tồn tại
+    private Wallet wallet;
+
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
