@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link as RouterLink } from 'react-router-dom';
-import { activateAccount } from '../../config/axiosInstance';
+import { verifyEmail } from '../../config/axiosInstance';
 import styles from '../../styles/auth.module.css';
 
 // Material UI imports
@@ -17,43 +17,43 @@ import {
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 
-export default function ActivateAccount() {
+export default function VerifyEmail() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [activating, setActivating] = useState(true);
-  const [activated, setActivated] = useState(false);
-  const [message, setMessage] = useState('Activating your account...');
+  const [verifying, setVerifying] = useState(true);
+  const [verified, setVerified] = useState(false);
+  const [message, setMessage] = useState('Verifying your email...');
 
   useEffect(() => {
-    const activateUserAccount = async () => {
+    const verifyUserEmail = async () => {
       try {
         // Extract token from URL query parameters
         const queryParams = new URLSearchParams(location.search);
         const token = queryParams.get('token');
         
         if (!token) {
-          setMessage('Invalid activation link. The token is missing.');
-          setActivating(false);
+          setMessage('Invalid verification link. The token is missing.');
+          setVerifying(false);
           return;
         }
         
-        const response = await activateAccount(token);
-        setActivated(true);
-        setMessage(response.data.message || 'Your account has been successfully activated! You can now log in.');
+        const response = await verifyEmail(token);
+        setVerified(true);
+        setMessage(response.data.message || 'Your email has been successfully verified! You can now log in.');
       } catch (error) {
-        setActivated(false);
+        setVerified(false);
         const errorMessage = error.response?.data 
           ? (typeof error.response.data === 'string' 
               ? error.response.data 
               : error.response.data.message || JSON.stringify(error.response.data))
-          : 'Account activation failed. The link may have expired or is invalid.';
+          : 'Email verification failed. The link may have expired or is invalid.';
         setMessage(errorMessage);
       } finally {
-        setActivating(false);
+        setVerifying(false);
       }
     };
 
-    activateUserAccount();
+    verifyUserEmail();
   }, [location]);
 
   return (
@@ -65,10 +65,10 @@ export default function ActivateAccount() {
           </Box>
           
           <Typography variant="h4" component="h1" className={styles.appTitle}>
-            Account Activation
+            Email Verification
           </Typography>
           
-          {activating ? (
+          {verifying ? (
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', my: 4 }}>
               <CircularProgress size={60} thickness={4} />
               <Typography variant="body1" sx={{ mt: 2 }}>
@@ -77,12 +77,12 @@ export default function ActivateAccount() {
             </Box>
           ) : (
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', my: 4 }}>
-              {activated ? (
+              {verified ? (
                 <CheckCircleOutlineIcon color="success" sx={{ fontSize: 60 }} />
               ) : (
                 <ErrorOutlineIcon color="error" sx={{ fontSize: 60 }} />
               )}
-              <Box className={activated ? styles.successMessage : styles.errorMessage}>
+              <Box className={verified ? styles.successMessage : styles.errorMessage}>
                 {message}
               </Box>
               
@@ -97,7 +97,7 @@ export default function ActivateAccount() {
                 Go to Login
               </Button>
               
-              {!activated && (
+              {!verified && (
                 <Typography variant="body2" sx={{ mt: 2, textAlign: 'center' }}>
                   <Link
                     component={RouterLink}

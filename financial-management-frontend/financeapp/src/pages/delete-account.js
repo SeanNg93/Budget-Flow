@@ -1,16 +1,26 @@
 import { useState } from 'react';
-import axios from 'axios';
 import { useRouter } from 'next/router';
+import { 
+    Container, 
+    Typography, 
+    TextField, 
+    Button, 
+    Paper, 
+    Box, 
+    CircularProgress,
+    Alert
+} from '@mui/material';
 import styles from '../styles/delete-account.module.css';
 
 export default function DeleteAccount() {
     const [password, setPassword] = useState('');
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
 
     const handleDelete = async () => {
         if (!password.trim()) {
-            alert("Please enter your password to confirm.");
+            setError("Please enter your password to confirm.");
             return;
         }
 
@@ -18,11 +28,13 @@ export default function DeleteAccount() {
         if (!confirmed) return;
 
         setIsLoading(true);
+        setError('');
+        
         try {
             // Get token from localStorage and verify
             const token = localStorage.getItem('token');
             if (!token) {
-                alert("Your session has expired. Please log in again.");
+                setError("Your session has expired. Please log in again.");
                 router.push('/login');
                 return;
             }
@@ -55,7 +67,7 @@ export default function DeleteAccount() {
                 localStorage.clear();
                 router.push('/register');
             } else {
-                alert(data.message || "An error occurred.");
+                setError(data.message || "An error occurred.");
             }
         } catch (error) {
             console.error('Error:', error);
@@ -63,7 +75,7 @@ export default function DeleteAccount() {
                 localStorage.clear();
                 router.push('/login');
             } else {
-                alert("Error: " + (error.message || "An error occurred, please try again later."));
+                setError(error.message || "An error occurred, please try again later.");
             }
         } finally {
             setIsLoading(false);
@@ -71,40 +83,54 @@ export default function DeleteAccount() {
     };
 
     return (
-        <div className={styles.container}>
-            <div className={styles.deleteAccountForm}>
-                <h2 className={styles.title}>Delete Account</h2>
-                <p className={styles.warning}>
+        <Container maxWidth="sm" className={styles.container}>
+            <Paper elevation={3} className={styles.deleteAccountForm}>
+                <Typography variant="h4" component="h2" className={styles.title}>
+                    Delete Account
+                </Typography>
+                <Typography variant="body1" color="error" className={styles.warning}>
                     This action will delete all your related information and cannot be undone.
-                </p>
+                </Typography>
 
-                <div className={styles.formGroup}>
-                    <input
+                {error && (
+                    <Alert severity="error" sx={{ my: 2 }}>
+                        {error}
+                    </Alert>
+                )}
+
+                <Box sx={{ my: 3 }}>
+                    <TextField
                         type="password"
-                        placeholder="Enter your password to confirm"
-                        className={styles.input}
+                        label="Enter your password to confirm"
+                        variant="outlined"
+                        fullWidth
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
+                        className={styles.input}
                     />
-                </div>
+                </Box>
 
-                <div className={styles.buttonGroup}>
-                    <button
+                <Box className={styles.buttonGroup}>
+                    <Button
+                        variant="outlined"
                         onClick={() => router.push('/dashboard')}
-                        className={styles.cancelButton}
                         disabled={isLoading}
+                        className={styles.cancelButton}
                     >
                         Back
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                        variant="contained"
+                        color="error"
                         onClick={handleDelete}
+                        disabled={isLoading}
+                        startIcon={isLoading ? <CircularProgress size={20} /> : null}
                         className={styles.deleteButton}
-                        disabled={isLoading || !password.trim()}
                     >
-                        {isLoading ? "Processing..." : "I'm sure, delete my account"}
-                    </button>
-                </div>
-            </div>
-        </div>
+                        {isLoading ? 'Processing...' : 'Delete My Account'}
+                    </Button>
+                </Box>
+            </Paper>
+        </Container>
     );
 }

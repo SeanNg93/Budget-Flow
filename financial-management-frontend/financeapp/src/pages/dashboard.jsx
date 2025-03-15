@@ -26,7 +26,12 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import EditIcon from '@mui/icons-material/Edit';
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import TrendingDownIcon from '@mui/icons-material/TrendingDown';
+import SavingsIcon from '@mui/icons-material/Savings';
 import axios from 'axios';
+import styles from '../styles/dashboard.module.css';
 
 // Import dashboard components
 import SideMenu from '../components/dashboard/SideMenu';
@@ -260,7 +265,7 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+      <Box className={styles.loadingContainer}>
         <CircularProgress />
       </Box>
     );
@@ -274,29 +279,17 @@ export default function Dashboard() {
         <SideMenu open={open} handleDrawerClose={handleDrawerClose} />
         <Main open={open}>
           <DrawerHeader />
-          <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+          <Container maxWidth="lg" className={styles.dashboardContainer}>
             <Grid container spacing={3}>
               {/* Welcome Card */}
               <Grid item xs={12}>
-                <Paper
-                  sx={{
-                    p: 3,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    backgroundColor: 'background.paper',
-                    borderRadius: 4,
-                    boxShadow: '0px 2px 12px rgba(0, 0, 0, 0.08)',
-                  }}
-                >
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Paper className={styles.welcomeCard}>
+                  <Box className={styles.welcomeHeader}>
                     <Typography 
                       component="h1" 
                       variant="h4" 
                       color="text.primary" 
-                      sx={{ 
-                        fontWeight: 700,
-                        letterSpacing: '-0.02em',
-                      }}
+                      className={styles.welcomeTitle}
                     >
                       Welcome, {userProfile?.fullName || user?.username || 'User'}!
                     </Typography>
@@ -305,13 +298,7 @@ export default function Dashboard() {
                       color="primary" 
                       startIcon={<AddIcon />}
                       onClick={openFinanceActionPanel}
-                      sx={{
-                        borderRadius: 3,
-                        px: 3,
-                        py: 1.2,
-                        fontWeight: 600,
-                        boxShadow: 'none',
-                      }}
+                      className={styles.addButton}
                     >
                       Add Transaction
                     </Button>
@@ -319,7 +306,7 @@ export default function Dashboard() {
                   <Typography 
                     variant="body1" 
                     color="text.secondary"
-                    sx={{ mt: 1, fontSize: '1.05rem' }}
+                    className={styles.welcomeSubtitle}
                   >
                     This is your financial dashboard. Here you can manage your finances, track expenses, and plan your budget.
                   </Typography>
@@ -328,18 +315,18 @@ export default function Dashboard() {
               
               {/* Summary Cards */}
               <Grid item xs={12} md={3}>
-                <Card sx={{ height: '100%', position: 'relative' }}>
+                <Card className={styles.summaryCard}>
                   <CardHeader 
                     title={
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Box className={styles.cardHeaderContent}>
+                        <Box className={styles.cardTitleContainer}>
+                          <AccountBalanceWalletIcon 
+                            sx={{ mr: 1, color: '#007aff' }} 
+                          />
                           <Typography 
                             variant="h6" 
                             component="div" 
-                            sx={{ 
-                              fontWeight: 600,
-                              color: 'text.primary',
-                            }}
+                            className={styles.cardTitle}
                           >
                             Total Balance
                           </Typography>
@@ -347,13 +334,7 @@ export default function Dashboard() {
                             color="primary" 
                             size="small" 
                             onClick={() => setAddBalanceFormOpen(true)}
-                            sx={{ 
-                              ml: 1,
-                              backgroundColor: 'rgba(0, 122, 255, 0.1)',
-                              '&:hover': {
-                                backgroundColor: 'rgba(0, 122, 255, 0.2)',
-                              }
-                            }}
+                            className={styles.addIconButton}
                           >
                             <AddIcon fontSize="small" />
                           </IconButton>
@@ -364,12 +345,7 @@ export default function Dashboard() {
                           aria-haspopup="true"
                           onClick={handleBalanceMenuOpen}
                           size="small"
-                          sx={{ 
-                            color: 'text.secondary',
-                            '&:hover': {
-                              backgroundColor: 'rgba(0, 0, 0, 0.04)',
-                            }
-                          }}
+                          className={styles.moreOptionsButton}
                         >
                           <MoreVertIcon fontSize="small" />
                         </IconButton>
@@ -383,15 +359,11 @@ export default function Dashboard() {
                     open={Boolean(balanceMenuAnchorEl)}
                     onClose={handleBalanceMenuClose}
                     PaperProps={{
-                      sx: {
-                        borderRadius: 3,
-                        boxShadow: '0px 5px 15px rgba(0, 0, 0, 0.15)',
-                        minWidth: 180,
-                      }
+                      className: styles.menuPaper
                     }}
                   >
-                    <MenuItem onClick={handleEditBalance} sx={{ py: 1.5 }}>
-                      <EditIcon fontSize="small" sx={{ mr: 1.5, color: 'primary.main' }} />
+                    <MenuItem onClick={handleEditBalance} className={styles.menuItem}>
+                      <EditIcon fontSize="small" className={styles.menuIcon} />
                       Edit Balance
                     </MenuItem>
                   </Menu>
@@ -401,11 +373,7 @@ export default function Dashboard() {
                     ) : (
                       <Typography 
                         variant="h4" 
-                        sx={{ 
-                          fontWeight: 700,
-                          color: 'text.primary',
-                          letterSpacing: '-0.02em',
-                        }}
+                        className={styles.balanceAmount}
                       >
                         {formatCurrency(financialData.totalBalance)}
                       </Typography>
@@ -414,19 +382,21 @@ export default function Dashboard() {
                 </Card>
               </Grid>
               <Grid item xs={12} md={3}>
-                <Card sx={{ height: '100%' }}>
+                <Card className={styles.summaryCard}>
                   <CardHeader 
                     title={
-                      <Typography 
-                        variant="h6" 
-                        component="div" 
-                        sx={{ 
-                          fontWeight: 600,
-                          color: 'text.primary',
-                        }}
-                      >
-                        Income
-                      </Typography>
+                      <Box className={styles.cardTitleContainer}>
+                        <TrendingUpIcon 
+                          sx={{ mr: 1, color: '#34c759' }} 
+                        />
+                        <Typography 
+                          variant="h6" 
+                          component="div" 
+                          className={styles.cardTitle}
+                        >
+                          Income
+                        </Typography>
+                      </Box>
                     } 
                   />
                   <CardContent sx={{ pt: 0 }}>
@@ -436,10 +406,7 @@ export default function Dashboard() {
                       <Typography 
                         variant="h4" 
                         color="success.main"
-                        sx={{ 
-                          fontWeight: 700,
-                          letterSpacing: '-0.02em',
-                        }}
+                        className={styles.incomeAmount}
                       >
                         {formatCurrency(financialData.totalIncome)}
                       </Typography>
@@ -448,19 +415,21 @@ export default function Dashboard() {
                 </Card>
               </Grid>
               <Grid item xs={12} md={3}>
-                <Card sx={{ height: '100%' }}>
+                <Card className={styles.summaryCard}>
                   <CardHeader 
                     title={
-                      <Typography 
-                        variant="h6" 
-                        component="div" 
-                        sx={{ 
-                          fontWeight: 600,
-                          color: 'text.primary',
-                        }}
-                      >
-                        Expenses
-                      </Typography>
+                      <Box className={styles.cardTitleContainer}>
+                        <TrendingDownIcon 
+                          sx={{ mr: 1, color: '#ff3b30' }} 
+                        />
+                        <Typography 
+                          variant="h6" 
+                          component="div" 
+                          className={styles.cardTitle}
+                        >
+                          Expenses
+                        </Typography>
+                      </Box>
                     } 
                   />
                   <CardContent sx={{ pt: 0 }}>
@@ -470,10 +439,7 @@ export default function Dashboard() {
                       <Typography 
                         variant="h4" 
                         color="error.main"
-                        sx={{ 
-                          fontWeight: 700,
-                          letterSpacing: '-0.02em',
-                        }}
+                        className={styles.expenseAmount}
                       >
                         {formatCurrency(financialData.totalExpense)}
                       </Typography>
@@ -482,19 +448,21 @@ export default function Dashboard() {
                 </Card>
               </Grid>
               <Grid item xs={12} md={3}>
-                <Card sx={{ height: '100%' }}>
+                <Card className={styles.summaryCard}>
                   <CardHeader 
                     title={
-                      <Typography 
-                        variant="h6" 
-                        component="div" 
-                        sx={{ 
-                          fontWeight: 600,
-                          color: 'text.primary',
-                        }}
-                      >
-                        Net Savings
-                      </Typography>
+                      <Box className={styles.cardTitleContainer}>
+                        <SavingsIcon 
+                          sx={{ mr: 1, color: financialData.netSavings >= 0 ? '#34c759' : '#ff3b30' }} 
+                        />
+                        <Typography 
+                          variant="h6" 
+                          component="div" 
+                          className={styles.cardTitle}
+                        >
+                          Net Savings
+                        </Typography>
+                      </Box>
                     } 
                   />
                   <CardContent sx={{ pt: 0 }}>
@@ -504,10 +472,7 @@ export default function Dashboard() {
                       <Typography 
                         variant="h4" 
                         color={financialData.netSavings >= 0 ? "success.main" : "error.main"}
-                        sx={{ 
-                          fontWeight: 700,
-                          letterSpacing: '-0.02em',
-                        }}
+                        className={styles.savingsAmount}
                       >
                         {formatCurrency(financialData.netSavings)}
                       </Typography>
@@ -519,23 +484,14 @@ export default function Dashboard() {
               {/* Recent Transactions */}
               <Grid item xs={12}>
                 <Paper 
-                  sx={{ 
-                    p: 3, 
-                    display: 'flex', 
-                    flexDirection: 'column',
-                    borderRadius: 4,
-                    boxShadow: '0px 2px 12px rgba(0, 0, 0, 0.08)',
-                  }}
+                  className={styles.transactionsCard}
                 >
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                  <Box className={styles.transactionsHeader}>
                     <Typography 
                       component="h2" 
                       variant="h5" 
                       color="text.primary" 
-                      sx={{ 
-                        fontWeight: 600,
-                        letterSpacing: '-0.01em',
-                      }}
+                      className={styles.sectionTitle}
                     >
                       Recent Transactions
                     </Typography>
@@ -544,72 +500,51 @@ export default function Dashboard() {
                       color="primary" 
                       startIcon={<AddIcon />}
                       onClick={openFinanceActionPanel}
-                      sx={{
-                        borderRadius: 3,
-                        fontWeight: 600,
-                        borderWidth: '1.5px',
-                      }}
+                      className={styles.addTransactionButton}
                     >
                       Add New
                     </Button>
                   </Box>
                   
                   {loading ? (
-                    <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+                    <Box className={styles.loadingBox}>
                       <CircularProgress />
                     </Box>
                   ) : transactions.length > 0 ? (
-                    <TableContainer sx={{ borderRadius: 3, overflow: 'hidden' }}>
+                    <TableContainer className={styles.tableContainer}>
                       <Table>
                         <TableHead>
                           <TableRow>
-                            <TableCell sx={{ fontWeight: 600, color: 'text.secondary', fontSize: '0.875rem' }}>Date</TableCell>
-                            <TableCell sx={{ fontWeight: 600, color: 'text.secondary', fontSize: '0.875rem' }}>Description</TableCell>
-                            <TableCell sx={{ fontWeight: 600, color: 'text.secondary', fontSize: '0.875rem' }}>Category</TableCell>
-                            <TableCell sx={{ fontWeight: 600, color: 'text.secondary', fontSize: '0.875rem' }}>Type</TableCell>
-                            <TableCell align="right" sx={{ fontWeight: 600, color: 'text.secondary', fontSize: '0.875rem' }}>Amount</TableCell>
+                            <TableCell className={styles.tableHeaderCell}>Date</TableCell>
+                            <TableCell className={styles.tableHeaderCell}>Description</TableCell>
+                            <TableCell className={styles.tableHeaderCell}>Category</TableCell>
+                            <TableCell className={styles.tableHeaderCell}>Type</TableCell>
+                            <TableCell align="right" className={styles.tableHeaderCell}>Amount</TableCell>
                           </TableRow>
                         </TableHead>
                         <TableBody>
                           {transactions.map((transaction) => (
                             <TableRow 
                               key={transaction.id}
-                              sx={{ 
-                                '&:hover': { 
-                                  backgroundColor: 'rgba(0, 0, 0, 0.02)' 
-                                } 
-                              }}
+                              className={styles.tableRow}
                             >
-                              <TableCell sx={{ fontSize: '0.95rem' }}>{formatDate(transaction.transactionDate)}</TableCell>
-                              <TableCell sx={{ fontSize: '0.95rem', fontWeight: 500 }}>{transaction.description}</TableCell>
-                              <TableCell sx={{ fontSize: '0.95rem' }}>{transaction.category?.categoryName || 'Uncategorized'}</TableCell>
-                              <TableCell sx={{ fontSize: '0.95rem' }}>
+                              <TableCell className={styles.tableCell}>{formatDate(transaction.transactionDate)}</TableCell>
+                              <TableCell className={styles.tableCellBold}>{transaction.description}</TableCell>
+                              <TableCell className={styles.tableCell}>{transaction.category?.categoryName || 'Uncategorized'}</TableCell>
+                              <TableCell className={styles.tableCell}>
                                 <Box
-                                  sx={{
-                                    display: 'inline-block',
-                                    px: 1.5,
-                                    py: 0.5,
-                                    borderRadius: 2,
-                                    fontSize: '0.8rem',
-                                    fontWeight: 600,
-                                    backgroundColor: transaction.transactionType === 'INCOME' 
-                                      ? 'rgba(52, 199, 89, 0.1)' 
-                                      : 'rgba(255, 59, 48, 0.1)',
-                                    color: transaction.transactionType === 'INCOME' 
-                                      ? 'success.main' 
-                                      : 'error.main',
-                                  }}
+                                  className={transaction.transactionType === 'INCOME' 
+                                    ? styles.incomeTag 
+                                    : styles.expenseTag}
                                 >
                                   {transaction.transactionType}
                                 </Box>
                               </TableCell>
                               <TableCell 
                                 align="right" 
-                                sx={{ 
-                                  color: transaction.transactionType === 'INCOME' ? 'success.main' : 'error.main',
-                                  fontSize: '0.95rem',
-                                  fontWeight: 600
-                                }}
+                                className={transaction.transactionType === 'INCOME' 
+                                  ? styles.incomeAmount 
+                                  : styles.expenseAmount}
                               >
                                 {formatCurrency(transaction.amount)}
                               </TableCell>
@@ -619,14 +554,7 @@ export default function Dashboard() {
                       </Table>
                     </TableContainer>
                   ) : (
-                    <Box 
-                      sx={{ 
-                        p: 4, 
-                        textAlign: 'center', 
-                        backgroundColor: 'rgba(0, 0, 0, 0.02)',
-                        borderRadius: 3
-                      }}
-                    >
+                    <Box className={styles.emptyTransactionsBox}>
                       <Typography variant="body1" color="text.secondary">
                         No transactions to display. Start adding your financial data to see it here.
                       </Typography>
@@ -635,14 +563,7 @@ export default function Dashboard() {
                         color="primary" 
                         startIcon={<AddIcon />}
                         onClick={openFinanceActionPanel}
-                        sx={{
-                          mt: 2,
-                          borderRadius: 3,
-                          px: 3,
-                          py: 1,
-                          fontWeight: 600,
-                          boxShadow: 'none',
-                        }}
+                        className={styles.addFirstTransactionButton}
                       >
                         Add First Transaction
                       </Button>

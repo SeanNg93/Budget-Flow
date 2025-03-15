@@ -3,6 +3,17 @@ import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
 import { sendForm } from '@emailjs/browser';
 import { EMAILJS_CONFIG } from '../config/emailjs.config';
+import { 
+  Container, 
+  Box, 
+  Typography, 
+  TextField, 
+  Button, 
+  Paper, 
+  Alert, 
+  CircularProgress 
+} from '@mui/material';
+import styles from '../styles/contact.module.css';
 
 export default function Contact() {
   const formRef = useRef();
@@ -42,134 +53,98 @@ export default function Contact() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+    <Container maxWidth="sm" className={styles.contactContainer}>
+      <Box sx={{ my: 4, textAlign: 'center' }}>
+        <Typography variant="h4" component="h2" gutterBottom>
           Contact Us
-        </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Have a question? We&apos;d love to hear from you.
-        </p>
-      </div>
+        </Typography>
+        <Typography variant="body1" color="text.secondary">
+          Have a question? We'd love to hear from you.
+        </Typography>
+      </Box>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          {message && (
-            <div className={`mb-4 p-4 rounded ${isSuccess ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
-              {message}
-            </div>
-          )}
+      <Paper elevation={3} sx={{ p: 4 }}>
+        {message && (
+          <Alert 
+            severity={isSuccess ? "success" : "error"} 
+            sx={{ mb: 3 }}
+          >
+            {message}
+          </Alert>
+        )}
 
-          <form ref={formRef} onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <div>
-              <label htmlFor="from_name" className="block text-sm font-medium text-gray-700">
-                Name
-              </label>
-              <div className="mt-1">
-                <input
-                  id="from_name"
-                  name="from_name"
-                  type="text"
-                  required
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  {...register('from_name', { required: 'Name is required' })}
-                />
-                {errors.from_name && (
-                  <p className="mt-1 text-sm text-red-600">{errors.from_name.message}</p>
-                )}
-              </div>
-            </div>
+        <form ref={formRef} onSubmit={handleSubmit(onSubmit)} className={styles.form}>
+          <TextField
+            id="from_name"
+            name="from_name"
+            label="Name"
+            fullWidth
+            margin="normal"
+            variant="outlined"
+            error={!!errors.from_name}
+            helperText={errors.from_name?.message}
+            inputProps={{
+              ...register('from_name', { required: 'Name is required' })
+            }}
+          />
 
-            <div>
-              <label htmlFor="from_email" className="block text-sm font-medium text-gray-700">
-                Email
-              </label>
-              <div className="mt-1">
-                <input
-                  id="from_email"
-                  name="from_email"
-                  type="email"
-                  required
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  {...register('from_email', { 
-                    required: 'Email is required',
-                    pattern: {
-                      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                      message: 'Invalid email address'
-                    }
-                  })}
-                />
-                {errors.from_email && (
-                  <p className="mt-1 text-sm text-red-600">{errors.from_email.message}</p>
-                )}
-              </div>
-            </div>
+          <TextField
+            id="from_email"
+            name="from_email"
+            label="Email"
+            fullWidth
+            margin="normal"
+            variant="outlined"
+            error={!!errors.from_email}
+            helperText={errors.from_email?.message}
+            inputProps={{
+              ...register('from_email', { 
+                required: 'Email is required',
+                pattern: {
+                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                  message: 'Invalid email address'
+                }
+              })
+            }}
+          />
 
-            <div>
-              <label htmlFor="subject" className="block text-sm font-medium text-gray-700">
-                Subject
-              </label>
-              <div className="mt-1">
-                <input
-                  id="subject"
-                  name="subject"
-                  type="text"
-                  required
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  {...register('subject', { required: 'Subject is required' })}
-                />
-                {errors.subject && (
-                  <p className="mt-1 text-sm text-red-600">{errors.subject.message}</p>
-                )}
-              </div>
-            </div>
+          <TextField
+            id="message"
+            name="message"
+            label="Message"
+            fullWidth
+            margin="normal"
+            variant="outlined"
+            multiline
+            rows={4}
+            error={!!errors.message}
+            helperText={errors.message?.message}
+            inputProps={{
+              ...register('message', { required: 'Message is required' })
+            }}
+          />
 
-            <div>
-              <label htmlFor="message" className="block text-sm font-medium text-gray-700">
-                Message
-              </label>
-              <div className="mt-1">
-                <textarea
-                  id="message"
-                  name="message"
-                  rows={4}
-                  required
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  {...register('message', { required: 'Message is required' })}
-                />
-                {errors.message && (
-                  <p className="mt-1 text-sm text-red-600">{errors.message.message}</p>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-              >
-                {isLoading ? 'Sending...' : 'Send Message'}
-              </button>
-            </div>
-          </form>
-
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">
-                  <Link to="/" className="font-medium text-indigo-600 hover:text-indigo-500">
-                    Back to Home
-                  </Link>
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between' }}>
+            <Button 
+              component={Link} 
+              to="/"
+              variant="outlined"
+              color="primary"
+            >
+              Back to Home
+            </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              disabled={isLoading}
+              startIcon={isLoading ? <CircularProgress size={20} /> : null}
+            >
+              {isLoading ? 'Sending...' : 'Send Message'}
+            </Button>
+          </Box>
+        </form>
+      </Paper>
+    </Container>
   );
 } 

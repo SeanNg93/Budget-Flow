@@ -12,17 +12,24 @@ import {
   CircularProgress, 
   Alert, 
   IconButton,
-  Card,
-  CardContent,
   Divider,
   Container,
-  useTheme
+  Paper,
+  Stack,
+  useTheme,
+  Fab
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
 import CancelIcon from "@mui/icons-material/Cancel";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
+import PersonIcon from "@mui/icons-material/Person";
+import BadgeIcon from "@mui/icons-material/Badge";
+import EmailIcon from "@mui/icons-material/Email";
+import PhoneIcon from "@mui/icons-material/Phone";
+import InfoIcon from "@mui/icons-material/Info";
+import styles from "../../styles/Profile.module.css";
 
 // Define the backend API base URL
 const API_BASE_URL = "http://localhost:8080";
@@ -204,7 +211,6 @@ export default function Profile() {
     }
   };
 
-
   const handleSave = async () => {
     try {
       const token = getAuthToken();
@@ -239,36 +245,24 @@ export default function Profile() {
 
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
-        <CircularProgress size={40} thickness={4} sx={{ color: theme.palette.primary.main }} />
+      <Box className={styles.loadingContainer}>
+        <CircularProgress size={50} thickness={4} style={{ color: '#007aff' }} />
       </Box>
     );
   }
 
   if (error) {
     return (
-      <Container maxWidth="md" sx={{ py: 8 }}>
+      <Container maxWidth="md" className={styles.errorContainer}>
         <Alert 
           severity="error" 
-          variant="outlined"
-          sx={{ 
-            borderRadius: 2, 
-            py: 2,
-            boxShadow: '0 2px 10px rgba(0,0,0,0.05)'
-          }}
           action={
-            <Button 
-              color="inherit" 
-              size="small" 
-              onClick={fetchUserProfile}
-              sx={{ 
-                borderRadius: 10, 
-                px: 3,
-                textTransform: 'none',
-                fontWeight: 500
-              }}
+            <Button
+              color="inherit"
+              size="small"
+              onClick={() => navigate('/login')}
             >
-              Try Again
+              Go to Login
             </Button>
           }
         >
@@ -280,26 +274,14 @@ export default function Profile() {
 
   if (!profile) {
     return (
-      <Container maxWidth="md" sx={{ py: 8 }}>
+      <Container maxWidth="md" className={styles.errorContainer}>
         <Alert 
           severity="warning" 
-          variant="outlined"
-          sx={{ 
-            borderRadius: 2, 
-            py: 2,
-            boxShadow: '0 2px 10px rgba(0,0,0,0.05)'
-          }}
           action={
-            <Button 
-              color="inherit" 
-              size="small" 
+            <Button
+              color="inherit"
+              size="small"
               onClick={() => navigate('/login')}
-              sx={{ 
-                borderRadius: 10, 
-                px: 3,
-                textTransform: 'none',
-                fontWeight: 500
-              }}
             >
               Go to Login
             </Button>
@@ -312,411 +294,209 @@ export default function Profile() {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 6 }}>
-      <Typography 
-        variant="h4" 
-        component="h1" 
-        gutterBottom 
-        align="center" 
-        sx={{ 
-          mb: 5, 
-          fontWeight: 500,
-          color: theme.palette.text.primary
-        }}
-      >
-        Profile Information
-      </Typography>
-
-      <Card 
-        elevation={0} 
-        sx={{ 
-          borderRadius: 4, 
-          overflow: 'hidden',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-          transition: 'all 0.3s ease',
-          '&:hover': {
-            boxShadow: '0 6px 25px rgba(0,0,0,0.1)',
-          }
-        }}
-      >
-        <CardContent sx={{ p: { xs: 3, md: 5 } }}>
-          <Grid container spacing={6}>
-            {/* Left column - Avatar and basic info */}
-            <Grid item xs={12} md={4} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <Box sx={{ position: 'relative', mb: 3 }}>
-                <Avatar 
-                  src={avatarPreview} 
-                  alt={profile.fullName || profile.username}
-                  sx={{ 
-                    width: 180, 
-                    height: 180, 
-                    border: '4px solid #fff',
-                    boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
-                    transition: 'all 0.3s ease',
-                    '&:hover': {
-                      boxShadow: '0 6px 20px rgba(0,0,0,0.15)',
-                    }
-                  }}
-                  imgProps={{
-                    onError: (e) => {
-                      e.target.src = DEFAULT_AVATAR;
-                    }
-                  }}
+    <Container className={styles.profileContainer}>
+      <Paper elevation={3} className={styles.profileCard}>
+        {/* Header */}
+        <Box className={styles.profileHeader}>
+          <Typography variant="h5" className={styles.profileTitle}>
+            Profile Information
+          </Typography>
+          
+          {!isEditing && (
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<EditIcon />}
+              onClick={handleEditToggle}
+              className={styles.editButton}
+            >
+              Edit Profile
+            </Button>
+          )}
+        </Box>
+        
+        {/* User Section */}
+        <Box className={styles.userSection}>
+          <Box className={styles.avatarContainer}>
+            <Avatar 
+              src={avatarPreview} 
+              alt={profile.fullName || profile.username}
+              className={styles.avatar}
+              imgProps={{
+                onError: (e) => {
+                  e.target.src = DEFAULT_AVATAR;
+                }
+              }}
+            />
+            <input
+              accept="image/*"
+              style={{ display: 'none' }}
+              id="avatar-upload"
+              type="file"
+              onChange={handleAvatarChange}
+            />
+            <label htmlFor="avatar-upload">
+              <IconButton 
+                component="span" 
+                className={styles.uploadButton}
+                size="small"
+              >
+                <PhotoCameraIcon />
+              </IconButton>
+            </label>
+          </Box>
+          
+          <Box className={styles.userInfo}>
+            <Typography variant="h5" className={styles.userName}>
+              {profile.fullName || profile.username}
+            </Typography>
+            
+            <Typography variant="body1" className={styles.userRole}>
+              <BadgeIcon className={styles.userRoleIcon} />
+              {profile.role || "User"}
+            </Typography>
+          </Box>
+        </Box>
+        
+        {/* Details Section */}
+        <Box className={styles.detailsSection}>
+          <Typography variant="h6" className={styles.sectionTitle}>
+            Personal Information
+          </Typography>
+          
+          <Box className={styles.fieldGrid}>
+            <Box className={styles.fieldContainer}>
+              <Typography variant="caption" className={styles.fieldLabel}>
+                <PersonIcon fontSize="small" sx={{ mr: 0.5, verticalAlign: 'text-bottom' }} />
+                Full Name
+              </Typography>
+              {isEditing ? (
+                <TextField
+                  fullWidth
+                  name="fullName"
+                  value={editedProfile.fullName || ""}
+                  onChange={handleInputChange}
+                  variant="outlined"
+                  size="small"
+                  className={styles.textField}
+                  placeholder="Enter your full name"
                 />
-                <input
-                  accept="image/*"
-                  style={{ display: 'none' }}
-                  id="avatar-upload"
-                  type="file"
-                  onChange={handleAvatarChange}
+              ) : (
+                <Typography variant="body1" className={styles.fieldValue}>
+                  {profile.fullName || profile.username}
+                </Typography>
+              )}
+            </Box>
+            
+            <Box className={styles.fieldContainer}>
+              <Typography variant="caption" className={styles.fieldLabel}>
+                <EmailIcon fontSize="small" sx={{ mr: 0.5, verticalAlign: 'text-bottom' }} />
+                Email
+              </Typography>
+              <Typography variant="body1" className={styles.fieldValue}>
+                {profile.email}
+              </Typography>
+            </Box>
+            
+            <Box className={styles.fieldContainer}>
+              <Typography variant="caption" className={styles.fieldLabel}>
+                <PhoneIcon fontSize="small" sx={{ mr: 0.5, verticalAlign: 'text-bottom' }} />
+                Phone Number
+              </Typography>
+              {isEditing ? (
+                <TextField
+                  fullWidth
+                  name="phone"
+                  value={editedProfile.phone || ""}
+                  onChange={handleInputChange}
+                  variant="outlined"
+                  size="small"
+                  className={styles.textField}
+                  placeholder="Enter your phone number"
                 />
-                <label htmlFor="avatar-upload">
-                  <IconButton 
-                    component="span" 
-                    sx={{ 
-                      position: 'absolute', 
-                      bottom: 5, 
-                      right: 5, 
-                      backgroundColor: theme.palette.primary.main,
-                      color: 'white',
-                      width: 44,
-                      height: 44,
-                      boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
-                      transition: 'all 0.2s ease',
-                      '&:hover': {
-                        backgroundColor: theme.palette.primary.dark,
-                        transform: 'scale(1.05)',
-                      }
-                    }}
-                  >
-                    <PhotoCameraIcon />
-                  </IconButton>
-                </label>
+              ) : (
+                <Typography variant="body1" className={styles.fieldValue}>
+                  {profile.phone || "Not provided"}
+                </Typography>
+              )}
+            </Box>
+          </Box>
+          
+          <Box className={styles.fieldContainer} sx={{ mt: 3 }}>
+            <Typography variant="caption" className={styles.fieldLabel}>
+              <InfoIcon fontSize="small" sx={{ mr: 0.5, verticalAlign: 'text-bottom' }} />
+              Bio
+            </Typography>
+            {isEditing ? (
+              <TextField
+                fullWidth
+                multiline
+                rows={4}
+                name="bio"
+                value={editedProfile.bio || ""}
+                onChange={handleInputChange}
+                variant="outlined"
+                size="small"
+                className={styles.textField}
+                placeholder="Tell us about yourself"
+              />
+            ) : (
+              <Box className={styles.bioField}>
+                <Typography variant="body1" className={styles.fieldValue}>
+                  {profile.bio || "No bio provided"}
+                </Typography>
               </Box>
-              
-              <Typography 
-                variant="h5" 
-                gutterBottom
-                sx={{ 
-                  fontWeight: 600,
-                  mb: 1,
-                  color: theme.palette.text.primary
-                }}
-              >
-                {profile.fullName || profile.username}
-              </Typography>
-              
-              <Typography 
-                variant="body1" 
-                color="text.secondary" 
-                gutterBottom
-                sx={{ 
-                  fontWeight: 500,
-                  mb: 1
-                }}
-              >
-                {profile.role || 'User'}
-              </Typography>
-              
-              <Typography 
-                variant="body2" 
-                color="text.secondary"
-                sx={{ opacity: 0.8 }}
-              >
-                Joined: {profile.joinDate || 'N/A'}
-              </Typography>
-            </Grid>
-
-            {/* Right column - Profile details */}
-            <Grid item xs={12} md={8}>
-              <Box component="form" noValidate>
-                <Grid container spacing={4}>
-                  <Grid item xs={12} sm={6}>
-                    <Typography 
-                      variant="subtitle2" 
-                      gutterBottom
-                      sx={{ 
-                        fontWeight: 600,
-                        color: theme.palette.text.secondary,
-                        mb: 1
-                      }}
-                    >
-                      Full Name
-                    </Typography>
-                    {isEditing ? (
-                      <TextField
-                        fullWidth
-                        name="fullName"
-                        value={editedProfile.fullName || ""}
-                        onChange={handleInputChange}
-                        variant="outlined"
-                        size="small"
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
-                            borderRadius: 2,
-                            backgroundColor: 'rgba(0,0,0,0.02)',
-                            '&:hover .MuiOutlinedInput-notchedOutline': {
-                              borderColor: theme.palette.primary.light,
-                            },
-                          }
-                        }}
-                      />
-                    ) : (
-                      <Typography 
-                        variant="body1"
-                        sx={{ 
-                          fontWeight: 400,
-                          color: theme.palette.text.primary
-                        }}
-                      >
-                        {profile.fullName || profile.username}
-                      </Typography>
-                    )}
-                  </Grid>
-
-                  <Grid item xs={12} sm={6}>
-                    <Typography 
-                      variant="subtitle2" 
-                      gutterBottom
-                      sx={{ 
-                        fontWeight: 600,
-                        color: theme.palette.text.secondary,
-                        mb: 1
-                      }}
-                    >
-                      Email
-                    </Typography>
-                    <Typography 
-                      variant="body1"
-                      sx={{ 
-                        fontWeight: 400,
-                        color: theme.palette.text.primary
-                      }}
-                    >
-                      {profile.email}
-                    </Typography>
-                  </Grid>
-
-                  <Grid item xs={12} sm={6}>
-                    <Typography 
-                      variant="subtitle2" 
-                      gutterBottom
-                      sx={{ 
-                        fontWeight: 600,
-                        color: theme.palette.text.secondary,
-                        mb: 1
-                      }}
-                    >
-                      Phone Number
-                    </Typography>
-                    {isEditing ? (
-                      <TextField
-                        fullWidth
-                        name="phone"
-                        value={editedProfile.phone || ""}
-                        onChange={handleInputChange}
-                        variant="outlined"
-                        size="small"
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
-                            borderRadius: 2,
-                            backgroundColor: 'rgba(0,0,0,0.02)',
-                            '&:hover .MuiOutlinedInput-notchedOutline': {
-                              borderColor: theme.palette.primary.light,
-                            },
-                          }
-                        }}
-                      />
-                    ) : (
-                      <Typography 
-                        variant="body1"
-                        sx={{ 
-                          fontWeight: 400,
-                          color: theme.palette.text.primary
-                        }}
-                      >
-                        {profile.phone || "Not updated"}
-                      </Typography>
-                    )}
-                  </Grid>
-
-                  <Grid item xs={12} sm={6}>
-                    <Typography 
-                      variant="subtitle2" 
-                      gutterBottom
-                      sx={{ 
-                        fontWeight: 600,
-                        color: theme.palette.text.secondary,
-                        mb: 1
-                      }}
-                    >
-                      Role
-                    </Typography>
-                    {isEditing ? (
-                      <TextField
-                        fullWidth
-                        name="role"
-                        value={editedProfile.role || ""}
-                        disabled={true}
-                        variant="outlined"
-                        size="small"
-                        helperText="Role cannot be changed"
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
-                            borderRadius: 2,
-                            backgroundColor: 'rgba(0,0,0,0.02)',
-                          },
-                          '& .MuiFormHelperText-root': {
-                            marginLeft: 0
-                          }
-                        }}
-                      />
-                    ) : (
-                      <Typography 
-                        variant="body1"
-                        sx={{ 
-                          fontWeight: 400,
-                          color: theme.palette.text.primary
-                        }}
-                      >
-                        {profile.role || "User"}
-                      </Typography>
-                    )}
-                  </Grid>
-
-                  <Grid item xs={12}>
-                    <Typography 
-                      variant="subtitle2" 
-                      gutterBottom
-                      sx={{ 
-                        fontWeight: 600,
-                        color: theme.palette.text.secondary,
-                        mb: 1
-                      }}
-                    >
-                      Bio
-                    </Typography>
-                    {isEditing ? (
-                      <TextField
-                        fullWidth
-                        multiline
-                        rows={4}
-                        name="bio"
-                        value={editedProfile.bio || ""}
-                        onChange={handleInputChange}
-                        variant="outlined"
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
-                            borderRadius: 2,
-                            backgroundColor: 'rgba(0,0,0,0.02)',
-                            '&:hover .MuiOutlinedInput-notchedOutline': {
-                              borderColor: theme.palette.primary.light,
-                            },
-                          }
-                        }}
-                      />
-                    ) : (
-                      <Typography 
-                        variant="body1"
-                        sx={{ 
-                          fontWeight: 400,
-                          color: theme.palette.text.primary
-                        }}
-                      >
-                        {profile.bio || "Not updated"}
-                      </Typography>
-                    )}
-                  </Grid>
-                </Grid>
-
-                <Divider sx={{ my: 4 }} />
-
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
-                  {isEditing ? (
-                    <>
-                      <Button
-                        variant="outlined"
-                        color="secondary"
-                        onClick={handleEditToggle}
-                        startIcon={<CancelIcon />}
-                        sx={{ 
-                          borderRadius: 10, 
-                          px: 3,
-                          py: 1,
-                          textTransform: 'none',
-                          fontWeight: 500,
-                          boxShadow: 'none',
-                          borderWidth: 1.5
-                        }}
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={handleSave}
-                        startIcon={<SaveIcon />}
-                        sx={{ 
-                          borderRadius: 10, 
-                          px: 3,
-                          py: 1,
-                          textTransform: 'none',
-                          fontWeight: 500,
-                          boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
-                          '&:hover': {
-                            boxShadow: '0 6px 15px rgba(0,0,0,0.15)',
-                          }
-                        }}
-                      >
-                        Save Changes
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Button
-                        variant="outlined"
-                        color="primary"
-                        onClick={() => navigate('/dashboard')}
-                        startIcon={<ArrowBackIcon />}
-                        sx={{ 
-                          borderRadius: 10, 
-                          px: 3,
-                          py: 1,
-                          textTransform: 'none',
-                          fontWeight: 500,
-                          boxShadow: 'none',
-                          borderWidth: 1.5
-                        }}
-                      >
-                        Back
-                      </Button>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={handleEditToggle}
-                        startIcon={<EditIcon />}
-                        sx={{ 
-                          borderRadius: 10, 
-                          px: 3,
-                          py: 1,
-                          textTransform: 'none',
-                          fontWeight: 500,
-                          boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
-                          '&:hover': {
-                            boxShadow: '0 6px 15px rgba(0,0,0,0.15)',
-                          }
-                        }}
-                      >
-                        Edit Profile
-                      </Button>
-                    </>
-                  )}
-                </Box>
-              </Box>
-            </Grid>
-          </Grid>
-        </CardContent>
-      </Card>
+            )}
+          </Box>
+        </Box>
+        
+        {/* Action Buttons */}
+        {isEditing ? (
+          <Box className={styles.actionButtons}>
+            <Button
+              variant="outlined"
+              color="inherit"
+              onClick={handleEditToggle}
+              startIcon={<CancelIcon />}
+              className={styles.cancelButton}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleSave}
+              startIcon={<SaveIcon />}
+              className={styles.saveButton}
+            >
+              Save Changes
+            </Button>
+          </Box>
+        ) : (
+          <Box className={styles.navButtonsContainer}>
+            <Button
+              variant="outlined"
+              startIcon={<ArrowBackIcon className={styles.backButtonIcon} />}
+              onClick={() => navigate('/dashboard')}
+              className={styles.backButton}
+            >
+              Back to Dashboard
+            </Button>
+          </Box>
+        )}
+      </Paper>
+      
+      {/* Floating Edit Button for Mobile */}
+      {!isEditing && (
+        <Fab 
+          color="primary" 
+          aria-label="edit profile"
+          className={styles.floatingEditButton}
+          onClick={handleEditToggle}
+        >
+          <EditIcon />
+        </Fab>
+      )}
     </Container>
   );
 } 

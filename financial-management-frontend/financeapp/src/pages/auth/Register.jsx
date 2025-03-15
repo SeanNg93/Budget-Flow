@@ -5,6 +5,7 @@ import * as Yup from 'yup';
 import { register as registerUser } from '../../config/axiosInstance';
 import { sendForm } from '@emailjs/browser';
 import { EMAILJS_CONFIG } from '../../config/emailjs.config';
+import styles from '../../styles/auth.module.css';
 
 // Material UI imports
 import {
@@ -25,7 +26,6 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { styled } from '@mui/material/styles';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 
@@ -45,40 +45,6 @@ const RegisterSchema = Yup.object().shape({
     .oneOf([Yup.ref('password'), null], 'Passwords do not match')
     .required('Confirm password is required'),
 });
-
-const Card = styled(Paper)(({ theme }) => ({
-  display: 'flex',
-  flexDirection: 'column',
-  alignSelf: 'center',
-  width: '100%',
-  padding: theme.spacing(4),
-  gap: theme.spacing(2),
-  margin: 'auto',
-  [theme.breakpoints.up('sm')]: {
-    maxWidth: '450px',
-  },
-  boxShadow:
-    'hsla(220, 30%, 5%, 0.05) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.05) 0px 15px 35px -5px',
-}));
-
-const RegisterContainer = styled(Stack)(({ theme }) => ({
-  height: '100vh',
-  minHeight: '100%',
-  padding: theme.spacing(2),
-  [theme.breakpoints.up('sm')]: {
-    padding: theme.spacing(4),
-  },
-  '&::before': {
-    content: '""',
-    display: 'block',
-    position: 'absolute',
-    zIndex: -1,
-    inset: 0,
-    backgroundImage:
-      'radial-gradient(ellipse at 50% 50%, hsl(210, 100%, 97%), hsl(0, 0%, 100%))',
-    backgroundRepeat: 'no-repeat',
-  },
-}));
 
 export default function Register() {
   const navigate = useNavigate();
@@ -102,38 +68,42 @@ export default function Register() {
     event.preventDefault();
   };
 
-  // Xử lý đăng ký tài khoản
   const handleSubmit = async (values, { setSubmitting }) => {
     setMessage('');
-
+    
     try {
       const response = await registerUser(values.username, values.email, values.password);
       setIsSuccess(true);
-
+      
+      // If the response contains an activation link, prepare to send an email
       if (response.data && response.data.activationLink) {
-        setMessage(`Registration successful! Preparing to send activation email to ${values.email}...`);
+        setMessage('Registration successful! Preparing to send activation email...');
         setActivationData({
           to_email: values.email,
           activation_link: response.data.activationLink,
+          user_name: values.username
         });
       } else {
-        setMessage('Registration successful! Please check your email to activate your account.');
+        setMessage(response.data.message || 'Registration successful! Please check your email for activation instructions.');
       }
     } catch (error) {
       setIsSuccess(false);
-      const errorMessage =
-        error.response?.data?.message || 'Registration failed. Please try again.';
+      const errorMessage = error.response?.data 
+        ? (typeof error.response.data === 'string' 
+            ? error.response.data 
+            : error.response.data.message || JSON.stringify(error.response.data))
+        : 'Registration failed. Please try again.';
       setMessage(errorMessage);
     } finally {
       setSubmitting(false);
     }
   };
 
-  // Gửi email kích hoạt
   const sendActivationEmail = async () => {
     if (!activationData) return;
-
+    
     setIsSendingEmail(true);
+    
     try {
       const result = await sendForm(
         EMAILJS_CONFIG.serviceId,
@@ -141,257 +111,208 @@ export default function Register() {
         activationFormRef.current,
         EMAILJS_CONFIG.publicKey
       );
-
-      if (result.status === 200) {
-        setMessage(`Registration successful! Activation email has been sent to ${activationData.to_email}`);
-      } else {
-        setMessage(
-          'Registration successful, but unable to send activation email. Please contact the administrator.'
-        );
-      }
+      
+      setMessage('Registration successful! Please check your email for activation instructions.');
     } catch (error) {
-      console.error('Error sending activation email:', error);
-      setMessage(
-        'Registration successful, but unable to send activation email. Please contact the administrator.'
-      );
+      console.error('Failed to send activation email:', error);
+      setMessage('Registration successful, but we could not send the activation email. Please contact support.');
     } finally {
       setIsSendingEmail(false);
     }
   };
 
-  // Gửi email kích hoạt khi có dữ liệu
+  // Send activation email when activation data is available
   useEffect(() => {
-    if (activationData) {
+    if (activationData && !isSendingEmail) {
       sendActivationEmail();
     }
   }, [activationData]);
 
   return (
     <CssBaseline>
-      <RegisterContainer direction="column" justifyContent="space-between">
-        <Card elevation={3}>
-          <Box
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-            }}
-          >
-            <Box
-              sx={{
-                backgroundColor: 'primary.main',
-                borderRadius: '50%',
-                p: 1,
-                mb: 1,
-                color: 'white',
-              }}
-            >
-              <PersonAddIcon />
-            </Box>
-            <Typography
-              component="h1"
-              variant="h4"
-              sx={{ width: '100%', fontSize: 'clamp(2rem, 10vw, 2.15rem)', textAlign: 'center' }}
-            >
-              Register Account
-            </Typography>
+      <Stack direction="column" justifyContent="space-between" className={styles.authContainer}>
+        <Paper elevation={3} className={styles.authCard}>
+          <Box className={styles.logoContainer}>
+            <img src="/logo.png" alt="Budget Flow Logo" className={styles.logo} />
           </Box>
+          
+          <Typography variant="h4" component="h1" className={styles.appTitle}>
+            Create Account
+          </Typography>
+          
+          <Typography variant="body1" className={styles.appSubtitle}>
+            Sign up to start managing your finances
+          </Typography>
 
           {message && (
-            <Typography color={isSuccess ? 'success.main' : 'error'} sx={{ mt: 1, textAlign: 'center' }}>
+            <Box className={isSuccess ? styles.successMessage : styles.errorMessage}>
               {message}
-            </Typography>
-          )}
-
-          {isSendingEmail && (
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mt: 2 }}>
-              <CircularProgress size={24} sx={{ mr: 1 }} />
-              <Typography>Sending activation email...</Typography>
             </Box>
           )}
 
-          {!isSuccess && (
-            <Formik
-              initialValues={{
-                username: '',
-                email: '',
-                password: '',
-                confirmPassword: '',
-              }}
-              validationSchema={RegisterSchema}
-              onSubmit={handleSubmit}
-              validateOnChange={false}
-              validateOnBlur={false}
-            >
-              {({ errors, touched, isSubmitting }) => (
-                <Form>
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      width: '100%',
-                      gap: 2,
-                      mt: 2,
+          <Formik
+            initialValues={{
+              username: '',
+              email: '',
+              password: '',
+              confirmPassword: '',
+              agreeTerms: false,
+            }}
+            validationSchema={RegisterSchema}
+            onSubmit={handleSubmit}
+          >
+            {({ isSubmitting, errors, touched, handleChange, values }) => (
+              <Form>
+                <FormControl fullWidth className={styles.formField}>
+                  <FormLabel htmlFor="username" className={styles.formLabel}>
+                    Username
+                  </FormLabel>
+                  <Field
+                    as={TextField}
+                    id="username"
+                    name="username"
+                    variant="outlined"
+                    fullWidth
+                    error={touched.username && Boolean(errors.username)}
+                    helperText={touched.username && errors.username}
+                  />
+                </FormControl>
+
+                <FormControl fullWidth className={styles.formField}>
+                  <FormLabel htmlFor="email" className={styles.formLabel}>
+                    Email
+                  </FormLabel>
+                  <Field
+                    as={TextField}
+                    id="email"
+                    name="email"
+                    type="email"
+                    variant="outlined"
+                    fullWidth
+                    error={touched.email && Boolean(errors.email)}
+                    helperText={touched.email && errors.email}
+                  />
+                </FormControl>
+
+                <FormControl fullWidth className={styles.formField}>
+                  <FormLabel htmlFor="password" className={styles.formLabel}>
+                    Password
+                  </FormLabel>
+                  <Field
+                    as={TextField}
+                    id="password"
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    variant="outlined"
+                    fullWidth
+                    error={touched.password && Boolean(errors.password)}
+                    helperText={touched.password && errors.password}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            aria-label="toggle password visibility"
+                            onClick={handleClickShowPassword}
+                            onMouseDown={handleMouseDownPassword}
+                            edge="end"
+                          >
+                            {showPassword ? <VisibilityOff /> : <Visibility />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
                     }}
-                  >
-                    <FormControl>
-                      <FormLabel htmlFor="username">Username</FormLabel>
-                      <Field name="username">
-                        {({ field, meta }) => (
-                          <TextField
-                            {...field}
-                            id="username"
-                            placeholder="Username"
-                            autoComplete="username"
-                            autoFocus
-                            fullWidth
-                            error={meta.touched && Boolean(meta.error)}
-                            helperText={meta.touched && meta.error}
-                          />
-                        )}
-                      </Field>
-                    </FormControl>
+                  />
+                </FormControl>
 
-                    <FormControl>
-                      <FormLabel htmlFor="email">Email</FormLabel>
-                      <Field name="email">
-                        {({ field, meta }) => (
-                          <TextField
-                            {...field}
-                            id="email"
-                            placeholder="your@email.com"
-                            type="email"
-                            autoComplete="email"
-                            fullWidth
-                            error={meta.touched && Boolean(meta.error)}
-                            helperText={meta.touched && meta.error}
-                          />
-                        )}
-                      </Field>
-                    </FormControl>
+                <FormControl fullWidth className={styles.formField}>
+                  <FormLabel htmlFor="confirmPassword" className={styles.formLabel}>
+                    Confirm Password
+                  </FormLabel>
+                  <Field
+                    as={TextField}
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    variant="outlined"
+                    fullWidth
+                    error={touched.confirmPassword && Boolean(errors.confirmPassword)}
+                    helperText={touched.confirmPassword && errors.confirmPassword}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            aria-label="toggle confirm password visibility"
+                            onClick={handleClickShowConfirmPassword}
+                            onMouseDown={handleMouseDownPassword}
+                            edge="end"
+                          >
+                            {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </FormControl>
 
-                    <FormControl>
-                      <FormLabel htmlFor="password">Password</FormLabel>
-                      <Field name="password">
-                        {({ field, meta }) => (
-                          <TextField
-                            {...field}
-                            id="password"
-                            placeholder="••••••"
-                            type={showPassword ? 'text' : 'password'}
-                            autoComplete="new-password"
-                            fullWidth
-                            error={meta.touched && Boolean(meta.error)}
-                            helperText={meta.touched && meta.error}
-                            InputProps={{
-                              endAdornment: (
-                                <InputAdornment position="end">
-                                  <IconButton
-                                    aria-label="toggle password visibility"
-                                    onClick={handleClickShowPassword}
-                                    onMouseDown={handleMouseDownPassword}
-                                    edge="end"
-                                  >
-                                    {showPassword ? <VisibilityOff /> : <Visibility />}
-                                  </IconButton>
-                                </InputAdornment>
-                              ),
-                            }}
-                          />
-                        )}
-                      </Field>
-                    </FormControl>
-
-                    <FormControl>
-                      <FormLabel htmlFor="confirmPassword">Confirm Password</FormLabel>
-                      <Field name="confirmPassword">
-                        {({ field, meta }) => (
-                          <TextField
-                            {...field}
-                            id="confirmPassword"
-                            placeholder="••••••"
-                            type={showConfirmPassword ? 'text' : 'password'}
-                            autoComplete="new-password"
-                            fullWidth
-                            error={meta.touched && Boolean(meta.error)}
-                            helperText={meta.touched && meta.error}
-                            InputProps={{
-                              endAdornment: (
-                                <InputAdornment position="end">
-                                  <IconButton
-                                    aria-label="toggle password visibility"
-                                    onClick={handleClickShowConfirmPassword}
-                                    onMouseDown={handleMouseDownPassword}
-                                    edge="end"
-                                  >
-                                    {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                                  </IconButton>
-                                </InputAdornment>
-                              ),
-                            }}
-                          />
-                        )}
-                      </Field>
-                    </FormControl>
-
-                    <FormControlLabel
-                      control={<Checkbox value="allowExtraEmails" color="primary" />}
-                      label="I want to receive notifications via email."
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      name="agreeTerms"
+                      color="primary"
+                      onChange={handleChange}
+                      checked={values.agreeTerms}
                     />
+                  }
+                  label={
+                    <Typography variant="body2">
+                      I agree to the{' '}
+                      <Link href="#" className={styles.authLink}>
+                        Terms of Service
+                      </Link>{' '}
+                      and{' '}
+                      <Link href="#" className={styles.authLink}>
+                        Privacy Policy
+                      </Link>
+                    </Typography>
+                  }
+                />
 
-                    <Button
-                      type="submit"
-                      fullWidth
-                      variant="contained"
-                      disabled={isSubmitting}
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  color="primary"
+                  disabled={isSubmitting || isSendingEmail || !values.agreeTerms}
+                  className={styles.submitButton}
+                  startIcon={isSubmitting || isSendingEmail ? <CircularProgress size={20} /> : <PersonAddIcon />}
+                >
+                  {isSubmitting ? 'Registering...' : isSendingEmail ? 'Sending activation email...' : 'Create Account'}
+                </Button>
+
+                <Box sx={{ mt: 3, textAlign: 'center' }}>
+                  <Typography variant="body2">
+                    Already have an account?{' '}
+                    <Link
+                      component={RouterLink}
+                      to="/login"
+                      className={styles.authLink}
                     >
-                      {isSubmitting ? 'Registering...' : 'Register'}
-                    </Button>
-                  </Box>
-                </Form>
-              )}
-            </Formik>
-          )}
-
-          {isSuccess ? (
-            <Box sx={{ textAlign: 'center', mt: 2 }}>
-              <Link
-                component={RouterLink}
-                to="/login"
-                variant="body2"
-              >
-                Back to login page
-              </Link>
-            </Box>
-          ) : (
-            <>
-              <Divider sx={{ my: 2 }}>or</Divider>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <Typography sx={{ textAlign: 'center' }}>
-                  Already have an account?{' '}
-                  <Link
-                    component={RouterLink}
-                    to="/login"
-                    variant="body2"
-                  >
-                    Login
-                  </Link>
-                </Typography>
-              </Box>
-            </>
-          )}
+                      Sign in
+                    </Link>
+                  </Typography>
+                </Box>
+              </Form>
+            )}
+          </Formik>
 
           {/* Hidden form for EmailJS */}
           <form ref={activationFormRef} style={{ display: 'none' }}>
-            <input type="text" name="to_email" defaultValue={activationData?.to_email || ''} />
-            <input
-              type="text"
-              name="activation_link"
-              defaultValue={activationData?.activation_link || ''}
-            />
+            <input type="text" name="to_email" value={activationData?.to_email || ''} readOnly />
+            <input type="text" name="activation_link" value={activationData?.activation_link || ''} readOnly />
+            <input type="text" name="user_name" value={activationData?.user_name || ''} readOnly />
           </form>
-        </Card>
-      </RegisterContainer>
+        </Paper>
+      </Stack>
     </CssBaseline>
   );
 } 
