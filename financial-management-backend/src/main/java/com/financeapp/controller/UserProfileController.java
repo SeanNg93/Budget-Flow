@@ -33,7 +33,6 @@ import java.util.Optional;
 @RequestMapping("/api/user/profile")
 @RequiredArgsConstructor
 @Slf4j
-@CrossOrigin(origins = "*", maxAge = 3600)
 public class UserProfileController {
 
     private final UserProfileService userProfileService;
