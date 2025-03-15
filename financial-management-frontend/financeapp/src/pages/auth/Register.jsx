@@ -1,10 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
-import { register as registerUser } from '../../config/axiosInstance';
-import { sendForm } from '@emailjs/browser';
-import { EMAILJS_CONFIG } from '../../config/emailjs.config';
+import { register } from '../../config/axiosInstance';
 import styles from '../../styles/auth.module.css';
 
 // Material UI imports
@@ -12,9 +10,7 @@ import {
   Box,
   Button,
   Checkbox,
-  CircularProgress,
   CssBaseline,
-  Divider,
   FormControl,
   FormControlLabel,
   FormLabel,
@@ -22,37 +18,33 @@ import {
   InputAdornment,
   Link,
   Paper,
-  Stack,
   TextField,
   Typography,
 } from '@mui/material';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import { Visibility, VisibilityOff, Person, Email, Lock } from '@mui/icons-material';
 
 // Validation schema
 const RegisterSchema = Yup.object().shape({
   username: Yup.string()
     .min(3, 'Username must be at least 3 characters')
-    .max(20, 'Username cannot exceed 20 characters')
+    .max(20, 'Username must be less than 20 characters')
     .required('Username is required'),
   email: Yup.string()
-    .email('Invalid email format')
+    .email('Invalid email address')
     .required('Email is required'),
   password: Yup.string()
     .min(6, 'Password must be at least 6 characters')
     .required('Password is required'),
   confirmPassword: Yup.string()
-    .oneOf([Yup.ref('password'), null], 'Passwords do not match')
+    .oneOf([Yup.ref('password'), null], 'Passwords must match')
     .required('Confirm password is required'),
+  terms: Yup.boolean()
+    .oneOf([true], 'You must accept the terms and conditions')
 });
 
-export default function Register() {
+const Register = () => {
   const navigate = useNavigate();
-  const activationFormRef = useRef();
-  const [message, setMessage] = useState('');
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [isSendingEmail, setIsSendingEmail] = useState(false);
-  const [activationData, setActivationData] = useState(null);
+  const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -69,84 +61,55 @@ export default function Register() {
   };
 
   const handleSubmit = async (values, { setSubmitting }) => {
-    setMessage('');
-    
+    setError('');
+
     try {
-      const response = await registerUser(values.username, values.email, values.password);
-      setIsSuccess(true);
+      // Call the register function from axiosInstance
+      const response = await register(values.username, values.email, values.password);
       
-      // If the response contains an activation link, prepare to send an email
-      if (response.data && response.data.activationLink) {
-        setMessage('Registration successful! Preparing to send activation email...');
-        setActivationData({
-          to_email: values.email,
-          activation_link: response.data.activationLink,
-          user_name: values.username
-        });
-      } else {
-        setMessage(response.data.message || 'Registration successful! Please check your email for activation instructions.');
+      // Check for success response
+      if (response.data) {
+        // Redirect to login page with success message
+        navigate('/login', { state: { message: 'Registration successful! Please login.' } });
       }
     } catch (error) {
-      setIsSuccess(false);
-      const errorMessage = error.response?.data 
-        ? (typeof error.response.data === 'string' 
-            ? error.response.data 
-            : error.response.data.message || JSON.stringify(error.response.data))
-        : 'Registration failed. Please try again.';
-      setMessage(errorMessage);
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        setError(`Registration failed: ${error.response.data.message || error.response.statusText || 'Server error'}`);
+      } else if (error.request) {
+        // The request was made but no response was received
+        setError('Registration failed: No response from server. Please try again later.');
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        setError(`Registration failed: ${error.message}`);
+      }
     } finally {
       setSubmitting(false);
     }
   };
 
-  const sendActivationEmail = async () => {
-    if (!activationData) return;
-    
-    setIsSendingEmail(true);
-    
-    try {
-      const result = await sendForm(
-        EMAILJS_CONFIG.serviceId,
-        EMAILJS_CONFIG.activationTemplateId,
-        activationFormRef.current,
-        EMAILJS_CONFIG.publicKey
-      );
-      
-      setMessage('Registration successful! Please check your email for activation instructions.');
-    } catch (error) {
-      console.error('Failed to send activation email:', error);
-      setMessage('Registration successful, but we could not send the activation email. Please contact support.');
-    } finally {
-      setIsSendingEmail(false);
-    }
-  };
-
-  // Send activation email when activation data is available
-  useEffect(() => {
-    if (activationData && !isSendingEmail) {
-      sendActivationEmail();
-    }
-  }, [activationData]);
-
   return (
     <CssBaseline>
-      <Stack direction="column" justifyContent="space-between" className={styles.authContainer}>
+      <div className={styles.authContainer}>
         <Paper elevation={3} className={styles.authCard}>
           <Box className={styles.logoContainer}>
-            <img src="/logo.png" alt="Budget Flow Logo" className={styles.logo} />
+            <div className={styles.logoBackground}>
+              <img src="/Illuminati-Logo.png" alt="Budget Flow Logo" className={styles.logo} />
+            </div>
           </Box>
           
           <Typography variant="h4" component="h1" className={styles.appTitle}>
-            Create Account
+            BUDGET FLOW
           </Typography>
           
-          <Typography variant="body1" className={styles.appSubtitle}>
-            Sign up to start managing your finances
+          <Typography variant="body2" className={styles.appTagline}>
+            Illuminate Your Financial Future
           </Typography>
 
-          {message && (
-            <Box className={isSuccess ? styles.successMessage : styles.errorMessage}>
-              {message}
+          {error && (
+            <Box className={styles.errorMessage}>
+              {error}
             </Box>
           )}
 
@@ -156,163 +119,212 @@ export default function Register() {
               email: '',
               password: '',
               confirmPassword: '',
-              agreeTerms: false,
+              terms: false
             }}
             validationSchema={RegisterSchema}
             onSubmit={handleSubmit}
           >
-            {({ isSubmitting, errors, touched, handleChange, values }) => (
+            {({ errors, touched, isSubmitting, handleSubmit: formikSubmit }) => (
               <Form>
-                <FormControl fullWidth className={styles.formField}>
-                  <FormLabel htmlFor="username" className={styles.formLabel}>
-                    Username
-                  </FormLabel>
-                  <Field
-                    as={TextField}
-                    id="username"
-                    name="username"
-                    variant="outlined"
-                    fullWidth
-                    error={touched.username && Boolean(errors.username)}
-                    helperText={touched.username && errors.username}
-                  />
-                </FormControl>
+                <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 1.5 }}>
+                  <FormControl className={styles.formField}>
+                    <FormLabel htmlFor="username" className={styles.formLabel}>Username</FormLabel>
+                    <Field name="username">
+                      {({ field, meta }) => (
+                        <TextField
+                          {...field}
+                          id="username"
+                          placeholder="Type your username"
+                          autoComplete="username"
+                          autoFocus
+                          fullWidth
+                          variant="outlined"
+                          size="small"
+                          className={styles.inputField}
+                          error={meta.touched && Boolean(meta.error)}
+                          helperText={meta.touched && meta.error}
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <Person fontSize="small" sx={{ color: '#888' }} />
+                              </InputAdornment>
+                            ),
+                          }}
+                        />
+                      )}
+                    </Field>
+                  </FormControl>
 
-                <FormControl fullWidth className={styles.formField}>
-                  <FormLabel htmlFor="email" className={styles.formLabel}>
-                    Email
-                  </FormLabel>
-                  <Field
-                    as={TextField}
-                    id="email"
-                    name="email"
-                    type="email"
-                    variant="outlined"
-                    fullWidth
-                    error={touched.email && Boolean(errors.email)}
-                    helperText={touched.email && errors.email}
-                  />
-                </FormControl>
+                  <FormControl className={styles.formField}>
+                    <FormLabel htmlFor="email" className={styles.formLabel}>Email</FormLabel>
+                    <Field name="email">
+                      {({ field, meta }) => (
+                        <TextField
+                          {...field}
+                          id="email"
+                          placeholder="Type your email"
+                          autoComplete="email"
+                          fullWidth
+                          variant="outlined"
+                          size="small"
+                          className={styles.inputField}
+                          error={meta.touched && Boolean(meta.error)}
+                          helperText={meta.touched && meta.error}
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <Email fontSize="small" sx={{ color: '#888' }} />
+                              </InputAdornment>
+                            ),
+                          }}
+                        />
+                      )}
+                    </Field>
+                  </FormControl>
 
-                <FormControl fullWidth className={styles.formField}>
-                  <FormLabel htmlFor="password" className={styles.formLabel}>
-                    Password
-                  </FormLabel>
-                  <Field
-                    as={TextField}
-                    id="password"
-                    name="password"
-                    type={showPassword ? 'text' : 'password'}
-                    variant="outlined"
+                  <FormControl className={styles.formField}>
+                    <FormLabel htmlFor="password" className={styles.formLabel}>Password</FormLabel>
+                    <Field name="password">
+                      {({ field, meta }) => (
+                        <TextField
+                          {...field}
+                          id="password"
+                          placeholder="Type your password"
+                          type={showPassword ? 'text' : 'password'}
+                          autoComplete="new-password"
+                          fullWidth
+                          variant="outlined"
+                          size="small"
+                          className={styles.inputField}
+                          error={meta.touched && Boolean(meta.error)}
+                          helperText={meta.touched && meta.error}
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <Lock fontSize="small" sx={{ color: '#888' }} />
+                              </InputAdornment>
+                            ),
+                            endAdornment: (
+                              <InputAdornment position="end">
+                                <IconButton
+                                  aria-label="toggle password visibility"
+                                  onClick={handleClickShowPassword}
+                                  onMouseDown={handleMouseDownPassword}
+                                  edge="end"
+                                  size="small"
+                                >
+                                  {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                                </IconButton>
+                              </InputAdornment>
+                            ),
+                          }}
+                        />
+                      )}
+                    </Field>
+                  </FormControl>
+
+                  <FormControl className={styles.formField}>
+                    <FormLabel htmlFor="confirmPassword" className={styles.formLabel}>Confirm Password</FormLabel>
+                    <Field name="confirmPassword">
+                      {({ field, meta }) => (
+                        <TextField
+                          {...field}
+                          id="confirmPassword"
+                          placeholder="Confirm your password"
+                          type={showConfirmPassword ? 'text' : 'password'}
+                          autoComplete="new-password"
+                          fullWidth
+                          variant="outlined"
+                          size="small"
+                          className={styles.inputField}
+                          error={meta.touched && Boolean(meta.error)}
+                          helperText={meta.touched && meta.error}
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <Lock fontSize="small" sx={{ color: '#888' }} />
+                              </InputAdornment>
+                            ),
+                            endAdornment: (
+                              <InputAdornment position="end">
+                                <IconButton
+                                  aria-label="toggle password visibility"
+                                  onClick={handleClickShowConfirmPassword}
+                                  onMouseDown={handleMouseDownPassword}
+                                  edge="end"
+                                  size="small"
+                                >
+                                  {showConfirmPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                                </IconButton>
+                              </InputAdornment>
+                            ),
+                          }}
+                        />
+                      )}
+                    </Field>
+                  </FormControl>
+
+                  <FormControl className={styles.formField}>
+                    <Field name="terms">
+                      {({ field, meta }) => (
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              {...field}
+                              size="small"
+                              color="primary"
+                            />
+                          }
+                          label={
+                            <Typography variant="body2" sx={{ fontSize: '0.85rem' }}>
+                              I agree to the{' '}
+                              <Link component={RouterLink} to="/terms" className={styles.authLink}>
+                                Terms and Conditions
+                              </Link>
+                            </Typography>
+                          }
+                          className={styles.checkboxLabel}
+                        />
+                      )}
+                    </Field>
+                    {errors.terms && touched.terms && (
+                      <Typography color="error" variant="caption" sx={{ mt: 0.5 }}>
+                        {errors.terms}
+                      </Typography>
+                    )}
+                  </FormControl>
+
+                  <Button
+                    type="submit"
                     fullWidth
-                    error={touched.password && Boolean(errors.password)}
-                    helperText={touched.password && errors.password}
-                    InputProps={{
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <IconButton
-                            aria-label="toggle password visibility"
-                            onClick={handleClickShowPassword}
-                            onMouseDown={handleMouseDownPassword}
-                            edge="end"
-                          >
-                            {showPassword ? <VisibilityOff /> : <Visibility />}
-                          </IconButton>
-                        </InputAdornment>
-                      ),
+                    variant="contained"
+                    disabled={isSubmitting}
+                    className={styles.submitButton}
+                    onClick={() => {
+                      formikSubmit();
                     }}
-                  />
-                </FormControl>
-
-                <FormControl fullWidth className={styles.formField}>
-                  <FormLabel htmlFor="confirmPassword" className={styles.formLabel}>
-                    Confirm Password
-                  </FormLabel>
-                  <Field
-                    as={TextField}
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    variant="outlined"
-                    fullWidth
-                    error={touched.confirmPassword && Boolean(errors.confirmPassword)}
-                    helperText={touched.confirmPassword && errors.confirmPassword}
-                    InputProps={{
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <IconButton
-                            aria-label="toggle confirm password visibility"
-                            onClick={handleClickShowConfirmPassword}
-                            onMouseDown={handleMouseDownPassword}
-                            edge="end"
-                          >
-                            {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                          </IconButton>
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-                </FormControl>
-
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      name="agreeTerms"
-                      color="primary"
-                      onChange={handleChange}
-                      checked={values.agreeTerms}
-                    />
-                  }
-                  label={
-                    <Typography variant="body2">
-                      I agree to the{' '}
-                      <Link href="#" className={styles.authLink}>
-                        Terms of Service
-                      </Link>{' '}
-                      and{' '}
-                      <Link href="#" className={styles.authLink}>
-                        Privacy Policy
-                      </Link>
-                    </Typography>
-                  }
-                />
-
-                <Button
-                  type="submit"
-                  fullWidth
-                  variant="contained"
-                  color="primary"
-                  disabled={isSubmitting || isSendingEmail || !values.agreeTerms}
-                  className={styles.submitButton}
-                  startIcon={isSubmitting || isSendingEmail ? <CircularProgress size={20} /> : <PersonAddIcon />}
-                >
-                  {isSubmitting ? 'Registering...' : isSendingEmail ? 'Sending activation email...' : 'Create Account'}
-                </Button>
-
-                <Box sx={{ mt: 3, textAlign: 'center' }}>
-                  <Typography variant="body2">
-                    Already have an account?{' '}
-                    <Link
-                      component={RouterLink}
-                      to="/login"
-                      className={styles.authLink}
-                    >
-                      Sign in
-                    </Link>
-                  </Typography>
+                  >
+                    {isSubmitting ? 'Creating Account...' : 'SIGN UP'}
+                  </Button>
                 </Box>
               </Form>
             )}
           </Formik>
 
-          {/* Hidden form for EmailJS */}
-          <form ref={activationFormRef} style={{ display: 'none' }}>
-            <input type="text" name="to_email" value={activationData?.to_email || ''} readOnly />
-            <input type="text" name="activation_link" value={activationData?.activation_link || ''} readOnly />
-            <input type="text" name="user_name" value={activationData?.user_name || ''} readOnly />
-          </form>
+          <Typography sx={{ textAlign: 'center', mt: 2, fontSize: '0.85rem' }}>
+            Already have an account?{' '}
+            <Link
+              component={RouterLink}
+              to="/login"
+              className={styles.authLink}
+            >
+              Login
+            </Link>
+          </Typography>
         </Paper>
-      </Stack>
+      </div>
     </CssBaseline>
   );
-} 
+};
+
+export default Register; 

@@ -11,7 +11,6 @@ import {
   CssBaseline,
   Link,
   Paper,
-  Stack,
   Typography,
 } from '@mui/material';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
@@ -58,25 +57,31 @@ export default function VerifyEmail() {
 
   return (
     <CssBaseline>
-      <Stack direction="column" justifyContent="space-between" className={styles.authContainer}>
+      <div className={styles.authContainer}>
         <Paper elevation={3} className={styles.authCard}>
           <Box className={styles.logoContainer}>
-            <img src="/logo.png" alt="Budget Flow Logo" className={styles.logo} />
+            <div className={styles.logoBackground}>
+              <img src="/Illuminati-Logo.png" alt="Budget Flow Logo" className={styles.logo} />
+            </div>
           </Box>
           
           <Typography variant="h4" component="h1" className={styles.appTitle}>
-            Email Verification
+            BUDGET FLOW
+          </Typography>
+          
+          <Typography variant="body2" className={styles.appTagline}>
+            Illuminate Your Financial Future
           </Typography>
           
           {verifying ? (
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', my: 4 }}>
+            <Box className={styles.loadingContainer}>
               <CircularProgress size={60} thickness={4} />
               <Typography variant="body1" sx={{ mt: 2 }}>
                 {message}
               </Typography>
             </Box>
           ) : (
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', my: 4 }}>
+            <Box className={styles.loadingContainer}>
               {verified ? (
                 <CheckCircleOutlineIcon color="success" sx={{ fontSize: 60 }} />
               ) : (
@@ -90,9 +95,7 @@ export default function VerifyEmail() {
                 component={RouterLink}
                 to="/login"
                 variant="contained"
-                color="primary"
                 className={styles.submitButton}
-                sx={{ mt: 3 }}
               >
                 Go to Login
               </Button>
@@ -111,7 +114,7 @@ export default function VerifyEmail() {
             </Box>
           )}
         </Paper>
-      </Stack>
+      </div>
     </CssBaseline>
   );
 } 
