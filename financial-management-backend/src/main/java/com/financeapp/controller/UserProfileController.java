@@ -26,11 +26,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 
+/**
+ * Controller for managing user profiles
+ */
 @RestController
 @RequestMapping("/api/user/profile")
 @RequiredArgsConstructor
 @Slf4j
-@CrossOrigin(origins = "*", maxAge = 3600)
 public class UserProfileController {
 
     private final UserProfileService userProfileService;
@@ -47,8 +49,15 @@ public class UserProfileController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<UserProfileDto> getCurrentUserProfile(Authentication authentication) {
         String username = authentication.getName();
-        UserProfileDto profile = userProfileService.getUserProfileByUsername(username);
-        return ResponseEntity.ok(profile);
+        log.info("Getting profile for current user: {}", username);
+        
+        try {
+            UserProfileDto profile = userProfileService.getUserProfileByUsername(username);
+            return ResponseEntity.ok(profile);
+        } catch (Exception e) {
+            log.error("Error getting profile for user {}: {}", username, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     /**
@@ -57,6 +66,8 @@ public class UserProfileController {
     @GetMapping("/{userId}")
     @PreAuthorize("hasRole('ADMIN') or @userSecurity.isCurrentUser(#userId)")
     public ResponseEntity<UserProfileDto> getUserProfile(@PathVariable Long userId) {
+        log.info("Getting profile for user ID: {}", userId);
+        
         try {
             UserProfileDto profile = userProfileService.getUserProfile(userId);
             return ResponseEntity.ok(profile);
@@ -74,8 +85,12 @@ public class UserProfileController {
     public ResponseEntity<UserProfileDto> updateUserProfile(
             @PathVariable Long userId,
             @RequestBody UserProfileDto profileDto) {
+        
+        log.info("Updating profile for user ID: {}", userId);
+        
         try {
             UserProfileDto updatedProfile = userProfileService.updateUserProfile(userId, profileDto);
+            log.info("Profile updated successfully for user ID: {}", userId);
             return ResponseEntity.ok(updatedProfile);
         } catch (Exception e) {
             log.error("Error updating profile for user ID {}: {}", userId, e.getMessage());
@@ -91,13 +106,21 @@ public class UserProfileController {
     public ResponseEntity<UserProfileDto> uploadProfilePicture(
             @PathVariable Long userId,
             @RequestParam("file") MultipartFile file) {
+        
+        log.info("Uploading profile picture for user ID: {}", userId);
+        
+        if (file.isEmpty()) {
+            log.warn("Empty file uploaded for user ID: {}", userId);
+            return ResponseEntity.badRequest().build();
+        }
+        
         try {
             UserProfileDto updatedProfile = userProfileService.uploadProfilePicture(userId, file);
+            log.info("Profile picture uploaded successfully for user ID: {}", userId);
             return ResponseEntity.ok(updatedProfile);
         } catch (IOException e) {
-            log.error("Error uploading profile picture: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(null);
+            log.error("Error uploading profile picture for user ID {}: {}", userId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -106,9 +129,12 @@ public class UserProfileController {
      */
     @GetMapping("/picture/{userId}")
     public ResponseEntity<Resource> getProfilePicture(@PathVariable Long userId) {
+        log.info("Getting profile picture for user ID: {}", userId);
+        
         try {
             Optional<User> userOpt = userRepository.findById(userId);
             if (userOpt.isEmpty()) {
+                log.warn("User not found with ID: {}", userId);
                 return ResponseEntity.notFound().build();
             }
 
@@ -116,30 +142,38 @@ public class UserProfileController {
             Optional<UserProfile> profileOpt = userProfileRepository.findByUser(user);
             
             if (profileOpt.isEmpty() || profileOpt.get().getProfilePicturePath() == null) {
+                log.warn("Profile or profile picture not found for user ID: {}", userId);
                 return ResponseEntity.notFound().build();
             }
             
             String filePath = profileOpt.get().getProfilePicturePath();
+            return getResourceFromPath(filePath);
             
-            Path path = Paths.get(filePath);
-            Resource resource;
-            
-            try {
-                resource = new UrlResource(path.toUri());
-                if (resource.exists() && resource.isReadable()) {
-                    return ResponseEntity.ok()
-                            .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + path.getFileName() + "\"")
-                            .contentType(MediaType.IMAGE_JPEG)
-                            .body(resource);
-                } else {
-                    return ResponseEntity.notFound().build();
-                }
-            } catch (MalformedURLException e) {
-                log.error("Error loading profile picture: {}", e.getMessage());
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-            }
         } catch (Exception e) {
-            log.error("Error getting profile picture: {}", e.getMessage());
+            log.error("Error getting profile picture for user ID {}: {}", userId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
+    /**
+     * Helper method to get a resource from a file path
+     */
+    private ResponseEntity<Resource> getResourceFromPath(String filePath) {
+        try {
+            Path path = Paths.get(filePath);
+            Resource resource = new UrlResource(path.toUri());
+            
+            if (resource.exists() && resource.isReadable()) {
+                return ResponseEntity.ok()
+                        .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + path.getFileName() + "\"")
+                        .contentType(MediaType.IMAGE_JPEG)
+                        .body(resource);
+            } else {
+                log.warn("File not found or not readable: {}", filePath);
+                return ResponseEntity.notFound().build();
+            }
+        } catch (MalformedURLException e) {
+            log.error("Error loading file: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

@@ -2,101 +2,201 @@ package com.financeapp.controller;
 
 import com.financeapp.model.Transaction;
 import com.financeapp.model.User;
-import com.financeapp.repository.UserRepository;
 import com.financeapp.service.AccountService;
 import com.financeapp.service.TransactionService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.financeapp.utils.SecurityUtils;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
-import java.util.Optional;
 
+/**
+ * Controller for managing financial transactions
+ */
 @RestController
 @RequestMapping("/api/transactions")
+@RequiredArgsConstructor
+@Slf4j
 public class TransactionController {
 
     private final TransactionService transactionService;
-    private final UserRepository userRepository;
     private final AccountService accountService;
+    private final SecurityUtils securityUtils;
 
-    @Autowired
-    public TransactionController(TransactionService transactionService, UserRepository userRepository, AccountService accountService) {
-        this.transactionService = transactionService;
-        this.userRepository = userRepository;
-        this.accountService = accountService;
-    }
-
+    /**
+     * Get all transactions for the authenticated user
+     */
     @GetMapping
     public ResponseEntity<List<Transaction>> getAllTransactions() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
-        Long userId = getUserIdFromUsername(username);
-        List<Transaction> transactions = transactionService.getAllTransactionsByUserId(userId);
-        return ResponseEntity.ok(transactions);
+        try {
+            String username = securityUtils.getCurrentUsername();
+            log.info("Getting all transactions for user: {}", username);
+            
+            User currentUser = securityUtils.getCurrentUser();
+            if (currentUser == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+            
+            List<Transaction> transactions = transactionService.getAllTransactionsByUserId(currentUser.getId());
+            
+            log.info("Found {} transactions for user: {}", transactions.size(), username);
+            return ResponseEntity.ok(transactions);
+        } catch (Exception e) {
+            log.error("Error getting transactions: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
+    /**
+     * Get a transaction by ID
+     */
     @GetMapping("/{id}")
     public ResponseEntity<Transaction> getTransactionById(@PathVariable Long id) {
-        Transaction transaction = transactionService.getTransactionById(id);
-        return ResponseEntity.ok(transaction);
+        try {
+            log.info("Getting transaction with ID: {}", id);
+            
+            User currentUser = securityUtils.getCurrentUser();
+            if (currentUser == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+            
+            Transaction transaction = transactionService.getTransactionById(id);
+            
+            // Check if transaction belongs to the authenticated user
+            if (!transaction.getUser().getId().equals(currentUser.getId())) {
+                log.warn("User {} attempted to access transaction {} which belongs to another user", 
+                        currentUser.getUsername(), id);
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+            
+            return ResponseEntity.ok(transaction);
+        } catch (Exception e) {
+            log.error("Error getting transaction with ID {}: {}", id, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
+    /**
+     * Create a new transaction
+     */
     @PostMapping
     public ResponseEntity<Transaction> createTransaction(
             @RequestBody Transaction transaction,
             @RequestParam Long accountId) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
-        Long userId = getUserIdFromUsername(username);
-        Transaction createdTransaction = transactionService.createTransaction(transaction, userId, accountId);
-        return new ResponseEntity<>(createdTransaction, HttpStatus.CREATED);
+        try {
+            User currentUser = securityUtils.getCurrentUser();
+            if (currentUser == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+            
+            log.info("Creating transaction for user: {} in account: {}", 
+                    currentUser.getUsername(), accountId);
+            
+            Transaction createdTransaction = transactionService.createTransaction(
+                    transaction, currentUser.getId(), accountId);
+            
+            log.info("Transaction created successfully with ID: {}", createdTransaction.getId());
+            return new ResponseEntity<>(createdTransaction, HttpStatus.CREATED);
+        } catch (Exception e) {
+            log.error("Error creating transaction: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
+    /**
+     * Update an existing transaction
+     */
     @PutMapping("/{id}")
     public ResponseEntity<Transaction> updateTransaction(
             @PathVariable Long id,
             @RequestBody Transaction transactionDetails) {
-        Transaction updatedTransaction = transactionService.updateTransaction(id, transactionDetails);
-        return ResponseEntity.ok(updatedTransaction);
+        try {
+            log.info("Updating transaction with ID: {}", id);
+            
+            User currentUser = securityUtils.getCurrentUser();
+            if (currentUser == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+            
+            // Check if transaction belongs to the authenticated user
+            Transaction existingTransaction = transactionService.getTransactionById(id);
+            if (!existingTransaction.getUser().getId().equals(currentUser.getId())) {
+                log.warn("User {} attempted to update transaction {} which belongs to another user", 
+                        currentUser.getUsername(), id);
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+            
+            Transaction updatedTransaction = transactionService.updateTransaction(id, transactionDetails);
+            log.info("Transaction updated successfully with ID: {}", id);
+            return ResponseEntity.ok(updatedTransaction);
+        } catch (Exception e) {
+            log.error("Error updating transaction with ID {}: {}", id, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
+    /**
+     * Delete a transaction
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTransaction(@PathVariable Long id) {
-        transactionService.deleteTransaction(id);
-        return ResponseEntity.noContent().build();
+        try {
+            log.info("Deleting transaction with ID: {}", id);
+            
+            User currentUser = securityUtils.getCurrentUser();
+            if (currentUser == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+            
+            // Check if transaction belongs to the authenticated user
+            Transaction existingTransaction = transactionService.getTransactionById(id);
+            if (!existingTransaction.getUser().getId().equals(currentUser.getId())) {
+                log.warn("User {} attempted to delete transaction {} which belongs to another user", 
+                        currentUser.getUsername(), id);
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+            
+            transactionService.deleteTransaction(id);
+            log.info("Transaction deleted successfully with ID: {}", id);
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            log.error("Error deleting transaction with ID {}: {}", id, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
+    /**
+     * Get financial summary for the authenticated user
+     */
     @GetMapping("/summary")
     public ResponseEntity<Map<String, BigDecimal>> getFinancialSummary() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
-        Long userId = getUserIdFromUsername(username);
-        
-        Map<String, BigDecimal> summary = new HashMap<>();
-        summary.put("totalBalance", accountService.getTotalBalance(userId));
-        summary.put("totalIncome", transactionService.getTotalIncome(userId));
-        summary.put("totalExpense", transactionService.getTotalExpense(userId));
-        summary.put("netSavings", transactionService.getNetSavings(userId));
-        summary.put("currentMonthIncome", transactionService.getCurrentMonthIncome(userId));
-        summary.put("currentMonthExpense", transactionService.getCurrentMonthExpense(userId));
-        summary.put("currentMonthNetSavings", transactionService.getCurrentMonthNetSavings(userId));
-        
-        return ResponseEntity.ok(summary);
-    }
-
-    // Helper method to get user ID from username
-    private Long getUserIdFromUsername(String username) {
-        Optional<User> userOptional = userRepository.findByUsername(username);
-        if (!userOptional.isPresent()) {
-            throw new RuntimeException("User not found with username: " + username);
+        try {
+            User currentUser = securityUtils.getCurrentUser();
+            if (currentUser == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+            
+            log.info("Getting financial summary for user: {}", currentUser.getUsername());
+            
+            Map<String, BigDecimal> summary = new HashMap<>();
+            summary.put("totalBalance", accountService.getTotalBalance(currentUser.getId()));
+            summary.put("totalIncome", transactionService.getTotalIncome(currentUser.getId()));
+            summary.put("totalExpense", transactionService.getTotalExpense(currentUser.getId()));
+            summary.put("netSavings", transactionService.getNetSavings(currentUser.getId()));
+            summary.put("currentMonthIncome", transactionService.getCurrentMonthIncome(currentUser.getId()));
+            summary.put("currentMonthExpense", transactionService.getCurrentMonthExpense(currentUser.getId()));
+            summary.put("currentMonthNetSavings", transactionService.getCurrentMonthNetSavings(currentUser.getId()));
+            
+            return ResponseEntity.ok(summary);
+        } catch (Exception e) {
+            log.error("Error getting financial summary: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
-        return userOptional.get().getId();
     }
 } 
