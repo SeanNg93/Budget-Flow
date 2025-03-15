@@ -1,1 +1,227 @@
- 
+/* Auth Module Styles - Following Apple Design Principles */
+
+/* Container Styles */
+.authContainer {
+  min-height: 100vh;
+  padding: 0;
+  background: linear-gradient(135deg, #6e8efb 0%, #ff5858 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.authCard {
+  width: 100%;
+  max-width: 360px;
+  padding: 2rem;
+  padding-top: 3rem;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Logo and Title Styles */
+.logoContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+}
+
+.logoBackground {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background-color: #333;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.logo {
+  width: 70px;
+  height: 70px;
+  animation: rotateLogo 10s linear infinite;
+}
+
+@keyframes rotateLogo {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.appTitle {
+  font-size: 1.5rem !important;
+  font-weight: 600 !important;
+  text-align: center;
+  margin-bottom: 0.5rem !important;
+  color: #333333;
+  font-family: 'Montserrat', sans-serif !important;
+}
+
+.appSubtitle {
+  font-size: 0.85rem !important;
+  text-align: center;
+  margin-bottom: 1.25rem !important;
+  color: #666666;
+}
+
+.appTagline {
+  font-size: 0.9rem !important;
+  text-align: center;
+  margin-bottom: 1.5rem !important;
+  color: #555555;
+  font-style: italic;
+}
+
+/* Form Styles */
+.formField {
+  margin-bottom: 1rem !important;
+}
+
+.formLabel {
+  margin-bottom: 0.25rem !important;
+  font-weight: 500 !important;
+  color: #555555 !important;
+  font-size: 0.85rem !important;
+}
+
+.inputField {
+  border-radius: 8px !important;
+  background-color: #f8f9fa !important;
+  border: 1px solid #e0e0e0 !important;
+}
+
+.submitButton {
+  margin-top: 1rem !important;
+  padding: 0.6rem 0 !important;
+  border-radius: 50px !important;
+  font-weight: 500 !important;
+  text-transform: none !important;
+  background: linear-gradient(90deg, #6e8efb 0%, #ff5858 100%) !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1) !important;
+}
+
+.submitButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Link Styles */
+.authLink {
+  color: #6e8efb !important;
+  text-decoration: none !important;
+  font-weight: 500 !important;
+  transition: color 0.2s ease !important;
+  font-size: 0.85rem !important;
+}
+
+.authLink:hover {
+  color: #ff5858 !important;
+  text-decoration: underline !important;
+}
+
+/* Message Styles */
+.successMessage, .errorMessage {
+  width: 100%;
+  padding: 0.6rem;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
+.successMessage {
+  background-color: rgba(52, 199, 89, 0.1);
+  color: #34c759;
+  border: 1px solid rgba(52, 199, 89, 0.2);
+}
+
+.errorMessage {
+  background-color: rgba(255, 59, 48, 0.1);
+  color: #ff3b30;
+  border: 1px solid rgba(255, 59, 48, 0.2);
+}
+
+/* Loading Container */
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 1rem 0;
+}
+
+/* Social Login Buttons */
+.socialButtonsContainer {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.socialButton {
+  min-width: auto !important;
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 50% !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  transition: all 0.2s ease !important;
+  background-color: #ffffff !important;
+}
+
+.socialButton:hover {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+  transform: translateY(-2px);
+}
+
+.dividerText {
+  font-size: 0.85rem !important;
+  color: #888888 !important;
+  margin: 1rem 0 !important;
+  text-align: center !important;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 600px) {
+  .authCard {
+    padding: 1.5rem;
+    padding-top: 2.5rem;
+    max-width: 320px;
+  }
+  
+  .appTitle {
+    font-size: 1.3rem !important;
+  }
+  
+  .appSubtitle {
+    font-size: 0.8rem !important;
+    margin-bottom: 1rem !important;
+  }
+} 

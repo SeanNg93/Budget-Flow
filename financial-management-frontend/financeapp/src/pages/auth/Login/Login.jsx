@@ -12,9 +12,7 @@ import {
   Box,
   Button,
   Checkbox,
-  Container,
   CssBaseline,
-  Divider,
   FormControl,
   FormControlLabel,
   FormLabel,
@@ -22,12 +20,10 @@ import {
   InputAdornment,
   Link,
   Paper,
-  Stack,
   TextField,
   Typography,
 } from '@mui/material';
-import { styled } from '@mui/material/styles';
-import { Visibility, VisibilityOff, Google, Facebook, GitHub } from '@mui/icons-material';
+import { Visibility, VisibilityOff, Google, Facebook, GitHub, Person, Lock } from '@mui/icons-material';
 
 // Validation schema
 const LoginSchema = Yup.object().shape({
@@ -147,20 +143,26 @@ const Login = () => {
 
   return (
     <CssBaseline>
-      <Stack direction="column" justifyContent="space-between" className={styles.authContainer}>
+      <div className={styles.authContainer}>
         <Paper elevation={3} className={styles.authCard}>
-          <Typography
-            component="h1"
-            variant="h4"
-            sx={{ width: '100%', fontSize: 'clamp(2rem, 10vw, 2.15rem)', textAlign: 'center', mb: 2 }}
-          >
-            Login
+          <Box className={styles.logoContainer}>
+            <div className={styles.logoBackground}>
+              <img src="/Illuminati-Logo.png" alt="Budget Flow Logo" className={styles.logo} />
+            </div>
+          </Box>
+          
+          <Typography variant="h4" component="h1" className={styles.appTitle}>
+            BUDGET FLOW
+          </Typography>
+          
+          <Typography variant="body2" className={styles.appTagline}>
+            Illuminate Your Financial Future
           </Typography>
 
           {error && (
-            <Typography color="error" sx={{ mt: 1, textAlign: 'center', mb: 2 }}>
+            <Box className={styles.errorMessage}>
               {error}
-            </Typography>
+            </Box>
           )}
 
           <Formik
@@ -172,48 +174,57 @@ const Login = () => {
           >
             {({ errors, touched, isSubmitting, handleSubmit: formikSubmit }) => (
               <Form>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    width: '100%',
-                    gap: 2,
-                  }}
-                >
-                  <FormControl>
-                    <FormLabel htmlFor="username">Username</FormLabel>
+                <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 1.5 }}>
+                  <FormControl className={styles.formField}>
+                    <FormLabel htmlFor="username" className={styles.formLabel}>Username</FormLabel>
                     <Field name="username">
                       {({ field, meta }) => (
                         <TextField
                           {...field}
                           id="username"
-                          placeholder="Username"
+                          placeholder="Type your username"
                           autoComplete="username"
                           autoFocus
                           fullWidth
                           variant="outlined"
+                          size="small"
+                          className={styles.inputField}
                           error={meta.touched && Boolean(meta.error)}
                           helperText={meta.touched && meta.error}
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <Person fontSize="small" sx={{ color: '#888' }} />
+                              </InputAdornment>
+                            ),
+                          }}
                         />
                       )}
                     </Field>
                   </FormControl>
 
-                  <FormControl>
-                    <FormLabel htmlFor="password">Password</FormLabel>
+                  <FormControl className={styles.formField}>
+                    <FormLabel htmlFor="password" className={styles.formLabel}>Password</FormLabel>
                     <Field name="password">
                       {({ field, meta }) => (
                         <TextField
                           {...field}
                           id="password"
-                          placeholder="••••••"
+                          placeholder="Type your password"
                           type={showPassword ? 'text' : 'password'}
                           autoComplete="current-password"
                           fullWidth
                           variant="outlined"
+                          size="small"
+                          className={styles.inputField}
                           error={meta.touched && Boolean(meta.error)}
                           helperText={meta.touched && meta.error}
                           InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <Lock fontSize="small" sx={{ color: '#888' }} />
+                              </InputAdornment>
+                            ),
                             endAdornment: (
                               <InputAdornment position="end">
                                 <IconButton
@@ -221,8 +232,9 @@ const Login = () => {
                                   onClick={handleClickShowPassword}
                                   onMouseDown={handleMouseDownPassword}
                                   edge="end"
+                                  size="small"
                                 >
-                                  {showPassword ? <VisibilityOff /> : <Visibility />}
+                                  {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
                                 </IconButton>
                               </InputAdornment>
                             ),
@@ -232,84 +244,80 @@ const Login = () => {
                     </Field>
                   </FormControl>
 
-                  <FormControlLabel
-                    control={<Checkbox value="remember" color="primary" />}
-                    label="Remember me"
-                  />
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <FormControlLabel
+                      control={<Checkbox size="small" value="remember" color="primary" />}
+                      label={<Typography variant="body2" sx={{ fontSize: '0.85rem' }}>Remember me</Typography>}
+                    />
+                    <Link
+                      component={RouterLink}
+                      to="/forgot-password"
+                      variant="body2"
+                      className={styles.authLink}
+                    >
+                      Forgot password?
+                    </Link>
+                  </Box>
 
                   <Button
                     type="submit"
                     fullWidth
                     variant="contained"
                     disabled={isSubmitting}
-                    sx={{ mt: 1 }}
+                    className={styles.submitButton}
                     onClick={() => {
                       formikSubmit();
                     }}
                   >
-                    {isSubmitting ? 'Logging in...' : 'Login'}
+                    {isSubmitting ? 'Logging in...' : 'LOGIN'}
                   </Button>
-
-                  <Link
-                    component={RouterLink}
-                    to="/forgot-password"
-                    variant="body2"
-                    sx={{ alignSelf: 'center', mt: 1 }}
-                  >
-                    Forgot password?
-                  </Link>
                 </Box>
               </Form>
             )}
           </Formik>
 
-          <Divider sx={{ my: 2 }}>or</Divider>
+          <Typography className={styles.dividerText}>
+            Or Sign Up Using
+          </Typography>
 
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-
-              <Button
-                  fullWidth
-                  variant="outlined"
-                  startIcon={<Google />}
-                  onClick={() => loginGoogle()}
-              >
-                Login with Google
-              </Button>
-
-
-            
+          <Box className={styles.socialButtonsContainer}>
             <Button
-              fullWidth
               variant="outlined"
-              startIcon={<Facebook />}
-              onClick={() => alert('Đăng nhập với Facebook')}
+              className={styles.socialButton}
+              onClick={() => loginGoogle()}
             >
-              Đăng nhập với Facebook
+              <Google fontSize="small" />
+            </Button>
+            
+            <Button
+              variant="outlined"
+              className={styles.socialButton}
+              onClick={() => alert('Login with Facebook')}
+            >
+              <Facebook fontSize="small" />
             </Button>
 
             <Button
-                fullWidth
-                variant="outlined"
-                startIcon={<GitHub/>}
-                onClick={() => window.location.href = `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}`}
+              variant="outlined"
+              className={styles.socialButton}
+              onClick={() => window.location.href = `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}`}
             >
-              Đăng nhập với Github
+              <GitHub fontSize="small" />
             </Button>
-            
-            <Typography sx={{ textAlign: 'center', mt: 1 }}>
-              Chưa có tài khoản?{' '}
-              <Link
-                component={RouterLink}
-                to="/register"
-                variant="body2"
-                sx={{ alignSelf: 'center' }}
-              >
-                Đăng ký
-              </Link>
-            </Typography>
           </Box>
+          
+          <Typography sx={{ textAlign: 'center', mt: 2, fontSize: '0.85rem' }}>
+            Don't have an account?{' '}
+            <Link
+              component={RouterLink}
+              to="/register"
+              className={styles.authLink}
+            >
+              Sign up
+            </Link>
+          </Typography>
         </Paper>
-      </Stack>
+      </div>
     </CssBaseline>
   );
 };
