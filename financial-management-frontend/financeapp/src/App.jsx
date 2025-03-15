@@ -11,9 +11,7 @@ import ActivateAccount from './pages/auth/ActivateAccount';
 
 // Main Pages
 import Dashboard from './pages/dashboard.jsx';
-import Home from './pages/home.jsx';
 import Contact from './pages/Contact.jsx';
-import Index from './pages/Index.jsx';
 
 // User Pages
 import Profile from './pages/user/Profile.jsx';
@@ -37,7 +35,7 @@ function App() {
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="/index" element={<Index />} />
+        {/* Removed /index route as it's redundant */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />

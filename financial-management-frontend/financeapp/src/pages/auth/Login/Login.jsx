@@ -5,6 +5,7 @@ import * as Yup from 'yup';
 import { login } from '../../../config/axiosInstance';
 import AuthService from "@/services/auth.service";
 import { useGoogleLogin } from "@react-oauth/google";
+import styles from '../../../styles/auth.module.css';
 
 // Material UI imports
 import {
@@ -33,27 +34,6 @@ const LoginSchema = Yup.object().shape({
   username: Yup.string().required('Username is required'),
   password: Yup.string().required('Password is required'),
 });
-
-const Card = styled(Paper)(({ theme }) => ({
-  display: 'flex',
-  flexDirection: 'column',
-  alignSelf: 'center',
-  width: '100%',
-  padding: theme.spacing(4),
-  gap: theme.spacing(2),
-  margin: 'auto',
-  [theme.breakpoints.up('sm')]: {
-    maxWidth: '450px',
-  },
-  boxShadow:
-    'hsla(220, 30%, 5%, 0.05) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.05) 0px 15px 35px -5px',
-}));
-
-const LoginContainer = styled(Stack)(({ theme }) => ({
-  height: 'calc(100dvh)',
-  minHeight: '100%',
-  padding: theme.spacing(2),
-}));
 
 const Login = () => {
   const navigate = useNavigate();
@@ -167,8 +147,8 @@ const Login = () => {
 
   return (
     <CssBaseline>
-      <LoginContainer direction="column" justifyContent="space-between">
-        <Card elevation={3}>
+      <Stack direction="column" justifyContent="space-between" className={styles.authContainer}>
+        <Paper elevation={3} className={styles.authCard}>
           <Typography
             component="h1"
             variant="h4"
@@ -328,8 +308,8 @@ const Login = () => {
               </Link>
             </Typography>
           </Box>
-        </Card>
-      </LoginContainer>
+        </Paper>
+      </Stack>
     </CssBaseline>
   );
 };

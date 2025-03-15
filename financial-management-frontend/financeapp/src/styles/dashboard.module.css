@@ -4,6 +4,8 @@
     flex-direction: column;
     height: 100vh;
     background-color: #f8f9fa;
+    margin-top: 2rem;
+    margin-bottom: 2rem;
   }
   
   /* --- Thanh điều hướng (Navbar) --- */
@@ -125,4 +127,218 @@
     justify-content: space-between;
     align-items: center;
     width: 100%;
+  }
+
+  /* Loading container */
+  .loadingContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+
+  /* Welcome card */
+  .welcomeCard {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    background-color: #ffffff;
+    border-radius: 1rem;
+    box-shadow: 0px 2px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  .welcomeHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .welcomeTitle {
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .welcomeSubtitle {
+    margin-top: 0.5rem;
+    font-size: 1.05rem;
+  }
+
+  .addButton {
+    border-radius: 0.75rem;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    padding-top: 0.6rem;
+    padding-bottom: 0.6rem;
+    font-weight: 600;
+    box-shadow: none;
+  }
+
+  /* Summary cards */
+  .summaryCard {
+    height: 100%;
+    position: relative;
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  }
+
+  .summaryCard:hover {
+    transform: translateY(-4px);
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .cardTitleContainer {
+    display: flex;
+    align-items: center;
+    flex-grow: 1;
+  }
+
+  .cardTitle {
+    font-weight: 500 !important;
+    font-size: 1rem !important;
+    color: #1f1f1f;
+  }
+
+  .cardHeaderContent {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+  }
+
+  .addIconButton {
+    margin-left: 8px !important;
+  }
+
+  .moreOptionsButton {
+    padding: 4px !important;
+  }
+
+  .menuPaper {
+    border-radius: 12px !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  .menuItem {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px !important;
+    min-height: 40px;
+  }
+
+  .menuIcon {
+    margin-right: 8px;
+    font-size: 18px !important;
+  }
+
+  .balanceAmount, .incomeAmount, .expenseAmount, .savingsAmount {
+    font-weight: 600 !important;
+    font-size: 1.75rem !important;
+    letter-spacing: -0.5px;
+  }
+
+  .incomeAmount {
+    color: #34c759; /* Apple's green color */
+  }
+
+  .expenseAmount {
+    color: #ff3b30; /* Apple's red color */
+  }
+
+  /* Transactions section */
+  .transactionsCard {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    border-radius: 1rem;
+    box-shadow: 0px 2px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  .transactionsHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .sectionTitle {
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .addTransactionButton {
+    border-radius: 0.75rem;
+    font-weight: 600;
+    border-width: 1.5px;
+  }
+
+  .loadingBox {
+    display: flex;
+    justify-content: center;
+    padding: 1rem;
+  }
+
+  .tableContainer {
+    border-radius: 0.75rem;
+    overflow: hidden;
+  }
+
+  .tableHeaderCell {
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 0.875rem;
+  }
+
+  .tableRow:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+
+  .tableCell {
+    font-size: 0.95rem;
+  }
+
+  .tableCellBold {
+    font-size: 0.95rem;
+    font-weight: 500;
+  }
+
+  .incomeTag,
+  .expenseTag {
+    display: inline-block;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+    border-radius: 0.5rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  .incomeTag {
+    background-color: rgba(52, 199, 89, 0.1);
+    color: #34c759;
+  }
+
+  .expenseTag {
+    background-color: rgba(255, 59, 48, 0.1);
+    color: #ff3b30;
+  }
+
+  .emptyTransactionsBox {
+    padding: 2rem;
+    text-align: center;
+    background-color: rgba(0, 0, 0, 0.02);
+    border-radius: 0.75rem;
+  }
+
+  .addFirstTransactionButton {
+    margin-top: 1rem;
+    border-radius: 0.75rem;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    font-weight: 600;
+    box-shadow: none;
   }
