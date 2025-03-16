@@ -30,6 +30,7 @@ import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import SavingsIcon from '@mui/icons-material/Savings';
+import SettingsIcon from '@mui/icons-material/Settings';
 import axios from 'axios';
 import styles from '../styles/dashboard.module.css';
 
@@ -38,6 +39,7 @@ import SideMenu from '../components/dashboard/SideMenu';
 import AppNavbar from '../components/dashboard/AppNavbar';
 import TransactionForm from '../components/dashboard/TransactionForm';
 import WalletForm from '../components/dashboard/WalletForm';
+import WalletManageForm from '../components/dashboard/WalletManageForm';
 import CategoryForm from '../components/dashboard/CategoryForm';
 import FinanceActionPanel from '../components/dashboard/FinanceActionPanel';
 import AddBalanceForm from '../components/dashboard/AddBalanceForm';
@@ -114,6 +116,7 @@ export default function Dashboard() {
   const [categoryFormOpen, setCategoryFormOpen] = useState(false);
   const [addBalanceFormOpen, setAddBalanceFormOpen] = useState(false);
   const [editBalanceFormOpen, setEditBalanceFormOpen] = useState(false);
+  const [walletManageFormOpen, setWalletManageFormOpen] = useState(false);
   const [balanceMenuAnchorEl, setBalanceMenuAnchorEl] = useState(null);
   const [error, setError] = useState(null);
 
@@ -263,6 +266,11 @@ export default function Dashboard() {
     setEditBalanceFormOpen(true);
   };
 
+  const handleManageWallets = () => {
+    handleBalanceMenuClose();
+    setWalletManageFormOpen(true);
+  };
+
   if (loading) {
     return (
       <Box className={styles.loadingContainer}>
@@ -365,6 +373,10 @@ export default function Dashboard() {
                     <MenuItem onClick={handleEditBalance} className={styles.menuItem}>
                       <EditIcon fontSize="small" className={styles.menuIcon} />
                       Edit Balance
+                    </MenuItem>
+                    <MenuItem onClick={handleManageWallets} className={styles.menuItem}>
+                      <SettingsIcon fontSize="small" className={styles.menuIcon} />
+                      Manage Wallets
                     </MenuItem>
                   </Menu>
                   <CardContent sx={{ pt: 0 }}>
@@ -581,6 +593,15 @@ export default function Dashboard() {
         open={financeActionPanelOpen} 
         handleClose={() => setFinanceActionPanelOpen(false)} 
         onTransactionAdded={handleTransactionAdded}
+        onWalletAdded={handleAccountAdded}
+        onCategoryAdded={handleCategoryAdded}
+      />
+      
+      {/* Wallet Management Form */}
+      <WalletManageForm 
+        open={walletManageFormOpen} 
+        handleClose={() => setWalletManageFormOpen(false)} 
+        onWalletUpdated={handleAccountAdded}
       />
       
       {/* Keep the individual forms for backward compatibility if needed */}
