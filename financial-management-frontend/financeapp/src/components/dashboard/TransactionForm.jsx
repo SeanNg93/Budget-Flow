@@ -431,6 +431,15 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
               <Typography variant="subtitle2" className={styles.labelText}>
                 <AccountBalanceWalletIcon className={styles.labelIcon} />
                 Wallet
+                {formData.accountId && (
+                  <Typography 
+                    component="span" 
+                    variant="caption" 
+                    className={styles.walletBalance}
+                  >
+                    (Balance: ${accounts.find(a => a.id === parseInt(formData.accountId, 10))?.balance.toFixed(2) || '0.00'})
+                  </Typography>
+                )}
               </Typography>
               <Box className={styles.actionButtonsContainer}>
                 <IconButton 
