@@ -37,7 +37,7 @@ import styles from '../styles/dashboard.module.css';
 import SideMenu from '../components/dashboard/SideMenu';
 import AppNavbar from '../components/dashboard/AppNavbar';
 import TransactionForm from '../components/dashboard/TransactionForm';
-import WalletForm from '../components/dashboard/AccountForm';
+import WalletForm from '../components/dashboard/WalletForm';
 import CategoryForm from '../components/dashboard/CategoryForm';
 import FinanceActionPanel from '../components/dashboard/FinanceActionPanel';
 import AddBalanceForm from '../components/dashboard/AddBalanceForm';
@@ -593,7 +593,7 @@ export default function Dashboard() {
       <WalletForm 
         open={accountFormOpen} 
         handleClose={() => setAccountFormOpen(false)} 
-        onAccountAdded={handleAccountAdded}
+        onWalletAdded={handleAccountAdded}
       />
       
       <CategoryForm 

@@ -22,7 +22,7 @@ import {
 import { DatePicker } from '@mui/x-date-pickers';
 import AddIcon from '@mui/icons-material/Add';
 import FinanceService from '../../services/FinanceService';
-import WalletForm from './AccountForm';
+import WalletForm from './WalletForm';
 import CategoryForm from './CategoryForm';
 
 const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = false }) => {
