@@ -315,7 +315,7 @@ export default function Dashboard() {
               
               {/* Summary Cards */}
               <Grid item xs={12} md={3}>
-                <Card className={styles.summaryCard}>
+                <Card className={`${styles.summaryCard} ${styles.balanceCard}`}>
                   <CardHeader 
                     title={
                       <Box className={styles.cardHeaderContent}>
@@ -382,7 +382,7 @@ export default function Dashboard() {
                 </Card>
               </Grid>
               <Grid item xs={12} md={3}>
-                <Card className={styles.summaryCard}>
+                <Card className={`${styles.summaryCard} ${styles.incomeCard}`}>
                   <CardHeader 
                     title={
                       <Box className={styles.cardTitleContainer}>
@@ -415,7 +415,7 @@ export default function Dashboard() {
                 </Card>
               </Grid>
               <Grid item xs={12} md={3}>
-                <Card className={styles.summaryCard}>
+                <Card className={`${styles.summaryCard} ${styles.expenseCard}`}>
                   <CardHeader 
                     title={
                       <Box className={styles.cardTitleContainer}>
@@ -448,7 +448,7 @@ export default function Dashboard() {
                 </Card>
               </Grid>
               <Grid item xs={12} md={3}>
-                <Card className={styles.summaryCard}>
+                <Card className={`${styles.summaryCard} ${styles.savingsCard}`}>
                   <CardHeader 
                     title={
                       <Box className={styles.cardTitleContainer}>

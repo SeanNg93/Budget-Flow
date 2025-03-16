@@ -180,12 +180,34 @@
     border-radius: 1rem;
     overflow: hidden;
     box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.05);
-    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    transition: box-shadow 0.3s ease-in-out, border 0.3s ease-in-out;
+    border: 1px solid transparent;
   }
 
+  /* Default glow effect for all cards */
   .summaryCard:hover {
-    transform: translateY(-4px);
-    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0px 0px 15px rgba(0, 122, 255, 0.3);
+  }
+
+  /* Add specific card classes for targeting in dashboard.jsx */
+  .balanceCard:hover {
+    box-shadow: 0px 0px 15px rgba(0, 122, 255, 0.4);
+    border: 1px solid rgba(0, 122, 255, 0.2);
+  }
+
+  .incomeCard:hover {
+    box-shadow: 0px 0px 15px rgba(52, 199, 89, 0.4);
+    border: 1px solid rgba(52, 199, 89, 0.2);
+  }
+
+  .expenseCard:hover {
+    box-shadow: 0px 0px 15px rgba(255, 59, 48, 0.4);
+    border: 1px solid rgba(255, 59, 48, 0.2);
+  }
+
+  .savingsCard:hover {
+    box-shadow: 0px 0px 15px rgba(52, 199, 89, 0.4);
+    border: 1px solid rgba(52, 199, 89, 0.2);
   }
 
   .cardTitleContainer {
