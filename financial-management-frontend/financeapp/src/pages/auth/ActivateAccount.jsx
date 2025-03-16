@@ -95,7 +95,7 @@ export default function ActivateAccount() {
                 component={RouterLink}
                 to="/login"
                 variant="contained"
-                className={styles.submitButton}
+                className={styles.gradientButton}
               >
                 Go to Login
               </Button>
