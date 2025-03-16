@@ -129,6 +129,24 @@
   box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15) !important;
 }
 
+.gradientButton {
+  margin-top: 1.5rem !important;
+  padding: 0.7rem 2rem !important;
+  border-radius: 50px !important;
+  font-weight: 500 !important;
+  text-transform: none !important;
+  background: linear-gradient(90deg, #6a75ca 0%, #ff6b95 100%) !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15) !important;
+  font-size: 1rem !important;
+}
+
+.gradientButton:hover {
+  background: linear-gradient(90deg, #5965b9 0%, #e55a84 100%) !important;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2) !important;
+  transform: translateY(-2px);
+}
+
 /* Link Styles */
 .authLink {
   color: #6e8efb !important;
