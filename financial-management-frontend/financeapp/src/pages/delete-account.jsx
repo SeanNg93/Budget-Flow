@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useRouter } from 'next/router';
+import { useNavigate } from 'react-router-dom';
 import { 
     Container, 
     Typography, 
@@ -14,7 +14,7 @@ import styles from '../styles/delete-account.module.css';
 
 export default function DeleteAccount() {
     const [password, setPassword] = useState('');
-    const router = useRouter();
+    const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
 
@@ -32,10 +32,10 @@ export default function DeleteAccount() {
         
         try {
             // Get token from localStorage and verify
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('userToken');
             if (!token) {
                 setError("Your session has expired. Please log in again.");
-                router.push('/login');
+                navigate('/login');
                 return;
             }
 
@@ -65,7 +65,7 @@ export default function DeleteAccount() {
             if (data.success === true || data.success === "true") {
                 alert("Account deleted successfully!");
                 localStorage.clear();
-                router.push('/register');
+                navigate('/register');
             } else {
                 setError(data.message || "An error occurred.");
             }
@@ -73,7 +73,7 @@ export default function DeleteAccount() {
             console.error('Error:', error);
             if (error.message.includes('log in again')) {
                 localStorage.clear();
-                router.push('/login');
+                navigate('/login');
             } else {
                 setError(error.message || "An error occurred, please try again later.");
             }
@@ -113,7 +113,7 @@ export default function DeleteAccount() {
                 <Box className={styles.buttonGroup}>
                     <Button
                         variant="outlined"
-                        onClick={() => router.push('/dashboard')}
+                        onClick={() => navigate('/dashboard')}
                         disabled={isLoading}
                         className={styles.cancelButton}
                     >
@@ -133,4 +133,4 @@ export default function DeleteAccount() {
             </Paper>
         </Container>
     );
-}
+} 
