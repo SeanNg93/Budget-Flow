@@ -26,6 +26,9 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
@@ -33,6 +36,14 @@ import SavingsIcon from '@mui/icons-material/Savings';
 import SettingsIcon from '@mui/icons-material/Settings';
 import axios from 'axios';
 import styles from '../styles/dashboard.module.css';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  DialogContentText,
+} from '@mui/material';
+import { toast } from 'react-toastify';
 
 // Import dashboard components
 import SideMenu from '../components/dashboard/SideMenu';
@@ -111,6 +122,9 @@ export default function Dashboard() {
     netSavings: 0
   });
   const [transactions, setTransactions] = useState([]);
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [editTransactionOpen, setEditTransactionOpen] = useState(false);
   const [transactionFormOpen, setTransactionFormOpen] = useState(false);
   const [accountFormOpen, setAccountFormOpen] = useState(false);
   const [categoryFormOpen, setCategoryFormOpen] = useState(false);
@@ -271,6 +285,51 @@ export default function Dashboard() {
     setWalletManageFormOpen(true);
   };
 
+  // Function to handle editing a transaction
+  const handleEditTransaction = (transaction) => {
+    setSelectedTransaction(transaction);
+    setEditTransactionOpen(true);
+  };
+
+  // Function to handle closing the edit transaction dialog
+  const handleEditTransactionClose = () => {
+    setSelectedTransaction(null);
+    setEditTransactionOpen(false);
+  };
+
+  // Function to handle confirming the edit
+  const handleEditTransactionConfirm = () => {
+    // Close the dialog, TransactionForm component will handle the API call
+    setEditTransactionOpen(false);
+    fetchFinancialData(); // Refresh data after edit
+  };
+
+  // Function to open delete confirmation dialog
+  const handleDeleteTransaction = (transaction) => {
+    setSelectedTransaction(transaction);
+    setDeleteConfirmOpen(true);
+  };
+
+  // Function to close delete confirmation dialog
+  const handleDeleteCancel = () => {
+    setSelectedTransaction(null);
+    setDeleteConfirmOpen(false);
+  };
+
+  // Function to confirm delete transaction
+  const handleDeleteConfirm = async () => {
+    try {
+      await FinanceService.deleteTransaction(selectedTransaction.id);
+      setDeleteConfirmOpen(false);
+      setSelectedTransaction(null);
+      fetchFinancialData(); // Refresh data after delete
+      toast.success('Transaction deleted successfully');
+    } catch (error) {
+      console.error('Error deleting transaction:', error);
+      toast.error('Failed to delete transaction');
+    }
+  };
+
   if (loading) {
     return (
       <Box className={styles.loadingContainer}>
@@ -301,15 +360,6 @@ export default function Dashboard() {
                     >
                       Welcome, {userProfile?.fullName || user?.username || 'User'}!
                     </Typography>
-                    <Button 
-                      variant="contained" 
-                      color="primary" 
-                      startIcon={<AddIcon />}
-                      onClick={openFinanceActionPanel}
-                      className={styles.addButton}
-                    >
-                      Add Transaction
-                    </Button>
                   </Box>
                   <Typography 
                     variant="body1" 
@@ -532,6 +582,7 @@ export default function Dashboard() {
                             <TableCell className={styles.tableHeaderCell}>Category</TableCell>
                             <TableCell className={styles.tableHeaderCell}>Type</TableCell>
                             <TableCell align="right" className={styles.tableHeaderCell}>Amount</TableCell>
+                            <TableCell className={styles.tableHeaderCell}>Actions</TableCell>
                           </TableRow>
                         </TableHead>
                         <TableBody>
@@ -559,6 +610,26 @@ export default function Dashboard() {
                                   : styles.expenseAmount}
                               >
                                 {formatCurrency(transaction.amount)}
+                              </TableCell>
+                              <TableCell className={styles.tableCell}>
+                                <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                  <IconButton 
+                                    size="small" 
+                                    color="primary" 
+                                    onClick={() => handleEditTransaction(transaction)}
+                                    className={styles.editButton}
+                                  >
+                                    <EditIcon fontSize="small" />
+                                  </IconButton>
+                                  <IconButton 
+                                    size="small" 
+                                    color="error" 
+                                    onClick={() => handleDeleteTransaction(transaction)}
+                                    className={styles.deleteButton}
+                                  >
+                                    <DeleteIcon fontSize="small" />
+                                  </IconButton>
+                                </Box>
                               </TableCell>
                             </TableRow>
                           ))}
@@ -635,6 +706,64 @@ export default function Dashboard() {
         onBalanceUpdated={handleBalanceAdded}
         currentBalance={financialData.totalBalance}
       />
+      
+      {/* Delete Transaction Confirmation Dialog */}
+      <Dialog
+        open={deleteConfirmOpen}
+        onClose={handleDeleteCancel}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+        PaperProps={{
+          sx: {
+            borderRadius: '12px',
+            padding: '8px',
+          }
+        }}
+      >
+        <DialogTitle id="alert-dialog-title">
+          Confirm Transaction Deletion
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            Are you sure you want to delete this transaction? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteCancel} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleDeleteConfirm} color="error" variant="contained" autoFocus>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Edit Transaction Dialog */}
+      {selectedTransaction && (
+        <Dialog
+          open={editTransactionOpen}
+          onClose={handleEditTransactionClose}
+          maxWidth="sm"
+          fullWidth
+          PaperProps={{
+            sx: {
+              borderRadius: '12px',
+              maxHeight: '85vh',
+            }
+          }}
+        >
+          <DialogTitle>Edit Transaction</DialogTitle>
+          <DialogContent>
+            <TransactionForm
+              open={true}
+              handleClose={handleEditTransactionClose}
+              onTransactionAdded={handleEditTransactionConfirm}
+              embedded={true}
+              initialData={selectedTransaction}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </AppTheme>
   );
 }

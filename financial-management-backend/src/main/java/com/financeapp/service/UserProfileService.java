@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -167,10 +168,144 @@ public class UserProfileService {
                 .fullName(user.getUsername())
                 .joinDate(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
                 .role("User")
+                .totalBalance(BigDecimal.ZERO)
+                .currency("USD")
                 .build();
         
         UserProfile savedProfile = userProfileRepository.save(profile);
         return mapToDto(savedProfile, user);
+    }
+    
+    /**
+     * Get the total balance for a user
+     * 
+     * @param userId User ID
+     * @return Total balance
+     */
+    public BigDecimal getTotalBalance(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+        
+        UserProfile profile = userProfileRepository.findByUser(user)
+                .orElseGet(() -> {
+                    // Create default profile if none exists
+                    UserProfile newProfile = UserProfile.builder()
+                            .user(user)
+                            .fullName(user.getUsername())
+                            .joinDate(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+                            .role("User")
+                            .totalBalance(BigDecimal.ZERO)
+                            .currency("USD")
+                            .build();
+                    return userProfileRepository.save(newProfile);
+                });
+        
+        return profile.getTotalBalance();
+    }
+    
+    /**
+     * Add to the total balance
+     * 
+     * @param userId User ID
+     * @param amount Amount to add
+     * @return New total balance
+     */
+    @Transactional
+    public BigDecimal addToTotalBalance(Long userId, BigDecimal amount) {
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Amount must be positive to add to balance");
+        }
+        
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+        
+        UserProfile profile = userProfileRepository.findByUser(user)
+                .orElseGet(() -> {
+                    // Create default profile if none exists
+                    return UserProfile.builder()
+                            .user(user)
+                            .fullName(user.getUsername())
+                            .joinDate(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+                            .role("User")
+                            .totalBalance(BigDecimal.ZERO)
+                            .currency("USD")
+                            .build();
+                });
+        
+        // Add to total balance
+        BigDecimal newBalance = profile.getTotalBalance().add(amount);
+        profile.setTotalBalance(newBalance);
+        userProfileRepository.save(profile);
+        
+        return newBalance;
+    }
+    
+    /**
+     * Subtract from the total balance
+     * 
+     * @param userId User ID
+     * @param amount Amount to subtract
+     * @return New total balance
+     */
+    @Transactional
+    public BigDecimal subtractFromTotalBalance(Long userId, BigDecimal amount) {
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Amount must be positive to subtract from balance");
+        }
+        
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+        
+        UserProfile profile = userProfileRepository.findByUser(user)
+                .orElseThrow(() -> new RuntimeException("User profile not found"));
+        
+        // Check if there's enough balance
+        if (profile.getTotalBalance().compareTo(amount) < 0) {
+            throw new IllegalArgumentException("Insufficient total balance");
+        }
+        
+        // Subtract from total balance
+        BigDecimal newBalance = profile.getTotalBalance().subtract(amount);
+        profile.setTotalBalance(newBalance);
+        userProfileRepository.save(profile);
+        
+        return newBalance;
+    }
+    
+    /**
+     * Update total balance to a new amount
+     * 
+     * @param userId User ID
+     * @param newBalance New balance amount
+     * @return Updated total balance
+     */
+    @Transactional
+    public BigDecimal updateTotalBalance(Long userId, BigDecimal newBalance) {
+        if (newBalance.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Total balance cannot be negative");
+        }
+        
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+        
+        UserProfile profile = userProfileRepository.findByUser(user)
+                .orElseGet(() -> {
+                    // Create default profile if none exists
+                    return UserProfile.builder()
+                            .user(user)
+                            .fullName(user.getUsername())
+                            .joinDate(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+                            .role("User")
+                            .totalBalance(BigDecimal.ZERO)
+                            .currency("USD")
+                            .build();
+                });
+        
+        // Set the new total balance
+        profile.setTotalBalance(newBalance);
+        userProfileRepository.save(profile);
+        
+        return newBalance;
     }
     
     /**
@@ -194,6 +329,8 @@ public class UserProfileService {
                 .joinDate(profile.getJoinDate())
                 .role(profile.getRole())
                 .profilePictureUrl(profilePictureUrl)
+                .totalBalance(profile.getTotalBalance())
+                .currency(profile.getCurrency())
                 .build();
     }
 } 

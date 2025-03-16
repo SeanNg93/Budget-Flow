@@ -24,34 +24,34 @@ axiosInstance.interceptors.request.use(
   }
 );
 
-// Account services
-export const getAccounts = () => {
-  return axiosInstance.get('/accounts');
+// Wallet services (previously Account services)
+export const getWallets = () => {
+  return axiosInstance.get('/wallets');
 };
 
-export const getAccountById = (id) => {
-  return axiosInstance.get(`/accounts/${id}`);
+export const getWalletById = (id) => {
+  return axiosInstance.get(`/wallets/${id}`);
 };
 
-export const createAccount = (accountData) => {
-  return axiosInstance.post('/accounts', accountData);
+export const createWallet = (walletData) => {
+  return axiosInstance.post('/wallets', walletData);
 };
 
-export const updateAccount = (id, accountData) => {
-  return axiosInstance.put(`/accounts/${id}`, accountData);
+export const updateWallet = (id, walletData) => {
+  return axiosInstance.put(`/wallets/${id}`, walletData);
 };
 
-export const deleteAccount = (id) => {
-  return axiosInstance.delete(`/accounts/${id}`);
+export const deleteWallet = (id) => {
+  return axiosInstance.delete(`/wallets/${id}`);
 };
 
 export const getTotalBalance = () => {
-  return axiosInstance.get('/accounts/total-balance');
+  return axiosInstance.get('/wallets/total-balance');
 };
 
 export const addToTotalBalance = (amount) => {
   const token = localStorage.getItem('userToken');
-  return axios.post(`${API_URL}/accounts/add-to-balance`, 
+  return axios.post(`${API_URL}/wallets/add-to-balance`, 
     { amount }, 
     { 
       headers: { 
@@ -64,7 +64,7 @@ export const addToTotalBalance = (amount) => {
 
 export const updateTotalBalance = (amount) => {
   const token = localStorage.getItem('userToken');
-  return axios.put(`${API_URL}/accounts/update-balance`, 
+  return axios.put(`${API_URL}/wallets/update-balance`, 
     { amount }, 
     { 
       headers: { 
@@ -75,6 +75,13 @@ export const updateTotalBalance = (amount) => {
   );
 };
 
+// For backward compatibility - renamed functions to maintain API
+export const getAccounts = getWallets;
+export const getAccountById = getWalletById;
+export const createAccount = createWallet;
+export const updateAccount = updateWallet;
+export const deleteAccount = deleteWallet;
+
 // Transaction services
 export const getTransactions = () => {
   return axiosInstance.get('/transactions');
@@ -84,8 +91,8 @@ export const getTransactionById = (id) => {
   return axiosInstance.get(`/transactions/${id}`);
 };
 
-export const createTransaction = (transactionData, accountId) => {
-  return axiosInstance.post(`/transactions?accountId=${accountId}`, transactionData);
+export const createTransaction = (transactionData, walletId) => {
+  return axiosInstance.post(`/transactions?walletId=${walletId}`, transactionData);
 };
 
 export const updateTransaction = (id, transactionData) => {
@@ -145,20 +152,34 @@ export const getCategoriesByType = (type) => {
 
 // Export the service as a default object
 const FinanceService = {
+  // New wallet functions
+  getWallets,
+  getWalletById,
+  createWallet,
+  updateWallet,
+  deleteWallet,
+  
+  // Legacy account functions for backward compatibility
   getAccounts,
   getAccountById,
   createAccount,
   updateAccount,
   deleteAccount,
+  
+  // Balance functions
   getTotalBalance,
   addToTotalBalance,
   updateTotalBalance,
+  
+  // Transaction functions
   getTransactions,
   getTransactionById,
   createTransaction,
   updateTransaction,
   deleteTransaction,
   getFinancialSummary,
+  
+  // Category functions
   getCategories,
   getCategoryById,
   createCategory,

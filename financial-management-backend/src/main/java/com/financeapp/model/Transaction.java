@@ -24,7 +24,7 @@ public class Transaction {
 
     @ManyToOne
     @JoinColumn(name = "account_id", nullable = false)
-    private Account account;
+    private Wallet wallet;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "transaction_type", nullable = false)

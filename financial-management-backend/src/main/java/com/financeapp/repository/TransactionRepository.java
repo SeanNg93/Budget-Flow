@@ -1,6 +1,6 @@
 package com.financeapp.repository;
 
-import com.financeapp.model.Account;
+import com.financeapp.model.Wallet;
 import com.financeapp.model.Transaction;
 import com.financeapp.model.Transaction.TransactionType;
 import com.financeapp.model.User;
@@ -17,8 +17,8 @@ import java.util.List;
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
     List<Transaction> findByUser(User user);
     List<Transaction> findByUserId(Long userId);
-    List<Transaction> findByAccount(Account account);
-    List<Transaction> findByAccountId(Long accountId);
+    List<Transaction> findByWallet(Wallet wallet);
+    List<Transaction> findByWalletId(Long walletId);
     
     List<Transaction> findByUserAndTransactionDateBetween(User user, LocalDateTime startDate, LocalDateTime endDate);
     

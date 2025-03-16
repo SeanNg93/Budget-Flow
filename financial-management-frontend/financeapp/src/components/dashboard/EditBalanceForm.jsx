@@ -19,12 +19,29 @@ const EditBalanceForm = ({ open, handleClose, onBalanceUpdated, currentBalance }
   const [amount, setAmount] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [totalWalletBalance, setTotalWalletBalance] = useState(0);
 
   useEffect(() => {
     if (open && currentBalance) {
       setAmount(currentBalance.toString());
+      fetchWalletsTotalBalance();
     }
   }, [open, currentBalance]);
+
+  const fetchWalletsTotalBalance = async () => {
+    setLoading(true);
+    try {
+      const response = await FinanceService.getAccounts();
+      const accounts = response.data || [];
+      const walletsTotal = accounts.reduce((sum, account) => sum + account.balance, 0);
+      setTotalWalletBalance(walletsTotal);
+    } catch (err) {
+      console.error('Error fetching wallets:', err);
+      setError('Failed to calculate wallet totals. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleChange = (e) => {
     setAmount(e.target.value);
@@ -36,6 +53,13 @@ const EditBalanceForm = ({ open, handleClose, onBalanceUpdated, currentBalance }
       setError('Please enter a valid amount (0 or greater)');
       return false;
     }
+
+    const newBalance = parseFloat(amount);
+    if (newBalance < totalWalletBalance) {
+      setError(`Total balance can't be less than the sum of your wallets (${totalWalletBalance.toFixed(2)})`);
+      return false;
+    }
+    
     return true;
   };
 
@@ -86,6 +110,14 @@ const EditBalanceForm = ({ open, handleClose, onBalanceUpdated, currentBalance }
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
           {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
           
+          <Box sx={{ mb: 2 }}>
+            <Alert severity="info">
+              Wallet total: {totalWalletBalance.toFixed(2)}
+              <br/>
+              Available for allocation: {(parseFloat(amount || 0) - totalWalletBalance).toFixed(2)}
+            </Alert>
+          </Box>
+          
           <TextField
             autoFocus
             margin="dense"
@@ -99,9 +131,9 @@ const EditBalanceForm = ({ open, handleClose, onBalanceUpdated, currentBalance }
               startAdornment: <InputAdornment position="start">$</InputAdornment>,
             }}
             disabled={loading}
-            inputProps={{ step: "0.01", min: "0" }}
+            inputProps={{ step: "0.01", min: totalWalletBalance }}
           />
-          <FormHelperText>Enter the new total balance amount</FormHelperText>
+          <FormHelperText>Enter the new total balance amount (min: {totalWalletBalance.toFixed(2)})</FormHelperText>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose} disabled={loading}>Cancel</Button>
