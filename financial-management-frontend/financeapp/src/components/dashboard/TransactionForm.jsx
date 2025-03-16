@@ -216,10 +216,10 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
   // Form content that will be used in both embedded and non-embedded modes
   const formContent = (
     <>
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {error && <Alert severity="error" sx={{ mb: 1, py: 0.5 }}>{error}</Alert>}
       
-      <Grid container spacing={2} sx={{ mt: 0.5 }}>
-        <Grid item xs={12} sm={6}>
+      <Grid container spacing={1} sx={{ mt: 0 }}>
+        <Grid item xs={6}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
             <FormControl fullWidth error={!!errors.accountId} size="small" sx={{ mb: 1 }}>
               <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 500, color: 'text.secondary' }}>
@@ -254,7 +254,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
           </Box>
         </Grid>
         
-        <Grid item xs={12} sm={6}>
+        <Grid item xs={6}>
           <FormControl fullWidth error={!!errors.transactionType} size="small" sx={{ mb: 1 }}>
             <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 500, color: 'text.secondary' }}>
               Type
@@ -274,7 +274,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
           </FormControl>
         </Grid>
         
-        <Grid item xs={12} sm={6}>
+        <Grid item xs={6}>
           <FormControl fullWidth error={!!errors.amount} size="small" sx={{ mb: 1 }}>
             <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 500, color: 'text.secondary' }}>
               Amount
@@ -304,7 +304,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
           </FormControl>
         </Grid>
         
-        <Grid item xs={12} sm={6}>
+        <Grid item xs={6}>
           <FormControl fullWidth error={!!errors.transactionDate} size="small" sx={{ mb: 1 }}>
             <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 500, color: 'text.secondary' }}>
               Date
@@ -354,7 +354,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
         
         <Grid item xs={12}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <FormControl fullWidth error={!!errors.categoryId} size="small" sx={{ mb: 1 }}>
+            <FormControl fullWidth error={!!errors.categoryId} size="small" sx={{ mb: 0 }}>
               <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 500, color: 'text.secondary' }}>
                 Category
               </Typography>
@@ -402,7 +402,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
         </Grid>
       </Grid>
       
-      <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+      <Box sx={{ mt: 1.5, display: 'flex', justifyContent: 'flex-end' }}>
         {!embedded && (
           <Button 
             onClick={handleClose} 
@@ -423,6 +423,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
           onClick={handleSubmit}
           disabled={submitting || loading}
           startIcon={submitting ? <CircularProgress size={20} /> : null}
+          size="small"
           sx={{ 
             borderRadius: '8px',
             textTransform: 'none',
@@ -438,7 +439,8 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
       <WalletForm
         open={accountFormOpen}
         handleClose={() => setAccountFormOpen(false)}
-        onAccountAdded={handleAccountAdded}
+        onWalletAdded={handleAccountAdded}
+        compact={true}
       />
 
       {/* Category Form Dialog */}
@@ -446,6 +448,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
         open={categoryFormOpen}
         handleClose={() => setCategoryFormOpen(false)}
         onCategoryAdded={handleCategoryAdded}
+        compact={true}
       />
     </>
   );
@@ -465,12 +468,15 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
       PaperProps={{
         sx: {
           borderRadius: '12px',
-          boxShadow: '0px 8px 24px rgba(0, 0, 0, 0.15)'
+          boxShadow: '0px 8px 24px rgba(0, 0, 0, 0.15)',
+          width: '450px',
+          maxHeight: '85vh',
+          margin: '16px'
         }
       }}
     >
-      <DialogTitle sx={{ pb: 1, fontWeight: 600 }}>Add Transaction</DialogTitle>
-      <DialogContent sx={{ pt: 0 }}>
+      <DialogTitle sx={{ pb: 1, pt: 1.5, fontWeight: 600 }}>Add Transaction</DialogTitle>
+      <DialogContent sx={{ pt: 0, pb: 1.5, px: 2 }}>
         {formContent}
       </DialogContent>
     </Dialog>

@@ -82,12 +82,17 @@ const FinanceActionPanel = ({
       open={open} 
       onClose={handleClose}
       fullWidth
-      maxWidth="md"
+      maxWidth="sm"
       PaperProps={{
-        className: styles.dialogPaper
+        className: styles.dialogPaper,
+        sx: {
+          width: '450px',
+          maxHeight: '85vh',
+          margin: '16px'
+        }
       }}
     >
-      <DialogTitle className={styles.dialogTitle}>
+      <DialogTitle className={styles.dialogTitle} sx={{ py: 1.5 }}>
         <Box className={styles.headerContainer}>
           <Typography variant="h6" className={styles.title}>
             {getDialogTitle()}
@@ -103,6 +108,7 @@ const FinanceActionPanel = ({
           value={activeTab} 
           onChange={handleTabChange}
           aria-label="finance action tabs"
+          variant="fullWidth"
         >
           <Tab className={styles.tab} label="Transaction" />
           <Tab className={styles.tab} label="Wallet" />
@@ -110,7 +116,7 @@ const FinanceActionPanel = ({
         </Tabs>
       </Box>
       
-      <DialogContent className={styles.dialogContent}>
+      <DialogContent className={styles.dialogContent} sx={{ py: 1.5, px: 2 }}>
         {/* Transaction Tab */}
         {activeTab === 0 && (
           <TransactionForm 

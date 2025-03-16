@@ -6,10 +6,12 @@
 
 .dialogTitle {
   padding-bottom: 8px;
+  padding-top: 12px;
 }
 
 .dialogContent {
   padding-top: 8px;
+  padding-bottom: 12px;
 }
 
 .headerContainer {
@@ -20,26 +22,28 @@
 
 .title {
   font-weight: 600;
+  font-size: 1.1rem;
 }
 
 .loadingContainer {
   display: flex;
   justify-content: center;
-  padding: 24px;
+  padding: 16px;
 }
 
 .emptyMessage {
   text-align: center;
-  padding: 24px 0;
+  padding: 16px 0;
   color: rgba(0, 0, 0, 0.6);
 }
 
 .walletList {
   width: 100%;
+  padding: 0;
 }
 
 .walletItem {
-  padding: 12px 0;
+  padding: 8px 0;
   border-radius: 8px;
 }
 
@@ -78,28 +82,30 @@
 
 .tabsContainer {
   border-bottom: 1px solid rgba(0, 0, 0, 0.12);
-  padding: 0 24px;
+  padding: 0 16px;
 }
 
 .tab {
   text-transform: none;
   font-weight: 500;
-  min-height: 48px;
+  min-height: 40px;
+  font-size: 0.9rem;
 }
 
 .optionsContainer {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 16px 0;
+  gap: 12px;
+  padding: 8px 0;
 }
 
 .optionButton {
-  padding: 12px 0;
+  padding: 8px 0;
   border-radius: 8px;
   text-transform: none;
   font-weight: 500;
   justify-content: flex-start;
+  font-size: 0.85rem;
 }
 
 .primaryButton {
@@ -107,16 +113,19 @@
 }
 
 .backButton {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   border-radius: 8px;
   text-transform: none;
   font-weight: 500;
+  font-size: 0.85rem;
+  padding: 4px 8px;
 }
 
 /* Delete confirmation dialog */
 .confirmDialog {
   border-radius: 12px;
   box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.15);
+  width: 400px !important;
 }
 
 .confirmTitle {
@@ -125,7 +134,7 @@
 }
 
 .confirmActions {
-  padding: 0 24px 16px 24px;
+  padding: 0 16px 12px 16px;
 }
 
 .deleteButton {
