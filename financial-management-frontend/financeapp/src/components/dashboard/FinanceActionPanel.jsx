@@ -8,7 +8,8 @@ import {
   Typography,
   Tabs,
   Tab,
-  Button
+  Button,
+  Grid
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
@@ -123,32 +124,42 @@ const FinanceActionPanel = ({
         {/* Wallet Tab */}
         {activeTab === 1 && !showWalletManage && (
           <Box className={styles.optionsContainer}>
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<AccountBalanceWalletIcon />}
-              onClick={() => setShowWalletManage(false)}
-              className={`${styles.optionButton} ${styles.primaryButton}`}
-            >
-              Add New Wallet
-            </Button>
+            <Grid container spacing={2} sx={{ mb: 2 }}>
+              <Grid item xs={6}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  startIcon={<AccountBalanceWalletIcon />}
+                  onClick={() => setShowWalletManage(false)}
+                  className={`${styles.optionButton} ${styles.primaryButton}`}
+                  fullWidth
+                  size="small"
+                >
+                  Add New Wallet
+                </Button>
+              </Grid>
+              <Grid item xs={6}>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  startIcon={<SettingsIcon />}
+                  onClick={handleShowWalletManage}
+                  className={styles.optionButton}
+                  fullWidth
+                  size="small"
+                >
+                  Manage Wallets
+                </Button>
+              </Grid>
+            </Grid>
             
-            <Button
-              variant="outlined"
-              color="primary"
-              startIcon={<SettingsIcon />}
-              onClick={handleShowWalletManage}
-              className={styles.optionButton}
-            >
-              Manage Existing Wallets
-            </Button>
-            
-            <Box sx={{ mt: 2 }}>
+            <Box>
               <WalletForm 
                 open={true} 
                 handleClose={handleWalletClose}
                 onWalletAdded={onWalletAdded}
                 embedded={true}
+                compact={true}
               />
             </Box>
           </Box>
@@ -177,32 +188,42 @@ const FinanceActionPanel = ({
         {/* Category Tab */}
         {activeTab === 2 && !showCategoryManage && (
           <Box className={styles.optionsContainer}>
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<CategoryIcon />}
-              onClick={() => setShowCategoryManage(false)}
-              className={`${styles.optionButton} ${styles.primaryButton}`}
-            >
-              Add New Category
-            </Button>
+            <Grid container spacing={2} sx={{ mb: 2 }}>
+              <Grid item xs={6}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  startIcon={<CategoryIcon />}
+                  onClick={() => setShowCategoryManage(false)}
+                  className={`${styles.optionButton} ${styles.primaryButton}`}
+                  fullWidth
+                  size="small"
+                >
+                  Add New Category
+                </Button>
+              </Grid>
+              <Grid item xs={6}>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  startIcon={<SettingsIcon />}
+                  onClick={handleShowCategoryManage}
+                  className={styles.optionButton}
+                  fullWidth
+                  size="small"
+                >
+                  Manage Categories
+                </Button>
+              </Grid>
+            </Grid>
             
-            <Button
-              variant="outlined"
-              color="primary"
-              startIcon={<SettingsIcon />}
-              onClick={handleShowCategoryManage}
-              className={styles.optionButton}
-            >
-              Manage Existing Categories
-            </Button>
-            
-            <Box sx={{ mt: 2 }}>
+            <Box>
               <CategoryForm 
                 open={true} 
                 handleClose={handleCategoryClose}
                 onCategoryAdded={onCategoryAdded}
                 embedded={true}
+                compact={true}
               />
             </Box>
           </Box>

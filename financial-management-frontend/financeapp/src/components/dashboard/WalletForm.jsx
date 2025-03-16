@@ -20,7 +20,7 @@ import {
 } from '@mui/material';
 import FinanceService from '../../services/FinanceService';
 
-const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false }) => {
+const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compact = false }) => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     accountName: '',
@@ -116,89 +116,175 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false }) => {
   // Form content that will be used in both embedded and non-embedded modes
   const formContent = (
     <>
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {error && <Alert severity="error" sx={{ mb: compact ? 1 : 2 }}>{error}</Alert>}
       
-      <Grid container spacing={2} sx={{ mt: 0.5 }}>
-        <Grid item xs={12}>
-          <FormControl fullWidth error={!!errors.accountName} size="small" sx={{ mb: 1 }}>
-            <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 500, color: 'text.secondary' }}>
-              Wallet Name
-            </Typography>
-            <TextField
-              name="accountName"
-              value={formData.accountName}
-              onChange={handleChange}
-              placeholder="My Wallet"
-              error={!!errors.accountName}
-              helperText={errors.accountName}
-              disabled={loading}
-              size="small"
-              sx={{ 
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: '8px'
-                }
-              }}
-            />
-          </FormControl>
-        </Grid>
-        
-        <Grid item xs={12}>
-          <FormControl fullWidth error={!!errors.accountType} size="small" sx={{ mb: 1 }}>
-            <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 500, color: 'text.secondary' }}>
-              Wallet Type
-            </Typography>
-            <Select
-              name="accountType"
-              value={formData.accountType}
-              onChange={handleChange}
-              displayEmpty
-              disabled={loading}
-              sx={{ borderRadius: '8px' }}
-            >
-              <MenuItem value="Checking">Checking</MenuItem>
-              <MenuItem value="Savings">Savings</MenuItem>
-              <MenuItem value="Cash">Cash</MenuItem>
-              <MenuItem value="Credit_Card">Credit Card</MenuItem>
-              <MenuItem value="Investment">Investment</MenuItem>
-              <MenuItem value="Digital_Wallet">Digital Wallet</MenuItem>
-              <MenuItem value="Crypto">Cryptocurrency</MenuItem>
-            </Select>
-            {errors.accountType && <FormHelperText>{errors.accountType}</FormHelperText>}
-          </FormControl>
-        </Grid>
-        
-        <Grid item xs={12}>
-          <FormControl fullWidth error={!!errors.balance} size="small" sx={{ mb: 1 }}>
-            <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 500, color: 'text.secondary' }}>
-              Initial Balance
-            </Typography>
-            <TextField
-              name="balance"
-              value={formData.balance}
-              onChange={handleChange}
-              placeholder="0.00"
-              error={!!errors.balance}
-              helperText={errors.balance}
-              disabled={loading}
-              size="small"
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    $
-                  </InputAdornment>
-                ),
-              }}
-              sx={{ 
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: '8px'
-                }
-              }}
-            />
-          </FormControl>
-        </Grid>
+      <Grid container spacing={compact ? 1 : 2} sx={{ mt: compact ? 0 : 0.5 }}>
+        {compact ? (
+          // Compact layout - 2 fields per row
+          <>
+            <Grid item xs={6}>
+              <FormControl fullWidth error={!!errors.accountName} size="small" sx={{ mb: 1 }}>
+                <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 500, color: 'text.secondary' }}>
+                  Wallet Name
+                </Typography>
+                <TextField
+                  name="accountName"
+                  value={formData.accountName}
+                  onChange={handleChange}
+                  placeholder="My Wallet"
+                  error={!!errors.accountName}
+                  helperText={errors.accountName}
+                  disabled={loading}
+                  size="small"
+                  sx={{ 
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '8px'
+                    }
+                  }}
+                />
+              </FormControl>
+            </Grid>
+            
+            <Grid item xs={6}>
+              <FormControl fullWidth error={!!errors.accountType} size="small" sx={{ mb: 1 }}>
+                <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 500, color: 'text.secondary' }}>
+                  Wallet Type
+                </Typography>
+                <Select
+                  name="accountType"
+                  value={formData.accountType}
+                  onChange={handleChange}
+                  displayEmpty
+                  disabled={loading}
+                  sx={{ borderRadius: '8px' }}
+                >
+                  <MenuItem value="Checking">Checking</MenuItem>
+                  <MenuItem value="Savings">Savings</MenuItem>
+                  <MenuItem value="Cash">Cash</MenuItem>
+                  <MenuItem value="Credit_Card">Credit Card</MenuItem>
+                  <MenuItem value="Investment">Investment</MenuItem>
+                  <MenuItem value="Digital_Wallet">Digital Wallet</MenuItem>
+                  <MenuItem value="Crypto">Cryptocurrency</MenuItem>
+                </Select>
+                {errors.accountType && <FormHelperText>{errors.accountType}</FormHelperText>}
+              </FormControl>
+            </Grid>
+            
+            <Grid item xs={12}>
+              <FormControl fullWidth error={!!errors.balance} size="small" sx={{ mb: 0 }}>
+                <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 500, color: 'text.secondary' }}>
+                  Initial Balance
+                </Typography>
+                <TextField
+                  name="balance"
+                  value={formData.balance}
+                  onChange={handleChange}
+                  placeholder="0.00"
+                  error={!!errors.balance}
+                  helperText={errors.balance}
+                  disabled={loading}
+                  size="small"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        $
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{ 
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '8px'
+                    }
+                  }}
+                />
+              </FormControl>
+            </Grid>
+          </>
+        ) : (
+          // Original layout - 1 field per row
+          <>
+            <Grid item xs={12}>
+              <FormControl fullWidth error={!!errors.accountName} size="small" sx={{ mb: 1 }}>
+                <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 500, color: 'text.secondary' }}>
+                  Wallet Name
+                </Typography>
+                <TextField
+                  name="accountName"
+                  value={formData.accountName}
+                  onChange={handleChange}
+                  placeholder="My Wallet"
+                  error={!!errors.accountName}
+                  helperText={errors.accountName}
+                  disabled={loading}
+                  size="small"
+                  sx={{ 
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '8px'
+                    }
+                  }}
+                />
+              </FormControl>
+            </Grid>
+            
+            <Grid item xs={12}>
+              <FormControl fullWidth error={!!errors.accountType} size="small" sx={{ mb: 1 }}>
+                <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 500, color: 'text.secondary' }}>
+                  Wallet Type
+                </Typography>
+                <Select
+                  name="accountType"
+                  value={formData.accountType}
+                  onChange={handleChange}
+                  displayEmpty
+                  disabled={loading}
+                  sx={{ borderRadius: '8px' }}
+                >
+                  <MenuItem value="Checking">Checking</MenuItem>
+                  <MenuItem value="Savings">Savings</MenuItem>
+                  <MenuItem value="Cash">Cash</MenuItem>
+                  <MenuItem value="Credit_Card">Credit Card</MenuItem>
+                  <MenuItem value="Investment">Investment</MenuItem>
+                  <MenuItem value="Digital_Wallet">Digital Wallet</MenuItem>
+                  <MenuItem value="Crypto">Cryptocurrency</MenuItem>
+                </Select>
+                {errors.accountType && <FormHelperText>{errors.accountType}</FormHelperText>}
+              </FormControl>
+            </Grid>
+            
+            <Grid item xs={12}>
+              <FormControl fullWidth error={!!errors.balance} size="small" sx={{ mb: 1 }}>
+                <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 500, color: 'text.secondary' }}>
+                  Initial Balance
+                </Typography>
+                <TextField
+                  name="balance"
+                  value={formData.balance}
+                  onChange={handleChange}
+                  placeholder="0.00"
+                  error={!!errors.balance}
+                  helperText={errors.balance}
+                  disabled={loading}
+                  size="small"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        $
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{ 
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '8px'
+                    }
+                  }}
+                />
+              </FormControl>
+            </Grid>
+          </>
+        )}
       </Grid>
       
-      <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+      <Box sx={{ mt: compact ? 1 : 2, display: 'flex', justifyContent: 'flex-end' }}>
         {!embedded && (
           <Button 
             onClick={handleClose} 
@@ -219,6 +305,7 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false }) => {
           onClick={handleSubmit}
           disabled={submitting || loading}
           startIcon={submitting ? <CircularProgress size={20} /> : null}
+          size={compact ? "small" : "medium"}
           sx={{ 
             borderRadius: '8px',
             textTransform: 'none',
