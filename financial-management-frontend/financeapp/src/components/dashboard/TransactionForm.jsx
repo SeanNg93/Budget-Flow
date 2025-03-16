@@ -40,7 +40,7 @@ import WalletForm from './WalletForm';
 import CategoryForm from './CategoryForm';
 import styles from '../../styles/transactionForm.module.css';
 
-const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = false }) => {
+const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = false, initialData = null }) => {
   const [accounts, setAccounts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -110,6 +110,19 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
     }
   }, [open]);
   
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        accountId: initialData.wallet.id.toString(),
+        transactionType: initialData.transactionType,
+        amount: initialData.amount.toString(),
+        description: initialData.description || '',
+        categoryId: initialData.category ? initialData.category.id.toString() : '',
+        transactionDate: initialData.transactionDate ? new Date(initialData.transactionDate) : new Date()
+      });
+    }
+  }, [initialData]);
+  
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -166,21 +179,40 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
     
     try {
       const transactionData = {
-        ...formData,
+        transactionType: formData.transactionType,
         amount: parseFloat(formData.amount),
-        categoryId: formData.categoryId || null
+        description: formData.description,
+        categoryId: formData.categoryId ? parseInt(formData.categoryId, 10) : null,
+        transactionDate: formData.transactionDate
       };
-      await FinanceService.createTransaction(transactionData, formData.accountId);
+      
+      let response;
+      
+      if (initialData) {
+        // Update existing transaction
+        response = await FinanceService.updateTransaction(initialData.id, transactionData);
+      } else {
+        // Create new transaction
+        response = await FinanceService.createTransaction(
+          transactionData, 
+          parseInt(formData.accountId, 10)
+        );
+      }
+      
+      // Reset form
       resetForm();
+      
+      // Close dialog and notify parent
       if (onTransactionAdded) {
         onTransactionAdded();
       }
+      
       if (!embedded) {
         handleClose();
       }
     } catch (err) {
-      console.error('Error creating transaction:', err);
-      setError(err.response?.data?.message || 'Failed to create transaction. Please try again.');
+      console.error('Error processing transaction:', err);
+      setError(err.response?.data?.message || 'Failed to process transaction. Please try again.');
     } finally {
       setSubmitting(false);
     }
@@ -844,25 +876,20 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
       open={open} 
       onClose={handleClose} 
       maxWidth="sm" 
-      fullWidth
+      fullWidth={!embedded}
       PaperProps={{
-        className: styles.dialogPaper,
-        sx: {
-          width: '450px',
-          maxHeight: '85vh',
-          margin: '16px'
-        }
+        className: styles.dialogPaper
       }}
     >
       <DialogTitle className={styles.dialogTitle}>
         {formData.transactionType === 'EXPENSE' ? 
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <ArrowUpwardIcon sx={{ mr: 1, color: '#ff3b30', fontSize: '1.3rem' }} />
-            Add Expense
+            {initialData ? 'Edit Expense' : 'Add Expense'}
           </Box> : 
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <ArrowDownwardIcon sx={{ mr: 1, color: '#34c759', fontSize: '1.3rem' }} />
-            Add Income
+            {initialData ? 'Edit Income' : 'Add Income'}
           </Box>
         }
       </DialogTitle>

@@ -2,7 +2,7 @@ package com.financeapp.controller;
 
 import com.financeapp.model.Transaction;
 import com.financeapp.model.User;
-import com.financeapp.service.AccountService;
+import com.financeapp.service.WalletService;
 import com.financeapp.service.TransactionService;
 import com.financeapp.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +26,7 @@ import java.util.Map;
 public class TransactionController {
 
     private final TransactionService transactionService;
-    private final AccountService accountService;
+    private final WalletService walletService;
     private final SecurityUtils securityUtils;
 
     /**
@@ -88,18 +88,18 @@ public class TransactionController {
     @PostMapping
     public ResponseEntity<Transaction> createTransaction(
             @RequestBody Transaction transaction,
-            @RequestParam Long accountId) {
+            @RequestParam Long walletId) {
         try {
             User currentUser = securityUtils.getCurrentUser();
             if (currentUser == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
             
-            log.info("Creating transaction for user: {} in account: {}", 
-                    currentUser.getUsername(), accountId);
+            log.info("Creating transaction for user: {} in wallet: {}", 
+                    currentUser.getUsername(), walletId);
             
             Transaction createdTransaction = transactionService.createTransaction(
-                    transaction, currentUser.getId(), accountId);
+                    transaction, currentUser.getId(), walletId);
             
             log.info("Transaction created successfully with ID: {}", createdTransaction.getId());
             return new ResponseEntity<>(createdTransaction, HttpStatus.CREATED);
@@ -185,7 +185,9 @@ public class TransactionController {
             log.info("Getting financial summary for user: {}", currentUser.getUsername());
             
             Map<String, BigDecimal> summary = new HashMap<>();
-            summary.put("totalBalance", accountService.getTotalBalance(currentUser.getId()));
+            summary.put("totalBalance", walletService.getTotalBalance(currentUser.getId()));
+            summary.put("allocatedBalance", walletService.getAllocatedBalance(currentUser.getId()));
+            summary.put("availableBalance", walletService.getAvailableBalance(currentUser.getId()));
             summary.put("totalIncome", transactionService.getTotalIncome(currentUser.getId()));
             summary.put("totalExpense", transactionService.getTotalExpense(currentUser.getId()));
             summary.put("netSavings", transactionService.getNetSavings(currentUser.getId()));

@@ -3,6 +3,8 @@ package com.financeapp.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Entity
 @Table(name = "user_profiles")
 @Getter
@@ -33,6 +35,14 @@ public class UserProfile {
     // Default role/position
     private String role;
     
+    // Total balance field (represents all available money)
+    @Column(name = "total_balance", nullable = false)
+    private BigDecimal totalBalance = BigDecimal.ZERO;
+    
+    // Currency for the total balance
+    @Column(name = "currency", length = 3, nullable = false)
+    private String currency = "USD";
+    
     // Timestamp fields
     @Column(name = "created_at")
     private java.time.LocalDateTime createdAt;
@@ -44,6 +54,14 @@ public class UserProfile {
     protected void onCreate() {
         createdAt = java.time.LocalDateTime.now();
         updatedAt = createdAt;
+        
+        // Initialize default values if not set
+        if (totalBalance == null) {
+            totalBalance = BigDecimal.ZERO;
+        }
+        if (currency == null || currency.isEmpty()) {
+            currency = "USD";
+        }
     }
     
     @PreUpdate

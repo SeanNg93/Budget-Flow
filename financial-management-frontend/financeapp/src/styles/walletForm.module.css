@@ -1,0 +1,84 @@
+/* WalletForm Styles */
+
+/* Main container */
+.formContainer {
+  width: 100%;
+  padding: 0 4px;
+}
+
+/* Alert styles */
+.alertContainer {
+  margin-bottom: 16px;
+}
+
+.alertCompact {
+  margin-bottom: 8px;
+}
+
+/* Form control */
+.formControl {
+  margin-bottom: 8px;
+  width: 100%;
+}
+
+/* Typography */
+.fieldLabel {
+  margin-bottom: 4px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+/* Input Fields */
+.textField input,
+.selectField {
+  border-radius: 8px;
+}
+
+.textField:hover,
+.selectField:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Buttons */
+.buttonContainer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.buttonContainerCompact {
+  margin-top: 8px;
+}
+
+.cancelButton {
+  margin-right: 8px;
+  border-radius: 8px;
+  text-transform: none;
+  font-weight: 500;
+}
+
+.saveButton {
+  border-radius: 8px;
+  text-transform: none;
+  font-weight: 500;
+  box-shadow: none;
+}
+
+.saveButtonSmall {
+  font-size: 0.85rem;
+}
+
+/* Dialog styles */
+.dialogPaper {
+  border-radius: 12px;
+  box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.dialogTitle {
+  padding-bottom: 8px;
+  font-weight: 600;
+}
+
+.dialogContent {
+  padding-top: 0;
+} 

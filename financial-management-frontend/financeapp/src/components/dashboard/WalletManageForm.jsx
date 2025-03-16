@@ -21,7 +21,8 @@ import {
   ListItemSecondaryAction,
   Divider,
   DialogActions,
-  DialogContentText
+  DialogContentText,
+  InputAdornment,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -38,6 +39,11 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
   const [editMode, setEditMode] = useState(false);
   const [editWalletId, setEditWalletId] = useState(null);
   const [editWalletName, setEditWalletName] = useState('');
+  const [editWalletBalance, setEditWalletBalance] = useState('');
+  const [originalBalance, setOriginalBalance] = useState(0);
+  const [totalBalance, setTotalBalance] = useState(0);
+  const [availableBalance, setAvailableBalance] = useState(0);
+  const [balanceError, setBalanceError] = useState('');
   
   // Delete confirmation states
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -47,40 +53,104 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
 
   useEffect(() => {
     if (open) {
-      fetchWallets();
+      fetchFinancialData();
     }
   }, [open]);
 
-  const fetchWallets = async () => {
+  const fetchFinancialData = async () => {
     setLoading(true);
     setError('');
     
     try {
+      // Fetch financial summary to get total balance
+      const summaryResponse = await FinanceService.getFinancialSummary();
+      const totalBalance = summaryResponse.data.totalBalance || 0;
+      setTotalBalance(totalBalance);
+      
+      // Fetch wallets
       const response = await FinanceService.getAccounts();
       setWallets(response.data || []);
+      
+      // Calculate available balance
+      calculateAvailableBalance(totalBalance, response.data || [], null);
     } catch (err) {
-      console.error('Error fetching wallets:', err);
+      console.error('Error fetching data:', err);
       setError('Failed to load wallets. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
+  const calculateAvailableBalance = (total, walletsList, excludeWalletId = null) => {
+    const usedBalance = walletsList.reduce((sum, wallet) => {
+      // Skip the wallet being edited when calculating used balance
+      if (wallet.id !== excludeWalletId) {
+        return sum + wallet.balance;
+      }
+      return sum;
+    }, 0);
+    
+    const available = total - usedBalance;
+    setAvailableBalance(available);
+    return available;
+  };
+
   const handleEditClick = (wallet) => {
     setEditMode(true);
     setEditWalletId(wallet.id);
     setEditWalletName(wallet.accountName);
+    setEditWalletBalance(wallet.balance.toString());
+    setOriginalBalance(wallet.balance);
+    
+    // Calculate available balance excluding this wallet
+    calculateAvailableBalance(totalBalance, wallets, wallet.id);
+    setBalanceError('');
   };
 
   const handleEditCancel = () => {
     setEditMode(false);
     setEditWalletId(null);
     setEditWalletName('');
+    setEditWalletBalance('');
+    setOriginalBalance(0);
+    setBalanceError('');
+    
+    // Reset available balance calculation
+    calculateAvailableBalance(totalBalance, wallets, null);
+  };
+
+  const validateBalanceEdit = (value) => {
+    // Check if value is a valid number
+    if (!value || isNaN(value) || parseFloat(value) < 0) {
+      setBalanceError('Valid balance is required');
+      return false;
+    }
+    
+    const newBalance = parseFloat(value);
+    const maxAllowed = availableBalance + originalBalance;
+    
+    if (newBalance > maxAllowed) {
+      setBalanceError(`Balance exceeds available amount (max: ${maxAllowed.toFixed(2)})`);
+      return false;
+    }
+    
+    setBalanceError('');
+    return true;
+  };
+
+  const handleBalanceChange = (e) => {
+    const value = e.target.value;
+    setEditWalletBalance(value);
+    validateBalanceEdit(value);
   };
 
   const handleEditSave = async () => {
     if (!editWalletName.trim()) {
       setError('Wallet name cannot be empty');
+      return;
+    }
+
+    if (!validateBalanceEdit(editWalletBalance)) {
       return;
     }
 
@@ -98,7 +168,8 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
       // Create updated wallet data
       const updatedWallet = {
         ...walletToUpdate,
-        accountName: editWalletName
+        accountName: editWalletName,
+        balance: parseFloat(editWalletBalance)
       };
       
       // Call API to update wallet
@@ -108,9 +179,12 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
       setEditMode(false);
       setEditWalletId(null);
       setEditWalletName('');
+      setEditWalletBalance('');
+      setOriginalBalance(0);
+      setBalanceError('');
       
       // Refresh wallets list
-      fetchWallets();
+      fetchFinancialData();
       
       // Notify parent component
       if (onWalletUpdated) {
@@ -150,7 +224,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
       setDeleteWalletName('');
       
       // Refresh wallets list
-      fetchWallets();
+      fetchFinancialData();
       
       // Notify parent component
       if (onWalletUpdated) {
@@ -168,6 +242,12 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
   const formContent = (
     <>
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      
+      <Box sx={{ mb: 2 }}>
+        <Alert severity="info">
+          Total Balance: {totalBalance.toFixed(2)}
+        </Alert>
+      </Box>
       
       {loading ? (
         <Box className={styles.loadingContainer}>
@@ -193,13 +273,33 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
                       onChange={(e) => setEditWalletName(e.target.value)}
                       placeholder="Wallet name"
                       className={styles.textField}
+                      sx={{ mb: 2 }}
+                    />
+                    <TextField
+                      fullWidth
+                      size="small"
+                      value={editWalletBalance}
+                      onChange={handleBalanceChange}
+                      placeholder="Balance"
+                      className={styles.textField}
+                      type="number"
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            $
+                          </InputAdornment>
+                        ),
+                      }}
+                      error={!!balanceError}
+                      helperText={balanceError || `Available: ${(availableBalance + originalBalance).toFixed(2)}`}
+                      sx={{ mb: 2 }}
                     />
                     <Button 
                       variant="contained" 
                       color="primary" 
                       size="small"
                       onClick={handleEditSave}
-                      disabled={loading}
+                      disabled={loading || !!balanceError}
                       className={`${styles.actionButton} ${styles.saveButton}`}
                     >
                       Save

@@ -1,9 +1,9 @@
 package com.financeapp.service;
 
-import com.financeapp.model.Account;
+import com.financeapp.model.Wallet;
 import com.financeapp.model.Transaction;
 import com.financeapp.model.User;
-import com.financeapp.repository.AccountRepository;
+import com.financeapp.repository.WalletRepository;
 import com.financeapp.repository.TransactionRepository;
 import com.financeapp.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -21,19 +21,22 @@ public class TransactionService {
 
     private final TransactionRepository transactionRepository;
     private final UserRepository userRepository;
-    private final AccountRepository accountRepository;
-    private final AccountService accountService;
+    private final WalletRepository walletRepository;
+    private final WalletService walletService;
+    private final UserProfileService userProfileService;
 
     @Autowired
     public TransactionService(
             TransactionRepository transactionRepository,
             UserRepository userRepository,
-            AccountRepository accountRepository,
-            AccountService accountService) {
+            WalletRepository walletRepository,
+            WalletService walletService,
+            UserProfileService userProfileService) {
         this.transactionRepository = transactionRepository;
         this.userRepository = userRepository;
-        this.accountRepository = accountRepository;
-        this.accountService = accountService;
+        this.walletRepository = walletRepository;
+        this.walletService = walletService;
+        this.userProfileService = userProfileService;
     }
 
     public List<Transaction> getAllTransactionsByUserId(Long userId) {
@@ -46,21 +49,29 @@ public class TransactionService {
     }
 
     @Transactional
-    public Transaction createTransaction(Transaction transaction, Long userId, Long accountId) {
+    public Transaction createTransaction(Transaction transaction, Long userId, Long walletId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
-        Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new EntityNotFoundException("Account not found with id: " + accountId));
+        Wallet wallet = walletRepository.findById(walletId)
+                .orElseThrow(() -> new EntityNotFoundException("Wallet not found with id: " + walletId));
 
         transaction.setUser(user);
-        transaction.setAccount(account);
+        transaction.setWallet(wallet);
         transaction.setStatus(Transaction.TransactionStatus.COMPLETED);
 
-        // Update account balance based on transaction type
+        // Update wallet balance and total balance based on transaction type
         if (transaction.getTransactionType() == Transaction.TransactionType.INCOME) {
-            accountService.addToBalance(accountId, transaction.getAmount());
+            // Add to wallet balance
+            walletService.addToBalance(walletId, transaction.getAmount());
+            
+            // Add to total balance in user profile
+            userProfileService.addToTotalBalance(userId, transaction.getAmount());
         } else if (transaction.getTransactionType() == Transaction.TransactionType.EXPENSE) {
-            accountService.subtractFromBalance(accountId, transaction.getAmount());
+            // Subtract from wallet balance
+            walletService.subtractFromBalance(walletId, transaction.getAmount());
+            
+            // Subtract from total balance in user profile
+            userProfileService.subtractFromTotalBalance(userId, transaction.getAmount());
         }
 
         return transactionRepository.save(transaction);
@@ -69,12 +80,21 @@ public class TransactionService {
     @Transactional
     public Transaction updateTransaction(Long transactionId, Transaction transactionDetails) {
         Transaction transaction = getTransactionById(transactionId);
+        Long userId = transaction.getUser().getId();
         
-        // Revert the old transaction's effect on the account balance
+        // Revert the old transaction's effect on the wallet balance and total balance
         if (transaction.getTransactionType() == Transaction.TransactionType.INCOME) {
-            accountService.subtractFromBalance(transaction.getAccount().getId(), transaction.getAmount());
+            // Subtract from wallet balance
+            walletService.subtractFromBalance(transaction.getWallet().getId(), transaction.getAmount());
+            
+            // Subtract from total balance in user profile
+            userProfileService.subtractFromTotalBalance(userId, transaction.getAmount());
         } else if (transaction.getTransactionType() == Transaction.TransactionType.EXPENSE) {
-            accountService.addToBalance(transaction.getAccount().getId(), transaction.getAmount());
+            // Add back to wallet balance
+            walletService.addToBalance(transaction.getWallet().getId(), transaction.getAmount());
+            
+            // Add back to total balance in user profile
+            userProfileService.addToTotalBalance(userId, transaction.getAmount());
         }
         
         // Update transaction details
@@ -84,11 +104,19 @@ public class TransactionService {
         transaction.setDescription(transactionDetails.getDescription());
         transaction.setTransactionDate(transactionDetails.getTransactionDate());
         
-        // Apply the new transaction's effect on the account balance
+        // Apply the new transaction's effect on the wallet balance and total balance
         if (transaction.getTransactionType() == Transaction.TransactionType.INCOME) {
-            accountService.addToBalance(transaction.getAccount().getId(), transaction.getAmount());
+            // Add to wallet balance
+            walletService.addToBalance(transaction.getWallet().getId(), transaction.getAmount());
+            
+            // Add to total balance in user profile
+            userProfileService.addToTotalBalance(userId, transaction.getAmount());
         } else if (transaction.getTransactionType() == Transaction.TransactionType.EXPENSE) {
-            accountService.subtractFromBalance(transaction.getAccount().getId(), transaction.getAmount());
+            // Subtract from wallet balance
+            walletService.subtractFromBalance(transaction.getWallet().getId(), transaction.getAmount());
+            
+            // Subtract from total balance in user profile
+            userProfileService.subtractFromTotalBalance(userId, transaction.getAmount());
         }
         
         return transactionRepository.save(transaction);
@@ -97,12 +125,21 @@ public class TransactionService {
     @Transactional
     public void deleteTransaction(Long transactionId) {
         Transaction transaction = getTransactionById(transactionId);
+        Long userId = transaction.getUser().getId();
         
-        // Revert the transaction's effect on the account balance
+        // Revert the transaction's effect on the wallet balance and total balance
         if (transaction.getTransactionType() == Transaction.TransactionType.INCOME) {
-            accountService.subtractFromBalance(transaction.getAccount().getId(), transaction.getAmount());
+            // Subtract from wallet balance
+            walletService.subtractFromBalance(transaction.getWallet().getId(), transaction.getAmount());
+            
+            // Subtract from total balance in user profile
+            userProfileService.subtractFromTotalBalance(userId, transaction.getAmount());
         } else if (transaction.getTransactionType() == Transaction.TransactionType.EXPENSE) {
-            accountService.addToBalance(transaction.getAccount().getId(), transaction.getAmount());
+            // Add back to wallet balance
+            walletService.addToBalance(transaction.getWallet().getId(), transaction.getAmount());
+            
+            // Add back to total balance in user profile
+            userProfileService.addToTotalBalance(userId, transaction.getAmount());
         }
         
         transactionRepository.delete(transaction);

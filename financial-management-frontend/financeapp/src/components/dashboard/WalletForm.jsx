@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Button, 
   Dialog, 
@@ -19,6 +19,7 @@ import {
   Typography
 } from '@mui/material';
 import FinanceService from '../../services/FinanceService';
+import styles from '../../styles/walletForm.module.css';
 
 const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compact = false }) => {
   const [loading, setLoading] = useState(false);
@@ -31,6 +32,41 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
   const [errors, setErrors] = useState({});
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [totalBalance, setTotalBalance] = useState(0);
+  const [usedBalance, setUsedBalance] = useState(0);
+  const [availableBalance, setAvailableBalance] = useState(0);
+
+  useEffect(() => {
+    if (open) {
+      fetchBalanceData();
+    }
+  }, [open]);
+
+  const fetchBalanceData = async () => {
+    setLoading(true);
+    try {
+      // Fetch total balance from summary
+      const summaryResponse = await FinanceService.getFinancialSummary();
+      const totalBalance = summaryResponse.data.totalBalance || 0;
+      
+      // Fetch all accounts/wallets to calculate used balance
+      const accountsResponse = await FinanceService.getAccounts();
+      const accounts = accountsResponse.data || [];
+      const usedBalance = accounts.reduce((sum, account) => sum + account.balance, 0);
+      
+      // Calculate available balance
+      const availableBalance = totalBalance - usedBalance;
+      
+      setTotalBalance(totalBalance);
+      setUsedBalance(usedBalance);
+      setAvailableBalance(availableBalance);
+    } catch (err) {
+      console.error('Error fetching balance data:', err);
+      setError('Failed to load balance data. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -61,6 +97,11 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
     
     if (!formData.balance || isNaN(formData.balance) || parseFloat(formData.balance) < 0) {
       newErrors.balance = 'Valid balance is required';
+    } else {
+      const balanceValue = parseFloat(formData.balance);
+      if (balanceValue > availableBalance) {
+        newErrors.balance = `Balance exceeds available amount (${availableBalance.toFixed(2)})`;
+      }
     }
     
     setErrors(newErrors);
@@ -115,16 +156,30 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
 
   // Form content that will be used in both embedded and non-embedded modes
   const formContent = (
-    <>
-      {error && <Alert severity="error" sx={{ mb: compact ? 1 : 2 }}>{error}</Alert>}
+    <Box className={styles.formContainer}>
+      {error && (
+        <Alert 
+          severity="error" 
+          className={compact ? styles.alertCompact : styles.alertContainer}
+        >
+          {error}
+        </Alert>
+      )}
+      
+      <Box className={styles.alertContainer}>
+        <Alert severity="info">
+          Available balance: {availableBalance.toFixed(2)} 
+          {availableBalance <= 0 && " (No funds available for new wallets)"}
+        </Alert>
+      </Box>
       
       <Grid container spacing={compact ? 1 : 2} sx={{ mt: compact ? 0 : 0.5 }}>
         {compact ? (
           // Compact layout - 2 fields per row
           <>
             <Grid item xs={6}>
-              <FormControl fullWidth error={!!errors.accountName} size="small" sx={{ mb: 1 }}>
-                <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 500, color: 'text.secondary' }}>
+              <FormControl fullWidth error={!!errors.accountName} size="small" className={styles.formControl}>
+                <Typography variant="caption" className={styles.fieldLabel}>
                   Wallet Name
                 </Typography>
                 <TextField
@@ -136,18 +191,14 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
                   helperText={errors.accountName}
                   disabled={loading}
                   size="small"
-                  sx={{ 
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: '8px'
-                    }
-                  }}
+                  className={styles.textField}
                 />
               </FormControl>
             </Grid>
             
             <Grid item xs={6}>
-              <FormControl fullWidth error={!!errors.accountType} size="small" sx={{ mb: 1 }}>
-                <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 500, color: 'text.secondary' }}>
+              <FormControl fullWidth error={!!errors.accountType} size="small" className={styles.formControl}>
+                <Typography variant="caption" className={styles.fieldLabel}>
                   Wallet Type
                 </Typography>
                 <Select
@@ -156,7 +207,7 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
                   onChange={handleChange}
                   displayEmpty
                   disabled={loading}
-                  sx={{ borderRadius: '8px' }}
+                  className={styles.selectField}
                 >
                   <MenuItem value="Checking">Checking</MenuItem>
                   <MenuItem value="Savings">Savings</MenuItem>
@@ -171,9 +222,9 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
             </Grid>
             
             <Grid item xs={12}>
-              <FormControl fullWidth error={!!errors.balance} size="small" sx={{ mb: 0 }}>
-                <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 500, color: 'text.secondary' }}>
-                  Initial Balance
+              <FormControl fullWidth error={!!errors.balance} size="small" className={styles.formControl}>
+                <Typography variant="caption" className={styles.fieldLabel}>
+                  Initial Balance (Max: {availableBalance.toFixed(2)})
                 </Typography>
                 <TextField
                   name="balance"
@@ -182,19 +233,15 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
                   placeholder="0.00"
                   error={!!errors.balance}
                   helperText={errors.balance}
-                  disabled={loading}
+                  disabled={loading || availableBalance <= 0}
                   size="small"
+                  className={styles.textField}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
                         $
                       </InputAdornment>
                     ),
-                  }}
-                  sx={{ 
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: '8px'
-                    }
                   }}
                 />
               </FormControl>
@@ -204,8 +251,8 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
           // Original layout - 1 field per row
           <>
             <Grid item xs={12}>
-              <FormControl fullWidth error={!!errors.accountName} size="small" sx={{ mb: 1 }}>
-                <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 500, color: 'text.secondary' }}>
+              <FormControl fullWidth error={!!errors.accountName} size="small" className={styles.formControl}>
+                <Typography variant="caption" className={styles.fieldLabel}>
                   Wallet Name
                 </Typography>
                 <TextField
@@ -217,18 +264,14 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
                   helperText={errors.accountName}
                   disabled={loading}
                   size="small"
-                  sx={{ 
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: '8px'
-                    }
-                  }}
+                  className={styles.textField}
                 />
               </FormControl>
             </Grid>
             
             <Grid item xs={12}>
-              <FormControl fullWidth error={!!errors.accountType} size="small" sx={{ mb: 1 }}>
-                <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 500, color: 'text.secondary' }}>
+              <FormControl fullWidth error={!!errors.accountType} size="small" className={styles.formControl}>
+                <Typography variant="caption" className={styles.fieldLabel}>
                   Wallet Type
                 </Typography>
                 <Select
@@ -237,7 +280,7 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
                   onChange={handleChange}
                   displayEmpty
                   disabled={loading}
-                  sx={{ borderRadius: '8px' }}
+                  className={styles.selectField}
                 >
                   <MenuItem value="Checking">Checking</MenuItem>
                   <MenuItem value="Savings">Savings</MenuItem>
@@ -252,9 +295,9 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
             </Grid>
             
             <Grid item xs={12}>
-              <FormControl fullWidth error={!!errors.balance} size="small" sx={{ mb: 1 }}>
-                <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 500, color: 'text.secondary' }}>
-                  Initial Balance
+              <FormControl fullWidth error={!!errors.balance} size="small" className={styles.formControl}>
+                <Typography variant="caption" className={styles.fieldLabel}>
+                  Initial Balance (Max: {availableBalance.toFixed(2)})
                 </Typography>
                 <TextField
                   name="balance"
@@ -263,19 +306,15 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
                   placeholder="0.00"
                   error={!!errors.balance}
                   helperText={errors.balance}
-                  disabled={loading}
+                  disabled={loading || availableBalance <= 0}
                   size="small"
+                  className={styles.textField}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
                         $
                       </InputAdornment>
                     ),
-                  }}
-                  sx={{ 
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: '8px'
-                    }
                   }}
                 />
               </FormControl>
@@ -284,17 +323,12 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
         )}
       </Grid>
       
-      <Box sx={{ mt: compact ? 1 : 2, display: 'flex', justifyContent: 'flex-end' }}>
+      <Box className={compact ? `${styles.buttonContainer} ${styles.buttonContainerCompact}` : styles.buttonContainer}>
         {!embedded && (
           <Button 
             onClick={handleClose} 
             disabled={submitting} 
-            sx={{ 
-              mr: 1, 
-              borderRadius: '8px',
-              textTransform: 'none',
-              fontWeight: 500
-            }}
+            className={styles.cancelButton}
           >
             Cancel
           </Button>
@@ -303,20 +337,15 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
           variant="contained" 
           color="primary" 
           onClick={handleSubmit}
-          disabled={submitting || loading}
+          disabled={submitting || loading || availableBalance <= 0}
           startIcon={submitting ? <CircularProgress size={20} /> : null}
           size={compact ? "small" : "medium"}
-          sx={{ 
-            borderRadius: '8px',
-            textTransform: 'none',
-            fontWeight: 500,
-            boxShadow: 'none'
-          }}
+          className={`${styles.saveButton} ${compact ? styles.saveButtonSmall : ''}`}
         >
           {submitting ? 'Saving...' : 'Save Wallet'}
         </Button>
       </Box>
-    </>
+    </Box>
   );
 
   // If embedded, just return the form content
@@ -332,14 +361,11 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
       maxWidth="sm" 
       fullWidth
       PaperProps={{
-        sx: {
-          borderRadius: '12px',
-          boxShadow: '0px 8px 24px rgba(0, 0, 0, 0.15)'
-        }
+        className: styles.dialogPaper
       }}
     >
-      <DialogTitle sx={{ pb: 1, fontWeight: 600 }}>Add Wallet</DialogTitle>
-      <DialogContent sx={{ pt: 0 }}>
+      <DialogTitle className={styles.dialogTitle}>Add Wallet</DialogTitle>
+      <DialogContent className={styles.dialogContent}>
         {formContent}
       </DialogContent>
     </Dialog>
