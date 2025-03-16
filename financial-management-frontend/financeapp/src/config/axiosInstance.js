@@ -75,6 +75,14 @@ export const confirmPasswordReset = (token, newPassword) => {
   return axiosInstance.post('/password/reset-confirm', { token, newPassword });
 };
 
+export const resetPassword = (token, newPassword) => {
+  return axiosInstance.post('/password/reset-confirm', { token, newPassword });
+};
+
+export const verifyResetToken = (token) => {
+  return axiosInstance.post('/password/verify-token', { token });
+};
+
 export const changePassword = (currentPassword, newPassword) => {
   // Get the username from localStorage
   const userData = JSON.parse(localStorage.getItem('userData') || '{}');
