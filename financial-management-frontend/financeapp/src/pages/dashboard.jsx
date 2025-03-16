@@ -593,8 +593,6 @@ export default function Dashboard() {
         open={financeActionPanelOpen} 
         handleClose={() => setFinanceActionPanelOpen(false)} 
         onTransactionAdded={handleTransactionAdded}
-        onWalletAdded={handleAccountAdded}
-        onCategoryAdded={handleCategoryAdded}
       />
       
       {/* Wallet Management Form */}

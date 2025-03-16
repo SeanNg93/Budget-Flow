@@ -21,8 +21,7 @@ import {
   ListItemSecondaryAction,
   Divider,
   DialogActions,
-  DialogContentText,
-  Chip
+  DialogContentText
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -39,7 +38,6 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
   const [editMode, setEditMode] = useState(false);
   const [editCategoryId, setEditCategoryId] = useState(null);
   const [editCategoryName, setEditCategoryName] = useState('');
-  const [editCategoryType, setEditCategoryType] = useState('');
   
   // Delete confirmation states
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -72,14 +70,12 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
     setEditMode(true);
     setEditCategoryId(category.id);
     setEditCategoryName(category.categoryName);
-    setEditCategoryType(category.type);
   };
 
   const handleEditCancel = () => {
     setEditMode(false);
     setEditCategoryId(null);
     setEditCategoryName('');
-    setEditCategoryType('');
   };
 
   const handleEditSave = async () => {
@@ -102,8 +98,7 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
       // Create updated category data
       const updatedCategory = {
         ...categoryToUpdate,
-        categoryName: editCategoryName,
-        type: editCategoryType
+        categoryName: editCategoryName
       };
       
       // Call API to update category
@@ -113,7 +108,6 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
       setEditMode(false);
       setEditCategoryId(null);
       setEditCategoryName('');
-      setEditCategoryType('');
       
       // Refresh categories list
       fetchCategories();
@@ -170,10 +164,6 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
     }
   };
 
-  const getCategoryTypeColor = (type) => {
-    return type === 'INCOME' ? 'success' : 'error';
-  };
-
   // Form content that will be used in both embedded and non-embedded modes
   const formContent = (
     <>
@@ -197,22 +187,13 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
                 {editMode && editCategoryId === category.id ? (
                   <Box className={styles.editContainer}>
                     <TextField
+                      fullWidth
                       size="small"
                       value={editCategoryName}
                       onChange={(e) => setEditCategoryName(e.target.value)}
                       placeholder="Category name"
                       className={styles.textField}
-                      sx={{ flexGrow: 1 }}
                     />
-                    <Select
-                      size="small"
-                      value={editCategoryType}
-                      onChange={(e) => setEditCategoryType(e.target.value)}
-                      sx={{ minWidth: 120 }}
-                    >
-                      <MenuItem value="EXPENSE">Expense</MenuItem>
-                      <MenuItem value="INCOME">Income</MenuItem>
-                    </Select>
                     <Button 
                       variant="contained" 
                       color="primary" 
@@ -237,17 +218,9 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
                   <>
                     <ListItemText
                       primary={
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Typography variant="body1" className={styles.walletName}>
-                            {category.categoryName}
-                          </Typography>
-                          <Chip 
-                            label={category.type === 'INCOME' ? 'Income' : 'Expense'} 
-                            color={getCategoryTypeColor(category.type)}
-                            size="small"
-                            variant="outlined"
-                          />
-                        </Box>
+                        <Typography variant="body1" className={styles.walletName}>
+                          {category.categoryName}
+                        </Typography>
                       }
                     />
                     <ListItemSecondaryAction>
@@ -331,7 +304,12 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
       maxWidth="sm"
       fullWidth
       PaperProps={{
-        className: styles.dialogPaper
+        className: styles.dialogPaper,
+        sx: {
+          width: '450px',
+          maxHeight: '85vh',
+          margin: '16px'
+        }
       }}
     >
       <DialogTitle className={styles.dialogTitle}>

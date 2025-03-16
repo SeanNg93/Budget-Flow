@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Button, 
   Dialog, 
@@ -19,15 +19,23 @@ import {
 } from '@mui/material';
 import FinanceService from '../../services/FinanceService';
 
-const CategoryForm = ({ open, handleClose, onCategoryAdded, embedded = false, compact = false }) => {
+const CategoryForm = ({ open, handleClose, onCategoryAdded, embedded = false, compact = false, defaultType = 'EXPENSE' }) => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     categoryName: '',
-    type: 'EXPENSE'
+    type: defaultType
   });
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  // Update type when defaultType prop changes
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      type: defaultType
+    }));
+  }, [defaultType]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -50,10 +58,6 @@ const CategoryForm = ({ open, handleClose, onCategoryAdded, embedded = false, co
     
     if (!formData.categoryName) {
       newErrors.categoryName = 'Category name is required';
-    }
-    
-    if (!formData.type) {
-      newErrors.type = 'Category type is required';
     }
     
     setErrors(newErrors);
@@ -93,7 +97,7 @@ const CategoryForm = ({ open, handleClose, onCategoryAdded, embedded = false, co
   const resetForm = () => {
     setFormData({
       categoryName: '',
-      type: 'EXPENSE'
+      type: defaultType
     });
     setErrors({});
     setError('');
@@ -105,99 +109,28 @@ const CategoryForm = ({ open, handleClose, onCategoryAdded, embedded = false, co
       {error && <Alert severity="error" sx={{ mb: compact ? 1 : 2 }}>{error}</Alert>}
       
       <Grid container spacing={compact ? 1 : 2} sx={{ mt: compact ? 0 : 0.5 }}>
-        {compact ? (
-          // Compact layout - fields side by side
-          <>
-            <Grid item xs={7}>
-              <FormControl fullWidth error={!!errors.categoryName} size="small" sx={{ mb: 0 }}>
-                <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 500, color: 'text.secondary' }}>
-                  Category Name
-                </Typography>
-                <TextField
-                  name="categoryName"
-                  value={formData.categoryName}
-                  onChange={handleChange}
-                  placeholder="e.g., Groceries, Rent, Salary"
-                  error={!!errors.categoryName}
-                  helperText={errors.categoryName}
-                  disabled={loading}
-                  size="small"
-                  sx={{ 
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: '8px'
-                    }
-                  }}
-                />
-              </FormControl>
-            </Grid>
-            
-            <Grid item xs={5}>
-              <FormControl fullWidth error={!!errors.type} size="small" sx={{ mb: 0 }}>
-                <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 500, color: 'text.secondary' }}>
-                  Category Type
-                </Typography>
-                <Select
-                  name="type"
-                  value={formData.type}
-                  onChange={handleChange}
-                  displayEmpty
-                  disabled={loading}
-                  sx={{ borderRadius: '8px' }}
-                >
-                  <MenuItem value="EXPENSE">Expense</MenuItem>
-                  <MenuItem value="INCOME">Income</MenuItem>
-                </Select>
-                {errors.type && <FormHelperText>{errors.type}</FormHelperText>}
-              </FormControl>
-            </Grid>
-          </>
-        ) : (
-          // Original layout - 1 field per row
-          <>
-            <Grid item xs={12}>
-              <FormControl fullWidth error={!!errors.categoryName} size="small" sx={{ mb: 1 }}>
-                <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 500, color: 'text.secondary' }}>
-                  Category Name
-                </Typography>
-                <TextField
-                  name="categoryName"
-                  value={formData.categoryName}
-                  onChange={handleChange}
-                  placeholder="e.g., Groceries, Rent, Salary"
-                  error={!!errors.categoryName}
-                  helperText={errors.categoryName}
-                  disabled={loading}
-                  size="small"
-                  sx={{ 
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: '8px'
-                    }
-                  }}
-                />
-              </FormControl>
-            </Grid>
-            
-            <Grid item xs={12}>
-              <FormControl fullWidth error={!!errors.type} size="small" sx={{ mb: 1 }}>
-                <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 500, color: 'text.secondary' }}>
-                  Category Type
-                </Typography>
-                <Select
-                  name="type"
-                  value={formData.type}
-                  onChange={handleChange}
-                  displayEmpty
-                  disabled={loading}
-                  sx={{ borderRadius: '8px' }}
-                >
-                  <MenuItem value="EXPENSE">Expense</MenuItem>
-                  <MenuItem value="INCOME">Income</MenuItem>
-                </Select>
-                {errors.type && <FormHelperText>{errors.type}</FormHelperText>}
-              </FormControl>
-            </Grid>
-          </>
-        )}
+        <Grid item xs={12}>
+          <FormControl fullWidth error={!!errors.categoryName} size="small" sx={{ mb: 0 }}>
+            <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 500, color: 'text.secondary' }}>
+              Category Name
+            </Typography>
+            <TextField
+              name="categoryName"
+              value={formData.categoryName}
+              onChange={handleChange}
+              placeholder={formData.type === 'INCOME' ? 'e.g., Salary, Bonus, Investments' : 'e.g., Groceries, Rent, Utilities'}
+              error={!!errors.categoryName}
+              helperText={errors.categoryName}
+              disabled={loading}
+              size="small"
+              sx={{ 
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '8px'
+                }
+              }}
+            />
+          </FormControl>
+        </Grid>
       </Grid>
       
       <Box sx={{ mt: compact ? 1 : 2, display: 'flex', justifyContent: 'flex-end' }}>
@@ -250,12 +183,15 @@ const CategoryForm = ({ open, handleClose, onCategoryAdded, embedded = false, co
       PaperProps={{
         sx: {
           borderRadius: '12px',
-          boxShadow: '0px 8px 24px rgba(0, 0, 0, 0.15)'
+          boxShadow: '0px 8px 24px rgba(0, 0, 0, 0.15)',
+          width: '450px',
+          maxHeight: '85vh',
+          margin: '16px'
         }
       }}
     >
-      <DialogTitle sx={{ pb: 1, fontWeight: 600 }}>Add Category</DialogTitle>
-      <DialogContent sx={{ pt: 0 }}>
+      <DialogTitle sx={{ pb: 1, pt: 1.5, fontWeight: 600 }}>Add Category</DialogTitle>
+      <DialogContent sx={{ pt: 0, pb: 1.5, px: 2 }}>
         {formContent}
       </DialogContent>
     </Dialog>
