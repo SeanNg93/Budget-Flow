@@ -43,22 +43,27 @@
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 10;
+  border-radius: 50%;
+  overflow: hidden;
 }
 
 .logoBackground {
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background-color: #333;
+  background-color: #ffffff;
   display: flex;
   justify-content: center;
   align-items: center;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
 }
 
 .logo {
-  width: 70px;
-  height: 70px;
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 50%;
   animation: rotateLogo 10s linear infinite;
 }
 
