@@ -220,7 +220,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
       
       <Grid container spacing={2} sx={{ mt: 0.5 }}>
         <Grid item xs={12} sm={6}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
             <FormControl fullWidth error={!!errors.accountId} size="small" sx={{ mb: 1 }}>
               <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 500, color: 'text.secondary' }}>
                 Wallet
@@ -247,7 +247,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
             <IconButton 
               size="small" 
               onClick={() => setAccountFormOpen(true)}
-              sx={{ mt: -1 }}
+              sx={{ mt: 3 }}
             >
               <AddIcon fontSize="small" />
             </IconButton>
@@ -353,7 +353,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
         </Grid>
         
         <Grid item xs={12}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
             <FormControl fullWidth error={!!errors.categoryId} size="small" sx={{ mb: 1 }}>
               <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 500, color: 'text.secondary' }}>
                 Category
@@ -394,7 +394,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
             <IconButton 
               size="small" 
               onClick={() => setCategoryFormOpen(true)}
-              sx={{ mt: -1 }}
+              sx={{ mt: 3 }}
             >
               <AddIcon fontSize="small" />
             </IconButton>
