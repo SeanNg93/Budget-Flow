@@ -1,0 +1,142 @@
+/* Wallet Management Dialog Styles */
+.dialogPaper {
+  border-radius: 12px;
+  box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.dialogTitle {
+  padding-bottom: 8px;
+}
+
+.dialogContent {
+  padding-top: 8px;
+}
+
+.headerContainer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.title {
+  font-weight: 600;
+}
+
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  padding: 24px;
+}
+
+.emptyMessage {
+  text-align: center;
+  padding: 24px 0;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.walletList {
+  width: 100%;
+}
+
+.walletItem {
+  padding: 12px 0;
+  border-radius: 8px;
+}
+
+.walletItemEditing {
+  background-color: rgba(0, 122, 255, 0.05);
+}
+
+.editContainer {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 8px;
+}
+
+.textField input {
+  border-radius: 8px;
+}
+
+.walletName {
+  font-weight: 500;
+}
+
+.walletDetails {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.actionButton {
+  border-radius: 8px;
+  text-transform: none;
+  font-weight: 500;
+}
+
+.saveButton {
+  box-shadow: none;
+}
+
+.tabsContainer {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  padding: 0 24px;
+}
+
+.tab {
+  text-transform: none;
+  font-weight: 500;
+  min-height: 48px;
+}
+
+.optionsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 0;
+}
+
+.optionButton {
+  padding: 12px 0;
+  border-radius: 8px;
+  text-transform: none;
+  font-weight: 500;
+  justify-content: flex-start;
+}
+
+.primaryButton {
+  box-shadow: none;
+}
+
+.backButton {
+  margin-bottom: 16px;
+  border-radius: 8px;
+  text-transform: none;
+  font-weight: 500;
+}
+
+/* Delete confirmation dialog */
+.confirmDialog {
+  border-radius: 12px;
+  box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.confirmTitle {
+  padding-bottom: 8px;
+  font-weight: 600;
+}
+
+.confirmActions {
+  padding: 0 24px 16px 24px;
+}
+
+.deleteButton {
+  border-radius: 8px;
+  text-transform: none;
+  font-weight: 500;
+  box-shadow: none;
+}
+
+.cancelButton {
+  border-radius: 8px;
+  text-transform: none;
+  font-weight: 500;
+} 
