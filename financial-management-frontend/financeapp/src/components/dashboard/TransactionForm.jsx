@@ -22,7 +22,7 @@ import {
 import { DatePicker } from '@mui/x-date-pickers';
 import AddIcon from '@mui/icons-material/Add';
 import FinanceService from '../../services/FinanceService';
-import AccountForm from './AccountForm';
+import WalletForm from './AccountForm';
 import CategoryForm from './CategoryForm';
 
 const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = false }) => {
@@ -218,157 +218,202 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
     <>
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
       
-      <Grid container spacing={2}>
+      <Grid container spacing={2} sx={{ mt: 0.5 }}>
         <Grid item xs={12} sm={6}>
-          <Typography variant="caption" sx={{ mb: 1, display: 'block' }}>
-            Account
-          </Typography>
-          <FormControl fullWidth error={!!errors.accountId}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <FormControl fullWidth error={!!errors.accountId}>
-                <Select
-                  labelId="account-label"
-                  name="accountId"
-                  value={formData.accountId}
-                  onChange={handleChange}
-                  disabled={loading || accounts.length === 0}
-                >
-                  {accounts.map(account => (
-                    <MenuItem key={account.id} value={account.id}>
-                      {account.accountName} ({account.accountType})
-                    </MenuItem>
-                  ))}
-                </Select>
-                {errors.accountId && <FormHelperText>{errors.accountId}</FormHelperText>}
-                {accounts.length === 0 && !loading && (
-                  <FormHelperText>No accounts available. Please create an account first.</FormHelperText>
-                )}
-              </FormControl>
-              <IconButton 
-                size="small" 
-                onClick={() => setAccountFormOpen(true)}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <FormControl fullWidth error={!!errors.accountId} size="small" sx={{ mb: 1 }}>
+              <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 500, color: 'text.secondary' }}>
+                Wallet
+              </Typography>
+              <Select
+                name="accountId"
+                value={formData.accountId}
+                onChange={handleChange}
+                displayEmpty
+                disabled={loading || accounts.length === 0}
+                sx={{ borderRadius: '8px' }}
               >
-                <AddIcon />
-              </IconButton>
-            </Box>
-          </FormControl>
+                {accounts.map(account => (
+                  <MenuItem key={account.id} value={account.id}>
+                    {account.accountName} ({account.accountType})
+                  </MenuItem>
+                ))}
+              </Select>
+              {errors.accountId && <FormHelperText>{errors.accountId}</FormHelperText>}
+              {accounts.length === 0 && !loading && (
+                <FormHelperText>No wallets available. Please create a wallet first.</FormHelperText>
+              )}
+            </FormControl>
+            <IconButton 
+              size="small" 
+              onClick={() => setAccountFormOpen(true)}
+              sx={{ mt: -1 }}
+            >
+              <AddIcon fontSize="small" />
+            </IconButton>
+          </Box>
         </Grid>
         
         <Grid item xs={12} sm={6}>
-          <Typography variant="caption" sx={{ mb: 1, display: 'block' }}>
-            Type
-          </Typography>
-          <FormControl fullWidth>
+          <FormControl fullWidth error={!!errors.transactionType} size="small" sx={{ mb: 1 }}>
+            <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 500, color: 'text.secondary' }}>
+              Type
+            </Typography>
             <Select
-              labelId="transaction-type-label"
               name="transactionType"
               value={formData.transactionType}
               onChange={handleChange}
+              displayEmpty
               disabled={loading}
+              sx={{ borderRadius: '8px' }}
             >
               <MenuItem value="EXPENSE">Expense</MenuItem>
               <MenuItem value="INCOME">Income</MenuItem>
             </Select>
+            {errors.transactionType && <FormHelperText>{errors.transactionType}</FormHelperText>}
           </FormControl>
         </Grid>
         
         <Grid item xs={12} sm={6}>
-          <Typography variant="caption" sx={{ mb: 1, display: 'block' }}>
-            Amount
-          </Typography>
-          <TextField
-            fullWidth
-            name="amount"
-            value={formData.amount}
-            onChange={handleChange}
-            error={!!errors.amount}
-            helperText={errors.amount}
-            disabled={loading}
-            InputProps={{
-              startAdornment: <InputAdornment position="start">$</InputAdornment>,
-            }}
-          />
+          <FormControl fullWidth error={!!errors.amount} size="small" sx={{ mb: 1 }}>
+            <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 500, color: 'text.secondary' }}>
+              Amount
+            </Typography>
+            <TextField
+              name="amount"
+              value={formData.amount}
+              onChange={handleChange}
+              placeholder="0.00"
+              error={!!errors.amount}
+              helperText={errors.amount}
+              disabled={loading}
+              size="small"
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    $
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ 
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '8px'
+                }
+              }}
+            />
+          </FormControl>
         </Grid>
         
         <Grid item xs={12} sm={6}>
-          <Typography variant="caption" sx={{ mb: 1, display: 'block' }}>
-            Date
-          </Typography>
-          <DatePicker
-            value={formData.transactionDate}
-            onChange={handleDateChange}
-            slotProps={{
-              textField: {
-                fullWidth: true,
-                error: !!errors.transactionDate,
-                helperText: errors.transactionDate,
-                disabled: loading
-              }
-            }}
-          />
+          <FormControl fullWidth error={!!errors.transactionDate} size="small" sx={{ mb: 1 }}>
+            <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 500, color: 'text.secondary' }}>
+              Date
+            </Typography>
+            <DatePicker 
+              value={formData.transactionDate}
+              onChange={handleDateChange}
+              disabled={loading}
+              slotProps={{ 
+                textField: { 
+                  size: 'small',
+                  error: !!errors.transactionDate,
+                  helperText: errors.transactionDate,
+                  sx: { 
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '8px'
+                    }
+                  }
+                } 
+              }}
+            />
+          </FormControl>
         </Grid>
         
         <Grid item xs={12}>
-          <Typography variant="caption" sx={{ mb: 1, display: 'block' }}>
-            Description
-          </Typography>
-          <TextField
-            fullWidth
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            error={!!errors.description}
-            helperText={errors.description}
-            disabled={loading}
-          />
+          <FormControl fullWidth error={!!errors.description} size="small" sx={{ mb: 1 }}>
+            <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 500, color: 'text.secondary' }}>
+              Description
+            </Typography>
+            <TextField
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              placeholder="What's this transaction for?"
+              error={!!errors.description}
+              helperText={errors.description}
+              disabled={loading}
+              size="small"
+              sx={{ 
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '8px'
+                }
+              }}
+            />
+          </FormControl>
         </Grid>
         
         <Grid item xs={12}>
-          <Typography variant="caption" sx={{ mb: 1, display: 'block' }}>
-            Category
-          </Typography>
-          <FormControl fullWidth>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <FormControl fullWidth>
-                <Select
-                  labelId="category-label"
-                  name="categoryId"
-                  value={formData.categoryId}
-                  onChange={handleChange}
-                  disabled={loading || categoriesError || filteredCategories.length === 0}
-                >
-                  <MenuItem value="">None</MenuItem>
-                  {filteredCategories.map(category => (
-                    <MenuItem key={category.id} value={category.id}>
-                      {category.categoryName}
-                    </MenuItem>
-                  ))}
-                </Select>
-                {categoriesError && (
-                  <FormHelperText error>
-                    Unable to load categories. Please check your permissions.
-                  </FormHelperText>
-                )}
-                {filteredCategories.length === 0 && !categoriesError && !loading && (
-                  <FormHelperText>
-                    No {formData.transactionType.toLowerCase()} categories available. Please create a category first.
-                  </FormHelperText>
-                )}
-              </FormControl>
-              <IconButton 
-                size="small" 
-                onClick={() => setCategoryFormOpen(true)}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <FormControl fullWidth error={!!errors.categoryId} size="small" sx={{ mb: 1 }}>
+              <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 500, color: 'text.secondary' }}>
+                Category
+              </Typography>
+              <Select
+                name="categoryId"
+                value={formData.categoryId}
+                onChange={handleChange}
+                displayEmpty
+                disabled={loading || filteredCategories.length === 0}
+                sx={{ borderRadius: '8px' }}
+                renderValue={(selected) => {
+                  if (!selected) {
+                    return <em>Select a category</em>;
+                  }
+                  const category = categories.find(cat => cat.id === selected);
+                  return category ? category.categoryName : '';
+                }}
               >
-                <AddIcon />
-              </IconButton>
-            </Box>
-          </FormControl>
+                <MenuItem value="" disabled>
+                  <em>Select a category</em>
+                </MenuItem>
+                {filteredCategories.map(category => (
+                  <MenuItem key={category.id} value={category.id}>
+                    {category.categoryName}
+                  </MenuItem>
+                ))}
+              </Select>
+              {errors.categoryId && <FormHelperText>{errors.categoryId}</FormHelperText>}
+              {filteredCategories.length === 0 && !loading && (
+                <FormHelperText>
+                  {categoriesError 
+                    ? 'Error loading categories. Please try again.' 
+                    : `No ${formData.transactionType.toLowerCase()} categories available. Please create a category first.`}
+                </FormHelperText>
+              )}
+            </FormControl>
+            <IconButton 
+              size="small" 
+              onClick={() => setCategoryFormOpen(true)}
+              sx={{ mt: -1 }}
+            >
+              <AddIcon fontSize="small" />
+            </IconButton>
+          </Box>
         </Grid>
       </Grid>
       
-      <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
+      <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
         {!embedded && (
-          <Button onClick={handleClose} disabled={submitting} sx={{ mr: 1 }}>
+          <Button 
+            onClick={handleClose} 
+            disabled={submitting} 
+            sx={{ 
+              mr: 1, 
+              borderRadius: '8px',
+              textTransform: 'none',
+              fontWeight: 500
+            }}
+          >
             Cancel
           </Button>
         )}
@@ -376,15 +421,21 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
           variant="contained" 
           color="primary" 
           onClick={handleSubmit}
-          disabled={submitting || loading || (accounts.length === 0)}
+          disabled={submitting || loading}
           startIcon={submitting ? <CircularProgress size={20} /> : null}
+          sx={{ 
+            borderRadius: '8px',
+            textTransform: 'none',
+            fontWeight: 500,
+            boxShadow: 'none'
+          }}
         >
           {submitting ? 'Saving...' : 'Save Transaction'}
         </Button>
       </Box>
 
       {/* Account Form Dialog */}
-      <AccountForm
+      <WalletForm
         open={accountFormOpen}
         handleClose={() => setAccountFormOpen(false)}
         onAccountAdded={handleAccountAdded}
@@ -406,9 +457,20 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
 
   // Otherwise, wrap in a Dialog
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-      <DialogTitle>Add Transaction</DialogTitle>
-      <DialogContent>
+    <Dialog 
+      open={open} 
+      onClose={handleClose} 
+      maxWidth="sm" 
+      fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: '12px',
+          boxShadow: '0px 8px 24px rgba(0, 0, 0, 0.15)'
+        }
+      }}
+    >
+      <DialogTitle sx={{ pb: 1, fontWeight: 600 }}>Add Transaction</DialogTitle>
+      <DialogContent sx={{ pt: 0 }}>
         {formContent}
       </DialogContent>
     </Dialog>
