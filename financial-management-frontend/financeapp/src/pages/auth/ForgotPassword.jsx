@@ -80,7 +80,7 @@ const ForgotPassword = () => {
         <Paper elevation={3} className={styles.authCard}>
           <Box className={styles.logoContainer}>
             <div className={styles.logoBackground}>
-              <img src="/Illuminati-Logo.png" alt="Budget Flow Logo" className={styles.logo} />
+              <img src="/Dollarnote_siegel_hq.jpg" alt="Budget Flow Logo" className={styles.logo} />
             </div>
           </Box>
           
