@@ -30,6 +30,7 @@ import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import SavingsIcon from '@mui/icons-material/Savings';
+import SettingsIcon from '@mui/icons-material/Settings';
 import axios from 'axios';
 import styles from '../styles/dashboard.module.css';
 
@@ -37,7 +38,8 @@ import styles from '../styles/dashboard.module.css';
 import SideMenu from '../components/dashboard/SideMenu';
 import AppNavbar from '../components/dashboard/AppNavbar';
 import TransactionForm from '../components/dashboard/TransactionForm';
-import AccountForm from '../components/dashboard/AccountForm';
+import WalletForm from '../components/dashboard/WalletForm';
+import WalletManageForm from '../components/dashboard/WalletManageForm';
 import CategoryForm from '../components/dashboard/CategoryForm';
 import FinanceActionPanel from '../components/dashboard/FinanceActionPanel';
 import AddBalanceForm from '../components/dashboard/AddBalanceForm';
@@ -114,6 +116,7 @@ export default function Dashboard() {
   const [categoryFormOpen, setCategoryFormOpen] = useState(false);
   const [addBalanceFormOpen, setAddBalanceFormOpen] = useState(false);
   const [editBalanceFormOpen, setEditBalanceFormOpen] = useState(false);
+  const [walletManageFormOpen, setWalletManageFormOpen] = useState(false);
   const [balanceMenuAnchorEl, setBalanceMenuAnchorEl] = useState(null);
   const [error, setError] = useState(null);
 
@@ -263,6 +266,11 @@ export default function Dashboard() {
     setEditBalanceFormOpen(true);
   };
 
+  const handleManageWallets = () => {
+    handleBalanceMenuClose();
+    setWalletManageFormOpen(true);
+  };
+
   if (loading) {
     return (
       <Box className={styles.loadingContainer}>
@@ -315,7 +323,7 @@ export default function Dashboard() {
               
               {/* Summary Cards */}
               <Grid item xs={12} md={3}>
-                <Card className={styles.summaryCard}>
+                <Card className={`${styles.summaryCard} ${styles.balanceCard}`}>
                   <CardHeader 
                     title={
                       <Box className={styles.cardHeaderContent}>
@@ -366,6 +374,10 @@ export default function Dashboard() {
                       <EditIcon fontSize="small" className={styles.menuIcon} />
                       Edit Balance
                     </MenuItem>
+                    <MenuItem onClick={handleManageWallets} className={styles.menuItem}>
+                      <SettingsIcon fontSize="small" className={styles.menuIcon} />
+                      Manage Wallets
+                    </MenuItem>
                   </Menu>
                   <CardContent sx={{ pt: 0 }}>
                     {loading ? (
@@ -382,7 +394,7 @@ export default function Dashboard() {
                 </Card>
               </Grid>
               <Grid item xs={12} md={3}>
-                <Card className={styles.summaryCard}>
+                <Card className={`${styles.summaryCard} ${styles.incomeCard}`}>
                   <CardHeader 
                     title={
                       <Box className={styles.cardTitleContainer}>
@@ -415,7 +427,7 @@ export default function Dashboard() {
                 </Card>
               </Grid>
               <Grid item xs={12} md={3}>
-                <Card className={styles.summaryCard}>
+                <Card className={`${styles.summaryCard} ${styles.expenseCard}`}>
                   <CardHeader 
                     title={
                       <Box className={styles.cardTitleContainer}>
@@ -448,7 +460,7 @@ export default function Dashboard() {
                 </Card>
               </Grid>
               <Grid item xs={12} md={3}>
-                <Card className={styles.summaryCard}>
+                <Card className={`${styles.summaryCard} ${styles.savingsCard}`}>
                   <CardHeader 
                     title={
                       <Box className={styles.cardTitleContainer}>
@@ -583,6 +595,13 @@ export default function Dashboard() {
         onTransactionAdded={handleTransactionAdded}
       />
       
+      {/* Wallet Management Form */}
+      <WalletManageForm 
+        open={walletManageFormOpen} 
+        handleClose={() => setWalletManageFormOpen(false)} 
+        onWalletUpdated={handleAccountAdded}
+      />
+      
       {/* Keep the individual forms for backward compatibility if needed */}
       <TransactionForm 
         open={transactionFormOpen} 
@@ -590,10 +609,10 @@ export default function Dashboard() {
         onTransactionAdded={handleTransactionAdded}
       />
       
-      <AccountForm 
+      <WalletForm 
         open={accountFormOpen} 
         handleClose={() => setAccountFormOpen(false)} 
-        onAccountAdded={handleAccountAdded}
+        onWalletAdded={handleAccountAdded}
       />
       
       <CategoryForm 

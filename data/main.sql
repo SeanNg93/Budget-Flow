@@ -68,6 +68,9 @@ CREATE TABLE accounts (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+-- Comment: The accounts table is now used to store wallet information
+-- In a future update, we'll rename this table to wallets and update all references
+
 CREATE TABLE transaction_categories (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
@@ -148,9 +151,9 @@ INSERT INTO user_roles (user_id, role_id) VALUES
 -- =============================================
 -- Insert test accounts
 INSERT INTO accounts (user_id, account_name, account_type, balance, currency) VALUES 
-(1, 'Admin Account', 'Checking', 2500.00, 'USD'),
-(2, 'Checking Account', 'Checking', 1000.00, 'USD'),
-(2, 'Savings Account', 'Savings', 5000.00, 'USD');
+(1, 'Admin Wallet', 'Checking', 2500.00, 'USD'),
+(2, 'Main Wallet', 'Checking', 1000.00, 'USD'),
+(2, 'Savings Wallet', 'Savings', 5000.00, 'USD');
 
 -- Insert test categories
 INSERT INTO transaction_categories (user_id, category_name, type) VALUES 
@@ -196,6 +199,8 @@ SELECT u.username, a.account_name, a.balance, a.currency
 FROM accounts a
 JOIN users u ON a.user_id = u.id
 ORDER BY u.id, a.id;
+
+-- Comment: This query now shows user wallets
 
 -- Verify transactions
 SELECT u.username, a.account_name, t.transaction_type, t.amount, c.category_name, t.description

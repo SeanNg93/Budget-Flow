@@ -15,17 +15,18 @@ import {
   Box,
   InputAdornment,
   CircularProgress,
-  Alert
+  Alert,
+  Typography
 } from '@mui/material';
 import FinanceService from '../../services/FinanceService';
 
-const AccountForm = ({ open, handleClose, onAccountAdded, embedded = false }) => {
+const WalletForm = ({ open, handleClose, onAccountAdded, embedded = false }) => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     accountName: '',
     accountType: 'Checking',
     balance: '',
-    currency: 'USD'
+    currency: 'USD'  // Keeping this in the state but not showing in UI
   });
   const [errors, setErrors] = useState({});
   const [error, setError] = useState('');
@@ -51,19 +52,15 @@ const AccountForm = ({ open, handleClose, onAccountAdded, embedded = false }) =>
     const newErrors = {};
     
     if (!formData.accountName) {
-      newErrors.accountName = 'Account name is required';
+      newErrors.accountName = 'Wallet name is required';
     }
     
     if (!formData.accountType) {
-      newErrors.accountType = 'Account type is required';
+      newErrors.accountType = 'Wallet type is required';
     }
     
     if (!formData.balance || isNaN(formData.balance) || parseFloat(formData.balance) < 0) {
       newErrors.balance = 'Valid balance is required';
-    }
-    
-    if (!formData.currency) {
-      newErrors.currency = 'Currency is required';
     }
     
     setErrors(newErrors);
@@ -98,8 +95,8 @@ const AccountForm = ({ open, handleClose, onAccountAdded, embedded = false }) =>
         handleClose();
       }
     } catch (err) {
-      console.error('Error creating account:', err);
-      setError(err.response?.data?.message || 'Failed to create account. Please try again.');
+      console.error('Error creating wallet:', err);
+      setError(err.response?.data?.message || 'Failed to create wallet. Please try again.');
     } finally {
       setSubmitting(false);
     }
@@ -121,95 +118,98 @@ const AccountForm = ({ open, handleClose, onAccountAdded, embedded = false }) =>
     <>
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
       
-      <Grid container spacing={2}>
+      <Grid container spacing={2} sx={{ mt: 0.5 }}>
         <Grid item xs={12}>
-          <TextField
-            fullWidth
-            label="Account Name"
-            name="accountName"
-            value={formData.accountName}
-            onChange={handleChange}
-            error={!!errors.accountName}
-            helperText={errors.accountName}
-            disabled={loading}
-          />
+          <FormControl fullWidth error={!!errors.accountName} size="small" sx={{ mb: 1 }}>
+            <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 500, color: 'text.secondary' }}>
+              Wallet Name
+            </Typography>
+            <TextField
+              name="accountName"
+              value={formData.accountName}
+              onChange={handleChange}
+              placeholder="My Wallet"
+              error={!!errors.accountName}
+              helperText={errors.accountName}
+              disabled={loading}
+              size="small"
+              sx={{ 
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '8px'
+                }
+              }}
+            />
+          </FormControl>
         </Grid>
         
-        <Grid item xs={12} sm={6}>
-          <FormControl fullWidth error={!!errors.accountType}>
-            <InputLabel id="account-type-label">Account Type</InputLabel>
+        <Grid item xs={12}>
+          <FormControl fullWidth error={!!errors.accountType} size="small" sx={{ mb: 1 }}>
+            <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 500, color: 'text.secondary' }}>
+              Wallet Type
+            </Typography>
             <Select
-              labelId="account-type-label"
               name="accountType"
               value={formData.accountType}
               onChange={handleChange}
-              label="Account Type"
+              displayEmpty
               disabled={loading}
+              sx={{ borderRadius: '8px' }}
             >
               <MenuItem value="Checking">Checking</MenuItem>
               <MenuItem value="Savings">Savings</MenuItem>
+              <MenuItem value="Cash">Cash</MenuItem>
               <MenuItem value="Credit_Card">Credit Card</MenuItem>
               <MenuItem value="Investment">Investment</MenuItem>
+              <MenuItem value="Digital_Wallet">Digital Wallet</MenuItem>
+              <MenuItem value="Crypto">Cryptocurrency</MenuItem>
             </Select>
             {errors.accountType && <FormHelperText>{errors.accountType}</FormHelperText>}
           </FormControl>
         </Grid>
         
-        <Grid item xs={12} sm={6}>
-          <FormControl fullWidth error={!!errors.currency}>
-            <InputLabel id="currency-label">Currency</InputLabel>
-            <Select
-              labelId="currency-label"
-              name="currency"
-              value={formData.currency}
-              onChange={handleChange}
-              label="Currency"
-              disabled={loading}
-            >
-              <MenuItem value="USD">USD ($)</MenuItem>
-              <MenuItem value="EUR">EUR (€)</MenuItem>
-              <MenuItem value="GBP">GBP (£)</MenuItem>
-              <MenuItem value="JPY">JPY (¥)</MenuItem>
-              <MenuItem value="CAD">CAD ($)</MenuItem>
-              <MenuItem value="AUD">AUD ($)</MenuItem>
-              <MenuItem value="CHF">CHF (Fr)</MenuItem>
-              <MenuItem value="CNY">CNY (¥)</MenuItem>
-              <MenuItem value="INR">INR (₹)</MenuItem>
-              <MenuItem value="VND">VND (₫)</MenuItem>
-            </Select>
-            {errors.currency && <FormHelperText>{errors.currency}</FormHelperText>}
-          </FormControl>
-        </Grid>
-        
         <Grid item xs={12}>
-          <TextField
-            fullWidth
-            label="Initial Balance"
-            name="balance"
-            value={formData.balance}
-            onChange={handleChange}
-            error={!!errors.balance}
-            helperText={errors.balance}
-            disabled={loading}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  {formData.currency === 'USD' ? '$' : 
-                   formData.currency === 'EUR' ? '€' : 
-                   formData.currency === 'GBP' ? '£' : 
-                   formData.currency === 'JPY' ? '¥' : 
-                   formData.currency === 'INR' ? '₹' : 
-                   formData.currency === 'VND' ? '₫' : ''}
-                </InputAdornment>
-              ),
-            }}
-          />
+          <FormControl fullWidth error={!!errors.balance} size="small" sx={{ mb: 1 }}>
+            <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 500, color: 'text.secondary' }}>
+              Initial Balance
+            </Typography>
+            <TextField
+              name="balance"
+              value={formData.balance}
+              onChange={handleChange}
+              placeholder="0.00"
+              error={!!errors.balance}
+              helperText={errors.balance}
+              disabled={loading}
+              size="small"
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    $
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ 
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '8px'
+                }
+              }}
+            />
+          </FormControl>
         </Grid>
       </Grid>
       
-      <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
+      <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
         {!embedded && (
-          <Button onClick={handleClose} disabled={submitting} sx={{ mr: 1 }}>
+          <Button 
+            onClick={handleClose} 
+            disabled={submitting} 
+            sx={{ 
+              mr: 1, 
+              borderRadius: '8px',
+              textTransform: 'none',
+              fontWeight: 500
+            }}
+          >
             Cancel
           </Button>
         )}
@@ -219,8 +219,14 @@ const AccountForm = ({ open, handleClose, onAccountAdded, embedded = false }) =>
           onClick={handleSubmit}
           disabled={submitting || loading}
           startIcon={submitting ? <CircularProgress size={20} /> : null}
+          sx={{ 
+            borderRadius: '8px',
+            textTransform: 'none',
+            fontWeight: 500,
+            boxShadow: 'none'
+          }}
         >
-          {submitting ? 'Saving...' : 'Save Account'}
+          {submitting ? 'Saving...' : 'Save Wallet'}
         </Button>
       </Box>
     </>
@@ -233,13 +239,24 @@ const AccountForm = ({ open, handleClose, onAccountAdded, embedded = false }) =>
 
   // Otherwise, wrap in a Dialog
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-      <DialogTitle>Add Account</DialogTitle>
-      <DialogContent>
+    <Dialog 
+      open={open} 
+      onClose={handleClose} 
+      maxWidth="sm" 
+      fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: '12px',
+          boxShadow: '0px 8px 24px rgba(0, 0, 0, 0.15)'
+        }
+      }}
+    >
+      <DialogTitle sx={{ pb: 1, fontWeight: 600 }}>Add Wallet</DialogTitle>
+      <DialogContent sx={{ pt: 0 }}>
         {formContent}
       </DialogContent>
     </Dialog>
   );
 };
 
-export default AccountForm; 
+export default WalletForm; 
