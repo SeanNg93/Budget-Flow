@@ -173,15 +173,7 @@ public class WalletService {
         }
         
         Wallet wallet = getWalletById(id);
-        BigDecimal currentBalance = wallet.getBalance();
-        
-        // Check if wallet has enough balance
-        if (amount.compareTo(currentBalance) > 0) {
-            throw new IllegalArgumentException("Cannot subtract " + amount 
-                + " from wallet with balance of " + currentBalance);
-        }
-        
-        BigDecimal newBalance = currentBalance.subtract(amount);
+        BigDecimal newBalance = wallet.getBalance().subtract(amount);
         wallet.setBalance(newBalance);
         return walletRepository.save(wallet);
     }

@@ -55,6 +55,14 @@ public class TransactionService {
         Wallet wallet = walletRepository.findById(walletId)
                 .orElseThrow(() -> new EntityNotFoundException("Wallet not found with id: " + walletId));
 
+        // Validate wallet balance for expense transactions
+        if (transaction.getTransactionType() == Transaction.TransactionType.EXPENSE) {
+            BigDecimal walletBalance = wallet.getBalance();
+            if (transaction.getAmount().compareTo(walletBalance) > 0) {
+                throw new InsufficientFundsException(walletBalance, transaction.getAmount());
+            }
+        }
+
         transaction.setUser(user);
         transaction.setWallet(wallet);
         transaction.setStatus(Transaction.TransactionStatus.COMPLETED);

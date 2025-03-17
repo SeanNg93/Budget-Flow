@@ -1,5 +1,6 @@
 package com.financeapp.controller;
 
+import com.financeapp.exception.InsufficientFundsException;
 import com.financeapp.model.Transaction;
 import com.financeapp.model.User;
 import com.financeapp.service.WalletService;
@@ -86,7 +87,7 @@ public class TransactionController {
      * Create a new transaction
      */
     @PostMapping
-    public ResponseEntity<Transaction> createTransaction(
+    public ResponseEntity<?> createTransaction(
             @RequestBody Transaction transaction,
             @RequestParam Long walletId) {
         try {
@@ -95,17 +96,15 @@ public class TransactionController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
             
-            log.info("Creating transaction for user: {} in wallet: {}", 
-                    currentUser.getUsername(), walletId);
-            
             Transaction createdTransaction = transactionService.createTransaction(
                     transaction, currentUser.getId(), walletId);
             
-            log.info("Transaction created successfully with ID: {}", createdTransaction.getId());
             return new ResponseEntity<>(createdTransaction, HttpStatus.CREATED);
         } catch (Exception e) {
-            log.error("Error creating transaction: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            if (!(e instanceof InsufficientFundsException)) {
+                log.error("Error creating transaction: {}", e.getMessage());
+            }
+            throw e; // Let GlobalExceptionHandler handle it
         }
     }
 
@@ -113,7 +112,7 @@ public class TransactionController {
      * Update an existing transaction
      */
     @PutMapping("/{id}")
-    public ResponseEntity<Transaction> updateTransaction(
+    public ResponseEntity<?> updateTransaction(
             @PathVariable Long id,
             @RequestBody Transaction transactionDetails) {
         try {
@@ -135,9 +134,19 @@ public class TransactionController {
             Transaction updatedTransaction = transactionService.updateTransaction(id, transactionDetails);
             log.info("Transaction updated successfully with ID: {}", id);
             return ResponseEntity.ok(updatedTransaction);
+        } catch (IllegalArgumentException e) {
+            // Handle validation errors like insufficient funds
+            log.error("Validation error updating transaction: {}", e.getMessage());
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Validation Error");
+            errorResponse.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         } catch (Exception e) {
             log.error("Error updating transaction with ID {}: {}", id, e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Server Error");
+            errorResponse.put("message", "An unexpected error occurred while updating your transaction");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
 
