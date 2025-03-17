@@ -27,7 +27,9 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloseIcon from '@mui/icons-material/Close';
+import AddIcon from '@mui/icons-material/Add';
 import FinanceService from '../../services/FinanceService';
+import WalletForm from './WalletForm';
 import styles from '../../styles/walletManage.module.css';
 
 const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false }) => {
@@ -50,6 +52,9 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
   const [deleteWalletId, setDeleteWalletId] = useState(null);
   const [deleteWalletName, setDeleteWalletName] = useState('');
   const [deleting, setDeleting] = useState(false);
+  
+  // New wallet states
+  const [newWalletFormOpen, setNewWalletFormOpen] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -237,16 +242,45 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
       setDeleting(false);
     }
   };
+  
+  const handleOpenNewWalletForm = () => {
+    setNewWalletFormOpen(true);
+  };
+  
+  const handleCloseNewWalletForm = () => {
+    setNewWalletFormOpen(false);
+  };
+  
+  const handleWalletAdded = () => {
+    handleCloseNewWalletForm();
+    fetchFinancialData();
+    
+    // Notify parent component
+    if (onWalletUpdated) {
+      onWalletUpdated();
+    }
+  };
 
   // Form content that will be used in both embedded and non-embedded modes
   const formContent = (
     <>
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
       
-      <Box sx={{ mb: 2 }}>
-        <Alert severity="info">
+      <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Alert severity="info" sx={{ flexGrow: 1 }}>
           Total Balance: {totalBalance.toFixed(2)}
         </Alert>
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<AddIcon />}
+          onClick={handleOpenNewWalletForm}
+          sx={{ ml: 2 }}
+          disabled={editMode || loading}
+          className={styles.addWalletButton}
+        >
+          New Wallet
+        </Button>
       </Box>
       
       {loading ? (
@@ -392,6 +426,26 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
             {deleting ? 'Deleting...' : 'Delete'}
           </Button>
         </DialogActions>
+      </Dialog>
+      
+      {/* New Wallet Form Dialog */}
+      <Dialog
+        open={newWalletFormOpen}
+        onClose={handleCloseNewWalletForm}
+        maxWidth="sm"
+        PaperProps={{
+          className: styles.walletFormDialog
+        }}
+      >
+        <DialogTitle>Add New Wallet</DialogTitle>
+        <DialogContent>
+          <WalletForm
+            open={true}
+            handleClose={handleCloseNewWalletForm}
+            onWalletAdded={handleWalletAdded}
+            embedded={true}
+          />
+        </DialogContent>
       </Dialog>
     </>
   );
