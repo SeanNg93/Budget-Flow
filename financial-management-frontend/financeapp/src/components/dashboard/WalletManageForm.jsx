@@ -274,11 +274,18 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
   // Transfer money functions
   const handleOpenTransferDialog = () => {
     setTransferDialogOpen(true);
+    // Default to first wallet as source if available
     if (wallets.length > 0) {
       setSourceWalletId(wallets[0].id.toString());
+      // Default to "Total Balance" as destination if there's only one wallet
       if (wallets.length > 1) {
         setDestinationWalletId(wallets[1].id.toString());
+      } else {
+        setDestinationWalletId("total");
       }
+    } else {
+      // If no wallets, default to Total Balance as source
+      setSourceWalletId("total");
     }
     setTransferAmount('');
     setTransferError('');
@@ -298,17 +305,17 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
     
     // Check if source and destination are selected and different
     if (!sourceWalletId) {
-      setTransferError('Please select a source wallet');
+      setTransferError('Please select a source');
       return false;
     }
     
     if (!destinationWalletId) {
-      setTransferError('Please select a destination wallet');
+      setTransferError('Please select a destination');
       return false;
     }
     
     if (sourceWalletId === destinationWalletId) {
-      setTransferError('Source and destination wallets must be different');
+      setTransferError('Source and destination must be different');
       return false;
     }
     
@@ -318,16 +325,27 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
       return false;
     }
     
-    // Check if source wallet has enough balance
-    const sourceWallet = wallets.find(w => w.id.toString() === sourceWalletId);
-    if (!sourceWallet) {
-      setTransferError('Source wallet not found');
-      return false;
-    }
+    const amount = parseFloat(transferAmount);
     
-    if (parseFloat(transferAmount) > sourceWallet.balance) {
-      setTransferError(`Insufficient funds in source wallet (available: ${sourceWallet.balance.toFixed(2)})`);
-      return false;
+    // Check if source has enough balance
+    if (sourceWalletId === "total") {
+      // If source is total balance, check if there's enough available balance
+      if (amount > availableBalance) {
+        setTransferError(`Insufficient available balance (available: ${availableBalance.toFixed(2)})`);
+        return false;
+      }
+    } else {
+      // If source is a wallet, check if it has enough balance
+      const sourceWallet = wallets.find(w => w.id.toString() === sourceWalletId);
+      if (!sourceWallet) {
+        setTransferError('Source wallet not found');
+        return false;
+      }
+      
+      if (amount > sourceWallet.balance) {
+        setTransferError(`Insufficient funds in source wallet (available: ${sourceWallet.balance.toFixed(2)})`);
+        return false;
+      }
     }
     
     return true;
@@ -341,25 +359,52 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
     setTransferring(true);
     
     try {
-      const sourceWallet = wallets.find(w => w.id.toString() === sourceWalletId);
-      const destinationWallet = wallets.find(w => w.id.toString() === destinationWalletId);
       const amount = parseFloat(transferAmount);
       
-      // Update source wallet
-      const updatedSourceWallet = {
-        ...sourceWallet,
-        balance: sourceWallet.balance - amount
-      };
-      
-      // Update destination wallet
-      const updatedDestinationWallet = {
-        ...destinationWallet,
-        balance: destinationWallet.balance + amount
-      };
-      
-      // Call API to update both wallets
-      await FinanceService.updateAccount(sourceWallet.id, updatedSourceWallet);
-      await FinanceService.updateAccount(destinationWallet.id, updatedDestinationWallet);
+      // Handle different transfer scenarios
+      if (sourceWalletId === "total" && destinationWalletId !== "total") {
+        // Transfer from total balance to wallet
+        const destinationWallet = wallets.find(w => w.id.toString() === destinationWalletId);
+        const updatedDestinationWallet = {
+          ...destinationWallet,
+          balance: destinationWallet.balance + amount
+        };
+        
+        // Update wallet balance
+        await FinanceService.updateAccount(destinationWallet.id, updatedDestinationWallet);
+      } 
+      else if (sourceWalletId !== "total" && destinationWalletId === "total") {
+        // Transfer from wallet to total balance
+        const sourceWallet = wallets.find(w => w.id.toString() === sourceWalletId);
+        const updatedSourceWallet = {
+          ...sourceWallet,
+          balance: sourceWallet.balance - amount
+        };
+        
+        // Update wallet balance
+        await FinanceService.updateAccount(sourceWallet.id, updatedSourceWallet);
+      }
+      else {
+        // Transfer between wallets
+        const sourceWallet = wallets.find(w => w.id.toString() === sourceWalletId);
+        const destinationWallet = wallets.find(w => w.id.toString() === destinationWalletId);
+        
+        // Update source wallet
+        const updatedSourceWallet = {
+          ...sourceWallet,
+          balance: sourceWallet.balance - amount
+        };
+        
+        // Update destination wallet
+        const updatedDestinationWallet = {
+          ...destinationWallet,
+          balance: destinationWallet.balance + amount
+        };
+        
+        // Call API to update both wallets
+        await FinanceService.updateAccount(sourceWallet.id, updatedSourceWallet);
+        await FinanceService.updateAccount(destinationWallet.id, updatedDestinationWallet);
+      }
       
       // Close dialog and refresh wallets
       handleCloseTransferDialog();
@@ -618,9 +663,13 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
             </Alert>
           )}
           
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Transfer money between your wallets or allocate funds from your available total balance.
+          </Typography>
+          
           <FormControl fullWidth margin="normal">
             <Typography variant="subtitle2" gutterBottom>
-              From Wallet
+              From
             </Typography>
             <Select
               value={sourceWalletId}
@@ -629,6 +678,9 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
               size="small"
               className={styles.selectField}
             >
+              <MenuItem value="total">
+                Total Balance (Available: ${availableBalance.toFixed(2)})
+              </MenuItem>
               {wallets.map((wallet) => (
                 <MenuItem key={wallet.id} value={wallet.id.toString()}>
                   {wallet.accountName} (${wallet.balance.toFixed(2)})
@@ -639,7 +691,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
           
           <FormControl fullWidth margin="normal">
             <Typography variant="subtitle2" gutterBottom>
-              To Wallet
+              To
             </Typography>
             <Select
               value={destinationWalletId}
@@ -648,6 +700,9 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
               size="small"
               className={styles.selectField}
             >
+              <MenuItem value="total">
+                Total Balance (Available: ${availableBalance.toFixed(2)})
+              </MenuItem>
               {wallets.map((wallet) => (
                 <MenuItem key={wallet.id} value={wallet.id.toString()}>
                   {wallet.accountName} (${wallet.balance.toFixed(2)})
@@ -675,6 +730,21 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
               }}
             />
           </FormControl>
+          
+          {/* Show contextual help text based on transfer type */}
+          {sourceWalletId && destinationWalletId && sourceWalletId !== destinationWalletId && (
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                {sourceWalletId === "total" && destinationWalletId !== "total" ? (
+                  "Allocating funds from your available balance to a specific wallet."
+                ) : destinationWalletId === "total" && sourceWalletId !== "total" ? (
+                  "Unallocating funds from a wallet back to your available balance."
+                ) : (
+                  "Moving funds between wallets. Total balance remains unchanged."
+                )}
+              </Typography>
+            </Box>
+          )}
           
         </DialogContent>
         <DialogActions className={styles.transferActions}>
