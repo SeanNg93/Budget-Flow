@@ -18,7 +18,7 @@ import Profile from './pages/user/Profile.jsx';
 import DeleteUser from './pages/user/DeleteUser.jsx';
 
 // Account Pages
-import DeleteAccount from './pages/account/DeleteAccount.jsx';
+import DeleteAccount from './pages/delete-account.jsx';
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
