@@ -174,8 +174,8 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
       return;
     }
     
-    setSubmitting(true);
-    setError('');
+    setLoading(true);
+    setError(null);
     
     try {
       const transactionData = {
@@ -210,11 +210,22 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
       if (!embedded) {
         handleClose();
       }
-    } catch (err) {
-      console.error('Error processing transaction:', err);
-      setError(err.response?.data?.message || 'Failed to process transaction. Please try again.');
+    } catch (error) {
+      console.error('Error processing transaction:', error);
+      
+      if (error.response && error.response.data) {
+        const errorData = error.response.data;
+        if (errorData.error === 'Insufficient funds') {
+          // Format the error message nicely with the available balance
+          setError(`Wallet balance not enough. Available: ${errorData.available}, Required: ${errorData.required}`);
+        } else {
+          setError(errorData.message || 'Failed to process transaction. Please try again.');
+        }
+      } else {
+        setError('Failed to process transaction. Please try again.');
+      }
     } finally {
-      setSubmitting(false);
+      setLoading(false);
     }
   };
   
