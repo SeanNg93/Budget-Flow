@@ -40,7 +40,7 @@ public class SecurityConfig {
                 .cors().configurationSource(corsConfigurationSource())
                 .and()
                 .authorizeHttpRequests()
-                .requestMatchers("/api/auth/**", "/api/password/**", "/api/activate/**", "/api/test/**", "/api/user/deletion-status").permitAll()
+                .requestMatchers("/api/auth/**", "/api/password/**", "/api/activate/**", "/api/account/**", "/api/test/**", "/api/user/deletion-status", "/uploads/**").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
