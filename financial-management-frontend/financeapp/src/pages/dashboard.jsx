@@ -55,6 +55,7 @@ import CategoryForm from '../components/dashboard/CategoryForm';
 import FinanceActionPanel from '../components/dashboard/FinanceActionPanel';
 import AddBalanceForm from '../components/dashboard/AddBalanceForm';
 import EditBalanceForm from '../components/dashboard/EditBalanceForm';
+import PendingDeletionAlert from '../components/dashboard/PendingDeletionAlert';
 
 // Import theme
 import AppTheme from '../shared-theme/AppTheme';
@@ -344,6 +345,7 @@ export default function Dashboard() {
         <CssBaseline />
         <AppNavbar open={open} handleDrawerOpen={handleDrawerOpen} />
         <SideMenu open={open} handleDrawerClose={handleDrawerClose} />
+        <PendingDeletionAlert />
         <Main open={open}>
           <DrawerHeader />
           <Container maxWidth="lg" className={styles.dashboardContainer}>

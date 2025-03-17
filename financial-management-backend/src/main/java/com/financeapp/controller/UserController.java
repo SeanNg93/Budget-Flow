@@ -3,6 +3,7 @@ package com.financeapp.controller;
 import com.financeapp.dto.ChangePasswordRequest;
 import com.financeapp.model.User;
 import com.financeapp.repository.UserRepository;
+import com.financeapp.service.UserDeletionService;
 import com.financeapp.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +30,7 @@ public class UserController {
 
     private final UserRepository userRepository;
     private final UserService userService;
+    private final UserDeletionService userDeletionService;
 
     /**
      * Delete a user by username (admin can delete any user, regular users can only delete themselves)
@@ -56,37 +58,52 @@ public class UserController {
                     .body(Map.of("success", "false", "message", "You can only delete your own account"));
         }
 
-        userRepository.delete(user);
-        log.info("User {} deleted successfully by {}", username, currentUsername);
-        return ResponseEntity.ok(Map.of("success", "true", "message", "User deleted successfully"));
+        // For admin-initiated deletions, bypass the 30-minute wait
+        if (isAdmin && !currentUsername.equals(username)) {
+            userRepository.delete(user);
+            log.info("User {} deleted immediately by admin {}", username, currentUsername);
+            return ResponseEntity.ok(Map.of("success", "true", "message", "User deleted successfully"));
+        } else {
+            // For self-deletions, use the soft delete process
+            Map<String, String> result = userDeletionService.requestAccountDeletion(username, "", true);
+            return ResponseEntity.ok(result);
+        }
     }
 
     /**
-     * Delete the authenticated user's account with password verification
+     * Request deletion of the authenticated user's account with password verification
      */
     @DeleteMapping("/delete-account")
-    public ResponseEntity<Map<String, String>> deleteOwnAccount(
+    public ResponseEntity<Map<String, String>> requestAccountDeletion(
             Authentication authentication, 
             @RequestParam("password") String password) {
         
         String username = authentication.getName();
-        log.info("Attempting to delete account for user: {}", username);
+        log.info("Requesting account deletion for user: {}", username);
         
-        boolean deleted = userService.deleteUserAccount(username, password);
+        Map<String, String> result = userDeletionService.requestAccountDeletion(username, password, true);
         
-        if (deleted) {
-            log.info("Account deleted successfully for user: {}", username);
-            return ResponseEntity.ok(Map.of(
-                "success", "true", 
-                "message", "Account has been successfully deleted."
-            ));
+        if (result.get("success").equals("true")) {
+            return ResponseEntity.ok(result);
         } else {
-            log.warn("Failed to delete account for user: {}", username);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of(
-                        "success", "false", 
-                        "message", "Authentication failed or account could not be deleted."
-                    ));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
+        }
+    }
+    
+    /**
+     * Cancel a pending account deletion
+     */
+    @PostMapping("/cancel-deletion")
+    public ResponseEntity<Map<String, String>> cancelDeletion(Authentication authentication) {
+        String username = authentication.getName();
+        log.info("Cancelling account deletion for user: {}", username);
+        
+        Map<String, String> result = userDeletionService.cancelAccountDeletion(username);
+        
+        if (result.get("success").equals("true")) {
+            return ResponseEntity.ok(result);
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
         }
     }
 
@@ -133,5 +150,19 @@ public class UserController {
                         "message", "Current password is incorrect or user not found"
                     ));
         }
+    }
+    
+    /**
+     * Check if the current user has a pending deletion
+     */
+    @GetMapping("/deletion-status")
+    public ResponseEntity<Map<String, Object>> getDeletionStatus(Authentication authentication) {
+        String username = authentication.getName();
+        boolean isPendingDeletion = userDeletionService.isUserPendingDeletion(username);
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("isPendingDeletion", isPendingDeletion);
+        
+        return ResponseEntity.ok(response);
     }
 }

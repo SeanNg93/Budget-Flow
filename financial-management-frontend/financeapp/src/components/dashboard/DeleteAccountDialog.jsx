@@ -12,6 +12,7 @@ import {
     CircularProgress,
     Alert
 } from '@mui/material';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import styles from '../../styles/delete-account.module.css';
 
 export default function DeleteAccountDialog({ open, handleClose }) {
@@ -19,16 +20,26 @@ export default function DeleteAccountDialog({ open, handleClose }) {
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
+    const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+    const [successDialogOpen, setSuccessDialogOpen] = useState(false);
+    const [successMessage, setSuccessMessage] = useState('');
 
-    const handleDelete = async () => {
+    const handleDeleteRequest = () => {
         if (!password.trim()) {
             setError("Please enter your password to confirm.");
             return;
         }
+        
+        // Open the confirmation dialog instead of using window.confirm
+        setConfirmDialogOpen(true);
+    };
+    
+    const handleConfirmCancel = () => {
+        setConfirmDialogOpen(false);
+    };
 
-        const confirmed = window.confirm('Are you sure you want to delete your account? This action cannot be undone.');
-        if (!confirmed) return;
-
+    const handleDelete = async () => {
+        setConfirmDialogOpen(false);
         setIsLoading(true);
         setError('');
         
@@ -59,9 +70,9 @@ export default function DeleteAccountDialog({ open, handleClose }) {
             const data = await response.json();
 
             if (data.success === true || data.success === "true") {
-                alert("Account deleted successfully!");
-                localStorage.clear();
-                navigate('/register');
+                // Show success dialog instead of alert
+                setSuccessMessage(data.message || "Account marked for deletion. You have 30 minutes to log back in if you change your mind.");
+                setSuccessDialogOpen(true);
             } else {
                 setError(data.message || "An error occurred.");
             }
@@ -78,6 +89,12 @@ export default function DeleteAccountDialog({ open, handleClose }) {
         }
     };
 
+    const handleSuccessClose = () => {
+        setSuccessDialogOpen(false);
+        localStorage.clear();
+        navigate('/login');
+    };
+
     const handleCancel = () => {
         setPassword('');
         setError('');
@@ -85,63 +102,140 @@ export default function DeleteAccountDialog({ open, handleClose }) {
     };
 
     return (
-        <Dialog 
-            open={open} 
-            onClose={handleCancel}
-            maxWidth="sm"
-            fullWidth
-            PaperProps={{
-                className: styles.deleteAccountDialog
-            }}
-        >
-            <DialogTitle className={styles.title}>
-                Delete Account
-            </DialogTitle>
-            
-            <DialogContent>
-                <Typography variant="body1" color="error" className={styles.warning}>
-                    This action will delete all your related information and cannot be undone.
-                </Typography>
+        <>
+            <Dialog 
+                open={open} 
+                onClose={handleCancel}
+                maxWidth="sm"
+                fullWidth
+                PaperProps={{
+                    className: styles.deleteAccountDialog
+                }}
+            >
+                <DialogTitle className={styles.title}>
+                    Delete Account
+                </DialogTitle>
+                
+                <DialogContent>
+                    <Typography variant="body1" color="error" className={styles.warning}>
+                        This action will mark your account for deletion. After 30 minutes, your account and all related information will be permanently deleted.
+                    </Typography>
+                    
+                    <Typography variant="body2" sx={{ mt: 1, mb: 2 }}>
+                        If you change your mind, you can cancel the deletion by logging back in within the 30-minute period.
+                    </Typography>
 
-                {error && (
-                    <Alert severity="error" sx={{ my: 2 }}>
-                        {error}
-                    </Alert>
-                )}
+                    {error && (
+                        <Alert severity="error" sx={{ my: 2 }}>
+                            {error}
+                        </Alert>
+                    )}
 
-                <Box sx={{ my: 3 }}>
-                    <TextField
-                        type="password"
-                        label="Enter your password to confirm"
+                    <Box sx={{ my: 3 }}>
+                        <TextField
+                            type="password"
+                            label="Enter your password to confirm"
+                            variant="outlined"
+                            fullWidth
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className={styles.input}
+                        />
+                    </Box>
+                </DialogContent>
+
+                <DialogActions className={styles.buttonGroup}>
+                    <Button
                         variant="outlined"
-                        fullWidth
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className={styles.input}
-                    />
-                </Box>
-            </DialogContent>
+                        onClick={handleCancel}
+                        disabled={isLoading}
+                        className={styles.cancelButton}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="contained"
+                        color="error"
+                        onClick={handleDeleteRequest}
+                        disabled={isLoading}
+                        startIcon={isLoading ? <CircularProgress size={20} /> : null}
+                        className={styles.deleteButton}
+                    >
+                        {isLoading ? 'Processing...' : 'Delete My Account'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+            
+            {/* Confirmation Dialog */}
+            <Dialog
+                open={confirmDialogOpen}
+                onClose={handleConfirmCancel}
+                maxWidth="sm"
+                PaperProps={{
+                    style: {
+                        borderRadius: '12px',
+                        padding: '8px'
+                    }
+                }}
+            >
+                <DialogTitle>
+                    Confirm Account Deletion
+                </DialogTitle>
+                <DialogContent>
+                    <Typography variant="body1">
+                        Are you sure you want to delete your account? Your account will be marked for deletion and will be permanently deleted after 30 minutes. You can cancel this by logging back in within the 30-minute period.
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button 
+                        variant="outlined" 
+                        onClick={handleConfirmCancel}
+                    >
+                        Cancel
+                    </Button>
+                    <Button 
+                        variant="contained" 
+                        color="error" 
+                        onClick={handleDelete}
+                        autoFocus
+                    >
+                        Yes, Delete My Account
+                    </Button>
+                </DialogActions>
+            </Dialog>
 
-            <DialogActions className={styles.buttonGroup}>
-                <Button
-                    variant="outlined"
-                    onClick={handleCancel}
-                    disabled={isLoading}
-                    className={styles.cancelButton}
-                >
-                    Cancel
-                </Button>
-                <Button
-                    variant="contained"
-                    color="error"
-                    onClick={handleDelete}
-                    disabled={isLoading}
-                    startIcon={isLoading ? <CircularProgress size={20} /> : null}
-                    className={styles.deleteButton}
-                >
-                    {isLoading ? 'Processing...' : 'Delete My Account'}
-                </Button>
-            </DialogActions>
-        </Dialog>
+            {/* Success Dialog */}
+            <Dialog
+                open={successDialogOpen}
+                onClose={handleSuccessClose}
+                maxWidth="sm"
+                PaperProps={{
+                    style: {
+                        borderRadius: '12px',
+                        padding: '16px'
+                    }
+                }}
+            >
+                <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <CheckCircleOutlineIcon color="success" />
+                    <span>Account Deletion Requested</span>
+                </DialogTitle>
+                <DialogContent>
+                    <Typography variant="body1">
+                        {successMessage}
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button 
+                        variant="contained" 
+                        color="primary" 
+                        onClick={handleSuccessClose}
+                        autoFocus
+                    >
+                        OK
+                    </Button>
+                </DialogActions>
+            </Dialog>
+        </>
     );
 } 

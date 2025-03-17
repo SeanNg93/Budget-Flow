@@ -32,6 +32,10 @@ public class User {
     private boolean enabled = false;
     private String activationToken;
     private LocalDateTime activationTokenExpiry;
+    
+    // Fields for soft delete functionality
+    private boolean isPendingDeletion = false;
+    private LocalDateTime deletionRequestedAt;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -48,6 +52,7 @@ public class User {
                 ", username='" + username + '\'' +
                 ", email='" + email + '\'' +
                 ", enabled=" + enabled +
+                ", isPendingDeletion=" + isPendingDeletion +
                 ", roles=" + (roles != null ? roles.stream().map(role -> role.getName().name()).collect(Collectors.joining(", ")) : "null") +
                 '}';
     }
