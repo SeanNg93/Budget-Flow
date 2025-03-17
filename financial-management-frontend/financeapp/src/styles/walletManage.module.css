@@ -51,17 +51,6 @@
   background-color: rgba(0, 122, 255, 0.05);
 }
 
-.editContainer {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  gap: 8px;
-}
-
-.textField input {
-  border-radius: 8px;
-}
-
 .walletName {
   font-weight: 500;
 }
@@ -70,14 +59,108 @@
   color: rgba(0, 0, 0, 0.6);
 }
 
+/* Balance info box */
+.balanceInfoBox {
+  background-color: rgba(232, 244, 253, 0.4);
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+
+.editContainer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.textField input {
+  border-radius: 8px;
+}
+
 .actionButton {
+  border-radius: 8px;
+  text-transform: none;
+  font-weight: 500;
+  margin-right: 8px;
+}
+
+.saveButton {
+  box-shadow: none;
+}
+
+/* Delete confirmation dialog */
+.confirmDialog {
+  border-radius: 12px;
+  box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.15);
+  width: 400px !important;
+}
+
+.confirmTitle {
+  padding-bottom: 8px;
+  font-weight: 600;
+}
+
+.confirmActions {
+  padding: 0 16px 12px 16px;
+}
+
+.deleteButton {
+  border-radius: 8px;
+  text-transform: none;
+  font-weight: 500;
+  box-shadow: none;
+}
+
+.cancelButton {
   border-radius: 8px;
   text-transform: none;
   font-weight: 500;
 }
 
-.saveButton {
+/* New wallet form dialog */
+.walletFormDialog {
+  border-radius: 12px;
+  box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* Add wallet button */
+.addWalletButton {
+  margin-left: 16px;
+  background-color: #007bff;
+  color: white;
+  border-radius: 8px;
+  box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.1);
+  text-transform: none;
+  font-weight: 500;
+}
+
+.addWalletButton:hover {
+  background-color: #0069d9;
+}
+
+/* Transfer money dialog and button */
+.transferDialog {
+  border-radius: 12px;
+  box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.transferTitle {
+  padding-bottom: 8px;
+  font-weight: 600;
+}
+
+.transferActions {
+  padding: 0 16px 16px 16px;
+}
+
+.transferButton {
+  border-radius: 8px;
+  text-transform: none;
+  font-weight: 500;
   box-shadow: none;
+}
+
+.selectField {
+  border-radius: 8px;
 }
 
 .tabsContainer {
@@ -119,33 +202,4 @@
   font-weight: 500;
   font-size: 0.85rem;
   padding: 4px 8px;
-}
-
-/* Delete confirmation dialog */
-.confirmDialog {
-  border-radius: 12px;
-  box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.15);
-  width: 400px !important;
-}
-
-.confirmTitle {
-  padding-bottom: 8px;
-  font-weight: 600;
-}
-
-.confirmActions {
-  padding: 0 16px 12px 16px;
-}
-
-.deleteButton {
-  border-radius: 8px;
-  text-transform: none;
-  font-weight: 500;
-  box-shadow: none;
-}
-
-.cancelButton {
-  border-radius: 8px;
-  text-transform: none;
-  font-weight: 500;
 } 

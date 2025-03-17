@@ -27,7 +27,11 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloseIcon from '@mui/icons-material/Close';
+import AddIcon from '@mui/icons-material/Add';
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
+import InfoIcon from '@mui/icons-material/Info';
 import FinanceService from '../../services/FinanceService';
+import WalletForm from './WalletForm';
 import styles from '../../styles/walletManage.module.css';
 
 const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false }) => {
@@ -50,6 +54,17 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
   const [deleteWalletId, setDeleteWalletId] = useState(null);
   const [deleteWalletName, setDeleteWalletName] = useState('');
   const [deleting, setDeleting] = useState(false);
+  
+  // New wallet states
+  const [newWalletFormOpen, setNewWalletFormOpen] = useState(false);
+  
+  // Transfer money states
+  const [transferDialogOpen, setTransferDialogOpen] = useState(false);
+  const [sourceWalletId, setSourceWalletId] = useState('');
+  const [destinationWalletId, setDestinationWalletId] = useState('');
+  const [transferAmount, setTransferAmount] = useState('');
+  const [transferError, setTransferError] = useState('');
+  const [transferring, setTransferring] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -237,16 +252,233 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
       setDeleting(false);
     }
   };
+  
+  const handleOpenNewWalletForm = () => {
+    setNewWalletFormOpen(true);
+  };
+  
+  const handleCloseNewWalletForm = () => {
+    setNewWalletFormOpen(false);
+  };
+  
+  const handleWalletAdded = () => {
+    handleCloseNewWalletForm();
+    fetchFinancialData();
+    
+    // Notify parent component
+    if (onWalletUpdated) {
+      onWalletUpdated();
+    }
+  };
+  
+  // Transfer money functions
+  const handleOpenTransferDialog = () => {
+    setTransferDialogOpen(true);
+    // Default to first wallet as source if available
+    if (wallets.length > 0) {
+      setSourceWalletId(wallets[0].id.toString());
+      // Default to "Total Balance" as destination if there's only one wallet
+      if (wallets.length > 1) {
+        setDestinationWalletId(wallets[1].id.toString());
+      } else {
+        setDestinationWalletId("total");
+      }
+    } else {
+      // If no wallets, default to Total Balance as source
+      setSourceWalletId("total");
+    }
+    setTransferAmount('');
+    setTransferError('');
+  };
+  
+  const handleCloseTransferDialog = () => {
+    setTransferDialogOpen(false);
+    setSourceWalletId('');
+    setDestinationWalletId('');
+    setTransferAmount('');
+    setTransferError('');
+  };
+  
+  const validateTransfer = () => {
+    // Reset error
+    setTransferError('');
+    
+    // Check if source and destination are selected and different
+    if (!sourceWalletId) {
+      setTransferError('Please select a source');
+      return false;
+    }
+    
+    if (!destinationWalletId) {
+      setTransferError('Please select a destination');
+      return false;
+    }
+    
+    if (sourceWalletId === destinationWalletId) {
+      setTransferError('Source and destination must be different');
+      return false;
+    }
+    
+    // Check if amount is valid
+    if (!transferAmount || isNaN(transferAmount) || parseFloat(transferAmount) <= 0) {
+      setTransferError('Please enter a valid amount');
+      return false;
+    }
+    
+    const amount = parseFloat(transferAmount);
+    
+    // Check if source has enough balance
+    if (sourceWalletId === "total") {
+      // If source is total balance, check if there's enough available balance
+      if (amount > availableBalance) {
+        setTransferError(`Insufficient available balance (available: ${availableBalance.toFixed(2)})`);
+        return false;
+      }
+    } else {
+      // If source is a wallet, check if it has enough balance
+      const sourceWallet = wallets.find(w => w.id.toString() === sourceWalletId);
+      if (!sourceWallet) {
+        setTransferError('Source wallet not found');
+        return false;
+      }
+      
+      if (amount > sourceWallet.balance) {
+        setTransferError(`Insufficient funds in source wallet (available: ${sourceWallet.balance.toFixed(2)})`);
+        return false;
+      }
+    }
+    
+    return true;
+  };
+  
+  const handleTransfer = async () => {
+    if (!validateTransfer()) {
+      return;
+    }
+    
+    setTransferring(true);
+    
+    try {
+      const amount = parseFloat(transferAmount);
+      
+      // Handle different transfer scenarios
+      if (sourceWalletId === "total" && destinationWalletId !== "total") {
+        // Transfer from total balance to wallet
+        const destinationWallet = wallets.find(w => w.id.toString() === destinationWalletId);
+        const updatedDestinationWallet = {
+          ...destinationWallet,
+          balance: destinationWallet.balance + amount
+        };
+        
+        // Update wallet balance
+        await FinanceService.updateAccount(destinationWallet.id, updatedDestinationWallet);
+      } 
+      else if (sourceWalletId !== "total" && destinationWalletId === "total") {
+        // Transfer from wallet to total balance
+        const sourceWallet = wallets.find(w => w.id.toString() === sourceWalletId);
+        const updatedSourceWallet = {
+          ...sourceWallet,
+          balance: sourceWallet.balance - amount
+        };
+        
+        // Update wallet balance
+        await FinanceService.updateAccount(sourceWallet.id, updatedSourceWallet);
+      }
+      else {
+        // Transfer between wallets
+        const sourceWallet = wallets.find(w => w.id.toString() === sourceWalletId);
+        const destinationWallet = wallets.find(w => w.id.toString() === destinationWalletId);
+        
+        // Update source wallet
+        const updatedSourceWallet = {
+          ...sourceWallet,
+          balance: sourceWallet.balance - amount
+        };
+        
+        // Update destination wallet
+        const updatedDestinationWallet = {
+          ...destinationWallet,
+          balance: destinationWallet.balance + amount
+        };
+        
+        // Call API to update both wallets
+        await FinanceService.updateAccount(sourceWallet.id, updatedSourceWallet);
+        await FinanceService.updateAccount(destinationWallet.id, updatedDestinationWallet);
+      }
+      
+      // Close dialog and refresh wallets
+      handleCloseTransferDialog();
+      fetchFinancialData();
+      
+      // Notify parent component
+      if (onWalletUpdated) {
+        onWalletUpdated();
+      }
+    } catch (err) {
+      console.error('Error transferring funds:', err);
+      setTransferError(err.response?.data?.message || 'Failed to transfer funds. Please try again.');
+    } finally {
+      setTransferring(false);
+    }
+  };
 
   // Form content that will be used in both embedded and non-embedded modes
   const formContent = (
     <>
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
       
-      <Box sx={{ mb: 2 }}>
-        <Alert severity="info">
-          Total Balance: {totalBalance.toFixed(2)}
-        </Alert>
+      <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Box 
+          className={styles.balanceInfoBox}
+          sx={{ flexGrow: 1 }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+            <Box component="span" sx={{ mr: 1, color: '#0288d1', display: 'flex', alignItems: 'center' }}>
+              <InfoIcon fontSize="small" color="info" />
+            </Box>
+            <Typography variant="body2" color="text.secondary">
+              Total Balance: ${totalBalance.toFixed(2)}
+            </Typography>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+            <Box component="span" sx={{ mr: 1, color: '#0288d1', display: 'flex', alignItems: 'center' }}>
+              <InfoIcon fontSize="small" color="info" />
+            </Box>
+            <Typography variant="body2" color="text.secondary">
+              Allocated in Wallets: ${wallets.reduce((sum, wallet) => sum + wallet.balance, 0).toFixed(2)}
+            </Typography>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Box component="span" sx={{ mr: 1, color: '#0288d1', display: 'flex', alignItems: 'center' }}>
+              <InfoIcon fontSize="small" color="info" />
+            </Box>
+            <Typography variant="body2" color="text.secondary">
+              Available for allocation: ${availableBalance.toFixed(2)}
+            </Typography>
+          </Box>
+        </Box>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button
+            variant="outlined"
+            color="primary"
+            startIcon={<SwapHorizIcon />}
+            onClick={handleOpenTransferDialog}
+            disabled={editMode || loading || wallets.length < 2}
+            className={styles.transferButton}
+          >
+            Transfer
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={handleOpenNewWalletForm}
+            disabled={editMode || loading}
+            className={styles.addWalletButton}
+          >
+            New Wallet
+          </Button>
+        </Box>
       </Box>
       
       {loading ? (
@@ -390,6 +622,147 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
             className={styles.deleteButton}
           >
             {deleting ? 'Deleting...' : 'Delete'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+      
+      {/* New Wallet Form Dialog */}
+      <Dialog
+        open={newWalletFormOpen}
+        onClose={handleCloseNewWalletForm}
+        maxWidth="sm"
+        PaperProps={{
+          className: styles.walletFormDialog
+        }}
+      >
+        <DialogTitle>Add New Wallet</DialogTitle>
+        <DialogContent>
+          <WalletForm
+            open={true}
+            handleClose={handleCloseNewWalletForm}
+            onWalletAdded={handleWalletAdded}
+            embedded={true}
+          />
+        </DialogContent>
+      </Dialog>
+      
+      {/* Transfer Money Dialog */}
+      <Dialog
+        open={transferDialogOpen}
+        onClose={handleCloseTransferDialog}
+        maxWidth="xs"
+        PaperProps={{
+          className: styles.transferDialog
+        }}
+      >
+        <DialogTitle className={styles.transferTitle}>Transfer Money</DialogTitle>
+        <DialogContent>
+          {transferError && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {transferError}
+            </Alert>
+          )}
+          
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Transfer money between your wallets or allocate funds from your available total balance.
+          </Typography>
+          
+          <FormControl fullWidth margin="normal">
+            <Typography variant="subtitle2" gutterBottom>
+              From
+            </Typography>
+            <Select
+              value={sourceWalletId}
+              onChange={(e) => setSourceWalletId(e.target.value)}
+              displayEmpty
+              size="small"
+              className={styles.selectField}
+            >
+              <MenuItem value="total">
+                Total Balance (Available: ${availableBalance.toFixed(2)})
+              </MenuItem>
+              {wallets.map((wallet) => (
+                <MenuItem key={wallet.id} value={wallet.id.toString()}>
+                  {wallet.accountName} (${wallet.balance.toFixed(2)})
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          
+          <FormControl fullWidth margin="normal">
+            <Typography variant="subtitle2" gutterBottom>
+              To
+            </Typography>
+            <Select
+              value={destinationWalletId}
+              onChange={(e) => setDestinationWalletId(e.target.value)}
+              displayEmpty
+              size="small"
+              className={styles.selectField}
+            >
+              <MenuItem value="total">
+                Total Balance (Available: ${availableBalance.toFixed(2)})
+              </MenuItem>
+              {wallets.map((wallet) => (
+                <MenuItem key={wallet.id} value={wallet.id.toString()}>
+                  {wallet.accountName} (${wallet.balance.toFixed(2)})
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          
+          <FormControl fullWidth margin="normal">
+            <Typography variant="subtitle2" gutterBottom>
+              Amount
+            </Typography>
+            <TextField
+              value={transferAmount}
+              onChange={(e) => setTransferAmount(e.target.value)}
+              placeholder="0.00"
+              type="number"
+              size="small"
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    $
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </FormControl>
+          
+          {/* Show contextual help text based on transfer type */}
+          {sourceWalletId && destinationWalletId && sourceWalletId !== destinationWalletId && (
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                {sourceWalletId === "total" && destinationWalletId !== "total" ? (
+                  "Allocating funds from your available balance to a specific wallet."
+                ) : destinationWalletId === "total" && sourceWalletId !== "total" ? (
+                  "Unallocating funds from a wallet back to your available balance."
+                ) : (
+                  "Moving funds between wallets. Total balance remains unchanged."
+                )}
+              </Typography>
+            </Box>
+          )}
+          
+        </DialogContent>
+        <DialogActions className={styles.transferActions}>
+          <Button 
+            onClick={handleCloseTransferDialog} 
+            className={styles.cancelButton}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleTransfer} 
+            color="primary" 
+            variant="contained"
+            disabled={transferring}
+            startIcon={transferring ? <CircularProgress size={20} color="inherit" /> : null}
+            className={styles.transferButton}
+          >
+            {transferring ? 'Transferring...' : 'Transfer'}
           </Button>
         </DialogActions>
       </Dialog>
