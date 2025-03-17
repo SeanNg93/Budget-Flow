@@ -1,23 +1,21 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-    Container, 
-    Typography, 
-    TextField, 
-    Button, 
-    Paper, 
-    Box, 
-    CircularProgress,
-    Alert,
     Dialog,
     DialogTitle,
     DialogContent,
-    DialogActions
+    DialogActions,
+    Typography, 
+    TextField, 
+    Button, 
+    Box, 
+    CircularProgress,
+    Alert
 } from '@mui/material';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import styles from '../styles/delete-account.module.css';
+import styles from '../../styles/delete-account.module.css';
 
-export default function DeleteAccount() {
+export default function DeleteAccountDialog({ open, handleClose }) {
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
@@ -46,7 +44,6 @@ export default function DeleteAccount() {
         setError('');
         
         try {
-            // Get token from localStorage and verify
             const token = localStorage.getItem('userToken');
             if (!token) {
                 setError("Your session has expired. Please log in again.");
@@ -54,9 +51,6 @@ export default function DeleteAccount() {
                 return;
             }
 
-            console.log('Token being used:', token); // Debug log
-
-            // Use fetch instead of axios
             const response = await fetch(
                 `http://localhost:8080/api/user/delete-account?password=${encodeURIComponent(password)}`,
                 {
@@ -69,13 +63,11 @@ export default function DeleteAccount() {
                 }
             );
 
-            // Check status code
             if (response.status === 403) {
                 throw new Error('Access denied. Please log in again.');
             }
 
             const data = await response.json();
-            console.log('Response data:', data);
 
             if (data.success === true || data.success === "true") {
                 // Show success dialog instead of alert
@@ -103,13 +95,28 @@ export default function DeleteAccount() {
         navigate('/login');
     };
 
+    const handleCancel = () => {
+        setPassword('');
+        setError('');
+        handleClose();
+    };
+
     return (
         <>
-            <Container maxWidth="sm" className={styles.container}>
-                <Paper elevation={3} className={styles.deleteAccountForm}>
-                    <Typography variant="h4" component="h2" className={styles.title}>
-                        Delete Account
-                    </Typography>
+            <Dialog 
+                open={open} 
+                onClose={handleCancel}
+                maxWidth="sm"
+                fullWidth
+                PaperProps={{
+                    className: styles.deleteAccountDialog
+                }}
+            >
+                <DialogTitle className={styles.title}>
+                    Delete Account
+                </DialogTitle>
+                
+                <DialogContent>
                     <Typography variant="body1" color="error" className={styles.warning}>
                         This action will mark your account for deletion. After 30 minutes, your account and all related information will be permanently deleted.
                     </Typography>
@@ -135,29 +142,29 @@ export default function DeleteAccount() {
                             className={styles.input}
                         />
                     </Box>
+                </DialogContent>
 
-                    <Box className={styles.buttonGroup}>
-                        <Button
-                            variant="outlined"
-                            onClick={() => navigate('/dashboard')}
-                            disabled={isLoading}
-                            className={styles.cancelButton}
-                        >
-                            Back
-                        </Button>
-                        <Button
-                            variant="contained"
-                            color="error"
-                            onClick={handleDeleteRequest}
-                            disabled={isLoading}
-                            startIcon={isLoading ? <CircularProgress size={20} /> : null}
-                            className={styles.deleteButton}
-                        >
-                            {isLoading ? 'Processing...' : 'Delete My Account'}
-                        </Button>
-                    </Box>
-                </Paper>
-            </Container>
+                <DialogActions className={styles.buttonGroup}>
+                    <Button
+                        variant="outlined"
+                        onClick={handleCancel}
+                        disabled={isLoading}
+                        className={styles.cancelButton}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="contained"
+                        color="error"
+                        onClick={handleDeleteRequest}
+                        disabled={isLoading}
+                        startIcon={isLoading ? <CircularProgress size={20} /> : null}
+                        className={styles.deleteButton}
+                    >
+                        {isLoading ? 'Processing...' : 'Delete My Account'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
             
             {/* Confirmation Dialog */}
             <Dialog

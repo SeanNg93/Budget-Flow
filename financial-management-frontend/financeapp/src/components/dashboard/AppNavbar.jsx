@@ -20,6 +20,10 @@ import Avatar from '@mui/material/Avatar';
 import InputBase from '@mui/material/InputBase';
 import Divider from '@mui/material/Divider';
 import axios from 'axios';
+import DeleteAccountDialog from './DeleteAccountDialog';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 const API_BASE_URL = "http://localhost:8080";
 const DEFAULT_AVATAR = "/default-avatar.svg";
@@ -126,6 +130,7 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
   const userData = JSON.parse(localStorage.getItem('userData') || '{}');
   const [profilePicture, setProfilePicture] = useState(null);
   const [fullName, setFullName] = useState(null);
+  const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
 
   useEffect(() => {
     fetchUserProfile();
@@ -196,8 +201,7 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
   };
 
   const handleDeleteAccount = () => {
-    handleMenuClose();
-    navigate('/account/delete');
+    setDeleteAccountOpen(true);
   };
 
   const handleChangePassword = () => {
@@ -238,8 +242,21 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
       <MenuItem onClick={handleProfile}>Profile</MenuItem>
       <MenuItem onClick={handleChangePassword}>Change Password</MenuItem>
       <Divider />
-      <MenuItem onClick={handleDeleteAccount} sx={{ color: 'error.main' }}>
-        Delete Account
+      <MenuItem 
+        onClick={handleDeleteAccount}
+        sx={{ 
+          color: '#d32f2f',  // màu đỏ của Material UI error
+          '&:hover': {
+            backgroundColor: 'rgba(211, 47, 47, 0.04)' // màu đỏ nhạt khi hover
+          }
+        }}
+      >
+        <ListItemText 
+          primary="Delete Account" 
+          primaryTypographyProps={{ 
+            color: 'inherit' 
+          }} 
+        />
       </MenuItem>
       <MenuItem onClick={handleLogout}>Logout</MenuItem>
     </StyledMenu>
@@ -404,6 +421,10 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
       {renderMobileMenu}
       {renderMenu}
       <ChangePassword open={changePasswordOpen} onClose={handleChangePasswordClose} />
+      <DeleteAccountDialog 
+        open={deleteAccountOpen}
+        handleClose={() => setDeleteAccountOpen(false)}
+      />
     </>
   );
 };
