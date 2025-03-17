@@ -3,6 +3,7 @@ package com.financeapp.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -41,7 +42,7 @@ public class DeletedUser {
     private String role;
     
     @Column(precision = 15, scale = 2)
-    private Double totalBalance = 0.0;
+    private BigDecimal totalBalance = BigDecimal.ZERO;
     
     private String currency = "USD";
     

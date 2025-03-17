@@ -36,7 +36,7 @@ public class UserProfile {
     private String role;
     
     // Total balance field (represents all available money)
-    @Column(name = "total_balance", nullable = false)
+    @Column(name = "total_balance", nullable = false, precision = 15, scale = 2)
     private BigDecimal totalBalance = BigDecimal.ZERO;
     
     // Currency for the total balance

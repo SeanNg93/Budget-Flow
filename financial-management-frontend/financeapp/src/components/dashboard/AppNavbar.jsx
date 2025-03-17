@@ -253,7 +253,7 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
       >
         <ListItemText 
           primary="Delete Account" 
-          primaryTypography={{ 
+          primaryTypographyProps={{ 
             color: 'inherit' 
           }} 
         />

@@ -153,10 +153,16 @@ public class UserController {
     }
     
     /**
-     * Check if the current user has a pending deletion
+     * Check if a user has a pending deletion
      */
     @GetMapping("/deletion-status")
     public ResponseEntity<Map<String, Object>> getDeletionStatus(Authentication authentication) {
+        if (authentication == null) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("isPendingDeletion", false);
+            return ResponseEntity.ok(response);
+        }
+        
         String username = authentication.getName();
         boolean isPendingDeletion = userDeletionService.isUserPendingDeletion(username);
         

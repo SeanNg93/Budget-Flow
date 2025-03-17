@@ -9,7 +9,11 @@ export default function PendingDeletionAlert() {
         const checkDeletionStatus = async () => {
             try {
                 const token = localStorage.getItem('userToken');
-                if (!token) return;
+                // If no token exists, user is not logged in, so no need to check deletion status
+                if (!token) {
+                    setLoading(false);
+                    return;
+                }
 
                 const response = await fetch('http://localhost:8080/api/user/deletion-status', {
                     headers: {
@@ -18,6 +22,14 @@ export default function PendingDeletionAlert() {
                     }
                 });
 
+                // If we get a 403 error, just silently fail - the user might not have permission
+                // or the endpoint might not be properly configured yet
+                if (response.status === 403) {
+                    console.debug('Permission denied for deletion status check');
+                    setLoading(false);
+                    return;
+                }
+
                 if (response.ok) {
                     const data = await response.json();
                     if (data.isPendingDeletion) {
@@ -25,7 +37,8 @@ export default function PendingDeletionAlert() {
                     }
                 }
             } catch (error) {
-                console.error('Error checking deletion status:', error);
+                // Silently handle errors to avoid console spam
+                console.debug('Error checking deletion status:', error);
             } finally {
                 setLoading(false);
             }
@@ -53,11 +66,7 @@ export default function PendingDeletionAlert() {
                     <Button 
                         color="inherit" 
                         size="small" 
-                        onClick={() => {
-                            // User has already logged in, which automatically cancels the deletion
-                            // Just close the alert
-                            handleClose();
-                        }}
+                        onClick={handleClose}
                     >
                         Dismiss
                     </Button>
