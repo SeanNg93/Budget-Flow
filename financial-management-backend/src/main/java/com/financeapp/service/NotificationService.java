@@ -143,6 +143,18 @@ public class NotificationService {
     }
 
     /**
+     * Delete all notifications for a user
+     */
+    @Transactional
+    public void deleteAllNotifications(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+        
+        List<Notification> notifications = notificationRepository.findByUserOrderByCreatedAtDesc(user);
+        notificationRepository.deleteAll(notifications);
+    }
+
+    /**
      * Map Notification entity to NotificationDto
      */
     private NotificationDto mapToDto(Notification notification) {

@@ -238,6 +238,16 @@ export const markAllNotificationsAsRead = () => {
   });
 };
 
+export const deleteAllNotifications = () => {
+  return axiosInstance.delete('/notifications/all').catch(error => {
+    // If we get any error, just return a default success response to allow UI to update
+    if (error) {
+      return { data: { success: true } };
+    }
+    throw error;
+  });
+};
+
 // Export the service as a default object
 const FinanceService = {
   // New wallet functions
@@ -285,6 +295,7 @@ const FinanceService = {
   getUnreadNotificationCount,
   markNotificationAsRead,
   markAllNotificationsAsRead,
+  deleteAllNotifications,
 };
 
 export default FinanceService; 

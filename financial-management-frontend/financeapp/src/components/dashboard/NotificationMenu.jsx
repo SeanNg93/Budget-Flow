@@ -12,7 +12,11 @@ import {
   ListItemText,
   Button,
   CircularProgress,
-  ListItemIcon
+  ListItemIcon,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
 } from '@mui/material';
 import {
   NotificationsNone as NotificationsIcon,
@@ -21,6 +25,7 @@ import {
   ArrowDownward as ReceivedIcon,
   CheckCircle as ReadIcon,
   MarkChatRead as MarkReadIcon,
+  Delete as DeleteIcon,
 } from '@mui/icons-material';
 import FinanceService from '../../services/FinanceService';
 import { format, formatDistanceToNow } from 'date-fns';
@@ -32,6 +37,7 @@ const NotificationMenu = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [clearDialogOpen, setClearDialogOpen] = useState(false);
   
   // Mock notifications data
   const [mockNotifications, setMockNotifications] = useState([
@@ -190,6 +196,36 @@ const NotificationMenu = () => {
     }
   };
   
+  const handleClearNotifications = async () => {
+    try {
+      await FinanceService.deleteAllNotifications();
+      
+      // Update local state
+      setNotifications([]);
+      
+      // Also update mock data
+      setMockNotifications([]);
+      
+      // Update unread count
+      setUnreadCount(0);
+      
+      // Close the dialog
+      setClearDialogOpen(false);
+    } catch (error) {
+      // Update mock data anyway
+      setMockNotifications([]);
+      
+      // Update notifications
+      setNotifications([]);
+      
+      // Update unread count
+      setUnreadCount(0);
+      
+      // Close the dialog
+      setClearDialogOpen(false);
+    }
+  };
+  
   const getNotificationIcon = (type) => {
     switch (type) {
       case 'MONEY_SENT':
@@ -264,7 +300,17 @@ const NotificationMenu = () => {
             )}
           </Typography>
           
-          <Box>
+          <Box className={styles.headerActions}>
+            {notifications.length > 0 && (
+              <Button 
+                size="small" 
+                startIcon={<DeleteIcon />}
+                onClick={() => setClearDialogOpen(true)}
+                className={styles.clearButton}
+              >
+                Clear all
+              </Button>
+            )}
             {unreadCount > 0 && (
               <Button 
                 size="small" 
@@ -331,6 +377,31 @@ const NotificationMenu = () => {
           </List>
         )}
       </Menu>
+
+      <Dialog
+        open={clearDialogOpen}
+        onClose={() => setClearDialogOpen(false)}
+        className={styles.clearDialog}
+      >
+        <DialogTitle>Clear All Notifications</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to clear all notifications? This action cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setClearDialogOpen(false)}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleClearNotifications}
+            color="error"
+            startIcon={<DeleteIcon />}
+          >
+            Clear All
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };

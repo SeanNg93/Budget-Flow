@@ -68,6 +68,12 @@
   justify-content: space-between;
 }
 
+/* Header actions container */
+.headerActions {
+  display: flex;
+  gap: 8px;
+}
+
 /* New count badge */
 .newCountBadge {
   margin-left: 8px;
@@ -88,6 +94,19 @@
   font-size: 0.75rem;
   padding: 2px 8px;
   border-radius: 12px;
+}
+
+/* Clear button */
+.clearButton {
+  text-transform: none;
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+  color: #f44336;
+}
+
+.clearButton:hover {
+  background-color: rgba(244, 67, 54, 0.04);
 }
 
 /* Loading container */
@@ -124,4 +143,41 @@
 
 .readIcon {
   margin-right: 4px;
+}
+
+/* Clear dialog */
+.clearDialog {
+  border-radius: 12px;
+}
+
+.clearDialog .MuiDialogTitle-root {
+  padding-bottom: 8px;
+  font-weight: 600;
+}
+
+.clearDialog .MuiDialogContent-root {
+  padding-top: 16px;
+}
+
+.clearDialog .MuiDialogActions-root {
+  padding: 16px 24px;
+}
+
+.clearDialog .MuiButton-root {
+  text-transform: none;
+  font-weight: 500;
+  border-radius: 8px;
+}
+
+.clearDialog .MuiButton-root:first-child {
+  color: #757575;
+}
+
+.clearDialog .MuiButton-root:last-child {
+  background-color: #f44336;
+  color: white;
+}
+
+.clearDialog .MuiButton-root:last-child:hover {
+  background-color: #d32f2f;
 } 
