@@ -18,12 +18,14 @@ import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import FinanceService from '../../services/FinanceService';
 import styles from '../../styles/dashboard.module.css';
+import { getWalletColorClass } from '../../utils/colorUtils';
 
 const WalletOverview = ({ onManageWallets }) => {
   const [wallets, setWallets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(0);
+  const [slideDirection, setSlideDirection] = useState(null);
   const walletsPerPage = 4;
 
   useEffect(() => {
@@ -64,12 +66,28 @@ const WalletOverview = ({ onManageWallets }) => {
   );
 
   const handleNextPage = () => {
-    setCurrentPage((prev) => (prev + 1) % totalPages);
+    setSlideDirection('slideLeft');
+    setTimeout(() => {
+      setCurrentPage((prev) => (prev + 1) % totalPages);
+    }, 200);
   };
 
   const handlePrevPage = () => {
-    setCurrentPage((prev) => (prev - 1 + totalPages) % totalPages);
+    setSlideDirection('slideRight');
+    setTimeout(() => {
+      setCurrentPage((prev) => (prev - 1 + totalPages) % totalPages);
+    }, 200);
   };
+
+  // Reset animation after it completes
+  useEffect(() => {
+    if (slideDirection) {
+      const timer = setTimeout(() => {
+        setSlideDirection(null);
+      }, 400); // Slightly longer than the animation to ensure it completes
+      return () => clearTimeout(timer);
+    }
+  }, [slideDirection]);
 
   return (
     <Paper className={styles.walletOverviewCard}>
@@ -128,27 +146,31 @@ const WalletOverview = ({ onManageWallets }) => {
               className={styles.walletNavButton} 
               onClick={handlePrevPage}
               sx={{ left: -18 }}
+              disabled={!!slideDirection}
             >
               <ArrowBackIosNewIcon fontSize="small" />
             </IconButton>
           )}
           
-          <Box className={styles.walletsList}>
-            {displayedWallets.map((wallet) => (
-              <Box key={wallet.id} className={styles.walletItem}>
-                <Typography variant="h6" className={styles.walletName}>
-                  {getWalletIcon(wallet.accountType)}
-                  {wallet.accountName}
-                </Typography>
-                <Typography variant="h4" className={styles.walletBalance}>
-                  ${wallet.balance.toFixed(2)}
-                </Typography>
-                <Divider sx={{ my: 1, opacity: 0.6 }} />
-                <Typography variant="body2" className={styles.walletType}>
-                  {wallet.accountType || "General Account"}
-                </Typography>
-              </Box>
-            ))}
+          <Box className={`${styles.walletsList} ${slideDirection ? styles[slideDirection] : ''}`}>
+            {displayedWallets.map((wallet) => {
+              const colorClass = getWalletColorClass(wallet.id);
+              return (
+                <Box key={wallet.id} className={`${styles.walletItem} ${styles[colorClass]}`}>
+                  <Typography variant="h6" className={styles.walletName}>
+                    {getWalletIcon(wallet.accountType)}
+                    {wallet.accountName}
+                  </Typography>
+                  <Typography variant="h4" className={styles.walletBalance}>
+                    ${wallet.balance.toFixed(2)}
+                  </Typography>
+                  <Divider sx={{ my: 1, opacity: 0.6 }} />
+                  <Typography variant="body2" className={styles.walletType}>
+                    {wallet.accountType || "General Account"}
+                  </Typography>
+                </Box>
+              );
+            })}
           </Box>
           
           {wallets.length > walletsPerPage && (
@@ -156,6 +178,7 @@ const WalletOverview = ({ onManageWallets }) => {
               className={styles.walletNavButton} 
               onClick={handleNextPage}
               sx={{ right: -18 }}
+              disabled={!!slideDirection}
             >
               <ArrowForwardIosIcon fontSize="small" />
             </IconButton>
@@ -167,7 +190,19 @@ const WalletOverview = ({ onManageWallets }) => {
                 <Box 
                   key={index}
                   className={`${styles.paginationDot} ${currentPage === index ? styles.activeDot : ''}`}
-                  onClick={() => setCurrentPage(index)}
+                  onClick={() => {
+                    if (slideDirection || index === currentPage) return;
+                    
+                    if (index > currentPage) {
+                      setSlideDirection('slideLeft');
+                    } else {
+                      setSlideDirection('slideRight');
+                    }
+                    
+                    setTimeout(() => {
+                      setCurrentPage(index);
+                    }, 200);
+                  }}
                 />
               ))}
             </Box>

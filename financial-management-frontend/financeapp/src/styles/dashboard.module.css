@@ -395,6 +395,60 @@
     grid-template-rows: repeat(2, 1fr);
     gap: 16px;
     position: relative;
+    transition: all 0.3s ease-out;
+  }
+
+  /* Slide animations for wallet pagination */
+  .slideLeft {
+    animation: slideOutLeft 0.2s forwards, slideInRight 0.2s 0.2s forwards;
+  }
+
+  .slideRight {
+    animation: slideOutRight 0.2s forwards, slideInLeft 0.2s 0.2s forwards;
+  }
+
+  @keyframes slideOutLeft {
+    from {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateX(-30px);
+      opacity: 0;
+    }
+  }
+
+  @keyframes slideOutRight {
+    from {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateX(30px);
+      opacity: 0;
+    }
+  }
+
+  @keyframes slideInRight {
+    from {
+      transform: translateX(30px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideInLeft {
+    from {
+      transform: translateX(-30px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
   }
 
   .walletItem {
@@ -441,17 +495,56 @@
 
   .walletIcon {
     margin-right: 10px;
-    color: #007aff;
     font-size: 1.3rem;
   }
 
   .walletBalance {
     font-size: 1.5rem !important;
     font-weight: 600;
-    color: #007aff;
     margin: 8px 0 12px;
     position: relative;
     z-index: 1;
+  }
+
+  /* Wallet color schemes */
+  .walletColor1 .walletIcon, .walletColor1 .walletBalance {
+    color: #007aff; /* Blue */
+  }
+
+  .walletColor2 .walletIcon, .walletColor2 .walletBalance {
+    color: #34c759; /* Green */
+  }
+
+  .walletColor3 .walletIcon, .walletColor3 .walletBalance {
+    color: #ff9500; /* Orange */
+  }
+
+  .walletColor4 .walletIcon, .walletColor4 .walletBalance {
+    color: #ff3b30; /* Red */
+  }
+
+  .walletColor5 .walletIcon, .walletColor5 .walletBalance {
+    color: #5856d6; /* Purple */
+  }
+
+  .walletColor6 .walletIcon, .walletColor6 .walletBalance {
+    color: #af52de; /* Pink/Purple */
+  }
+
+  .walletColor7 .walletIcon, .walletColor7 .walletBalance {
+    color: #ff2d55; /* Pink */
+  }
+
+  .walletColor8 .walletIcon, .walletColor8 .walletBalance {
+    color: #5ac8fa; /* Light Blue */
+  }
+
+  .walletColor9 .walletIcon, .walletColor9 .walletBalance {
+    color: #ffcc00; /* Yellow */
+  }
+
+  .walletColor10 .walletIcon, .walletColor10 .walletBalance {
+    color: #4cd964; /* Mint */
   }
 
   .walletType {
