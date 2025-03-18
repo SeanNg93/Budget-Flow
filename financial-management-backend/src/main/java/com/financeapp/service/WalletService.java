@@ -2,15 +2,20 @@ package com.financeapp.service;
 
 import com.financeapp.model.User;
 import com.financeapp.model.Wallet;
+import com.financeapp.model.UserProfile;
 import com.financeapp.repository.UserRepository;
 import com.financeapp.repository.WalletRepository;
+import com.financeapp.repository.UserProfileRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.HashMap;
+import java.util.stream.Collectors;
 
 @Service
 public class WalletService {
@@ -18,12 +23,14 @@ public class WalletService {
     private final WalletRepository walletRepository;
     private final UserRepository userRepository;
     private final UserProfileService userProfileService;
+    private final UserProfileRepository userProfileRepository;
 
     @Autowired
-    public WalletService(WalletRepository walletRepository, UserRepository userRepository, UserProfileService userProfileService) {
+    public WalletService(WalletRepository walletRepository, UserRepository userRepository, UserProfileService userProfileService, UserProfileRepository userProfileRepository) {
         this.walletRepository = walletRepository;
         this.userRepository = userRepository;
         this.userProfileService = userProfileService;
+        this.userProfileRepository = userProfileRepository;
     }
 
     public List<Wallet> getAllWalletsByUserId(Long userId) {
@@ -265,5 +272,92 @@ public class WalletService {
         }
         
         return userProfileService.updateTotalBalance(userId, newBalance);
+    }
+
+    /**
+     * Transfers money from one user's wallet to another user's total balance.
+     *
+     * @param sourceUserId User ID of the sender
+     * @param sourceWalletId Wallet ID of the source wallet
+     * @param targetUserId User ID of the recipient
+     * @param amount Amount to transfer
+     * @return Map containing updated source wallet balance and both users' total balances
+     * @throws RuntimeException if users or wallet not found, or insufficient funds
+     */
+    @Transactional
+    public Map<String, Object> transferToUser(Long sourceUserId, Long sourceWalletId, Long targetUserId, BigDecimal amount) {
+        // Validate inputs
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Transfer amount must be positive");
+        }
+        
+        if (sourceUserId.equals(targetUserId)) {
+            throw new IllegalArgumentException("Cannot transfer to yourself");
+        }
+        
+        // Get source wallet
+        Wallet sourceWallet = walletRepository.findById(sourceWalletId)
+                .orElseThrow(() -> new RuntimeException("Source wallet not found with id: " + sourceWalletId));
+        
+        // Verify the wallet belongs to the source user
+        if (!sourceWallet.getUser().getId().equals(sourceUserId)) {
+            throw new IllegalArgumentException("Source wallet does not belong to the user");
+        }
+        
+        // Check if there are sufficient funds
+        if (sourceWallet.getBalance().compareTo(amount) < 0) {
+            throw new IllegalArgumentException("Insufficient funds in the source wallet");
+        }
+        
+        // Get target user
+        User targetUser = userRepository.findById(targetUserId)
+                .orElseThrow(() -> new RuntimeException("Target user not found with id: " + targetUserId));
+        
+        // Subtract from source wallet
+        BigDecimal newSourceBalance = sourceWallet.getBalance().subtract(amount);
+        sourceWallet.setBalance(newSourceBalance);
+        walletRepository.save(sourceWallet);
+        
+        // Add to target user's total balance
+        BigDecimal newTargetTotalBalance = userProfileService.addToTotalBalance(targetUserId, amount);
+        
+        // Create response with updated balances
+        Map<String, Object> result = new HashMap<>();
+        result.put("sourceWalletBalance", newSourceBalance);
+        result.put("sourceTotalBalance", userProfileService.getTotalBalance(sourceUserId));
+        result.put("targetTotalBalance", newTargetTotalBalance);
+        result.put("targetUsername", targetUser.getUsername());
+        
+        return result;
+    }
+
+    /**
+     * Find a user by username or full name. Used for user transfer functionality.
+     * 
+     * @param query The username or full name to search for
+     * @return List of matching users with basic info
+     */
+    public List<Map<String, Object>> findUsersByQuery(String query, Long currentUserId) {
+        // Find users by username
+        List<User> users = userRepository.findByUsernameContainingIgnoreCase(query);
+        
+        return users.stream()
+                .filter(user -> !user.getId().equals(currentUserId)) // Exclude current user
+                .map(user -> {
+                    Map<String, Object> userInfo = new HashMap<>();
+                    userInfo.put("id", user.getId());
+                    userInfo.put("username", user.getUsername());
+                    
+                    // Get user profile from repository
+                    Optional<UserProfile> userProfileOpt = userProfileRepository.findByUserId(user.getId());
+                    if (userProfileOpt.isPresent()) {
+                        UserProfile userProfile = userProfileOpt.get();
+                        userInfo.put("fullName", userProfile.getFullName());
+                        userInfo.put("profilePicture", userProfile.getProfilePicturePath());
+                    }
+                    
+                    return userInfo;
+                })
+                .collect(Collectors.toList());
     }
 } 

@@ -19,4 +19,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     
     @Query("SELECT u FROM User u WHERE u.isPendingDeletion = true AND u.deletionRequestedAt < ?1")
     List<User> findUsersToDelete(LocalDateTime cutoffTime);
+    
+    // Method to search users by username for user transfers
+    List<User> findByUsernameContainingIgnoreCase(String username);
 }

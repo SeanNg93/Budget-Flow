@@ -150,6 +150,19 @@ export const getCategoriesByType = (type) => {
   });
 };
 
+// User Transfer services
+export const searchUsers = (query) => {
+  return axiosInstance.get(`/wallets/search-users?query=${encodeURIComponent(query)}`);
+};
+
+export const transferToUser = (sourceWalletId, targetUserId, amount) => {
+  return axiosInstance.post('/wallets/transfer-to-user', {
+    sourceWalletId,
+    targetUserId,
+    amount
+  });
+};
+
 // Export the service as a default object
 const FinanceService = {
   // New wallet functions
@@ -186,6 +199,10 @@ const FinanceService = {
   updateCategory,
   deleteCategory,
   getCategoriesByType,
+  
+  // User transfer functions
+  searchUsers,
+  transferToUser,
 };
 
 export default FinanceService; 

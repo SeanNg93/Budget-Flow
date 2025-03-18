@@ -1,6 +1,7 @@
 package com.financeapp.controller;
 
 import com.financeapp.dto.AddBalanceRequest;
+import com.financeapp.dto.UserTransferRequest;
 import com.financeapp.model.User;
 import com.financeapp.model.Wallet;
 import com.financeapp.repository.UserRepository;
@@ -124,6 +125,60 @@ public class WalletController {
             Map<String, Object> error = new HashMap<>();
             error.put("error", ex.getMessage());
             return ResponseEntity.badRequest().body(error);
+        }
+    }
+
+    /**
+     * Endpoint to search for users by username or full name.
+     * Used for user-to-user transfers.
+     */
+    @GetMapping("/search-users")
+    public ResponseEntity<List<Map<String, Object>>> searchUsers(@RequestParam String query) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        Long userId = getUserIdFromUsername(username);
+        
+        List<Map<String, Object>> users = walletService.findUsersByQuery(query, userId);
+        return ResponseEntity.ok(users);
+    }
+    
+    /**
+     * Endpoint to transfer money from one user's wallet to another user's total balance.
+     */
+    @PostMapping("/transfer-to-user")
+    public ResponseEntity<?> transferToUser(@RequestBody UserTransferRequest request) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        Long sourceUserId = getUserIdFromUsername(username);
+        
+        try {
+            // Parse target user ID from string to long if needed
+            Long targetUserId;
+            try {
+                targetUserId = Long.parseLong(request.getTargetUserId());
+            } catch (NumberFormatException e) {
+                // If not a number, try to look up by username
+                Optional<User> targetUser = userRepository.findByUsername(request.getTargetUserId());
+                if (!targetUser.isPresent()) {
+                    return ResponseEntity.badRequest().body(Map.of("error", "Target user not found"));
+                }
+                targetUserId = targetUser.get().getId();
+            }
+            
+            // Process the transfer
+            Map<String, Object> result = walletService.transferToUser(
+                sourceUserId, 
+                request.getSourceWalletId(), 
+                targetUserId, 
+                request.getAmount()
+            );
+            
+            return ResponseEntity.ok(result);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 

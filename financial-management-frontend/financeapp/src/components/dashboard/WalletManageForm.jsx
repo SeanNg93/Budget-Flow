@@ -30,8 +30,13 @@ import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import InfoIcon from '@mui/icons-material/Info';
+import SendIcon from '@mui/icons-material/Send';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import SaveIcon from '@mui/icons-material/Save';
+import CancelIcon from '@mui/icons-material/Cancel';
 import FinanceService from '../../services/FinanceService';
 import WalletForm from './WalletForm';
+import UserTransferForm from './UserTransferForm';
 import styles from '../../styles/walletManage.module.css';
 
 const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false }) => {
@@ -65,6 +70,9 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
   const [transferAmount, setTransferAmount] = useState('');
   const [transferError, setTransferError] = useState('');
   const [transferring, setTransferring] = useState(false);
+  
+  // Add state for the user transfer dialog
+  const [userTransferDialogOpen, setUserTransferDialogOpen] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -436,6 +444,25 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
     }
   };
 
+  // Add methods to handle opening and closing the user transfer dialog
+  const handleOpenUserTransferDialog = () => {
+    setUserTransferDialogOpen(true);
+  };
+  
+  const handleCloseUserTransferDialog = () => {
+    setUserTransferDialogOpen(false);
+  };
+  
+  const handleUserTransferCompleted = () => {
+    handleCloseUserTransferDialog();
+    fetchFinancialData();
+    
+    // Notify parent component
+    if (onWalletUpdated) {
+      onWalletUpdated();
+    }
+  };
+
   // Form content that will be used in both embedded and non-embedded modes
   const formContent = (
     <>
@@ -465,6 +492,16 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
           </Box>
         </Box>
         <Box className={styles.actionButtons}>
+          <Button
+            variant="outlined"
+            color="primary"
+            startIcon={<SendIcon />}
+            onClick={handleOpenUserTransferDialog}
+            disabled={editMode || loading || wallets.length === 0}
+            className={`${styles.sendMoneyButton} ${styles.compactButton}`}
+          >
+            Send Money
+          </Button>
           <Button
             variant="outlined"
             color="primary"
@@ -781,6 +818,13 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
           </Button>
         </DialogActions>
       </Dialog>
+      
+      {/* User Transfer Dialog */}
+      <UserTransferForm
+        open={userTransferDialogOpen}
+        handleClose={handleCloseUserTransferDialog}
+        onTransferCompleted={handleUserTransferCompleted}
+      />
     </>
   );
 
