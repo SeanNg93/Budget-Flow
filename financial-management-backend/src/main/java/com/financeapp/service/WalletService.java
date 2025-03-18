@@ -17,6 +17,9 @@ import java.util.Optional;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 import com.financeapp.service.NotificationService;
+import java.util.ArrayList;
+import com.financeapp.model.SharedWallet;
+import com.financeapp.repository.SharedWalletRepository;
 
 @Service
 public class WalletService {
@@ -26,20 +29,36 @@ public class WalletService {
     private final UserProfileService userProfileService;
     private final UserProfileRepository userProfileRepository;
     private final NotificationService notificationService;
+    private final SharedWalletRepository sharedWalletRepository;
 
     @Autowired
-    public WalletService(WalletRepository walletRepository, UserRepository userRepository, UserProfileService userProfileService, UserProfileRepository userProfileRepository, NotificationService notificationService) {
+    public WalletService(WalletRepository walletRepository, UserRepository userRepository, UserProfileService userProfileService, UserProfileRepository userProfileRepository, NotificationService notificationService, SharedWalletRepository sharedWalletRepository) {
         this.walletRepository = walletRepository;
         this.userRepository = userRepository;
         this.userProfileService = userProfileService;
         this.userProfileRepository = userProfileRepository;
         this.notificationService = notificationService;
+        this.sharedWalletRepository = sharedWalletRepository;
     }
 
     public List<Wallet> getAllWalletsByUserId(Long userId) {
-        List<Wallet> wallets = walletRepository.findByUserId(userId);
+        List<Wallet> wallets = new ArrayList<>();
         
-        // If user has no wallets, create a default one
+        // Get user's own wallets
+        wallets.addAll(walletRepository.findByUserId(userId));
+        
+        // Get shared wallets that have been accepted
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+        
+        List<SharedWallet> sharedWallets = sharedWalletRepository.findBySharedWithAndAccepted(user, true);
+        
+        // Add the actual wallet objects from shared wallets
+        for (SharedWallet sharedWallet : sharedWallets) {
+            wallets.add(sharedWallet.getWallet());
+        }
+        
+        // If user has no wallets (including shared ones), create a default one
         if (wallets.isEmpty()) {
             createDefaultWallet(userId);
             wallets = walletRepository.findByUserId(userId);

@@ -175,6 +175,65 @@ export const transferToUser = (sourceWalletId, targetUserId, amount) => {
   });
 };
 
+// Shared Wallet services
+export const shareWallet = (walletId, targetUserId) => {
+  return axiosInstance.post('/shared-wallets/share', {
+    walletId,
+    targetUserId
+  });
+};
+
+export const getSharedWalletsWithMe = () => {
+  return axiosInstance.get('/shared-wallets/shared-with-me').catch(error => {
+    // If we get a 403 or 404 or CORS error, return an empty array instead of throwing an error
+    if (error.response && (error.response.status === 403 || error.response.status === 404)) {
+      return { data: [] };
+    }
+    throw error;
+  });
+};
+
+export const getSharedWalletsByMe = () => {
+  return axiosInstance.get('/shared-wallets/shared-by-me').catch(error => {
+    // If we get a 403 or 404 or CORS error, return an empty array instead of throwing an error
+    if (error.response && (error.response.status === 403 || error.response.status === 404)) {
+      return { data: [] };
+    }
+    throw error;
+  });
+};
+
+export const getSharedWalletIdByNotification = async (notificationId, senderUsername, walletName) => {
+  try {
+    // First try to get shared wallets with the current user
+    const response = await getSharedWalletsWithMe();
+    const sharedWallets = response.data || [];
+    
+    // Look for a wallet that matches the sender username and wallet name
+    const matchedWallet = sharedWallets.find(wallet => 
+      wallet.ownerUsername === senderUsername && 
+      wallet.walletName === walletName
+    );
+    
+    if (matchedWallet) {
+      return matchedWallet.id;
+    }
+    
+    // If no match found, use the notification ID
+    return notificationId;
+  } catch (error) {
+    return notificationId; // fallback to notification ID
+  }
+};
+
+export const acceptSharedWallet = (sharedWalletId) => {
+  return axiosInstance.put(`/shared-wallets/${sharedWalletId}/accept`);
+};
+
+export const removeSharedWallet = (sharedWalletId) => {
+  return axiosInstance.delete(`/shared-wallets/${sharedWalletId}`);
+};
+
 // Notification services
 export const getNotifications = () => {
   return axiosInstance.get('/notifications').catch(error => {
@@ -288,6 +347,14 @@ const FinanceService = {
   // User transfer functions
   searchUsers,
   transferToUser,
+  
+  // Shared wallet functions
+  shareWallet,
+  getSharedWalletsWithMe,
+  getSharedWalletsByMe,
+  getSharedWalletIdByNotification,
+  acceptSharedWallet,
+  removeSharedWallet,
   
   // Notification functions
   getNotifications,

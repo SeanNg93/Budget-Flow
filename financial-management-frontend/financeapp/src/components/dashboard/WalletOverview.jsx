@@ -8,6 +8,8 @@ import {
   IconButton,
   Tooltip,
   Divider,
+  Menu,
+  MenuItem,
 } from '@mui/material';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -16,9 +18,12 @@ import SavingsIcon from '@mui/icons-material/Savings';
 import PaymentsIcon from '@mui/icons-material/Payments';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import FinanceService from '../../services/FinanceService';
 import styles from '../../styles/dashboard.module.css';
 import { getWalletColorClass } from '../../utils/colorUtils';
+import ShareWalletForm from './ShareWalletForm';
 
 const WalletOverview = ({ onManageWallets }) => {
   const [wallets, setWallets] = useState([]);
@@ -27,6 +32,14 @@ const WalletOverview = ({ onManageWallets }) => {
   const [currentPage, setCurrentPage] = useState(0);
   const [slideDirection, setSlideDirection] = useState(null);
   const walletsPerPage = 4;
+  
+  // Add state for wallet menu
+  const [walletMenuAnchorEl, setWalletMenuAnchorEl] = useState(null);
+  const [selectedWalletForMenu, setSelectedWalletForMenu] = useState(null);
+  
+  // Add state for share wallet dialog
+  const [shareWalletDialogOpen, setShareWalletDialogOpen] = useState(false);
+  const [walletToShare, setWalletToShare] = useState(null);
 
   useEffect(() => {
     fetchWallets();
@@ -77,6 +90,34 @@ const WalletOverview = ({ onManageWallets }) => {
     setTimeout(() => {
       setCurrentPage((prev) => (prev - 1 + totalPages) % totalPages);
     }, 200);
+  };
+
+  // Add functions for wallet menu
+  const handleWalletMenuOpen = (event, wallet) => {
+    event.stopPropagation();
+    setWalletMenuAnchorEl(event.currentTarget);
+    setSelectedWalletForMenu(wallet);
+  };
+  
+  const handleWalletMenuClose = () => {
+    setWalletMenuAnchorEl(null);
+  };
+  
+  // Add functions for share wallet
+  const handleShareWallet = () => {
+    setWalletToShare(selectedWalletForMenu);
+    setShareWalletDialogOpen(true);
+    handleWalletMenuClose();
+  };
+  
+  const handleShareWalletClose = () => {
+    setShareWalletDialogOpen(false);
+    setWalletToShare(null);
+  };
+  
+  const handleWalletShared = () => {
+    // Refresh wallet list after sharing
+    fetchWallets();
   };
 
   // Reset animation after it completes
@@ -167,10 +208,19 @@ const WalletOverview = ({ onManageWallets }) => {
               const colorClass = getWalletColorClass(wallet.id);
               return (
                 <Box key={wallet.id} className={`${styles.walletItem} ${styles[colorClass]}`}>
-                  <Typography variant="h6" className={styles.walletName}>
-                    {getWalletIcon(wallet.accountType)}
-                    {wallet.accountName}
-                  </Typography>
+                  <Box className={styles.walletHeader}>
+                    <Typography variant="h6" className={styles.walletName}>
+                      {getWalletIcon(wallet.accountType)}
+                      {wallet.accountName}
+                    </Typography>
+                    <IconButton
+                      size="small"
+                      className={styles.walletMenuButton}
+                      onClick={(e) => handleWalletMenuOpen(e, wallet)}
+                    >
+                      <MoreVertIcon fontSize="small" />
+                    </IconButton>
+                  </Box>
                   <Typography variant="h4" className={styles.walletBalance}>
                     ${wallet.balance.toFixed(2)}
                   </Typography>
@@ -218,6 +268,29 @@ const WalletOverview = ({ onManageWallets }) => {
             </Box>
           )}
         </Box>
+      )}
+      
+      {/* Wallet Menu */}
+      <Menu
+        anchorEl={walletMenuAnchorEl}
+        open={Boolean(walletMenuAnchorEl)}
+        onClose={handleWalletMenuClose}
+        classes={{ paper: styles.dashboardMenuPaper }}
+      >
+        <MenuItem onClick={handleShareWallet} className={styles.dashboardMenuItem}>
+          <PersonAddIcon fontSize="small" className={styles.dashboardMenuIcon} />
+          <span>Share Wallet</span>
+        </MenuItem>
+      </Menu>
+      
+      {/* Share Wallet Dialog */}
+      {walletToShare && (
+        <ShareWalletForm
+          open={shareWalletDialogOpen}
+          handleClose={handleShareWalletClose}
+          wallet={walletToShare}
+          onWalletShared={handleWalletShared}
+        />
       )}
     </Paper>
   );

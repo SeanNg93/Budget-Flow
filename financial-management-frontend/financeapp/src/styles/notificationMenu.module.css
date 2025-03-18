@@ -1,27 +1,45 @@
 /* Notification Menu Styles */
 
 /* Badge styling */
-.badgeRoot .badge {
+.badgeContainer {
+  border-radius: 50%;
+  margin-left: 8px;
+  margin-right: 8px;
+}
+
+.badgeContainer:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.badge {
   background-color: #f44336;
   color: #ffffff;
   font-size: 10px;
   height: 16px;
   min-width: 16px;
   padding: 0 4px;
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  transform: translate(50%, -50%);
 }
 
 /* Menu styling */
-.menuRoot .paper {
-  width: 320px;
-  max-height: 400px;
-  overflow: auto;
-  border-radius: 12px;
-  margin-top: 8px;
-  box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.15);
+.menuRoot {
+  z-index: 1400;
 }
 
-.menuRoot .divider {
-  margin: 8px 0;
+.paper {
+  width: 320px;
+  max-height: 400px;
+  border-radius: 12px;
+  box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.15);
+  overflow: visible;
+  margin-top: 8px;
+}
+
+.menuList {
+  padding: 0;
 }
 
 /* Notification item styling */
@@ -59,33 +77,42 @@
 
 /* Notification header container */
 .headerContainer {
-  padding-left: 16px;
-  padding-right: 16px;
-  padding-top: 12px;
-  padding-bottom: 12px;
+  padding: 12px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.titleContainer {
+  display: flex;
+  align-items: center;
+}
+
+.title {
+  font-size: 1rem;
+  font-weight: 600;
 }
 
 /* Header actions container */
 .headerActions {
   display: flex;
   gap: 8px;
+  align-items: center;
 }
 
 /* New count badge */
 .newCountBadge {
   margin-left: 8px;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: #f44336;
-  font-weight: bold;
+  font-weight: 500;
   background-color: rgba(244, 67, 54, 0.1);
   border-radius: 10px;
-  padding-left: 8px;
-  padding-right: 8px;
-  padding-top: 4px;
-  padding-bottom: 4px;
+  padding: 2px 8px;
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
 }
 
 /* Mark all read button */
@@ -94,6 +121,12 @@
   font-size: 0.75rem;
   padding: 2px 8px;
   border-radius: 12px;
+  min-height: 24px;
+  color: #2196f3;
+}
+
+.markAllReadButton:hover {
+  background-color: rgba(33, 150, 243, 0.04);
 }
 
 /* Clear button */
@@ -102,6 +135,7 @@
   font-size: 0.75rem;
   padding: 2px 8px;
   border-radius: 12px;
+  min-height: 24px;
   color: #f44336;
 }
 
@@ -113,8 +147,7 @@
 .loadingContainer {
   display: flex;
   justify-content: center;
-  padding-top: 32px;
-  padding-bottom: 32px;
+  padding: 32px 0;
 }
 
 /* List container */
@@ -145,39 +178,76 @@
   margin-right: 4px;
 }
 
-/* Clear dialog */
-.clearDialog {
-  border-radius: 12px;
+/* Clickable notification */
+.clickableNotification {
+  cursor: pointer;
 }
 
-.clearDialog .MuiDialogTitle-root {
+/* Notification actions container */
+.notificationActions {
+  display: flex;
+  margin-top: 8px;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Accept button styling */
+.acceptButton {
+  text-transform: none;
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-weight: 500;
+  box-shadow: none;
+}
+
+.acceptButton:hover {
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Dismiss button styling */
+.dismissButton {
+  text-transform: none;
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: 12px;
+  color: #757575;
+}
+
+/* Dialog styling */
+.clearDialog {
+  border-radius: 12px;
+  padding: 8px;
+}
+
+.dialogTitle {
   padding-bottom: 8px;
   font-weight: 600;
 }
 
-.clearDialog .MuiDialogContent-root {
+.dialogContent {
   padding-top: 16px;
 }
 
-.clearDialog .MuiDialogActions-root {
+.dialogActions {
   padding: 16px 24px;
 }
 
-.clearDialog .MuiButton-root {
+.cancelButton {
   text-transform: none;
   font-weight: 500;
   border-radius: 8px;
-}
-
-.clearDialog .MuiButton-root:first-child {
   color: #757575;
 }
 
-.clearDialog .MuiButton-root:last-child {
+.confirmButton {
+  text-transform: none;
+  font-weight: 500;
+  border-radius: 8px;
   background-color: #f44336;
   color: white;
 }
 
-.clearDialog .MuiButton-root:last-child:hover {
+.confirmButton:hover {
   background-color: #d32f2f;
 } 
