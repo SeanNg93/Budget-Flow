@@ -10,15 +10,20 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RestController
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:5173"}, allowCredentials = "true")
 @RequestMapping("/api/notifications")
 public class NotificationController {
 
+    private static final Logger logger = LoggerFactory.getLogger(NotificationController.class);
     private final NotificationService notificationService;
     private final UserRepository userRepository;
 
@@ -30,52 +35,101 @@ public class NotificationController {
 
     @GetMapping
     public ResponseEntity<List<NotificationDto>> getUserNotifications() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
-        Long userId = getUserIdFromUsername(username);
-        
-        List<NotificationDto> notifications = notificationService.getUserNotifications(userId);
-        return ResponseEntity.ok(notifications);
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            
+            if (auth == null || !auth.isAuthenticated()) {
+                return ResponseEntity.status(401).build();
+            }
+            
+            String username = auth.getName();
+            Long userId = getUserIdFromUsername(username);
+            
+            List<NotificationDto> notifications = notificationService.getUserNotifications(userId);
+            return ResponseEntity.ok(notifications);
+        } catch (Exception e) {
+            logger.error("Error retrieving notifications", e);
+            // Return an empty list for better UX
+            return ResponseEntity.ok(new ArrayList<>());
+        }
     }
 
     @GetMapping("/unread")
     public ResponseEntity<List<NotificationDto>> getUnreadNotifications() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
-        Long userId = getUserIdFromUsername(username);
-        
-        List<NotificationDto> notifications = notificationService.getUnreadNotifications(userId);
-        return ResponseEntity.ok(notifications);
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth == null || !auth.isAuthenticated()) {
+                return ResponseEntity.status(401).build();
+            }
+            
+            String username = auth.getName();
+            Long userId = getUserIdFromUsername(username);
+            
+            List<NotificationDto> notifications = notificationService.getUnreadNotifications(userId);
+            return ResponseEntity.ok(notifications);
+        } catch (Exception e) {
+            logger.error("Error retrieving unread notifications", e);
+            // Return an empty list for better UX
+            return ResponseEntity.ok(new ArrayList<>());
+        }
     }
 
     @GetMapping("/count")
     public ResponseEntity<Map<String, Long>> getUnreadCount() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
-        Long userId = getUserIdFromUsername(username);
-        
-        long count = notificationService.countUnreadNotifications(userId);
-        
-        Map<String, Long> response = new HashMap<>();
-        response.put("unreadCount", count);
-        
-        return ResponseEntity.ok(response);
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth == null || !auth.isAuthenticated()) {
+                return ResponseEntity.status(401).build();
+            }
+            
+            String username = auth.getName();
+            Long userId = getUserIdFromUsername(username);
+            
+            long count = notificationService.countUnreadNotifications(userId);
+            
+            Map<String, Long> response = new HashMap<>();
+            response.put("unreadCount", count);
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Error retrieving unread notification count", e);
+            
+            // Create a user-friendly response
+            Map<String, Long> response = new HashMap<>();
+            response.put("unreadCount", 0L);
+            return ResponseEntity.ok(response);
+        }
     }
 
     @PutMapping("/{id}/read")
     public ResponseEntity<NotificationDto> markAsRead(@PathVariable Long id) {
-        NotificationDto notification = notificationService.markAsRead(id);
-        return ResponseEntity.ok(notification);
+        try {
+            NotificationDto notification = notificationService.markAsRead(id);
+            return ResponseEntity.ok(notification);
+        } catch (Exception e) {
+            logger.error("Error marking notification as read", e);
+            return ResponseEntity.status(500).build();
+        }
     }
 
     @PutMapping("/read-all")
     public ResponseEntity<Void> markAllAsRead() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
-        Long userId = getUserIdFromUsername(username);
-        
-        notificationService.markAllAsRead(userId);
-        return ResponseEntity.ok().build();
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth == null || !auth.isAuthenticated()) {
+                logger.error("User not authenticated for mark all as read");
+                return ResponseEntity.status(401).build();
+            }
+            
+            String username = auth.getName();
+            Long userId = getUserIdFromUsername(username);
+            
+            notificationService.markAllAsRead(userId);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            logger.error("Error marking all notifications as read", e);
+            return ResponseEntity.status(500).build();
+        }
     }
 
     // Helper method to get user ID from username

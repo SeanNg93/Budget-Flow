@@ -5,10 +5,13 @@ import com.financeapp.model.Notification;
 import com.financeapp.model.User;
 import com.financeapp.repository.NotificationRepository;
 import com.financeapp.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,6 +20,7 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
+    private static final Logger logger = LoggerFactory.getLogger(NotificationService.class);
 
     @Autowired
     public NotificationService(NotificationRepository notificationRepository, UserRepository userRepository) {
@@ -60,38 +64,53 @@ public class NotificationService {
      * Get all notifications for a user
      */
     public List<NotificationDto> getUserNotifications(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
-        
-        List<Notification> notifications = notificationRepository.findByUserOrderByCreatedAtDesc(user);
-        
-        return notifications.stream()
-                .map(this::mapToDto)
-                .collect(Collectors.toList());
+        try {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+            
+            List<Notification> notifications = notificationRepository.findByUserOrderByCreatedAtDesc(user);
+            
+            return notifications.stream()
+                    .map(this::mapToDto)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            logger.error("Error retrieving notifications for user: {}", userId);
+            return new ArrayList<>();
+        }
     }
 
     /**
      * Get unread notifications for a user
      */
     public List<NotificationDto> getUnreadNotifications(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
-        
-        List<Notification> notifications = notificationRepository.findByUserAndReadOrderByCreatedAtDesc(user, false);
-        
-        return notifications.stream()
-                .map(this::mapToDto)
-                .collect(Collectors.toList());
+        try {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+            
+            List<Notification> notifications = notificationRepository.findByUserAndReadOrderByCreatedAtDesc(user, false);
+            
+            return notifications.stream()
+                    .map(this::mapToDto)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            logger.error("Error retrieving unread notifications for user: {}", userId);
+            return new ArrayList<>();
+        }
     }
 
     /**
      * Count unread notifications for a user
      */
     public long countUnreadNotifications(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
-        
-        return notificationRepository.countByUserAndRead(user, false);
+        try {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+            
+            return notificationRepository.countByUserAndRead(user, false);
+        } catch (Exception e) {
+            logger.error("Error counting unread notifications for user: {}", userId);
+            return 0;
+        }
     }
 
     /**

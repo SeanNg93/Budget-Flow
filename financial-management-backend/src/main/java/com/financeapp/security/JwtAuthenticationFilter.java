@@ -31,34 +31,39 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
+        String requestURI = request.getRequestURI();
+        boolean isNotificationEndpoint = requestURI != null && requestURI.contains("/api/notifications");
+        
         try {
             String jwt = parseJwt(request);
 
             if (jwt != null) {
-                String username = jwtUtils.extractUsername(jwt);
-
-                if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                    try {
-                        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-
-                        if (jwtUtils.validateToken(jwt, userDetails)) {
-                            UsernamePasswordAuthenticationToken authentication =
-                                    new UsernamePasswordAuthenticationToken(
-                                            userDetails,
-                                            null,
-                                            userDetails.getAuthorities()
-                                    );
-
-                            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                            SecurityContextHolder.getContext().setAuthentication(authentication);
-
-                            logger.info("Authenticated user: {}", username);
+                try {
+                    String username = jwtUtils.extractUsername(jwt);
+    
+                    if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                        try {
+                            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+    
+                            if (jwtUtils.validateToken(jwt, userDetails)) {
+                                UsernamePasswordAuthenticationToken authentication =
+                                        new UsernamePasswordAuthenticationToken(
+                                                userDetails,
+                                                null,
+                                                userDetails.getAuthorities()
+                                        );
+    
+                                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                                SecurityContextHolder.getContext().setAuthentication(authentication);
+                            }
+                        } catch (UsernameNotFoundException e) {
+                            logger.error("User not found: {}", username);
+                        } catch (Exception e) {
+                            logger.error("Cannot set user authentication: {}", e.getMessage());
                         }
-                    } catch (UsernameNotFoundException e) {
-                        logger.error("User not found: {}", username);
-                    } catch (Exception e) {
-                        logger.error("Cannot set user authentication: {}", e.getMessage());
                     }
+                } catch (Exception e) {
+                    logger.error("Could not process JWT token: {}", e.getMessage());
                 }
             }
         } catch (Exception e) {
@@ -76,5 +81,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         return null;
+    }
+    
+    // Utility method to mask the token for logging (show only first and last 5 chars)
+    private String maskToken(String token) {
+        if (token == null || token.length() <= 10) {
+            return "***masked***";
+        }
+        return token.substring(0, 5) + "..." + token.substring(token.length() - 5);
     }
 }

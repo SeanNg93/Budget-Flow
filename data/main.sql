@@ -143,6 +143,18 @@ CREATE TABLE password_reset_tokens (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+-- Create notifications table for user notifications
+CREATE TABLE notifications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    message TEXT NOT NULL,
+    type VARCHAR(50) NOT NULL,
+    `read` BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    data TEXT,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 -- =============================================
 -- PART 3: INSERT INITIAL DATA
 -- =============================================
@@ -154,8 +166,8 @@ INSERT INTO roles (name) VALUES
 
 -- Insert admin and testuser with BCrypt encoded passwords (123123)
 INSERT INTO users (username, email, password_hash, enabled) VALUES 
-('admin', 'admin@example.com', '$2a$10$dXJ3SW6G7P50lGmMkkmwe.20cQQubK3.HZWzG3YB1tlRy.fqvM/BG', true),
-('testuser', 'testuser@example.com', '$2a$10$dXJ3SW6G7P50lGmMkkmwe.20cQQubK3.HZWzG3YB1tlRy.fqvM/BG', true);
+('admin', 'admin@example.com', '$2a$12$GfuKtPTTh1OVhXkW1EabJepwy8DyC2AfL7s0l3YeuvpsqmddE1pKi', true),
+('testuser', 'testuser@example.com', '$2a$12$U48NVl/D6kA9FKEgu0md6elK.Ob47CBxKj7dKF2dvAvXQXy2hRW/2', true);
 
 -- Insert default profiles for users with total_balance initialized to 0
 INSERT INTO user_profiles (user_id, full_name, join_date, role, total_balance, currency) VALUES
