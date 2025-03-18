@@ -163,6 +163,27 @@ export const transferToUser = (sourceWalletId, targetUserId, amount) => {
   });
 };
 
+// Notification services
+export const getNotifications = () => {
+  return axiosInstance.get('/notifications');
+};
+
+export const getUnreadNotifications = () => {
+  return axiosInstance.get('/notifications/unread');
+};
+
+export const getUnreadNotificationCount = () => {
+  return axiosInstance.get('/notifications/count');
+};
+
+export const markNotificationAsRead = (id) => {
+  return axiosInstance.put(`/notifications/${id}/read`);
+};
+
+export const markAllNotificationsAsRead = () => {
+  return axiosInstance.put('/notifications/read-all');
+};
+
 // Export the service as a default object
 const FinanceService = {
   // New wallet functions
@@ -203,6 +224,13 @@ const FinanceService = {
   // User transfer functions
   searchUsers,
   transferToUser,
+  
+  // Notification functions
+  getNotifications,
+  getUnreadNotifications,
+  getUnreadNotificationCount,
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
 };
 
 export default FinanceService; 

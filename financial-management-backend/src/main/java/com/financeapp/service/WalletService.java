@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.HashMap;
 import java.util.stream.Collectors;
+import com.financeapp.service.NotificationService;
 
 @Service
 public class WalletService {
@@ -24,13 +25,15 @@ public class WalletService {
     private final UserRepository userRepository;
     private final UserProfileService userProfileService;
     private final UserProfileRepository userProfileRepository;
+    private final NotificationService notificationService;
 
     @Autowired
-    public WalletService(WalletRepository walletRepository, UserRepository userRepository, UserProfileService userProfileService, UserProfileRepository userProfileRepository) {
+    public WalletService(WalletRepository walletRepository, UserRepository userRepository, UserProfileService userProfileService, UserProfileRepository userProfileRepository, NotificationService notificationService) {
         this.walletRepository = walletRepository;
         this.userRepository = userRepository;
         this.userProfileService = userProfileService;
         this.userProfileRepository = userProfileRepository;
+        this.notificationService = notificationService;
     }
 
     public List<Wallet> getAllWalletsByUserId(Long userId) {
@@ -324,6 +327,14 @@ public class WalletService {
         
         // Add to target user's total balance
         BigDecimal newTargetTotalBalance = userProfileService.addToTotalBalance(targetUserId, amount);
+        
+        // Create notifications for both users
+        notificationService.createMoneyTransferNotifications(
+            sourceUserId, 
+            targetUserId, 
+            amount.toString(), 
+            sourceWallet.getAccountName()
+        );
         
         // Create response with updated balances
         Map<String, Object> result = new HashMap<>();
