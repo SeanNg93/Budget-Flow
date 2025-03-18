@@ -14,6 +14,8 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import CreditCardIcon from '@mui/icons-material/CreditCard';
 import SavingsIcon from '@mui/icons-material/Savings';
 import PaymentsIcon from '@mui/icons-material/Payments';
+import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
+import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import FinanceService from '../../services/FinanceService';
 import styles from '../../styles/dashboard.module.css';
 
@@ -21,6 +23,8 @@ const WalletOverview = ({ onManageWallets }) => {
   const [wallets, setWallets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(0);
+  const walletsPerPage = 4;
 
   useEffect(() => {
     fetchWallets();
@@ -51,6 +55,20 @@ const WalletOverview = ({ onManageWallets }) => {
       default:
         return <AccountBalanceWalletIcon className={styles.walletIcon} />;
     }
+  };
+
+  const totalPages = Math.ceil(wallets.length / walletsPerPage);
+  const displayedWallets = wallets.slice(
+    currentPage * walletsPerPage,
+    (currentPage + 1) * walletsPerPage
+  );
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) => (prev + 1) % totalPages);
+  };
+
+  const handlePrevPage = () => {
+    setCurrentPage((prev) => (prev - 1 + totalPages) % totalPages);
   };
 
   return (
@@ -104,22 +122,56 @@ const WalletOverview = ({ onManageWallets }) => {
           </Button>
         </Box>
       ) : (
-        <Box className={styles.walletsList}>
-          {wallets.map((wallet) => (
-            <Box key={wallet.id} className={styles.walletItem}>
-              <Typography variant="h6" className={styles.walletName}>
-                {getWalletIcon(wallet.accountType)}
-                {wallet.accountName}
-              </Typography>
-              <Typography variant="h4" className={styles.walletBalance}>
-                ${wallet.balance.toFixed(2)}
-              </Typography>
-              <Divider sx={{ my: 1, opacity: 0.6 }} />
-              <Typography variant="body2" className={styles.walletType}>
-                {wallet.accountType || "General Account"}
-              </Typography>
+        <Box className={styles.walletsContainer}>
+          {wallets.length > walletsPerPage && (
+            <IconButton 
+              className={styles.walletNavButton} 
+              onClick={handlePrevPage}
+              sx={{ left: -18 }}
+            >
+              <ArrowBackIosNewIcon fontSize="small" />
+            </IconButton>
+          )}
+          
+          <Box className={styles.walletsList}>
+            {displayedWallets.map((wallet) => (
+              <Box key={wallet.id} className={styles.walletItem}>
+                <Typography variant="h6" className={styles.walletName}>
+                  {getWalletIcon(wallet.accountType)}
+                  {wallet.accountName}
+                </Typography>
+                <Typography variant="h4" className={styles.walletBalance}>
+                  ${wallet.balance.toFixed(2)}
+                </Typography>
+                <Divider sx={{ my: 1, opacity: 0.6 }} />
+                <Typography variant="body2" className={styles.walletType}>
+                  {wallet.accountType || "General Account"}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+          
+          {wallets.length > walletsPerPage && (
+            <IconButton 
+              className={styles.walletNavButton} 
+              onClick={handleNextPage}
+              sx={{ right: -18 }}
+            >
+              <ArrowForwardIosIcon fontSize="small" />
+            </IconButton>
+          )}
+          
+          {totalPages > 1 && (
+            <Box className={styles.paginationDots}>
+              {[...Array(totalPages)].map((_, index) => (
+                <Box 
+                  key={index}
+                  className={`${styles.paginationDot} ${currentPage === index ? styles.activeDot : ''}`}
+                  onClick={() => setCurrentPage(index)}
+                />
+              ))}
             </Box>
-          ))}
+          )}
         </Box>
       )}
     </Paper>

@@ -571,6 +571,7 @@ export default function Dashboard() {
                       startIcon={<AddIcon />}
                       onClick={openFinanceActionPanel}
                       className={styles.addTransactionButton}
+                      elevation={3}
                     >
                       Add New
                     </Button>
@@ -649,15 +650,6 @@ export default function Dashboard() {
                       <Typography variant="body1" color="text.secondary">
                         No transactions to display. Start adding your financial data to see it here.
                       </Typography>
-                      <Button 
-                        variant="contained" 
-                        color="primary" 
-                        startIcon={<AddIcon />}
-                        onClick={openFinanceActionPanel}
-                        className={styles.addFirstTransactionButton}
-                      >
-                        Add First Transaction
-                      </Button>
                     </Box>
                   )}
                 </Paper>
