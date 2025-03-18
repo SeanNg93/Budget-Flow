@@ -56,6 +56,7 @@ import FinanceActionPanel from '../components/dashboard/FinanceActionPanel';
 import AddBalanceForm from '../components/dashboard/AddBalanceForm';
 import EditBalanceForm from '../components/dashboard/EditBalanceForm';
 import PendingDeletionAlert from '../components/dashboard/PendingDeletionAlert';
+import WalletOverview from '../components/dashboard/WalletOverview';
 
 // Import theme
 import AppTheme from '../shared-theme/AppTheme';
@@ -543,6 +544,11 @@ export default function Dashboard() {
                     )}
                   </CardContent>
                 </Card>
+              </Grid>
+              
+              {/* Wallet Overview */}
+              <Grid item xs={12}>
+                <WalletOverview onManageWallets={handleManageWallets} />
               </Grid>
               
               {/* Recent Transactions */}
