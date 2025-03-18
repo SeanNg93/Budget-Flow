@@ -12,8 +12,6 @@ import {
   ListItemText,
   Button,
   CircularProgress,
-  styled,
-  alpha,
   ListItemIcon
 } from '@mui/material';
 import {
@@ -26,47 +24,8 @@ import {
 } from '@mui/icons-material';
 import FinanceService from '../../services/FinanceService';
 import { format, formatDistanceToNow } from 'date-fns';
-
-const StyledBadge = styled(Badge)(({ theme }) => ({
-  '& .MuiBadge-badge': {
-    backgroundColor: theme.palette.error.main,
-    color: theme.palette.error.contrastText,
-    fontSize: 10,
-    height: 16,
-    minWidth: 16,
-    padding: '0 4px',
-  },
-}));
-
-const StyledMenu = styled(Menu)(({ theme }) => ({
-  '& .MuiPaper-root': {
-    width: 320,
-    maxHeight: 400,
-    overflow: 'auto',
-    borderRadius: 12,
-    marginTop: theme.spacing(1),
-    boxShadow: '0px 5px 15px rgba(0, 0, 0, 0.15)',
-  },
-  '& .MuiDivider-root': {
-    margin: theme.spacing(1, 0),
-  },
-}));
-
-const NotificationItem = styled(ListItem)(({ theme, read }) => ({
-  borderRadius: 8,
-  marginBottom: 4,
-  padding: theme.spacing(1.5),
-  backgroundColor: read ? 'transparent' : alpha(theme.palette.primary.light, 0.1),
-  '&:hover': {
-    backgroundColor: alpha(theme.palette.primary.light, 0.05),
-  },
-}));
-
-const EmptyNotification = styled(Box)(({ theme }) => ({
-  padding: theme.spacing(3),
-  textAlign: 'center',
-  color: theme.palette.text.secondary,
-}));
+import styles from '../../styles/notificationMenu.module.css';
+import clsx from 'clsx';
 
 const NotificationMenu = () => {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -114,16 +73,12 @@ const NotificationMenu = () => {
   
   const fetchUnreadCount = async () => {
     try {
-      console.log("Attempting to fetch unread notification count from backend...");
-      // First try the real API (it will fail with 403 for now)
+      // First try the real API
       const response = await FinanceService.getUnreadNotificationCount();
-      console.log("Successfully fetched unread count:", response.data);
       setUnreadCount(response.data.unreadCount);
     } catch (error) {
-      console.error('Error fetching unread notifications count:', error);
       // Use mock data
       const unreadCount = mockNotifications.filter(n => !n.read).length;
-      console.log("Using mock unread count instead:", unreadCount);
       setUnreadCount(unreadCount);
     }
   };
@@ -131,15 +86,11 @@ const NotificationMenu = () => {
   const fetchNotifications = async () => {
     setLoading(true);
     try {
-      console.log("Attempting to fetch notifications from backend...");
-      // First try the real API (it will fail with 403 for now)
+      // First try the real API
       const response = await FinanceService.getNotifications();
-      console.log("Successfully fetched notifications:", response.data);
       setNotifications(response.data);
     } catch (error) {
-      console.error('Error fetching notifications:', error);
       // Use mock data
-      console.log("Using mock notifications instead:", mockNotifications);
       setNotifications(mockNotifications);
     } finally {
       setLoading(false);
@@ -180,8 +131,6 @@ const NotificationMenu = () => {
       // Update unread count
       setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (error) {
-      console.error('Error marking notification as read:', error);
-      
       // Update mock data anyway
       setMockNotifications(prevMockNotifications => 
         prevMockNotifications.map(notification => 
@@ -224,8 +173,6 @@ const NotificationMenu = () => {
       // Update unread count
       setUnreadCount(0);
     } catch (error) {
-      console.error('Error marking all notifications as read:', error);
-      
       // Update mock data anyway
       setMockNotifications(mockNotifications.map(notification => ({ 
         ...notification, 
@@ -241,21 +188,6 @@ const NotificationMenu = () => {
       // Update unread count
       setUnreadCount(0);
     }
-  };
-  
-  // Utility function to add a fake notification (for testing)
-  const addFakeNotification = () => {
-    const newNotification = {
-      id: Date.now(), // Use timestamp as unique ID
-      message: `You received $${Math.floor(Math.random() * 100) + 10}.00 from testuser${Math.floor(Math.random() * 10)}.`,
-      type: "MONEY_RECEIVED",
-      read: false,
-      createdAt: new Date().toISOString()
-    };
-    
-    setMockNotifications(prev => [newNotification, ...prev]);
-    setNotifications(prev => [newNotification, ...prev]);
-    setUnreadCount(prev => prev + 1);
   };
   
   const getNotificationIcon = (type) => {
@@ -288,20 +220,21 @@ const NotificationMenu = () => {
         aria-label="show notifications"
         color="inherit"
         onClick={handleMenuOpen}
-        sx={{ 
-          borderRadius: 2,
-          mx: 1,
-          '&:hover': {
-            backgroundColor: alpha('#000', 0.04)
-          }
-        }}
+        className={styles.notificationButton}
       >
-        <StyledBadge badgeContent={unreadCount} color="error">
+        <Badge 
+          badgeContent={unreadCount} 
+          color="error"
+          classes={{
+            root: styles.badgeRoot,
+            badge: styles.badge
+          }}
+        >
           <NotificationsIcon />
-        </StyledBadge>
+        </Badge>
       </IconButton>
       
-      <StyledMenu
+      <Menu
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
         onClose={handleMenuClose}
@@ -313,23 +246,18 @@ const NotificationMenu = () => {
           vertical: 'top',
           horizontal: 'right',
         }}
+        classes={{
+          root: styles.menuRoot,
+          paper: styles.paper
+        }}
       >
-        <Box sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Box className={styles.headerContainer}>
           <Typography variant="h6" component="div">
             Notifications
             {unreadCount > 0 && (
               <Typography 
                 component="span" 
-                sx={{ 
-                  ml: 1, 
-                  fontSize: '0.8rem', 
-                  color: 'error.main',
-                  fontWeight: 'bold',
-                  backgroundColor: alpha('#f44336', 0.1),
-                  borderRadius: 10,
-                  px: 1,
-                  py: 0.5
-                }}
+                className={styles.newCountBadge}
               >
                 {unreadCount} new
               </Typography>
@@ -342,81 +270,67 @@ const NotificationMenu = () => {
                 size="small" 
                 startIcon={<MarkReadIcon />}
                 onClick={handleMarkAllAsRead}
-                sx={{ 
-                  textTransform: 'none',
-                  fontSize: '0.75rem',
-                  padding: '2px 8px',
-                  borderRadius: 1.5,
-                  mr: 1
-                }}
+                className={styles.markAllReadButton}
               >
                 Mark all read
               </Button>
             )}
-            <Button 
-              size="small"
-              onClick={addFakeNotification}
-              variant="outlined"
-              sx={{ 
-                textTransform: 'none',
-                fontSize: '0.75rem',
-                padding: '2px 8px',
-                borderRadius: 1.5
-              }}
-            >
-              Test
-            </Button>
           </Box>
         </Box>
         
-        <Divider />
+        <Divider className={styles.divider} />
         
         {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+          <Box className={styles.loadingContainer}>
             <CircularProgress size={24} />
           </Box>
         ) : notifications.length === 0 ? (
-          <EmptyNotification>
+          <Box className={styles.emptyNotification}>
             <Typography variant="body2">
               No notifications yet
             </Typography>
-          </EmptyNotification>
+          </Box>
         ) : (
-          <List sx={{ p: 1 }}>
+          <List className={styles.notificationList}>
             {notifications.map((notification) => (
-              <NotificationItem
+              <ListItem
                 key={notification.id}
-                read={notification.read}
                 button
                 onClick={() => !notification.read && handleMarkAsRead(notification.id)}
+                className={clsx(
+                  styles.notificationItem,
+                  !notification.read && styles.notificationItemUnread
+                )}
               >
-                <ListItemIcon sx={{ minWidth: 32 }}>
+                <ListItemIcon className={styles.itemIcon}>
                   {getNotificationIcon(notification.type)}
                 </ListItemIcon>
                 <ListItemText
                   primary={notification.message}
                   secondary={
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 0.5 }}>
-                      <Typography variant="caption" color="text.secondary">
-                        {formatDate(notification.createdAt)}
-                      </Typography>
-                      {notification.read && (
-                        <Typography variant="caption" color="success.main" sx={{ display: 'flex', alignItems: 'center' }}>
-                          <ReadIcon fontSize="inherit" sx={{ mr: 0.5 }} />
-                          Read
+                    <Typography component="span" variant="body2" color="text.secondary">
+                      <Box component="span" className={styles.metaContainer}>
+                        <Typography component="span" variant="caption" color="text.secondary">
+                          {formatDate(notification.createdAt)}
                         </Typography>
-                      )}
-                    </Box>
+                        {notification.read && (
+                          <Typography component="span" variant="caption" color="success.main" className={styles.readStatus}>
+                            <ReadIcon fontSize="inherit" className={styles.readIcon} />
+                            Read
+                          </Typography>
+                        )}
+                      </Box>
+                    </Typography>
                   }
                   primaryTypographyProps={{
                     style: { fontWeight: notification.read ? 'normal' : 'bold' }
                   }}
                 />
-              </NotificationItem>
+              </ListItem>
             ))}
           </List>
         )}
-      </StyledMenu>
+      </Menu>
     </>
   );
 };
