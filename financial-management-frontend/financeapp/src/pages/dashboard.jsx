@@ -56,6 +56,7 @@ import FinanceActionPanel from '../components/dashboard/FinanceActionPanel';
 import AddBalanceForm from '../components/dashboard/AddBalanceForm';
 import EditBalanceForm from '../components/dashboard/EditBalanceForm';
 import PendingDeletionAlert from '../components/dashboard/PendingDeletionAlert';
+import WalletOverview from '../components/dashboard/WalletOverview';
 
 // Import theme
 import AppTheme from '../shared-theme/AppTheme';
@@ -545,6 +546,11 @@ export default function Dashboard() {
                 </Card>
               </Grid>
               
+              {/* Wallet Overview */}
+              <Grid item xs={12}>
+                <WalletOverview onManageWallets={handleManageWallets} />
+              </Grid>
+              
               {/* Recent Transactions */}
               <Grid item xs={12}>
                 <Paper 
@@ -565,6 +571,7 @@ export default function Dashboard() {
                       startIcon={<AddIcon />}
                       onClick={openFinanceActionPanel}
                       className={styles.addTransactionButton}
+                      elevation={3}
                     >
                       Add New
                     </Button>
@@ -643,15 +650,6 @@ export default function Dashboard() {
                       <Typography variant="body1" color="text.secondary">
                         No transactions to display. Start adding your financial data to see it here.
                       </Typography>
-                      <Button 
-                        variant="contained" 
-                        color="primary" 
-                        startIcon={<AddIcon />}
-                        onClick={openFinanceActionPanel}
-                        className={styles.addFirstTransactionButton}
-                      >
-                        Add First Transaction
-                      </Button>
                     </Box>
                   )}
                 </Paper>

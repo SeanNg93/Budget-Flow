@@ -20,6 +20,7 @@ import {
 } from '@mui/material';
 import FinanceService from '../../services/FinanceService';
 import styles from '../../styles/walletForm.module.css';
+import { generateRandomColorIndex, saveWalletColor } from '../../utils/colorUtils';
 
 const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compact = false }) => {
   const [loading, setLoading] = useState(false);
@@ -122,7 +123,14 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
         balance: parseFloat(formData.balance)
       };
       
-      await FinanceService.createAccount(accountData);
+      // Create the wallet
+      const response = await FinanceService.createAccount(accountData);
+      
+      // If the wallet creation was successful and we have an ID, assign a random color
+      if (response && response.data && response.data.id) {
+        const colorIndex = generateRandomColorIndex();
+        saveWalletColor(response.data.id, colorIndex);
+      }
       
       // Reset form
       resetForm();

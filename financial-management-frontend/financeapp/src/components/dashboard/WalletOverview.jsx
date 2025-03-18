@@ -1,0 +1,226 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  Typography, 
+  Box, 
+  Button, 
+  Paper, 
+  CircularProgress,
+  IconButton,
+  Tooltip,
+  Divider,
+} from '@mui/material';
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import SettingsIcon from '@mui/icons-material/Settings';
+import CreditCardIcon from '@mui/icons-material/CreditCard';
+import SavingsIcon from '@mui/icons-material/Savings';
+import PaymentsIcon from '@mui/icons-material/Payments';
+import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
+import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import FinanceService from '../../services/FinanceService';
+import styles from '../../styles/dashboard.module.css';
+import { getWalletColorClass } from '../../utils/colorUtils';
+
+const WalletOverview = ({ onManageWallets }) => {
+  const [wallets, setWallets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [slideDirection, setSlideDirection] = useState(null);
+  const walletsPerPage = 4;
+
+  useEffect(() => {
+    fetchWallets();
+  }, []);
+
+  const fetchWallets = async () => {
+    setLoading(true);
+    try {
+      const response = await FinanceService.getWallets();
+      setWallets(response.data || []);
+    } catch (err) {
+      console.error('Error fetching wallets:', err);
+      setError('Failed to load wallets. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function to get the appropriate icon based on account type
+  const getWalletIcon = (accountType) => {
+    switch(accountType?.toLowerCase()) {
+      case 'savings':
+        return <SavingsIcon className={styles.walletIcon} />;
+      case 'credit card':
+        return <CreditCardIcon className={styles.walletIcon} />;
+      case 'cash':
+        return <PaymentsIcon className={styles.walletIcon} />;
+      default:
+        return <AccountBalanceWalletIcon className={styles.walletIcon} />;
+    }
+  };
+
+  const totalPages = Math.ceil(wallets.length / walletsPerPage);
+  const displayedWallets = wallets.slice(
+    currentPage * walletsPerPage,
+    (currentPage + 1) * walletsPerPage
+  );
+
+  const handleNextPage = () => {
+    setSlideDirection('slideLeft');
+    setTimeout(() => {
+      setCurrentPage((prev) => (prev + 1) % totalPages);
+    }, 200);
+  };
+
+  const handlePrevPage = () => {
+    setSlideDirection('slideRight');
+    setTimeout(() => {
+      setCurrentPage((prev) => (prev - 1 + totalPages) % totalPages);
+    }, 200);
+  };
+
+  // Reset animation after it completes
+  useEffect(() => {
+    if (slideDirection) {
+      const timer = setTimeout(() => {
+        setSlideDirection(null);
+      }, 400); // Slightly longer than the animation to ensure it completes
+      return () => clearTimeout(timer);
+    }
+  }, [slideDirection]);
+
+  return (
+    <Paper className={styles.walletOverviewCard}>
+      <Box className={styles.walletOverviewHeader}>
+        <Typography 
+          component="h2" 
+          variant="h5" 
+          color="text.primary" 
+          className={styles.sectionTitle}
+        >
+          Your Wallets
+          {wallets.length > 0 && (
+            <Typography 
+              component="span" 
+              variant="h6" 
+              sx={{ 
+                ml: 1, 
+                color: 'text.secondary', 
+                fontWeight: 'normal',
+                fontSize: '1.1rem',
+                opacity: 0.8
+              }}
+            >
+              ({wallets.length})
+            </Typography>
+          )}
+        </Typography>
+        <Button 
+          variant="contained" 
+          color="primary" 
+          onClick={onManageWallets}
+          className={styles.manageWalletsButton}
+          size="small"
+          startIcon={<SettingsIcon />}
+        >
+          Manage Wallets
+        </Button>
+      </Box>
+      
+      {loading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+          <CircularProgress size={32} />
+        </Box>
+      ) : error ? (
+        <Typography color="error" variant="body2" sx={{ textAlign: 'center', py: 2 }}>
+          {error}
+        </Typography>
+      ) : wallets.length === 0 ? (
+        <Box sx={{ textAlign: 'center', py: 3 }}>
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+            You don't have any wallets yet. Create one to get started!
+          </Typography>
+          <Button 
+            variant="contained" 
+            color="primary" 
+            onClick={onManageWallets}
+            size="small"
+          >
+            Create Wallet
+          </Button>
+        </Box>
+      ) : (
+        <Box className={styles.walletsContainer}>
+          {wallets.length > walletsPerPage && (
+            <IconButton 
+              className={styles.walletNavButton} 
+              onClick={handlePrevPage}
+              sx={{ left: -18 }}
+              disabled={!!slideDirection}
+            >
+              <ArrowBackIosNewIcon fontSize="small" />
+            </IconButton>
+          )}
+          
+          <Box className={`${styles.walletsList} ${slideDirection ? styles[slideDirection] : ''}`}>
+            {displayedWallets.map((wallet) => {
+              const colorClass = getWalletColorClass(wallet.id);
+              return (
+                <Box key={wallet.id} className={`${styles.walletItem} ${styles[colorClass]}`}>
+                  <Typography variant="h6" className={styles.walletName}>
+                    {getWalletIcon(wallet.accountType)}
+                    {wallet.accountName}
+                  </Typography>
+                  <Typography variant="h4" className={styles.walletBalance}>
+                    ${wallet.balance.toFixed(2)}
+                  </Typography>
+                  <Divider sx={{ my: 1, opacity: 0.6 }} />
+                  <Typography variant="body2" className={styles.walletType}>
+                    {wallet.accountType || "General Account"}
+                  </Typography>
+                </Box>
+              );
+            })}
+          </Box>
+          
+          {wallets.length > walletsPerPage && (
+            <IconButton 
+              className={styles.walletNavButton} 
+              onClick={handleNextPage}
+              sx={{ right: -18 }}
+              disabled={!!slideDirection}
+            >
+              <ArrowForwardIosIcon fontSize="small" />
+            </IconButton>
+          )}
+          
+          {totalPages > 1 && (
+            <Box className={styles.paginationDots}>
+              {[...Array(totalPages)].map((_, index) => (
+                <Box 
+                  key={index}
+                  className={`${styles.paginationDot} ${currentPage === index ? styles.activeDot : ''}`}
+                  onClick={() => {
+                    if (slideDirection || index === currentPage) return;
+                    
+                    if (index > currentPage) {
+                      setSlideDirection('slideLeft');
+                    } else {
+                      setSlideDirection('slideRight');
+                    }
+                    
+                    setTimeout(() => {
+                      setCurrentPage(index);
+                    }, 200);
+                  }}
+                />
+              ))}
+            </Box>
+          )}
+        </Box>
+      )}
+    </Paper>
+  );
+};
+
+export default WalletOverview; 

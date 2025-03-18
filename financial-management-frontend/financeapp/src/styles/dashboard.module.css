@@ -364,3 +364,321 @@
     font-weight: 600;
     box-shadow: none;
   }
+
+  /* --- Wallet Overview Section --- */
+  .walletOverviewCard {
+    background-color: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 0.5rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+    width: 49%;
+    margin-left: 0;
+  }
+
+  .walletOverviewHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .walletsContainer {
+    position: relative;
+    padding: 0 2.5rem;
+  }
+
+  .walletsList {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 16px;
+    position: relative;
+    transition: all 0.3s ease-out;
+  }
+
+  /* Slide animations for wallet pagination */
+  .slideLeft {
+    animation: slideOutLeft 0.2s forwards, slideInRight 0.2s 0.2s forwards;
+  }
+
+  .slideRight {
+    animation: slideOutRight 0.2s forwards, slideInLeft 0.2s 0.2s forwards;
+  }
+
+  @keyframes slideOutLeft {
+    from {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateX(-30px);
+      opacity: 0;
+    }
+  }
+
+  @keyframes slideOutRight {
+    from {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateX(30px);
+      opacity: 0;
+    }
+  }
+
+  @keyframes slideInRight {
+    from {
+      transform: translateX(30px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideInLeft {
+    from {
+      transform: translateX(-30px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  .walletItem {
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: 1px solid rgba(0, 0, 0, 0.03);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .walletItem:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+  }
+
+  .walletItem::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 80px;
+    width: 80px;
+    border-radius: 50%;
+    background-color: rgba(0, 122, 255, 0.05);
+    transform: translate(30%, -30%);
+    z-index: 0;
+  }
+
+  .walletName {
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+    color: #333;
+    display: flex;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  .walletIcon {
+    margin-right: 10px;
+    font-size: 1.3rem;
+  }
+
+  .walletBalance {
+    font-size: 1.5rem !important;
+    font-weight: 600;
+    margin: 8px 0 12px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Wallet color schemes */
+  .walletColor1 .walletIcon, .walletColor1 .walletBalance {
+    color: #007aff; /* Blue */
+  }
+
+  .walletColor2 .walletIcon, .walletColor2 .walletBalance {
+    color: #34c759; /* Green */
+  }
+
+  .walletColor3 .walletIcon, .walletColor3 .walletBalance {
+    color: #ff9500; /* Orange */
+  }
+
+  .walletColor4 .walletIcon, .walletColor4 .walletBalance {
+    color: #ff3b30; /* Red */
+  }
+
+  .walletColor5 .walletIcon, .walletColor5 .walletBalance {
+    color: #5856d6; /* Purple */
+  }
+
+  .walletColor6 .walletIcon, .walletColor6 .walletBalance {
+    color: #af52de; /* Pink/Purple */
+  }
+
+  .walletColor7 .walletIcon, .walletColor7 .walletBalance {
+    color: #ff2d55; /* Pink */
+  }
+
+  .walletColor8 .walletIcon, .walletColor8 .walletBalance {
+    color: #5ac8fa; /* Light Blue */
+  }
+
+  .walletColor9 .walletIcon, .walletColor9 .walletBalance {
+    color: #ffcc00; /* Yellow */
+  }
+
+  .walletColor10 .walletIcon, .walletColor10 .walletBalance {
+    color: #4cd964; /* Mint */
+  }
+
+  .walletType {
+    font-size: 0.85rem;
+    color: rgba(0, 0, 0, 0.6);
+    margin-top: auto;
+    position: relative;
+    z-index: 1;
+    font-weight: 500;
+  }
+
+  .walletActions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 12px;
+  }
+
+  .manageWalletsButton {
+    background-color: #007aff;
+    color: white;
+    font-weight: 500;
+    text-transform: none;
+    padding: 6px 16px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
+  }
+
+  .manageWalletsButton:hover {
+    background-color: #0062cc;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.4);
+  }
+
+  .walletNavButton {
+    position: absolute !important;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 5;
+    background-color: rgba(255, 255, 255, 0.8) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    width: 36px;
+    height: 36px;
+  }
+
+  .walletNavButton:hover {
+    background-color: white !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  .paginationDots {
+    display: flex;
+    justify-content: center;
+    margin-top: 16px;
+    gap: 8px;
+  }
+
+  .paginationDot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: rgba(0, 122, 255, 0.3);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .activeDot {
+    background-color: #007aff;
+    transform: scale(1.2);
+  }
+
+  @keyframes slideRight {
+    from {
+      transform: translateX(-10px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideLeft {
+    from {
+      transform: translateX(10px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  /* --- Recent Transactions Section --- */
+  .transactionsCard {
+    background-color: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    margin-top: 0;
+  }
+
+  .transactionsHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .sectionTitle {
+    font-weight: 600;
+    color: #333;
+  }
+
+  .addTransactionButton {
+    font-weight: 500;
+    text-transform: none;
+    padding: 6px 16px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.15);
+  }
+
+  .addTransactionButton:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.25);
+  }
+
+  .loadingBox {
+    display: flex;
+    justify-content: center;
+    padding: 2rem 0;
+  }
+
+  .tableContainer {
+    overflow-x: auto;
+  }
