@@ -85,17 +85,18 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
     setError('');
     
     try {
-      // Fetch financial summary to get total balance
-      const summaryResponse = await FinanceService.getFinancialSummary();
-      const totalBalance = summaryResponse.data.totalBalance || 0;
+      // First get the total balance from the wallet API to ensure we have the latest data
+      const balancesResponse = await FinanceService.getTotalBalance();
+      const totalBalance = balancesResponse.data.totalBalance || 0;
       setTotalBalance(totalBalance);
       
-      // Fetch wallets
-      const response = await FinanceService.getAccounts();
-      setWallets(response.data || []);
+      // Then fetch wallets
+      const walletsResponse = await FinanceService.getAccounts();
+      const wallets = walletsResponse.data || [];
+      setWallets(wallets);
       
       // Calculate available balance
-      calculateAvailableBalance(totalBalance, response.data || [], null);
+      calculateAvailableBalance(totalBalance, wallets, null);
     } catch (err) {
       console.error('Error fetching data:', err);
       setError('Failed to load wallets. Please try again.');
@@ -455,11 +456,13 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
   
   const handleUserTransferCompleted = () => {
     handleCloseUserTransferDialog();
+    
+    // Force a full refresh of all financial data
     fetchFinancialData();
     
-    // Notify parent component
+    // Also refresh the parent dashboard component to update the total balance
     if (onWalletUpdated) {
-      onWalletUpdated();
+      onWalletUpdated(true); // Pass true to indicate a balance change occurred
     }
   };
 

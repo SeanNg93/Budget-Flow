@@ -318,13 +318,17 @@ public class WalletService {
         sourceWallet.setBalance(newSourceBalance);
         walletRepository.save(sourceWallet);
         
+        // Update source user's total balance (decrease it)
+        BigDecimal newSourceTotalBalance = userProfileService.updateTotalBalance(sourceUserId, 
+            getTotalBalance(sourceUserId).subtract(amount));
+        
         // Add to target user's total balance
         BigDecimal newTargetTotalBalance = userProfileService.addToTotalBalance(targetUserId, amount);
         
         // Create response with updated balances
         Map<String, Object> result = new HashMap<>();
         result.put("sourceWalletBalance", newSourceBalance);
-        result.put("sourceTotalBalance", userProfileService.getTotalBalance(sourceUserId));
+        result.put("sourceTotalBalance", newSourceTotalBalance);
         result.put("targetTotalBalance", newTargetTotalBalance);
         result.put("targetUsername", targetUser.getUsername());
         

@@ -92,10 +92,6 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
       newErrors.accountName = 'Wallet name is required';
     }
     
-    if (!formData.accountType) {
-      newErrors.accountType = 'Wallet type is required';
-    }
-    
     if (!formData.balance || isNaN(formData.balance) || parseFloat(formData.balance) < 0) {
       newErrors.balance = 'Valid balance is required';
     } else {
@@ -185,7 +181,7 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
         {compact ? (
           // Compact layout - 2 fields per row
           <>
-            <Grid item xs={6}>
+            <Grid item xs={12}>
               <FormControl fullWidth error={!!errors.accountName} size="small" className={styles.formControl}>
                 <Typography variant="caption" className={styles.fieldLabel}>
                   Wallet Name
@@ -201,31 +197,6 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
                   size="small"
                   className={styles.textField}
                 />
-              </FormControl>
-            </Grid>
-            
-            <Grid item xs={6}>
-              <FormControl fullWidth error={!!errors.accountType} size="small" className={styles.formControl}>
-                <Typography variant="caption" className={styles.fieldLabel}>
-                  Wallet Type
-                </Typography>
-                <Select
-                  name="accountType"
-                  value={formData.accountType}
-                  onChange={handleChange}
-                  displayEmpty
-                  disabled={loading}
-                  className={styles.selectField}
-                >
-                  <MenuItem value="Checking">Checking</MenuItem>
-                  <MenuItem value="Savings">Savings</MenuItem>
-                  <MenuItem value="Cash">Cash</MenuItem>
-                  <MenuItem value="Credit_Card">Credit Card</MenuItem>
-                  <MenuItem value="Investment">Investment</MenuItem>
-                  <MenuItem value="Digital_Wallet">Digital Wallet</MenuItem>
-                  <MenuItem value="Crypto">Cryptocurrency</MenuItem>
-                </Select>
-                {errors.accountType && <FormHelperText>{errors.accountType}</FormHelperText>}
               </FormControl>
             </Grid>
             
@@ -274,31 +245,6 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
                   size="small"
                   className={styles.textField}
                 />
-              </FormControl>
-            </Grid>
-            
-            <Grid item xs={12}>
-              <FormControl fullWidth error={!!errors.accountType} size="small" className={styles.formControl}>
-                <Typography variant="caption" className={styles.fieldLabel}>
-                  Wallet Type
-                </Typography>
-                <Select
-                  name="accountType"
-                  value={formData.accountType}
-                  onChange={handleChange}
-                  displayEmpty
-                  disabled={loading}
-                  className={styles.selectField}
-                >
-                  <MenuItem value="Checking">Checking</MenuItem>
-                  <MenuItem value="Savings">Savings</MenuItem>
-                  <MenuItem value="Cash">Cash</MenuItem>
-                  <MenuItem value="Credit_Card">Credit Card</MenuItem>
-                  <MenuItem value="Investment">Investment</MenuItem>
-                  <MenuItem value="Digital_Wallet">Digital Wallet</MenuItem>
-                  <MenuItem value="Crypto">Cryptocurrency</MenuItem>
-                </Select>
-                {errors.accountType && <FormHelperText>{errors.accountType}</FormHelperText>}
               </FormControl>
             </Grid>
             

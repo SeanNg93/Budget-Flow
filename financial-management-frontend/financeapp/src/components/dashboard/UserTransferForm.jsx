@@ -136,7 +136,7 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted }) => {
     setSuccess(false);
     
     try {
-      await FinanceService.transferToUser(
+      const result = await FinanceService.transferToUser(
         parseInt(sourceWalletId),
         selectedUser.id.toString(),
         parseFloat(amount)
@@ -148,12 +148,9 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted }) => {
       setSelectedUser(null);
       setSearchQuery('');
       
-      // Reload wallets to show updated balances
-      loadWallets();
-      
-      // Notify parent component
+      // Notify parent component with refresh flag
       if (onTransferCompleted) {
-        onTransferCompleted();
+        onTransferCompleted(true);
       }
       
       // Close dialog after 2 seconds
