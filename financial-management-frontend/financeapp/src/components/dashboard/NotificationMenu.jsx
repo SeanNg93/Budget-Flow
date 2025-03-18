@@ -198,6 +198,10 @@ const NotificationMenu = () => {
   
   const handleClearNotifications = async () => {
     try {
+      // Debug log to check token
+      const token = localStorage.getItem('userToken');
+      console.log('Token before delete request:', token);
+      
       await FinanceService.deleteAllNotifications();
       
       // Update local state
@@ -212,6 +216,7 @@ const NotificationMenu = () => {
       // Close the dialog
       setClearDialogOpen(false);
     } catch (error) {
+      console.error('Error clearing notifications:', error);
       // Update mock data anyway
       setMockNotifications([]);
       

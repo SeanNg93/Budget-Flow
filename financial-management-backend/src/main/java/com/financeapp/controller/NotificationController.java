@@ -136,6 +136,7 @@ public class NotificationController {
     public ResponseEntity<Void> deleteAllNotifications() {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            
             if (auth == null || !auth.isAuthenticated()) {
                 logger.error("User not authenticated for delete all notifications");
                 return ResponseEntity.status(401).build();
