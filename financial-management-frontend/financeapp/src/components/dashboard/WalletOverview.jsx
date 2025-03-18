@@ -100,7 +100,17 @@ const WalletOverview = ({ onManageWallets }) => {
         >
           Your Wallets
           {wallets.length > 0 && (
-            <Typography component="span" variant="body2" sx={{ ml: 1, color: 'text.secondary', fontWeight: 'normal' }}>
+            <Typography 
+              component="span" 
+              variant="h6" 
+              sx={{ 
+                ml: 1, 
+                color: 'text.secondary', 
+                fontWeight: 'normal',
+                fontSize: '1.1rem',
+                opacity: 0.8
+              }}
+            >
               ({wallets.length})
             </Typography>
           )}
