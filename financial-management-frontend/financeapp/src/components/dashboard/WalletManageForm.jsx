@@ -156,7 +156,21 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
   const handleBalanceChange = (e) => {
     const value = e.target.value;
     setEditWalletBalance(value);
-    validateBalanceEdit(value);
+    
+    // Calculate dynamic available balance as user types
+    if (value && !isNaN(value) && parseFloat(value) >= 0) {
+      const newBalance = parseFloat(value);
+      const dynamicAvailable = availableBalance - (newBalance - originalBalance);
+      setBalanceError('');
+      
+      // Only show error if exceeds available amount
+      if (dynamicAvailable < 0) {
+        const maxAllowed = availableBalance + originalBalance;
+        setBalanceError(`Balance exceeds available amount (max: ${maxAllowed.toFixed(2)})`);
+      }
+    } else {
+      validateBalanceEdit(value);
+    }
   };
 
   const handleEditSave = async () => {
@@ -427,44 +441,37 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
     <>
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
       
-      <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 2 }}>
         <Box 
           className={styles.balanceInfoBox}
-          sx={{ flexGrow: 1 }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-            <Box component="span" sx={{ mr: 1, color: '#0288d1', display: 'flex', alignItems: 'center' }}>
-              <InfoIcon fontSize="small" color="info" />
-            </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center' }} className={styles.infoText}>
+            <InfoIcon fontSize="small" className={styles.infoIcon} />
             <Typography variant="body2" color="text.secondary">
               Total Balance: ${totalBalance.toFixed(2)}
             </Typography>
           </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-            <Box component="span" sx={{ mr: 1, color: '#0288d1', display: 'flex', alignItems: 'center' }}>
-              <InfoIcon fontSize="small" color="info" />
-            </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center' }} className={styles.infoText}>
+            <InfoIcon fontSize="small" className={styles.infoIcon} />
             <Typography variant="body2" color="text.secondary">
               Allocated in Wallets: ${wallets.reduce((sum, wallet) => sum + wallet.balance, 0).toFixed(2)}
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Box component="span" sx={{ mr: 1, color: '#0288d1', display: 'flex', alignItems: 'center' }}>
-              <InfoIcon fontSize="small" color="info" />
-            </Box>
+            <InfoIcon fontSize="small" className={styles.infoIcon} />
             <Typography variant="body2" color="text.secondary">
               Available for allocation: ${availableBalance.toFixed(2)}
             </Typography>
           </Box>
         </Box>
-        <Box sx={{ display: 'flex', gap: 1 }}>
+        <Box className={styles.actionButtons}>
           <Button
             variant="outlined"
             color="primary"
             startIcon={<SwapHorizIcon />}
             onClick={handleOpenTransferDialog}
             disabled={editMode || loading || wallets.length < 2}
-            className={styles.transferButton}
+            className={`${styles.transferButton} ${styles.compactButton}`}
           >
             Transfer
           </Button>
@@ -474,7 +481,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
             startIcon={<AddIcon />}
             onClick={handleOpenNewWalletForm}
             disabled={editMode || loading}
-            className={styles.addWalletButton}
+            className={`${styles.addWalletButton} ${styles.compactButton}`}
           >
             New Wallet
           </Button>
@@ -505,7 +512,9 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
                       onChange={(e) => setEditWalletName(e.target.value)}
                       placeholder="Wallet name"
                       className={styles.textField}
-                      sx={{ mb: 2 }}
+                      InputProps={{
+                        className: styles.textField
+                      }}
                     />
                     <TextField
                       fullWidth
@@ -521,30 +530,37 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
                             $
                           </InputAdornment>
                         ),
+                        className: styles.textField
+                      }}
+                      FormHelperTextProps={{
+                        sx: { fontSize: '0.75rem', mt: 0.5, ml: 1 }
                       }}
                       error={!!balanceError}
-                      helperText={balanceError || `Available: ${(availableBalance + originalBalance).toFixed(2)}`}
-                      sx={{ mb: 2 }}
+                      helperText={balanceError || `Available: ${(editWalletBalance && !isNaN(editWalletBalance) && parseFloat(editWalletBalance) >= 0) ? 
+                        (availableBalance - (parseFloat(editWalletBalance) - originalBalance)).toFixed(2) : 
+                        availableBalance.toFixed(2)}`}
                     />
-                    <Button 
-                      variant="contained" 
-                      color="primary" 
-                      size="small"
-                      onClick={handleEditSave}
-                      disabled={loading || !!balanceError}
-                      className={`${styles.actionButton} ${styles.saveButton}`}
-                    >
-                      Save
-                    </Button>
-                    <Button 
-                      variant="outlined" 
-                      color="inherit" 
-                      size="small"
-                      onClick={handleEditCancel}
-                      className={styles.actionButton}
-                    >
-                      Cancel
-                    </Button>
+                    <Box className={styles.actionButtonsContainer}>
+                      <Button 
+                        variant="outlined" 
+                        color="inherit" 
+                        size="small"
+                        onClick={handleEditCancel}
+                        className={styles.actionButton}
+                      >
+                        Cancel
+                      </Button>
+                      <Button 
+                        variant="contained" 
+                        color="primary" 
+                        size="small"
+                        onClick={handleEditSave}
+                        disabled={loading || !!balanceError}
+                        className={`${styles.actionButton} ${styles.saveButton}`}
+                      >
+                        Save
+                      </Button>
+                    </Box>
                   </Box>
                 ) : (
                   <>
@@ -567,9 +583,9 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
                         onClick={() => handleEditClick(wallet)}
                         disabled={editMode}
                         size="small"
-                        sx={{ mr: 1 }}
+                        className={styles.iconButton}
                       >
-                        <EditIcon fontSize="small" />
+                        <EditIcon fontSize="medium" />
                       </IconButton>
                       <IconButton 
                         edge="end" 
@@ -577,15 +593,14 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
                         onClick={() => handleDeleteClick(wallet)}
                         disabled={editMode}
                         size="small"
-                        color="error"
+                        className={styles.deleteIconButton}
                       >
-                        <DeleteIcon fontSize="small" />
+                        <DeleteIcon fontSize="medium" color="error" />
                       </IconButton>
                     </ListItemSecondaryAction>
                   </>
                 )}
               </ListItem>
-              {index < wallets.length - 1 && <Divider component="li" />}
             </React.Fragment>
           ))}
         </List>
@@ -787,7 +802,12 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
     >
       <DialogTitle className={styles.dialogTitle}>
         <Box className={styles.headerContainer}>
-          <Typography variant="h6" className={styles.title}>Manage Wallets</Typography>
+          <Typography variant="h6" className={styles.title}>
+            Manage Wallets
+            <span className={styles.walletCount}>
+              (Total: {wallets.length})
+            </span>
+          </Typography>
           <IconButton aria-label="close" onClick={handleClose} size="small">
             <CloseIcon />
           </IconButton>

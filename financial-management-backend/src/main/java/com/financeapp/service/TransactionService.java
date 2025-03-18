@@ -1,5 +1,6 @@
 package com.financeapp.service;
 
+import com.financeapp.exception.InsufficientFundsException;
 import com.financeapp.model.Wallet;
 import com.financeapp.model.Transaction;
 import com.financeapp.model.User;
