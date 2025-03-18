@@ -252,8 +252,17 @@ export default function Dashboard() {
     fetchFinancialData();
   };
 
-  const handleAccountAdded = () => {
-    fetchFinancialData();
+  const handleAccountAdded = (forceFullRefresh = false) => {
+    // If forceFullRefresh is true, refresh everything including transactions
+    if (forceFullRefresh) {
+      fetchFinancialData();
+      fetchTransactions();
+      fetchCategories();
+      updateFinancialSummary();
+    } else {
+      // Otherwise just refresh financial data
+      fetchFinancialData();
+    }
   };
 
   const handleCategoryAdded = () => {
@@ -329,6 +338,43 @@ export default function Dashboard() {
     } catch (error) {
       console.error('Error deleting transaction:', error);
       toast.error('Failed to delete transaction');
+    }
+  };
+
+  // Function to fetch transactions
+  const fetchTransactions = async () => {
+    try {
+      const transactionsResponse = await FinanceService.getTransactions();
+      setTransactions(transactionsResponse.data.slice(0, 5)); // Get only the 5 most recent
+    } catch (error) {
+      console.error('Error fetching transactions:', error);
+    }
+  };
+
+  // Function to fetch categories
+  const fetchCategories = async () => {
+    try {
+      await FinanceService.getCategories();
+      // No need to set state as we're just ensuring the data is refreshed
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
+
+  // Function to update financial summary
+  const updateFinancialSummary = async () => {
+    try {
+      const summaryResponse = await FinanceService.getFinancialSummary();
+      
+      // Update financial data
+      setFinancialData({
+        totalBalance: summaryResponse.data.totalBalance || 0,
+        totalIncome: summaryResponse.data.totalIncome || 0,
+        totalExpense: summaryResponse.data.totalExpense || 0,
+        netSavings: summaryResponse.data.netSavings || 0
+      });
+    } catch (error) {
+      console.error('Error updating financial summary:', error);
     }
   };
 

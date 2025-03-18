@@ -233,6 +233,25 @@
   box-shadow: none;
 }
 
+/* Send Money button */
+.sendMoneyButton {
+  border-radius: 8px;
+  text-transform: none;
+  font-weight: 500;
+  color: #2e7d32;
+  border-color: #2e7d32;
+}
+
+.sendMoneyButton:hover {
+  background-color: rgba(46, 125, 50, 0.05);
+  border-color: #2e7d32;
+}
+
+.sendMoneyButton:disabled {
+  color: rgba(0, 0, 0, 0.26);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
 .selectField {
   border-radius: 8px;
 }

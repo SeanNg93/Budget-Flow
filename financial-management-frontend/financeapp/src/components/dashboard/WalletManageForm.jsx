@@ -30,8 +30,13 @@ import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import InfoIcon from '@mui/icons-material/Info';
+import SendIcon from '@mui/icons-material/Send';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import SaveIcon from '@mui/icons-material/Save';
+import CancelIcon from '@mui/icons-material/Cancel';
 import FinanceService from '../../services/FinanceService';
 import WalletForm from './WalletForm';
+import UserTransferForm from './UserTransferForm';
 import styles from '../../styles/walletManage.module.css';
 
 const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false }) => {
@@ -65,6 +70,9 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
   const [transferAmount, setTransferAmount] = useState('');
   const [transferError, setTransferError] = useState('');
   const [transferring, setTransferring] = useState(false);
+  
+  // Add state for the user transfer dialog
+  const [userTransferDialogOpen, setUserTransferDialogOpen] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -77,17 +85,18 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
     setError('');
     
     try {
-      // Fetch financial summary to get total balance
-      const summaryResponse = await FinanceService.getFinancialSummary();
-      const totalBalance = summaryResponse.data.totalBalance || 0;
+      // First get the total balance from the wallet API to ensure we have the latest data
+      const balancesResponse = await FinanceService.getTotalBalance();
+      const totalBalance = balancesResponse.data.totalBalance || 0;
       setTotalBalance(totalBalance);
       
-      // Fetch wallets
-      const response = await FinanceService.getAccounts();
-      setWallets(response.data || []);
+      // Then fetch wallets
+      const walletsResponse = await FinanceService.getAccounts();
+      const wallets = walletsResponse.data || [];
+      setWallets(wallets);
       
       // Calculate available balance
-      calculateAvailableBalance(totalBalance, response.data || [], null);
+      calculateAvailableBalance(totalBalance, wallets, null);
     } catch (err) {
       console.error('Error fetching data:', err);
       setError('Failed to load wallets. Please try again.');
@@ -436,6 +445,27 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
     }
   };
 
+  // Add methods to handle opening and closing the user transfer dialog
+  const handleOpenUserTransferDialog = () => {
+    setUserTransferDialogOpen(true);
+  };
+  
+  const handleCloseUserTransferDialog = () => {
+    setUserTransferDialogOpen(false);
+  };
+  
+  const handleUserTransferCompleted = () => {
+    handleCloseUserTransferDialog();
+    
+    // Force a full refresh of all financial data
+    fetchFinancialData();
+    
+    // Also refresh the parent dashboard component to update the total balance
+    if (onWalletUpdated) {
+      onWalletUpdated(true); // Pass true to indicate a balance change occurred
+    }
+  };
+
   // Form content that will be used in both embedded and non-embedded modes
   const formContent = (
     <>
@@ -465,6 +495,16 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
           </Box>
         </Box>
         <Box className={styles.actionButtons}>
+          <Button
+            variant="outlined"
+            color="primary"
+            startIcon={<SendIcon />}
+            onClick={handleOpenUserTransferDialog}
+            disabled={editMode || loading || wallets.length === 0}
+            className={`${styles.sendMoneyButton} ${styles.compactButton}`}
+          >
+            Send Money
+          </Button>
           <Button
             variant="outlined"
             color="primary"
@@ -781,6 +821,13 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
           </Button>
         </DialogActions>
       </Dialog>
+      
+      {/* User Transfer Dialog */}
+      <UserTransferForm
+        open={userTransferDialogOpen}
+        handleClose={handleCloseUserTransferDialog}
+        onTransferCompleted={handleUserTransferCompleted}
+      />
     </>
   );
 

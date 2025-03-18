@@ -1,0 +1,127 @@
+/* Notification Menu Styles */
+
+/* Badge styling */
+.badgeRoot .badge {
+  background-color: #f44336;
+  color: #ffffff;
+  font-size: 10px;
+  height: 16px;
+  min-width: 16px;
+  padding: 0 4px;
+}
+
+/* Menu styling */
+.menuRoot .paper {
+  width: 320px;
+  max-height: 400px;
+  overflow: auto;
+  border-radius: 12px;
+  margin-top: 8px;
+  box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.15);
+}
+
+.menuRoot .divider {
+  margin: 8px 0;
+}
+
+/* Notification item styling */
+.notificationItem {
+  border-radius: 8px;
+  margin-bottom: 4px;
+  padding: 12px;
+}
+
+.notificationItemUnread {
+  background-color: rgba(63, 81, 181, 0.1);
+}
+
+.notificationItem:hover {
+  background-color: rgba(63, 81, 181, 0.05);
+}
+
+/* Empty notification styling */
+.emptyNotification {
+  padding: 24px;
+  text-align: center;
+  color: #757575;
+}
+
+/* Notification icon button */
+.notificationButton {
+  border-radius: 16px;
+  margin-left: 8px;
+  margin-right: 8px;
+}
+
+.notificationButton:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+/* Notification header container */
+.headerContainer {
+  padding-left: 16px;
+  padding-right: 16px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* New count badge */
+.newCountBadge {
+  margin-left: 8px;
+  font-size: 0.8rem;
+  color: #f44336;
+  font-weight: bold;
+  background-color: rgba(244, 67, 54, 0.1);
+  border-radius: 10px;
+  padding-left: 8px;
+  padding-right: 8px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+/* Mark all read button */
+.markAllReadButton {
+  text-transform: none;
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+/* Loading container */
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  padding-top: 32px;
+  padding-bottom: 32px;
+}
+
+/* List container */
+.notificationList {
+  padding: 8px;
+}
+
+/* List item icon */
+.itemIcon {
+  min-width: 32px;
+}
+
+/* Date and read status container */
+.metaContainer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+
+/* Read status styling */
+.readStatus {
+  display: flex;
+  align-items: center;
+}
+
+.readIcon {
+  margin-right: 4px;
+} 

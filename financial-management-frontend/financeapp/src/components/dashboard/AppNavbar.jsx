@@ -24,6 +24,7 @@ import DeleteAccountDialog from './DeleteAccountDialog';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import DeleteIcon from '@mui/icons-material/Delete';
+import NotificationMenu from './NotificationMenu';
 
 const API_BASE_URL = "http://localhost:8080";
 const DEFAULT_AVATAR = "/default-avatar.svg";
@@ -280,15 +281,7 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
       onClose={handleMobileMenuClose}
     >
       <MenuItem>
-        <IconButton
-          size="medium"
-          aria-label="show new notifications"
-          color="inherit"
-        >
-          <StyledBadge badgeContent={5} color="error">
-            <NotificationsIcon />
-          </StyledBadge>
-        </IconButton>
+        <NotificationMenu />
         <Typography variant="body1" sx={{ ml: 1 }}>Notifications</Typography>
       </MenuItem>
       <MenuItem onClick={handleProfileMenuOpen}>
@@ -357,22 +350,7 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
           <Box sx={{ flexGrow: 1 }} />
           
           <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center' }}>
-            <IconButton
-              size="large"
-              aria-label="show new notifications"
-              color="inherit"
-              sx={{ 
-                borderRadius: 2,
-                mx: 1,
-                '&:hover': {
-                  backgroundColor: alpha('#000', 0.04)
-                }
-              }}
-            >
-              <StyledBadge badgeContent={5} color="error">
-                <NotificationsIcon />
-              </StyledBadge>
-            </IconButton>
+            <NotificationMenu />
             
             <Box 
               onClick={handleProfileMenuOpen}
