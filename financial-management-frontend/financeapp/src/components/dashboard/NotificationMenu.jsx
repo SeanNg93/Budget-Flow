@@ -41,7 +41,6 @@ const NotificationMenu = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [clearDialogOpen, setClearDialogOpen] = useState(false);
   const [acceptingWallet, setAcceptingWallet] = useState(null);
   
   // Mock notifications data
@@ -222,8 +221,8 @@ const NotificationMenu = () => {
       // Update unread count
       setUnreadCount(0);
       
-      // Close the dialog
-      setClearDialogOpen(false);
+      // Close the menu
+      handleMenuClose();
     } catch (error) {
       // Update mock data anyway
       setMockNotifications([]);
@@ -234,8 +233,8 @@ const NotificationMenu = () => {
       // Update unread count
       setUnreadCount(0);
       
-      // Close the dialog
-      setClearDialogOpen(false);
+      // Close the menu
+      handleMenuClose();
     }
   };
   
@@ -396,16 +395,6 @@ const NotificationMenu = () => {
           </Box>
           
           <Box className={styles.headerActions}>
-            {notifications.length > 0 && (
-              <Button 
-                size="small" 
-                startIcon={<DeleteIcon />}
-                onClick={() => setClearDialogOpen(true)}
-                className={styles.clearButton}
-              >
-                Clear all
-              </Button>
-            )}
             {unreadCount > 0 && (
               <Button 
                 size="small" 
@@ -414,6 +403,17 @@ const NotificationMenu = () => {
                 className={styles.markAllReadButton}
               >
                 Mark all read
+              </Button>
+            )}
+            
+            {notifications.length > 0 && (
+              <Button 
+                size="small" 
+                startIcon={<DeleteIcon />}
+                onClick={handleClearNotifications}
+                className={styles.clearButton}
+              >
+                Clear all
               </Button>
             )}
           </Box>
@@ -501,39 +501,6 @@ const NotificationMenu = () => {
           </List>
         )}
       </Menu>
-
-      <Dialog
-        open={clearDialogOpen}
-        onClose={() => setClearDialogOpen(false)}
-        PaperProps={{
-          className: styles.clearDialog
-        }}
-      >
-        <DialogTitle className={styles.dialogTitle}>
-          Clear All Notifications
-        </DialogTitle>
-        <DialogContent className={styles.dialogContent}>
-          <Typography>
-            Are you sure you want to clear all notifications? This action cannot be undone.
-          </Typography>
-        </DialogContent>
-        <DialogActions className={styles.dialogActions}>
-          <Button 
-            onClick={() => setClearDialogOpen(false)}
-            className={styles.cancelButton}
-          >
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleClearNotifications}
-            color="error"
-            startIcon={<DeleteIcon />}
-            className={styles.confirmButton}
-          >
-            Clear All
-          </Button>
-        </DialogActions>
-      </Dialog>
     </>
   );
 };

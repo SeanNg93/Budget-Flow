@@ -87,6 +87,7 @@
 .titleContainer {
   display: flex;
   align-items: center;
+  flex: 1;
 }
 
 .title {
@@ -99,6 +100,8 @@
   display: flex;
   gap: 8px;
   align-items: center;
+  justify-content: flex-end;
+  flex-wrap: nowrap;
 }
 
 /* New count badge */
@@ -123,6 +126,7 @@
   border-radius: 12px;
   min-height: 24px;
   color: #2196f3;
+  white-space: nowrap;
 }
 
 .markAllReadButton:hover {
@@ -137,6 +141,7 @@
   border-radius: 12px;
   min-height: 24px;
   color: #f44336;
+  white-space: nowrap;
 }
 
 .clearButton:hover {
