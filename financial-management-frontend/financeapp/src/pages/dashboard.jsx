@@ -298,8 +298,23 @@ export default function Dashboard() {
     fetchFinancialData();
   };
 
-  const handleBalanceAdded = () => {
-    fetchFinancialData();
+  const handleBalanceAdded = async () => {
+    // Instead of calling fetchFinancialData which fetches all data,
+    // we'll selectively update only what changed
+    try {
+      // Fetch only the updated balance
+      const summaryResponse = await FinanceService.getFinancialSummary();
+      
+      // Update financial data without refreshing everything
+      setFinancialData(prevData => ({
+        ...prevData,
+        totalBalance: summaryResponse.data.totalBalance || 0,
+        netSavings: summaryResponse.data.netSavings || 0
+      }));
+      
+    } catch (error) {
+      console.error("Error updating balance:", error);
+    }
   };
 
   // Function to open the finance action panel
