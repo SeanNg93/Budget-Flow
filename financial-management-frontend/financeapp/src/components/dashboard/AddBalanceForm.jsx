@@ -24,6 +24,10 @@ const AddBalanceForm = ({ open, handleClose, onBalanceAdded }) => {
 
   useEffect(() => {
     if (open) {
+      // Reset form state when dialog opens
+      setAmount('');
+      setError('');
+      setSuccess('');
       fetchBalanceData();
     }
   }, [open]);
@@ -82,27 +86,49 @@ const AddBalanceForm = ({ open, handleClose, onBalanceAdded }) => {
         return;
       }
       
+      // Create a local variable to track success in this scope
+      let isSuccess = false;
+      
+      // Add to total balance
       const response = await FinanceService.addToTotalBalance(parseFloat(amount));
+      isSuccess = true;
+      
+      // Show a success message briefly before closing
+      setSuccess('Balance updated successfully!');
       
       // Notify parent component to refresh data
       if (onBalanceAdded) {
         onBalanceAdded();
       }
       
-      // Close the dialog immediately
-      handleClose();
+      // Wait a moment to show the success message, then close
+      setTimeout(() => {
+        if (isSuccess) {
+          handleClose();
+        }
+      }, 1000);
+      
     } catch (err) {
       if (err.response && err.response.status === 403) {
         setError('You are not authorized to add to the balance. Please log in again.');
       } else {
         setError(err.response?.data?.message || 'Failed to update balance. Please try again.');
       }
+    } finally {
       setLoading(false);
     }
   };
 
+  // Function to handle dialog close and reset form state
+  const handleFormClose = () => {
+    setSuccess('');
+    setError('');
+    setAmount('');
+    handleClose();
+  };
+
   return (
-    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="xs">
+    <Dialog open={open} onClose={handleFormClose} fullWidth maxWidth="xs">
       <DialogTitle>Add to Total Balance</DialogTitle>
       <form onSubmit={handleSubmit}>
         <DialogContent>
@@ -141,7 +167,7 @@ const AddBalanceForm = ({ open, handleClose, onBalanceAdded }) => {
           </FormHelperText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleClose} disabled={loading}>Cancel</Button>
+          <Button onClick={handleFormClose} disabled={loading}>Cancel</Button>
           <Button 
             type="submit" 
             variant="contained" 

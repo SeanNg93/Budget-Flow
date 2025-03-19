@@ -62,29 +62,11 @@ export const getTotalBalance = () => {
 };
 
 export const addToTotalBalance = (amount) => {
-  const token = localStorage.getItem('userToken');
-  return axios.post(`${API_URL}/wallets/add-to-balance`, 
-    { amount }, 
-    { 
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      } 
-    }
-  );
+  return axiosInstance.post('/wallets/add-to-balance', { amount });
 };
 
 export const updateTotalBalance = (amount) => {
-  const token = localStorage.getItem('userToken');
-  return axios.put(`${API_URL}/wallets/update-balance`, 
-    { amount }, 
-    { 
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      } 
-    }
-  );
+  return axiosInstance.put('/wallets/update-balance', { amount });
 };
 
 // For backward compatibility - renamed functions to maintain API

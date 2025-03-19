@@ -57,6 +57,7 @@ import AddBalanceForm from '../components/dashboard/AddBalanceForm';
 import EditBalanceForm from '../components/dashboard/EditBalanceForm';
 import PendingDeletionAlert from '../components/dashboard/PendingDeletionAlert';
 import WalletOverview from '../components/dashboard/WalletOverview';
+import ProfileDialog from '../components/user/ProfileDialog';
 
 // Import theme
 import AppTheme from '../shared-theme/AppTheme';
@@ -136,6 +137,7 @@ export default function Dashboard() {
   const [walletManageFormOpen, setWalletManageFormOpen] = useState(false);
   const [balanceMenuAnchorEl, setBalanceMenuAnchorEl] = useState(null);
   const [error, setError] = useState(null);
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
 
   // New state for the unified finance action panel
   const [financeActionPanelOpen, setFinanceActionPanelOpen] = useState(false);
@@ -298,8 +300,23 @@ export default function Dashboard() {
     fetchFinancialData();
   };
 
-  const handleBalanceAdded = () => {
-    fetchFinancialData();
+  const handleBalanceAdded = async () => {
+    // Instead of calling fetchFinancialData which fetches all data,
+    // we'll selectively update only what changed
+    try {
+      // Fetch only the updated balance
+      const summaryResponse = await FinanceService.getFinancialSummary();
+      
+      // Update financial data without refreshing everything
+      setFinancialData(prevData => ({
+        ...prevData,
+        totalBalance: summaryResponse.data.totalBalance || 0,
+        netSavings: summaryResponse.data.netSavings || 0
+      }));
+      
+    } catch (error) {
+      console.error("Error updating balance:", error);
+    }
   };
 
   // Function to open the finance action panel
@@ -420,7 +437,11 @@ export default function Dashboard() {
       <Box sx={{ display: 'flex' }}>
         <CssBaseline />
         <AppNavbar open={open} handleDrawerOpen={handleDrawerOpen} />
-        <SideMenu open={open} handleDrawerClose={handleDrawerClose} />
+        <SideMenu 
+          open={open} 
+          handleDrawerClose={handleDrawerClose} 
+          setProfileDialogOpen={setProfileDialogOpen}
+        />
         <PendingDeletionAlert />
         <Main open={open}>
           <DrawerHeader />
@@ -638,17 +659,16 @@ export default function Dashboard() {
                     <Typography 
                       component="h2" 
                       variant="h5" 
-                      color="text.primary" 
                       className={styles.sectionTitle}
                     >
                       Recent Transactions
                     </Typography>
                     <Button 
-                      variant="outlined" 
+                      variant="contained" 
                       color="primary" 
                       startIcon={<AddIcon />}
                       onClick={openFinanceActionPanel}
-                      className={styles.addTransactionButton}
+                      className={styles.addNewButton}
                       elevation={3}
                     >
                       Add New
@@ -842,6 +862,12 @@ export default function Dashboard() {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Profile Dialog */}
+      <ProfileDialog 
+        open={profileDialogOpen} 
+        onClose={() => setProfileDialogOpen(false)} 
+      />
     </AppTheme>
   );
 }

@@ -1,0 +1,262 @@
+/* ProfileDialog Styles */
+.profile-dialog .MuiPaper-root {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.profile-dialog .dialog-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.profile-dialog .close-button {
+  color: #6c757d;
+  transition: all 0.2s ease;
+}
+
+.profile-dialog .close-button:hover {
+  background-color: rgba(108, 117, 125, 0.1);
+  color: #495057;
+}
+
+.profile-dialog .profile-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #212529;
+  margin: 0;
+}
+
+.profile-dialog .dialog-content {
+  padding: 0 !important;
+}
+
+.profile-dialog .profile-card {
+  border-radius: 0;
+  box-shadow: none;
+  background-color: #ffffff;
+}
+
+/* Loading container */
+.profile-dialog .loading-container {
+  padding: 2rem;
+  text-align: center;
+  background-color: #ffffff;
+}
+
+/* User section */
+.profile-dialog .user-section {
+  padding: 2rem;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  background-color: #ffffff;
+}
+
+.profile-dialog .avatar-container {
+  position: relative;
+  margin-right: 2rem;
+}
+
+.profile-dialog .avatar {
+  width: 100px !important;
+  height: 100px !important;
+  border: 3px solid #fff;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.profile-dialog .upload-button {
+  position: absolute !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  background-color: #007aff !important;
+  color: white !important;
+  width: 32px !important;
+  height: 32px !important;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2) !important;
+  transition: all 0.2s ease !important;
+}
+
+.profile-dialog .upload-button:hover {
+  transform: translateY(-2px);
+  background-color: #0062cc !important;
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.25) !important;
+}
+
+.profile-dialog .user-info {
+  flex: 1;
+}
+
+.profile-dialog .user-name {
+  font-size: 1.5rem !important;
+  font-weight: 600 !important;
+  color: #212529 !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.profile-dialog .user-role {
+  font-size: 0.9rem !important;
+  color: #6c757d !important;
+  display: flex !important;
+  align-items: center !important;
+  margin-bottom: 1rem !important;
+}
+
+.profile-dialog .user-role-icon {
+  font-size: 1rem !important;
+  margin-right: 0.5rem !important;
+  color: #007aff !important;
+}
+
+.profile-dialog .edit-button {
+  background-color: #007aff !important;
+  color: white !important;
+  border-radius: 20px !important;
+  padding: 0.4rem 1.2rem !important;
+  font-size: 0.85rem !important;
+  font-weight: 500 !important;
+  text-transform: none !important;
+  box-shadow: 0 4px 10px rgba(0, 122, 255, 0.25) !important;
+  transition: all 0.2s ease !important;
+}
+
+.profile-dialog .edit-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(0, 122, 255, 0.35) !important;
+}
+
+/* Details section */
+.profile-dialog .details-section {
+  padding: 2rem;
+  background-color: #ffffff;
+}
+
+.profile-dialog .section-title {
+  font-size: 1.1rem !important;
+  font-weight: 600 !important;
+  color: #212529 !important;
+  margin-bottom: 1.5rem !important;
+  position: relative;
+  padding-bottom: 0.5rem;
+}
+
+.profile-dialog .section-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 50px;
+  height: 3px;
+  background-color: #007aff;
+  border-radius: 3px;
+}
+
+.profile-dialog .field-container {
+  margin-bottom: 1.5rem;
+}
+
+.profile-dialog .field-label {
+  display: block;
+  color: #6c757d;
+  font-weight: 500 !important;
+  margin-bottom: 0.5rem !important;
+  font-size: 0.85rem !important;
+}
+
+.profile-dialog .field-value {
+  color: #212529;
+  font-size: 1rem !important;
+  font-weight: 500 !important;
+}
+
+.profile-dialog .text-field {
+  margin-top: 0.25rem !important;
+}
+
+.profile-dialog .text-field input, 
+.profile-dialog .text-field textarea {
+  font-size: 1rem !important;
+}
+
+.profile-dialog .bio-container {
+  margin-top: 1.5rem;
+}
+
+.profile-dialog .bio-field {
+  background-color: #f8f9fa;
+  padding: 1rem;
+  border-radius: 8px;
+  min-height: 80px;
+}
+
+/* Action buttons */
+.profile-dialog .action-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding: 1.5rem 2rem;
+  background-color: #f8f9fa;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.profile-dialog .cancel-button {
+  border-radius: 20px !important;
+  padding: 0.5rem 1.5rem !important;
+  font-size: 0.9rem !important;
+  font-weight: 500 !important;
+  text-transform: none !important;
+}
+
+.profile-dialog .cancel-button:hover {
+  background-color: rgba(108, 117, 125, 0.1) !important;
+}
+
+.profile-dialog .save-button {
+  background-color: #007aff !important;
+  color: white !important;
+  border-radius: 20px !important;
+  padding: 0.5rem 1.5rem !important;
+  font-size: 0.9rem !important;
+  font-weight: 500 !important;
+  text-transform: none !important;
+  box-shadow: 0 4px 10px rgba(0, 122, 255, 0.25) !important;
+}
+
+.profile-dialog .save-button:hover {
+  background-color: #0062cc !important;
+  box-shadow: 0 6px 15px rgba(0, 122, 255, 0.35) !important;
+}
+
+.profile-dialog .field-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .profile-dialog .user-section {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .profile-dialog .avatar-container {
+    margin-right: 0;
+    margin-bottom: 1.5rem;
+  }
+  
+  .profile-dialog .user-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .profile-dialog .field-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+} 

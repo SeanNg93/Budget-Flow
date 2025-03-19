@@ -24,6 +24,7 @@ import {
   DialogContentText,
   InputAdornment,
   Menu,
+  Tooltip,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -37,6 +38,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import ShareIcon from '@mui/icons-material/Share';
 import FinanceService from '../../services/FinanceService';
 import WalletForm from './WalletForm';
 import UserTransferForm from './UserTransferForm';
@@ -547,16 +549,6 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
           <Button
             variant="outlined"
             color="primary"
-            startIcon={<SendIcon />}
-            onClick={handleOpenUserTransferDialog}
-            disabled={editMode || loading || wallets.length === 0}
-            className={`${styles.sendMoneyButton} ${styles.compactButton}`}
-          >
-            Send Money
-          </Button>
-          <Button
-            variant="outlined"
-            color="primary"
             startIcon={<SwapHorizIcon />}
             onClick={handleOpenTransferDialog}
             disabled={editMode || loading || wallets.length < 2}
@@ -665,36 +657,59 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
                         </Typography>
                       }
                     />
-                    <ListItemSecondaryAction>
+                    <ListItemSecondaryAction className={styles.walletActions}>
                       {!editMode && (
                         <>
-                          <IconButton
-                            edge="end"
-                            aria-label="more"
-                            onClick={(e) => handleWalletMenuOpen(e, wallet)}
-                            className={styles.iconButton}
-                            size="small"
-                          >
-                            <MoreVertIcon />
-                          </IconButton>
-                          <IconButton
-                            edge="end"
-                            aria-label="edit"
-                            onClick={() => handleEditClick(wallet)}
-                            className={styles.iconButton}
-                            size="small"
-                          >
-                            <EditIcon />
-                          </IconButton>
-                          <IconButton
-                            edge="end"
-                            aria-label="delete"
-                            onClick={() => handleDeleteClick(wallet)}
-                            className={styles.deleteIconButton}
-                            size="small"
-                          >
-                            <DeleteIcon />
-                          </IconButton>
+                          <Tooltip title="Share Wallet" arrow>
+                            <IconButton
+                              edge="end"
+                              aria-label="share wallet"
+                              onClick={() => {
+                                setWalletToShare(wallet);
+                                setShareWalletDialogOpen(true);
+                              }}
+                              className={styles.iconButton}
+                              size="small"
+                            >
+                              <ShareIcon />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Send Money" arrow>
+                            <IconButton
+                              edge="end"
+                              aria-label="send money"
+                              onClick={() => {
+                                setSelectedWalletForMenu(wallet);
+                                handleOpenUserTransferDialog();
+                              }}
+                              className={styles.iconButton}
+                              size="small"
+                            >
+                              <SendIcon />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Edit Wallet" arrow>
+                            <IconButton
+                              edge="end"
+                              aria-label="edit"
+                              onClick={() => handleEditClick(wallet)}
+                              className={styles.iconButton}
+                              size="small"
+                            >
+                              <EditIcon />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Delete Wallet" arrow>
+                            <IconButton
+                              edge="end"
+                              aria-label="delete"
+                              onClick={() => handleDeleteClick(wallet)}
+                              className={styles.deleteIconButton}
+                              size="small"
+                            >
+                              <DeleteIcon />
+                            </IconButton>
+                          </Tooltip>
                         </>
                       )}
                     </ListItemSecondaryAction>
@@ -888,19 +903,6 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
         handleClose={handleCloseUserTransferDialog}
         onTransferCompleted={handleUserTransferCompleted}
       />
-      
-      {/* Add Wallet Menu */}
-      <Menu
-        anchorEl={walletMenuAnchorEl}
-        open={Boolean(walletMenuAnchorEl)}
-        onClose={handleWalletMenuClose}
-        classes={{ paper: styles.menuPaper }}
-      >
-        <MenuItem onClick={handleShareWallet} className={styles.menuItem}>
-          <PersonAddIcon fontSize="small" className={styles.menuIcon} />
-          Share Wallet
-        </MenuItem>
-      </Menu>
       
       {/* Share Wallet Dialog */}
       {walletToShare && (

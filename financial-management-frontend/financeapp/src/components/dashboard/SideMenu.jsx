@@ -50,7 +50,7 @@ const StyledListItemButton = styled(ListItemButton)(({ theme }) => ({
   },
 }));
 
-const SideMenu = ({ open, handleDrawerClose }) => {
+const SideMenu = ({ open, handleDrawerClose, setProfileDialogOpen }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const userData = JSON.parse(localStorage.getItem('userData') || '{}');
@@ -97,6 +97,16 @@ const SideMenu = ({ open, handleDrawerClose }) => {
     localStorage.removeItem('userToken');
     localStorage.removeItem('userData');
     navigate('/login');
+  };
+
+  const handleMenuItemClick = (item) => {
+    if (item.text === 'Profile') {
+      // Open profile dialog instead of navigating
+      setProfileDialogOpen(true);
+    } else {
+      // Navigate to the specified path for other items
+      navigate(item.path);
+    }
   };
 
   const menuItems = [
@@ -172,7 +182,7 @@ const SideMenu = ({ open, handleDrawerClose }) => {
           {menuItems.map((item) => (
             <ListItem key={item.text} disablePadding>
               <StyledListItemButton 
-                onClick={() => navigate(item.path)}
+                onClick={() => handleMenuItemClick(item)}
                 selected={location.pathname === item.path}
               >
                 <ListItemIcon sx={{ minWidth: 40 }}>
