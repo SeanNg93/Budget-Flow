@@ -178,19 +178,40 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
     setError(null);
     
     try {
+      // Parse category ID properly
+      const categoryId = formData.categoryId ? parseInt(formData.categoryId, 10) : null;
+      
+      // Get full category details if categoryId is provided
+      let categoryDetails = null;
+      if (categoryId) {
+        const category = categories.find(cat => cat.id === categoryId);
+        if (category) {
+          categoryDetails = {
+            id: categoryId,
+            categoryName: category.categoryName,
+            type: category.type
+          };
+        }
+      }
+      
       const transactionData = {
         transactionType: formData.transactionType,
         amount: parseFloat(formData.amount),
         description: formData.description,
-        categoryId: formData.categoryId ? parseInt(formData.categoryId, 10) : null,
+        categoryId: categoryId,
+        category: categoryDetails, // Include full category details
         transactionDate: formData.transactionDate
       };
       
+      console.log('Sending transaction data:', transactionData);
+      
       let response;
+      let isUpdate = false;
       
       if (initialData) {
         // Update existing transaction
         response = await FinanceService.updateTransaction(initialData.id, transactionData);
+        isUpdate = true;
       } else {
         // Create new transaction
         response = await FinanceService.createTransaction(
@@ -204,7 +225,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
       
       // Close dialog and notify parent
       if (onTransactionAdded) {
-        onTransactionAdded();
+        onTransactionAdded(isUpdate);
       }
       
       if (!embedded) {

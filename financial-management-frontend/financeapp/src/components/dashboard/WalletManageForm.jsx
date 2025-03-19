@@ -45,7 +45,7 @@ import UserTransferForm from './UserTransferForm';
 import ShareWalletForm from './ShareWalletForm';
 import styles from '../../styles/walletManage.module.css';
 
-const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false }) => {
+const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false, initialOpenTransfer = false }) => {
   const [wallets, setWallets] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -93,6 +93,13 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
       fetchFinancialData();
     }
   }, [open]);
+  
+  // Open transfer dialog automatically if initialOpenTransfer is true
+  useEffect(() => {
+    if (open && initialOpenTransfer && wallets.length > 0) {
+      handleOpenTransferDialog();
+    }
+  }, [open, initialOpenTransfer, wallets.length]);
 
   const fetchFinancialData = async () => {
     setLoading(true);
@@ -564,7 +571,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
             color="primary"
             startIcon={<SwapHorizIcon />}
             onClick={handleOpenTransferDialog}
-            disabled={editMode || loading || wallets.length < 2}
+            disabled={editMode || loading || wallets.length < 1}
             className={`${styles.transferButton} ${styles.compactButton}`}
           >
             Transfer

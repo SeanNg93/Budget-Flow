@@ -1,0 +1,163 @@
+.appBar {
+  backdrop-filter: blur(10px);
+  background-color: rgba(255, 255, 255, 0.8);
+  box-shadow: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  color: rgba(0, 0, 0, 0.87);
+}
+
+.search {
+  position: relative;
+  border-radius: 20px;
+  background-color: rgba(0, 0, 0, 0.05);
+  margin-right: 16px;
+  margin-left: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  height: 40px;
+}
+
+.search:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+@media (min-width: 600px) {
+  .search {
+    margin-left: 24px;
+    width: auto;
+  }
+}
+
+.searchIconWrapper {
+  padding: 0 16px;
+  height: 100%;
+  position: absolute;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(0, 0, 0, 0.54);
+  left: 0;
+  top: 0;
+  z-index: 1;
+}
+
+.inputRoot {
+  color: inherit;
+  width: 100%;
+  height: 100%;
+}
+
+.inputInput {
+  padding: 8px 8px 8px 0;
+  padding-left: 42px !important;
+  transition: width 300ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+  width: 100%;
+  height: 100%;
+  font-size: 14px;
+}
+
+@media (min-width: 960px) {
+  .inputInput {
+    width: 20ch;
+  }
+}
+
+.searchResultsContainer {
+  position: absolute;
+  width: 100%;
+  margin-top: 4px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  z-index: 9999;
+  max-height: 300px;
+  overflow: auto;
+  max-width: 320px;
+  right: 0;
+}
+
+.searchResultsList {
+  padding: 2px 0;
+}
+
+.listItemButton {
+  padding: 4px 10px;
+  min-height: 40px;
+}
+
+.listItemButton:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.listItemIcon {
+  min-width: 28px;
+  margin-right: 4px;
+}
+
+.resultTitle {
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.resultDescription {
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.badgeRoot .badge {
+  background-color: #f44336;
+  color: #fff;
+  font-size: 10px;
+  height: 16px;
+  min-width: 16px;
+  padding: 0 4px;
+}
+
+.menuPaper {
+  border-radius: 12px;
+  margin-top: 8px;
+  box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.15);
+  min-width: 180px;
+}
+
+.menuItem {
+  padding: 12px 16px;
+}
+
+.menuItem:hover {
+  background-color: rgba(25, 118, 210, 0.08);
+}
+
+.menuDivider {
+  margin: 8px 0;
+}
+
+.profileButton {
+  display: flex;
+  align-items: center;
+  margin-left: 8px;
+  cursor: pointer;
+  border-radius: 16px;
+  padding: 4px;
+}
+
+.profileButton:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  font-weight: bold;
+}
+
+.deleteMenuItem {
+  color: #d32f2f;
+}
+
+.deleteMenuItem:hover {
+  background-color: rgba(211, 47, 47, 0.04);
+} 

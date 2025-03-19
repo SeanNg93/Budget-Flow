@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -58,6 +58,8 @@ import EditBalanceForm from '../components/dashboard/EditBalanceForm';
 import PendingDeletionAlert from '../components/dashboard/PendingDeletionAlert';
 import WalletOverview from '../components/dashboard/WalletOverview';
 import ProfileDialog from '../components/user/ProfileDialog';
+import UserTransferForm from '../components/dashboard/UserTransferForm';
+import ShareWalletForm from '../components/dashboard/ShareWalletForm';
 
 // Import theme
 import AppTheme from '../shared-theme/AppTheme';
@@ -114,6 +116,7 @@ const themeComponents = {
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [open, setOpen] = useState(true);
   const [user, setUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
@@ -138,6 +141,10 @@ export default function Dashboard() {
   const [balanceMenuAnchorEl, setBalanceMenuAnchorEl] = useState(null);
   const [error, setError] = useState(null);
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
+  const [userTransferDialogOpen, setUserTransferDialogOpen] = useState(false);
+  const [shareWalletDialogOpen, setShareWalletDialogOpen] = useState(false);
+  const [transferDialogOpen, setTransferDialogOpen] = useState(false);
+  const [selectedWallet, setSelectedWallet] = useState(null);
 
   // New state for the unified finance action panel
   const [financeActionPanelOpen, setFinanceActionPanelOpen] = useState(false);
@@ -152,6 +159,66 @@ export default function Dashboard() {
       fetchUserProfile();
     }
   }, [user]);
+
+  // Handle state passed from navigation/search
+  useEffect(() => {
+    if (location.state) {
+      // Handle form openings from search
+      if (location.state.openWalletForm) {
+        setAccountFormOpen(true);
+      }
+      if (location.state.openTransactionForm) {
+        setTransactionFormOpen(true);
+      }
+      if (location.state.openTransferDialog) {
+        setTransferDialogOpen(true);
+      }
+      if (location.state.openUserTransferDialog) {
+        setUserTransferDialogOpen(true);
+      }
+      if (location.state.openShareWalletDialog) {
+        setShareWalletDialogOpen(true);
+      }
+      if (location.state.openCategoryForm) {
+        setCategoryFormOpen(true);
+      }
+      
+      // Handle selected items from search
+      if (location.state.selectedWallet) {
+        setSelectedWallet(location.state.selectedWallet);
+        setWalletManageFormOpen(true);
+      }
+      if (location.state.selectedTransaction) {
+        const transactionId = location.state.selectedTransaction;
+        // Find and select the transaction from existing transactions
+        const transaction = transactions.find(t => t.id === transactionId);
+        if (transaction) {
+          setSelectedTransaction(transaction);
+          setEditTransactionOpen(true);
+        } else {
+          // If not found, try to fetch it
+          fetchTransactionDetails(transactionId);
+        }
+      }
+      
+      // Clear the location state after processing
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location, transactions]);
+
+  // Function to fetch a specific transaction
+  const fetchTransactionDetails = async (transactionId) => {
+    try {
+      const response = await FinanceService.getTransaction(transactionId);
+      if (response.data) {
+        setSelectedTransaction(response.data);
+        setEditTransactionOpen(true);
+      }
+    } catch (error) {
+      console.error('Error fetching transaction details:', error);
+      setError('Failed to fetch transaction details');
+    }
+  };
 
   const checkAuth = async () => {
     const token = localStorage.getItem('userToken');
@@ -254,8 +321,22 @@ export default function Dashboard() {
     });
   };
 
-  const handleTransactionAdded = () => {
-    fetchFinancialData();
+  const handleTransactionAdded = (isUpdate = false) => {
+    // Instead of fetching all data, selectively update what's needed
+    updateFinancialSummary();
+    fetchTransactions();
+    // If a transaction might affect wallet balances, update them too
+    updateWallets();
+    
+    // Add toast notification for successful transaction
+    toast.success(isUpdate ? 'Transaction updated successfully' : 'Transaction added successfully', {
+      position: "top-right",
+      autoClose: 2000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+    });
   };
 
   const handleAccountAdded = (forceFullRefresh = false) => {
@@ -398,7 +479,13 @@ export default function Dashboard() {
   const fetchTransactions = async () => {
     try {
       const transactionsResponse = await FinanceService.getTransactions();
-      setTransactions(transactionsResponse.data.slice(0, 5)); // Get only the 5 most recent
+      console.log('Fetched transactions:', transactionsResponse.data); // Log to check response data
+      
+      // Ensure we're getting complete transaction data with categories
+      if (transactionsResponse.data && transactionsResponse.data.length > 0) {
+        // Store the transactions with full details
+        setTransactions(transactionsResponse.data.slice(0, 5)); // Get only the 5 most recent
+      }
     } catch (error) {
       console.error('Error fetching transactions:', error);
     }
@@ -430,6 +517,13 @@ export default function Dashboard() {
       console.error('Error updating financial summary:', error);
     }
   };
+
+  const handleTransfer = async () => {
+    // ... existing code ...
+  };
+  
+  // Simplified one-liner function
+  const handleProfileUpdated = () => { fetchUserProfile(); };
 
   if (loading) {
     return (
@@ -707,7 +801,10 @@ export default function Dashboard() {
                             >
                               <TableCell className={styles.tableCell}>{formatDate(transaction.transactionDate)}</TableCell>
                               <TableCell className={styles.tableCellBold}>{transaction.description}</TableCell>
-                              <TableCell className={styles.tableCell}>{transaction.category?.categoryName || 'Uncategorized'}</TableCell>
+                              <TableCell className={styles.tableCell}>
+                                {transaction.category ? transaction.category.categoryName : 
+                                 (transaction.categoryId ? `Category #${transaction.categoryId}` : 'Uncategorized')}
+                              </TableCell>
                               <TableCell className={styles.tableCell}>
                                 <Box
                                   className={transaction.transactionType === 'INCOME' 
@@ -797,20 +894,75 @@ export default function Dashboard() {
         onCategoryAdded={handleCategoryAdded}
       />
       
-      {/* Add Balance Form */}
       <AddBalanceForm 
-        open={addBalanceFormOpen}
-        handleClose={() => setAddBalanceFormOpen(false)}
+        open={addBalanceFormOpen} 
+        handleClose={() => setAddBalanceFormOpen(false)} 
         onBalanceAdded={handleBalanceAdded}
       />
       
-      {/* Edit Balance Form */}
       <EditBalanceForm 
-        open={editBalanceFormOpen}
-        handleClose={() => setEditBalanceFormOpen(false)}
-        onBalanceUpdated={handleBalanceAdded}
-        currentBalance={financialData.totalBalance}
+        open={editBalanceFormOpen} 
+        handleClose={() => setEditBalanceFormOpen(false)} 
+        onBalanceEdited={handleBalanceAdded}
       />
+      
+      <ProfileDialog
+        open={profileDialogOpen}
+        handleClose={() => setProfileDialogOpen(false)}
+        onProfileUpdated={handleProfileUpdated}
+      />
+      
+      {/* Additional dialogs for search features */}
+      {selectedTransaction && (
+        <TransactionForm 
+          open={editTransactionOpen} 
+          handleClose={() => {
+            setEditTransactionOpen(false);
+            setSelectedTransaction(null);
+          }} 
+          transaction={selectedTransaction}
+          onTransactionAdded={handleTransactionAdded}
+        />
+      )}
+      
+      <UserTransferForm
+        open={userTransferDialogOpen}
+        handleClose={() => setUserTransferDialogOpen(false)}
+        onTransferCompleted={() => {
+          setUserTransferDialogOpen(false);
+          fetchFinancialData();
+        }}
+      />
+      
+      <ShareWalletForm
+        open={shareWalletDialogOpen && selectedWallet}
+        wallet={selectedWallet ? wallets.find(w => w.id === selectedWallet) : null}
+        handleClose={() => {
+          setShareWalletDialogOpen(false);
+          setSelectedWallet(null);
+        }}
+        onWalletShared={() => {
+          setShareWalletDialogOpen(false);
+          setSelectedWallet(null);
+          fetchFinancialData();
+        }}
+      />
+      
+      <Dialog
+        open={transferDialogOpen}
+        onClose={() => setTransferDialogOpen(false)}
+      >
+        <DialogTitle>Transfer Money Between Wallets</DialogTitle>
+        <DialogContent>
+          <WalletManageForm
+            open={true}
+            handleClose={() => setTransferDialogOpen(false)}
+            onWalletUpdated={handleAccountAdded}
+            embedded={true}
+            initialOpenTransfer={true}
+          />
+        </DialogContent>
+      </Dialog>
       
       {/* Delete Transaction Confirmation Dialog */}
       <Dialog
@@ -842,39 +994,6 @@ export default function Dashboard() {
           </Button>
         </DialogActions>
       </Dialog>
-
-      {/* Edit Transaction Dialog */}
-      {selectedTransaction && (
-        <Dialog
-          open={editTransactionOpen}
-          onClose={handleEditTransactionClose}
-          maxWidth="sm"
-          fullWidth
-          PaperProps={{
-            sx: {
-              borderRadius: '12px',
-              maxHeight: '85vh',
-            }
-          }}
-        >
-          <DialogTitle>Edit Transaction</DialogTitle>
-          <DialogContent>
-            <TransactionForm
-              open={true}
-              handleClose={handleEditTransactionClose}
-              onTransactionAdded={handleEditTransactionConfirm}
-              embedded={true}
-              initialData={selectedTransaction}
-            />
-          </DialogContent>
-        </Dialog>
-      )}
-
-      {/* Profile Dialog */}
-      <ProfileDialog 
-        open={profileDialogOpen} 
-        onClose={() => setProfileDialogOpen(false)} 
-      />
     </AppTheme>
   );
 }
