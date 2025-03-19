@@ -286,13 +286,60 @@
 
   .sectionTitle {
     font-weight: 600;
-    letter-spacing: -0.01em;
+    color: #333;
   }
 
+  /* Add New button in Recent Transactions */
+  .addNewButton {
+    background-color: #007aff;
+    color: white;
+    font-weight: 500;
+    text-transform: none;
+    padding: 6px 16px;
+    border-radius: 8px;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.2), 0 1px 3px rgba(0, 0, 0, 0.05);
+    position: relative;
+    top: 0;
+    border: none;
+    z-index: 1;
+  }
+
+  .addNewButton:hover {
+    background-color: #0062cc;
+    box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3), 0 2px 5px rgba(0, 0, 0, 0.07);
+    transform: none !important;
+  }
+
+  .addNewButton:active {
+    background-color: #005bb5;
+    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.2), 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+
+  /* Keep existing addTransactionButton for compatibility */
   .addTransactionButton {
-    border-radius: 0.75rem;
-    font-weight: 600;
-    border-width: 1.5px;
+    font-weight: 500;
+    text-transform: none;
+    padding: 6px 16px;
+    border-radius: 8px;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.2), 0 1px 3px rgba(0, 0, 0, 0.05);
+    position: relative;
+    top: 0;
+    border: none;
+    backdrop-filter: blur(20px);
+    transform: none !important;
+  }
+
+  .addTransactionButton:hover {
+    background-color: #0062cc;
+    box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3), 0 2px 5px rgba(0, 0, 0, 0.07);
+    transform: none !important;
+  }
+
+  .addTransactionButton:active {
+    background-color: #005bb5;
+    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.2), 0 1px 3px rgba(0, 0, 0, 0.05);
   }
 
   .loadingBox {
@@ -588,14 +635,22 @@
     text-transform: none;
     padding: 6px 16px;
     border-radius: 8px;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.2), 0 1px 3px rgba(0, 0, 0, 0.05);
+    position: relative;
+    top: 0;
+    border: none;
+    backdrop-filter: blur(20px);
   }
 
   .manageWalletsButton:hover {
     background-color: #0062cc;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.4);
+    box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3), 0 2px 5px rgba(0, 0, 0, 0.07);
+  }
+
+  .manageWalletsButton:active {
+    background-color: #005bb5;
+    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.2), 0 1px 3px rgba(0, 0, 0, 0.05);
   }
 
   .walletNavButton {

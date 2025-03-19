@@ -638,17 +638,16 @@ export default function Dashboard() {
                     <Typography 
                       component="h2" 
                       variant="h5" 
-                      color="text.primary" 
                       className={styles.sectionTitle}
                     >
                       Recent Transactions
                     </Typography>
                     <Button 
-                      variant="outlined" 
+                      variant="contained" 
                       color="primary" 
                       startIcon={<AddIcon />}
                       onClick={openFinanceActionPanel}
-                      className={styles.addTransactionButton}
+                      className={styles.addNewButton}
                       elevation={3}
                     >
                       Add New
