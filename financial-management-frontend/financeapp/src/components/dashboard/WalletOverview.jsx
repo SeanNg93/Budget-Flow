@@ -82,15 +82,38 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
       const sharedWithMeResponse = await FinanceService.getSharedWalletsWithMe();
       const sharedWithMe = sharedWithMeResponse.data || [];
       
+      // Get wallets shared by the current user
+      const sharedByMeResponse = await FinanceService.getSharedWalletsByMe();
+      const sharedByMe = sharedByMeResponse.data || [];
+      
       // Create a map of wallet IDs to their shared wallet information
       const sharedInfo = {};
+      
+      // Process wallets shared with me
       sharedWithMe.forEach(sharedWallet => {
         if (sharedWallet.accepted) {
           sharedInfo[sharedWallet.walletId] = {
             isShared: true,
+            isOwner: false,
             ownerUsername: sharedWallet.ownerUsername,
             ownerId: sharedWallet.ownerId,
             sharedWithId: sharedWallet.sharedWithId,
+            sharedWithUsername: sharedWallet.sharedWithUsername,
+            walletName: sharedWallet.walletName
+          };
+        }
+      });
+      
+      // Process wallets shared by me
+      sharedByMe.forEach(sharedWallet => {
+        if (sharedWallet.accepted) {
+          sharedInfo[sharedWallet.walletId] = {
+            isShared: true,
+            isOwner: true,
+            ownerUsername: sharedWallet.ownerUsername,
+            ownerId: sharedWallet.ownerId,
+            sharedWithId: sharedWallet.sharedWithId,
+            sharedWithUsername: sharedWallet.sharedWithUsername,
             walletName: sharedWallet.walletName
           };
         }
@@ -121,8 +144,13 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
     return sharedWalletsInfo[walletId] !== undefined;
   };
 
-  // Function to get shared wallet owner information
-  const getSharedWalletOwner = (walletId) => {
+  // Function to check if current user is the owner of a shared wallet
+  const isWalletOwner = (walletId) => {
+    return sharedWalletsInfo[walletId]?.isOwner === true;
+  };
+
+  // Function to get shared wallet information
+  const getSharedWalletInfo = (walletId) => {
     return sharedWalletsInfo[walletId] || {};
   };
 
@@ -186,9 +214,19 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
 
   // Generate avatar for shared wallet
   const renderSharedWalletAvatar = (walletId) => {
-    const ownerInfo = getSharedWalletOwner(walletId);
+    const info = getSharedWalletInfo(walletId);
+    const isOwner = isWalletOwner(walletId);
+    
+    // For owner: show avatar of person it's shared with
+    // For recipient: show avatar of the owner
+    const username = isOwner ? info.sharedWithUsername : info.ownerUsername;
+    
+    const tooltipTitle = isOwner 
+      ? `Shared with: ${info.sharedWithUsername}`
+      : `Owner: ${info.ownerUsername}`;
+
     return (
-      <Tooltip title={`Shared by: ${ownerInfo.ownerUsername} (ID: ${ownerInfo.ownerId})`}>
+      <Tooltip title={tooltipTitle}>
         <Avatar 
           sx={{ 
             width: 24, 
@@ -200,7 +238,7 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
             cursor: 'pointer'
           }}
         >
-          {ownerInfo.ownerUsername ? ownerInfo.ownerUsername.charAt(0).toUpperCase() : 'U'}
+          {username ? username.charAt(0).toUpperCase() : 'U'}
         </Avatar>
       </Tooltip>
     );
@@ -302,11 +340,16 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
                     ${wallet.balance.toFixed(2)}
                   </Typography>
                   <Divider sx={{ my: 1, opacity: 0.6 }} />
-                  <Typography variant="body2" className={styles.walletType} 
-                    sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Typography 
+                    variant="body2" 
+                    className={styles.walletType}
+                    component="div" 
+                    sx={{ display: 'flex', alignItems: 'center' }}
+                  >
                     {isShared ? (
                       <>
-                        Shared Wallet with: {renderSharedWalletAvatar(wallet.id)}
+                        {isWalletOwner(wallet.id) ? 'Shared Wallet with:' : 'Shared Wallet by:'}
+                        {renderSharedWalletAvatar(wallet.id)}
                       </>
                     ) : (
                       wallet.accountType || "General Account"
