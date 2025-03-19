@@ -1,27 +1,51 @@
 /* Notification Menu Styles */
 
 /* Badge styling */
-.badgeRoot .badge {
-  background-color: #f44336;
+.badgeContainer {
+  border-radius: 50%;
+  margin-left: 8px;
+  margin-right: 8px;
+  position: relative;
+}
+
+.badgeContainer:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.badge {
+  background-color: #ff3b30;
   color: #ffffff;
-  font-size: 10px;
-  height: 16px;
-  min-width: 16px;
-  padding: 0 4px;
+  font-size: 12px;
+  height: 20px;
+  min-width: 20px;
+  padding: 0 6px;
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform: translate(40%, -40%);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
 }
 
 /* Menu styling */
-.menuRoot .paper {
-  width: 320px;
-  max-height: 400px;
-  overflow: auto;
-  border-radius: 12px;
-  margin-top: 8px;
-  box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.15);
+.menuRoot {
+  z-index: 1400;
 }
 
-.menuRoot .divider {
-  margin: 8px 0;
+.paper {
+  width: 340px;
+  max-height: 400px;
+  border-radius: 12px;
+  box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.15);
+  overflow: visible;
+  margin-top: 8px;
+}
+
+.menuList {
+  padding: 0;
 }
 
 /* Notification item styling */
@@ -59,27 +83,50 @@
 
 /* Notification header container */
 .headerContainer {
-  padding-left: 16px;
-  padding-right: 16px;
-  padding-top: 12px;
-  padding-bottom: 12px;
+  padding: 12px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  flex-wrap: nowrap;
+}
+
+.titleContainer {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  flex-shrink: 1;
+}
+
+.title {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+/* Header actions container */
+.headerActions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: nowrap;
+  margin-left: 8px;
 }
 
 /* New count badge */
 .newCountBadge {
   margin-left: 8px;
-  font-size: 0.8rem;
-  color: #f44336;
-  font-weight: bold;
-  background-color: rgba(244, 67, 54, 0.1);
+  font-size: 0.75rem;
+  color: white;
+  font-weight: 600;
+  background-color: #ff3b30;
   border-radius: 10px;
-  padding-left: 8px;
-  padding-right: 8px;
-  padding-top: 4px;
-  padding-bottom: 4px;
+  padding: 2px 8px;
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  min-width: 20px;
+  justify-content: center;
 }
 
 /* Mark all read button */
@@ -88,14 +135,49 @@
   font-size: 0.75rem;
   padding: 2px 8px;
   border-radius: 12px;
+  min-height: 24px;
+  color: #2196f3;
+  white-space: nowrap;
+  min-width: auto;
+  display: flex;
+  align-items: center;
+}
+
+.markAllReadButton:hover {
+  background-color: rgba(33, 150, 243, 0.04);
+}
+
+.markAllReadButton svg {
+  font-size: 16px;
+}
+
+/* Clear button */
+.clearButton {
+  text-transform: none;
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+  min-height: 24px;
+  color: #f44336;
+  white-space: nowrap;
+  min-width: auto;
+  display: flex;
+  align-items: center;
+}
+
+.clearButton:hover {
+  background-color: rgba(244, 67, 54, 0.04);
+}
+
+.clearButton svg {
+  font-size: 16px;
 }
 
 /* Loading container */
 .loadingContainer {
   display: flex;
   justify-content: center;
-  padding-top: 32px;
-  padding-bottom: 32px;
+  padding: 32px 0;
 }
 
 /* List container */
@@ -124,4 +206,80 @@
 
 .readIcon {
   margin-right: 4px;
+}
+
+/* Clickable notification */
+.clickableNotification {
+  cursor: pointer;
+}
+
+/* Notification actions container */
+.notificationActions {
+  display: flex;
+  margin-top: 8px;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+/* Accept button styling */
+.acceptButton {
+  text-transform: none;
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  height: 28px;
+  border-radius: 12px;
+  font-weight: 500;
+  box-shadow: none;
+}
+
+.acceptButton:hover {
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Dismiss button styling */
+.dismissButton {
+  text-transform: none;
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: 12px;
+  color: #757575;
+}
+
+/* Dialog styling */
+.clearDialog {
+  border-radius: 12px;
+  padding: 8px;
+}
+
+.dialogTitle {
+  padding-bottom: 8px;
+  font-weight: 600;
+}
+
+.dialogContent {
+  padding-top: 16px;
+}
+
+.dialogActions {
+  padding: 16px 24px;
+}
+
+.cancelButton {
+  text-transform: none;
+  font-weight: 500;
+  border-radius: 8px;
+  color: #757575;
+}
+
+.confirmButton {
+  text-transform: none;
+  font-weight: 500;
+  border-radius: 8px;
+  background-color: #f44336;
+  color: white;
+}
+
+.confirmButton:hover {
+  background-color: #d32f2f;
 } 

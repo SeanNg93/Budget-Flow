@@ -23,6 +23,7 @@ import {
   DialogActions,
   DialogContentText,
   InputAdornment,
+  Menu,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -34,9 +35,12 @@ import SendIcon from '@mui/icons-material/Send';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import FinanceService from '../../services/FinanceService';
 import WalletForm from './WalletForm';
 import UserTransferForm from './UserTransferForm';
+import ShareWalletForm from './ShareWalletForm';
 import styles from '../../styles/walletManage.module.css';
 
 const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false }) => {
@@ -73,6 +77,14 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
   
   // Add state for the user transfer dialog
   const [userTransferDialogOpen, setUserTransferDialogOpen] = useState(false);
+  
+  // Add state for wallet menu
+  const [walletMenuAnchorEl, setWalletMenuAnchorEl] = useState(null);
+  const [selectedWalletForMenu, setSelectedWalletForMenu] = useState(null);
+  
+  // Add state for share wallet dialog
+  const [shareWalletDialogOpen, setShareWalletDialogOpen] = useState(false);
+  const [walletToShare, setWalletToShare] = useState(null);
 
   useEffect(() => {
     if (open) {
@@ -258,11 +270,13 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
       
       // Close confirmation dialog
       setDeleteConfirmOpen(false);
+      
+      // Update local state immediately instead of fetching again
+      setWallets(prevWallets => prevWallets.filter(wallet => wallet.id !== deleteWalletId));
+      
+      // Reset state
       setDeleteWalletId(null);
       setDeleteWalletName('');
-      
-      // Refresh wallets list
-      fetchFinancialData();
       
       // Notify parent component
       if (onWalletUpdated) {
@@ -270,7 +284,14 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
       }
     } catch (err) {
       console.error('Error deleting wallet:', err);
-      setError(err.response?.data?.message || 'Failed to delete wallet. Please try again.');
+      // Handle the specific case where the wallet is shared and user doesn't have permission
+      if (err.response?.data?.error) {
+        setError(err.response.data.error);
+      } else {
+        setError('Failed to delete wallet. Please try again.');
+      }
+      // Keep the dialog open to show the error
+      setDeleteConfirmOpen(false);
     } finally {
       setDeleting(false);
     }
@@ -466,6 +487,34 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
     }
   };
 
+  // Add functions for wallet menu
+  const handleWalletMenuOpen = (event, wallet) => {
+    event.stopPropagation();
+    setWalletMenuAnchorEl(event.currentTarget);
+    setSelectedWalletForMenu(wallet);
+  };
+  
+  const handleWalletMenuClose = () => {
+    setWalletMenuAnchorEl(null);
+  };
+  
+  // Add functions for share wallet
+  const handleShareWallet = () => {
+    setWalletToShare(selectedWalletForMenu);
+    setShareWalletDialogOpen(true);
+    handleWalletMenuClose();
+  };
+  
+  const handleShareWalletClose = () => {
+    setShareWalletDialogOpen(false);
+    setWalletToShare(null);
+  };
+  
+  const handleWalletShared = () => {
+    // Refresh wallet list after sharing
+    fetchFinancialData();
+  };
+
   // Form content that will be used in both embedded and non-embedded modes
   const formContent = (
     <>
@@ -617,26 +666,37 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
                       }
                     />
                     <ListItemSecondaryAction>
-                      <IconButton 
-                        edge="end" 
-                        aria-label="edit"
-                        onClick={() => handleEditClick(wallet)}
-                        disabled={editMode}
-                        size="small"
-                        className={styles.iconButton}
-                      >
-                        <EditIcon fontSize="medium" />
-                      </IconButton>
-                      <IconButton 
-                        edge="end" 
-                        aria-label="delete"
-                        onClick={() => handleDeleteClick(wallet)}
-                        disabled={editMode}
-                        size="small"
-                        className={styles.deleteIconButton}
-                      >
-                        <DeleteIcon fontSize="medium" color="error" />
-                      </IconButton>
+                      {!editMode && (
+                        <>
+                          <IconButton
+                            edge="end"
+                            aria-label="more"
+                            onClick={(e) => handleWalletMenuOpen(e, wallet)}
+                            className={styles.iconButton}
+                            size="small"
+                          >
+                            <MoreVertIcon />
+                          </IconButton>
+                          <IconButton
+                            edge="end"
+                            aria-label="edit"
+                            onClick={() => handleEditClick(wallet)}
+                            className={styles.iconButton}
+                            size="small"
+                          >
+                            <EditIcon />
+                          </IconButton>
+                          <IconButton
+                            edge="end"
+                            aria-label="delete"
+                            onClick={() => handleDeleteClick(wallet)}
+                            className={styles.deleteIconButton}
+                            size="small"
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </>
+                      )}
                     </ListItemSecondaryAction>
                   </>
                 )}
@@ -828,6 +888,29 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
         handleClose={handleCloseUserTransferDialog}
         onTransferCompleted={handleUserTransferCompleted}
       />
+      
+      {/* Add Wallet Menu */}
+      <Menu
+        anchorEl={walletMenuAnchorEl}
+        open={Boolean(walletMenuAnchorEl)}
+        onClose={handleWalletMenuClose}
+        classes={{ paper: styles.menuPaper }}
+      >
+        <MenuItem onClick={handleShareWallet} className={styles.menuItem}>
+          <PersonAddIcon fontSize="small" className={styles.menuIcon} />
+          Share Wallet
+        </MenuItem>
+      </Menu>
+      
+      {/* Share Wallet Dialog */}
+      {walletToShare && (
+        <ShareWalletForm
+          open={shareWalletDialogOpen}
+          handleClose={handleShareWalletClose}
+          wallet={walletToShare}
+          onWalletShared={handleWalletShared}
+        />
+      )}
     </>
   );
 

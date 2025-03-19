@@ -117,6 +117,7 @@ export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [wallets, setWallets] = useState([]);
   const [financialData, setFinancialData] = useState({
     totalBalance: 0,
     totalIncome: 0,
@@ -209,6 +210,9 @@ export default function Dashboard() {
         netSavings: summaryResponse.data.netSavings || 0
       });
       
+      // Update wallets
+      setWallets(accountsResponse.data || []);
+      
       // Update transactions
       setTransactions(transactionsResponse.data.slice(0, 5)); // Get only the 5 most recent
     } catch (error) {
@@ -260,9 +264,34 @@ export default function Dashboard() {
       fetchCategories();
       updateFinancialSummary();
     } else {
-      // Otherwise just refresh financial data
-      fetchFinancialData();
+      // Otherwise just update the necessary parts
+      // First update financial data
+      FinanceService.getTotalBalance().then(response => {
+        if (response && response.data) {
+          // Update only the balance-related properties in financialData
+          setFinancialData(prevData => ({
+            ...prevData,
+            totalBalance: response.data.totalBalance || 0
+          }));
+        }
+      }).catch(error => {
+        console.error("Error updating balance:", error);
+      });
+      
+      // Then update wallets list
+      updateWallets();
     }
+  };
+
+  // Function to update only wallets
+  const updateWallets = () => {
+    FinanceService.getAccounts().then(response => {
+      if (response && response.data) {
+        setWallets(response.data);
+      }
+    }).catch(error => {
+      console.error("Error updating wallets:", error);
+    });
   };
 
   const handleCategoryAdded = () => {
@@ -594,7 +623,10 @@ export default function Dashboard() {
               
               {/* Wallet Overview */}
               <Grid item xs={12}>
-                <WalletOverview onManageWallets={handleManageWallets} />
+                <WalletOverview 
+                  onManageWallets={handleManageWallets} 
+                  externalWallets={wallets}
+                />
               </Grid>
               
               {/* Recent Transactions */}

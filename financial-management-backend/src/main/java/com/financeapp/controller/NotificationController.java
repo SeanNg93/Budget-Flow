@@ -132,6 +132,27 @@ public class NotificationController {
         }
     }
 
+    @DeleteMapping("/all")
+    public ResponseEntity<Void> deleteAllNotifications() {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            
+            if (auth == null || !auth.isAuthenticated()) {
+                logger.error("User not authenticated for delete all notifications");
+                return ResponseEntity.status(401).build();
+            }
+            
+            String username = auth.getName();
+            Long userId = getUserIdFromUsername(username);
+            
+            notificationService.deleteAllNotifications(userId);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            logger.error("Error deleting all notifications", e);
+            return ResponseEntity.status(500).build();
+        }
+    }
+
     // Helper method to get user ID from username
     private Long getUserIdFromUsername(String username) {
         Optional<User> userOptional = userRepository.findByUsername(username);

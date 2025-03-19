@@ -1,0 +1,128 @@
+/* Share Wallet Form Styles */
+.dialogPaper {
+  border-radius: 12px;
+  box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.15);
+  overflow: visible;
+}
+
+.dialogTitle {
+  padding-bottom: 8px;
+  padding-top: 12px;
+}
+
+.dialogContent {
+  padding-top: 8px;
+  padding-bottom: 12px;
+}
+
+.dialogActions {
+  padding: 8px 24px 16px 24px;
+}
+
+.headerContainer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.title {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.formContainer {
+  margin-top: 8px;
+}
+
+.description {
+  color: rgba(0, 0, 0, 0.6);
+  margin-bottom: 16px;
+}
+
+.alert {
+  margin-bottom: 16px;
+}
+
+.searchContainer {
+  position: relative;
+}
+
+.searchIcon {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.searchInput {
+  border-radius: 8px;
+}
+
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0;
+}
+
+.userList {
+  margin-top: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  max-height: 240px;
+  overflow-y: auto;
+  background-color: #fff;
+}
+
+.userItem {
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.userItem:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  font-size: 0.9rem;
+  background-color: #1976d2;
+}
+
+.selectedUserContainer {
+  margin-top: 16px;
+  padding: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  background-color: rgba(25, 118, 210, 0.05);
+}
+
+.selectedUserLabel {
+  margin-bottom: 8px;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.selectedUser {
+  display: flex;
+  align-items: center;
+}
+
+.selectedAvatar {
+  width: 40px;
+  height: 40px;
+  margin-right: 12px;
+  background-color: #1976d2;
+}
+
+.cancelButton {
+  text-transform: none;
+  font-weight: 500;
+  margin-right: 8px;
+  border-radius: 8px;
+}
+
+.shareButton {
+  text-transform: none;
+  font-weight: 500;
+  border-radius: 8px;
+  box-shadow: none;
+} 

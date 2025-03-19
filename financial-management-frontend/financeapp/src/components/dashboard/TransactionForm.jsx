@@ -410,19 +410,28 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
     setError('');
     try {
       await FinanceService.deleteAccount(deleteWalletId);
+      
+      // Update local state immediately instead of fetching again
+      const updatedAccounts = accounts.filter(acc => acc.id !== deleteWalletId);
+      setAccounts(updatedAccounts);
+      
       if (formData.accountId === deleteWalletId) {
-        const remainingAccounts = accounts.filter(acc => acc.id !== deleteWalletId);
         setFormData({
           ...formData,
-          accountId: remainingAccounts.length > 0 ? remainingAccounts[0].id : ''
+          accountId: updatedAccounts.length > 0 ? updatedAccounts[0].id : ''
         });
       }
+      
       handleDeleteWalletClose();
-      const accountsResponse = await FinanceService.getAccounts();
-      setAccounts(accountsResponse.data || []);
     } catch (err) {
       console.error('Error deleting wallet:', err);
-      setError(err.response?.data?.message || 'Failed to delete wallet. Please try again.');
+      // Handle the specific case where the wallet is shared and user doesn't have permission
+      if (err.response?.data?.error) {
+        setError(err.response.data.error);
+      } else {
+        setError('Failed to delete wallet. Please try again.');
+      }
+      handleDeleteWalletClose();
     } finally {
       setLoading(false);
     }

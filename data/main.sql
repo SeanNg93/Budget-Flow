@@ -92,6 +92,21 @@ CREATE TABLE wallets (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+-- Create shared_wallets table for wallet sharing between users
+CREATE TABLE shared_wallets (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    wallet_id INT NOT NULL,
+    owner_id INT NOT NULL,
+    shared_with_id INT NOT NULL,
+    accepted BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (wallet_id) REFERENCES wallets(id) ON DELETE CASCADE,
+    FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (shared_with_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE KEY (wallet_id, shared_with_id)
+);
+
 CREATE TABLE transaction_categories (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,

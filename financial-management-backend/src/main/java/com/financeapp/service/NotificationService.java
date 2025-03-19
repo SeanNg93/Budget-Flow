@@ -61,6 +61,60 @@ public class NotificationService {
     }
 
     /**
+     * Create a wallet sharing notification
+     */
+    @Transactional
+    public void createWalletSharingNotification(Long ownerId, Long recipientId, String walletName) {
+        User owner = userRepository.findById(ownerId)
+                .orElseThrow(() -> new RuntimeException("Owner not found with id: " + ownerId));
+        
+        User recipient = userRepository.findById(recipientId)
+                .orElseThrow(() -> new RuntimeException("Recipient not found with id: " + recipientId));
+        
+        // Create notification for the owner
+        Notification ownerNotification = Notification.builder()
+                .user(owner)
+                .message("You shared your wallet \"" + walletName + "\" with " + recipient.getUsername() + ".")
+                .type("WALLET_SHARED")
+                .read(false)
+                .build();
+        
+        notificationRepository.save(ownerNotification);
+        
+        // Create notification for the recipient
+        Notification recipientNotification = Notification.builder()
+                .user(recipient)
+                .message(owner.getUsername() + " shared their wallet \"" + walletName + "\" with you.")
+                .type("WALLET_RECEIVED")
+                .read(false)
+                .build();
+        
+        notificationRepository.save(recipientNotification);
+    }
+
+    /**
+     * Create a notification for accepting a shared wallet
+     */
+    @Transactional
+    public void createWalletAcceptedNotification(Long ownerId, Long recipientId, String walletName) {
+        User owner = userRepository.findById(ownerId)
+                .orElseThrow(() -> new RuntimeException("Owner not found with id: " + ownerId));
+        
+        User recipient = userRepository.findById(recipientId)
+                .orElseThrow(() -> new RuntimeException("Recipient not found with id: " + recipientId));
+        
+        // Create notification for the owner
+        Notification ownerNotification = Notification.builder()
+                .user(owner)
+                .message(recipient.getUsername() + " accepted your shared wallet \"" + walletName + "\".")
+                .type("WALLET_SHARE_ACCEPTED")
+                .read(false)
+                .build();
+        
+        notificationRepository.save(ownerNotification);
+    }
+
+    /**
      * Get all notifications for a user
      */
     public List<NotificationDto> getUserNotifications(Long userId) {
@@ -140,6 +194,18 @@ public class NotificationService {
         unreadNotifications.forEach(notification -> notification.setRead(true));
         
         notificationRepository.saveAll(unreadNotifications);
+    }
+
+    /**
+     * Delete all notifications for a user
+     */
+    @Transactional
+    public void deleteAllNotifications(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+        
+        List<Notification> notifications = notificationRepository.findByUserOrderByCreatedAtDesc(user);
+        notificationRepository.deleteAll(notifications);
     }
 
     /**
