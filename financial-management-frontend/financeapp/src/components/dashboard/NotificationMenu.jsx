@@ -353,6 +353,11 @@ const NotificationMenu = () => {
           classes={{
             badge: styles.badge
           }}
+          anchorOrigin={{
+            vertical: 'top',
+            horizontal: 'right',
+          }}
+          sx={{ position: 'relative' }}
         >
           <NotificationsIcon />
         </Badge>
@@ -389,27 +394,25 @@ const NotificationMenu = () => {
                 component="span"
                 className={styles.newCountBadge}
               >
-                {unreadCount} new
+                {unreadCount}
               </Box>
             )}
           </Box>
           
           <Box className={styles.headerActions}>
-            {unreadCount > 0 && (
+            {unreadCount > 0 ? (
               <Button 
                 size="small" 
-                startIcon={<MarkReadIcon />}
+                startIcon={<MarkReadIcon fontSize="small" />}
                 onClick={handleMarkAllAsRead}
                 className={styles.markAllReadButton}
               >
                 Mark all read
               </Button>
-            )}
-            
-            {notifications.length > 0 && (
+            ) : (notifications.length > 0 && !loading) && (
               <Button 
                 size="small" 
-                startIcon={<DeleteIcon />}
+                startIcon={<DeleteIcon fontSize="small" />}
                 onClick={handleClearNotifications}
                 className={styles.clearButton}
               >
@@ -471,12 +474,16 @@ const NotificationMenu = () => {
                             size="small"
                             variant="contained"
                             color="success"
-                            startIcon={<AcceptIcon />}
+                            startIcon={acceptingWallet === notification.id ? null : <AcceptIcon fontSize="small" />}
                             onClick={() => handleAcceptSharedWallet(notification)}
                             disabled={acceptingWallet === notification.id}
                             className={styles.acceptButton}
                           >
-                            {acceptingWallet === notification.id ? 'Accepting...' : 'Accept Wallet'}
+                            {acceptingWallet === notification.id ? (
+                              <CircularProgress size={16} color="inherit" />
+                            ) : (
+                              'Accept'
+                            )}
                           </Button>
                           <Button
                             size="small"

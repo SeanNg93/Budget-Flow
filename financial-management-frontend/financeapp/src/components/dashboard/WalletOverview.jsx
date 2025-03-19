@@ -10,6 +10,8 @@ import {
   Divider,
   Menu,
   MenuItem,
+  Avatar,
+  Chip
 } from '@mui/material';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -31,6 +33,8 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
   const [error, setError] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
   const [slideDirection, setSlideDirection] = useState(null);
+  const [sharedWalletsInfo, setSharedWalletsInfo] = useState({});
+  
   const walletsPerPage = 4;
   
   // Add state for wallet menu
@@ -45,6 +49,7 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
     // If external wallets are provided, use them
     if (externalWallets && externalWallets.length > 0) {
       setWallets(externalWallets);
+      fetchSharedWalletsInfo();
     } else {
       // Otherwise fetch wallets
       fetchWallets();
@@ -61,11 +66,39 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
     try {
       const response = await FinanceService.getWallets();
       setWallets(response.data || []);
+      fetchSharedWalletsInfo();
     } catch (err) {
       console.error('Error fetching wallets:', err);
       setError('Failed to load wallets. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Fetch shared wallet information to identify which wallets are shared and who they're shared with
+  const fetchSharedWalletsInfo = async () => {
+    try {
+      // Get wallets shared with the current user
+      const sharedWithMeResponse = await FinanceService.getSharedWalletsWithMe();
+      const sharedWithMe = sharedWithMeResponse.data || [];
+      
+      // Create a map of wallet IDs to their shared wallet information
+      const sharedInfo = {};
+      sharedWithMe.forEach(sharedWallet => {
+        if (sharedWallet.accepted) {
+          sharedInfo[sharedWallet.walletId] = {
+            isShared: true,
+            ownerUsername: sharedWallet.ownerUsername,
+            ownerId: sharedWallet.ownerId,
+            sharedWithId: sharedWallet.sharedWithId,
+            walletName: sharedWallet.walletName
+          };
+        }
+      });
+      
+      setSharedWalletsInfo(sharedInfo);
+    } catch (err) {
+      console.error('Error fetching shared wallet info:', err);
     }
   };
 
@@ -81,6 +114,16 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
       default:
         return <AccountBalanceWalletIcon className={styles.walletIcon} />;
     }
+  };
+
+  // Function to check if a wallet is shared
+  const isSharedWallet = (walletId) => {
+    return sharedWalletsInfo[walletId] !== undefined;
+  };
+
+  // Function to get shared wallet owner information
+  const getSharedWalletOwner = (walletId) => {
+    return sharedWalletsInfo[walletId] || {};
   };
 
   const totalPages = Math.ceil(wallets.length / walletsPerPage);
@@ -140,6 +183,28 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
       return () => clearTimeout(timer);
     }
   }, [slideDirection]);
+
+  // Generate avatar for shared wallet
+  const renderSharedWalletAvatar = (walletId) => {
+    const ownerInfo = getSharedWalletOwner(walletId);
+    return (
+      <Tooltip title={`Shared by: ${ownerInfo.ownerUsername} (ID: ${ownerInfo.ownerId})`}>
+        <Avatar 
+          sx={{ 
+            width: 24, 
+            height: 24, 
+            fontSize: '0.8rem',
+            marginLeft: '8px',
+            backgroundColor: '#1976d2',
+            border: '2px solid white',
+            cursor: 'pointer'
+          }}
+        >
+          {ownerInfo.ownerUsername ? ownerInfo.ownerUsername.charAt(0).toUpperCase() : 'U'}
+        </Avatar>
+      </Tooltip>
+    );
+  };
 
   return (
     <Paper className={styles.walletOverviewCard}>
@@ -217,6 +282,7 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
           <Box className={`${styles.walletsList} ${slideDirection ? styles[slideDirection] : ''}`}>
             {displayedWallets.map((wallet) => {
               const colorClass = getWalletColorClass(wallet.id);
+              const isShared = isSharedWallet(wallet.id);
               return (
                 <Box key={wallet.id} className={`${styles.walletItem} ${styles[colorClass]}`}>
                   <Box className={styles.walletHeader}>
@@ -236,8 +302,15 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
                     ${wallet.balance.toFixed(2)}
                   </Typography>
                   <Divider sx={{ my: 1, opacity: 0.6 }} />
-                  <Typography variant="body2" className={styles.walletType}>
-                    {wallet.accountType || "General Account"}
+                  <Typography variant="body2" className={styles.walletType} 
+                    sx={{ display: 'flex', alignItems: 'center' }}>
+                    {isShared ? (
+                      <>
+                        Shared Wallet with: {renderSharedWalletAvatar(wallet.id)}
+                      </>
+                    ) : (
+                      wallet.accountType || "General Account"
+                    )}
                   </Typography>
                 </Box>
               );
