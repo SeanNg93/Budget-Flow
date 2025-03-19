@@ -4,6 +4,7 @@ import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
 import { sendForm } from '@emailjs/browser';
 import { EMAILJS_CONFIG } from '../../config/emailjs.config';
+import { requestPasswordReset } from '../../config/axiosInstance';
 import styles from '../../styles/auth.module.css';
 
 // Material UI imports
@@ -40,35 +41,56 @@ const ForgotPassword = () => {
     setMessage('');
 
     try {
-      // Generate a reset token (this would typically be done by your backend)
-      const resetToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+      // Request password reset from backend API
+      const response = await requestPasswordReset(values.email);
       
-      // Create a reset link (this would be your frontend route that handles password reset)
-      const resetLink = `${window.location.origin}/reset-password/${resetToken}`;
-      
-      // Set the form values for EmailJS
-      formRef.current.reset_link.value = resetLink;
-      formRef.current.to_email.value = values.email;
-      
-      // Send the email using EmailJS
-      const result = await sendForm(
-        EMAILJS_CONFIG.serviceId,
-        EMAILJS_CONFIG.resetPasswordTemplateId,
-        formRef.current,
-        EMAILJS_CONFIG.publicKey
-      );
-      
-      if (result.status === 200) {
-        setIsSuccess(true);
-        setMessage('Password reset instructions have been sent to your email.');
-        resetForm();
+      if (response.data && response.data.success === "true") {
+        // If we have a resetLink, send an email using EmailJS
+        if (response.data.resetLink) {
+          try {
+            // Set the form values for EmailJS
+            formRef.current.reset_link.value = response.data.resetLink;
+            formRef.current.to_email.value = values.email;
+            
+            // Send the email using EmailJS
+            const emailResult = await sendForm(
+              EMAILJS_CONFIG.serviceId,
+              EMAILJS_CONFIG.resetPasswordTemplateId,
+              formRef.current,
+              EMAILJS_CONFIG.publicKey
+            );
+            
+            if (emailResult.status === 200) {
+              setIsSuccess(true);
+              setMessage('Password reset instructions have been sent to your email.');
+              resetForm();
+            } else {
+              throw new Error('Failed to send email');
+            }
+          } catch (emailError) {
+            console.error('Error sending reset email:', emailError);
+            // Still show success since the backend created the token
+            setIsSuccess(true);
+            setMessage('Password reset has been initiated. You should receive an email shortly.');
+            resetForm();
+          }
+        } else {
+          // No reset link in response
+          setIsSuccess(true);
+          setMessage(response.data.message || 'Password reset instructions have been sent to your email.');
+          resetForm();
+        }
       } else {
-        throw new Error('Failed to send email');
+        throw new Error(response.data?.message || 'Failed to initiate password reset');
       }
     } catch (error) {
       setIsSuccess(false);
-      setMessage('Failed to send reset instructions. Please try again later.');
-      console.error('Error sending reset email:', error);
+      if (error.response && error.response.data) {
+        setMessage(error.response.data.message || 'Failed to send reset instructions. Please try again later.');
+      } else {
+        setMessage('Failed to send reset instructions. Please try again later.');
+      }
+      console.error('Error initiating password reset:', error);
     } finally {
       setIsSubmitting(false);
     }
