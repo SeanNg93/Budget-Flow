@@ -50,7 +50,18 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <LocalizationProvider dateAdapter={AdapterDateFns}>
         <CssBaseline />
         <App />
-        <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} newestOnTop closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
+        <ToastContainer 
+          position="top-right" 
+          autoClose={2000} 
+          hideProgressBar={false} 
+          newestOnTop 
+          closeOnClick 
+          rtl={false} 
+          pauseOnFocusLoss 
+          draggable 
+          pauseOnHover 
+          theme="colored"
+        />
       </LocalizationProvider>
     </ThemeProvider>
     </GoogleOAuthProvider>

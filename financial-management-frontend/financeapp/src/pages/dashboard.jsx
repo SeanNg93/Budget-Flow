@@ -321,8 +321,22 @@ export default function Dashboard() {
     });
   };
 
-  const handleTransactionAdded = () => {
-    fetchFinancialData();
+  const handleTransactionAdded = (isUpdate = false) => {
+    // Instead of fetching all data, selectively update what's needed
+    updateFinancialSummary();
+    fetchTransactions();
+    // If a transaction might affect wallet balances, update them too
+    updateWallets();
+    
+    // Add toast notification for successful transaction
+    toast.success(isUpdate ? 'Transaction updated successfully' : 'Transaction added successfully', {
+      position: "top-right",
+      autoClose: 2000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+    });
   };
 
   const handleAccountAdded = (forceFullRefresh = false) => {
@@ -465,7 +479,13 @@ export default function Dashboard() {
   const fetchTransactions = async () => {
     try {
       const transactionsResponse = await FinanceService.getTransactions();
-      setTransactions(transactionsResponse.data.slice(0, 5)); // Get only the 5 most recent
+      console.log('Fetched transactions:', transactionsResponse.data); // Log to check response data
+      
+      // Ensure we're getting complete transaction data with categories
+      if (transactionsResponse.data && transactionsResponse.data.length > 0) {
+        // Store the transactions with full details
+        setTransactions(transactionsResponse.data.slice(0, 5)); // Get only the 5 most recent
+      }
     } catch (error) {
       console.error('Error fetching transactions:', error);
     }
@@ -781,7 +801,10 @@ export default function Dashboard() {
                             >
                               <TableCell className={styles.tableCell}>{formatDate(transaction.transactionDate)}</TableCell>
                               <TableCell className={styles.tableCellBold}>{transaction.description}</TableCell>
-                              <TableCell className={styles.tableCell}>{transaction.category?.categoryName || 'Uncategorized'}</TableCell>
+                              <TableCell className={styles.tableCell}>
+                                {transaction.category ? transaction.category.categoryName : 
+                                 (transaction.categoryId ? `Category #${transaction.categoryId}` : 'Uncategorized')}
+                              </TableCell>
                               <TableCell className={styles.tableCell}>
                                 <Box
                                   className={transaction.transactionType === 'INCOME' 

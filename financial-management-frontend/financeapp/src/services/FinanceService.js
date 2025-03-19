@@ -78,18 +78,20 @@ export const deleteAccount = deleteWallet;
 
 // Transaction services
 export const getTransactions = () => {
-  return axiosInstance.get('/transactions');
+  return axiosInstance.get('/transactions?includeCategory=true');
 };
 
 export const getTransactionById = (id) => {
-  return axiosInstance.get(`/transactions/${id}`);
+  return axiosInstance.get(`/transactions/${id}?includeCategory=true`);
 };
 
 export const createTransaction = (transactionData, walletId) => {
+  // Ensure the category data is properly structured when sending to backend
   return axiosInstance.post(`/transactions?walletId=${walletId}`, transactionData);
 };
 
 export const updateTransaction = (id, transactionData) => {
+  // Ensure the category data is properly structured when sending to backend
   return axiosInstance.put(`/transactions/${id}`, transactionData);
 };
 
