@@ -34,12 +34,46 @@ axiosInstance.interceptors.response.use(
     return response;
   },
   (error) => {
+    // Log the error for debugging
+    console.error('API Error:', error);
+    
     // If the error has a response with data
     if (error.response && error.response.data) {
-      // If the data is an object, convert it to a string
-      if (typeof error.response.data === 'object') {
-        error.response.data = JSON.stringify(error.response.data);
+      // If the data is an object with a message property, preserve it
+      if (typeof error.response.data === 'object' && error.response.data.message) {
+        // Keep the structure as is, don't convert to string
+        // This allows components to extract the specific message
+      } 
+      // If the data is a plain object without a message property, add a default message
+      else if (typeof error.response.data === 'object' && !error.response.data.message) {
+        error.response.data.message = `${error.response.statusText || 'Error'}: ${JSON.stringify(error.response.data)}`;
       }
+      // If the data is a string, convert it to an object with a message property
+      else if (typeof error.response.data === 'string') {
+        try {
+          // Try to parse if it's a JSON string
+          const parsed = JSON.parse(error.response.data);
+          error.response.data = parsed;
+        } catch (e) {
+          // If it's not JSON, wrap the string in an object
+          error.response.data = { message: error.response.data };
+        }
+      }
+    } else if (error.response) {
+      // If there is a response but no data, create a default data object
+      error.response.data = { 
+        message: `${error.response.status}: ${error.response.statusText || 'Unknown error'}` 
+      };
+    } else if (error.request) {
+      // The request was made but no response was received
+      error.response = { 
+        data: { message: 'No response received from server. Please try again later.' }
+      };
+    } else {
+      // Something happened in setting up the request
+      error.response = { 
+        data: { message: error.message || 'Unknown error occurred' }
+      };
     }
     
     // Handle 401 Unauthorized errors (expired or invalid token)

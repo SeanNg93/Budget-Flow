@@ -6,6 +6,9 @@ import { register } from '../../config/axiosInstance';
 import styles from '../../styles/auth.module.css';
 import emailjs from '../../config/emailjs';
 import { EMAILJS_CONFIG } from '../../config/emailjs.config';
+import AuthError from '../../components/AuthError';
+import AuthSuccess from '../../components/AuthSuccess';
+import axiosInstance from '../../config/axiosInstance';
 
 // Material UI imports
 import {
@@ -22,8 +25,9 @@ import {
   Paper,
   TextField,
   Typography,
+  CircularProgress,
 } from '@mui/material';
-import { Visibility, VisibilityOff, Person, Email, Lock } from '@mui/icons-material';
+import { Visibility, VisibilityOff, Person, Email, Lock, CheckCircle, Error } from '@mui/icons-material';
 
 // Validation schema
 const RegisterSchema = Yup.object().shape({
@@ -50,6 +54,12 @@ const Register = () => {
   const [success, setSuccess] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+  const [usernameStatus, setUsernameStatus] = useState(null); // null, 'available', 'taken'
+  const [usernameTimeout, setUsernameTimeout] = useState(null);
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
+  const [emailStatus, setEmailStatus] = useState(null); // null, 'available', 'taken'
+  const [emailTimeout, setEmailTimeout] = useState(null);
 
   const handleClickShowPassword = () => {
     setShowPassword(!showPassword);
@@ -63,9 +73,125 @@ const Register = () => {
     event.preventDefault();
   };
 
+  // Check if username is already taken
+  const checkUsernameAvailability = async (username) => {
+    if (!username || username.length < 3) return;
+    
+    setIsCheckingUsername(true);
+    setUsernameStatus(null);
+    
+    try {
+      // Use a simple get request to check if user exists
+      const response = await axiosInstance.get(`/auth/check-username?username=${username}`);
+      
+      if (response.data && response.data.available) {
+        setUsernameStatus('available');
+      } else {
+        setUsernameStatus('taken');
+      }
+    } catch (error) {
+      // If endpoint doesn't exist or error occurs, assume username is ok
+      // This is a fallback since we'll check again during registration
+      setUsernameStatus(null);
+    } finally {
+      setIsCheckingUsername(false);
+    }
+  };
+
+  // Handle username field change with debounce
+  const handleUsernameChange = (e, formikChange) => {
+    const username = e.target.value;
+    
+    // Clear any previous timeout
+    if (usernameTimeout) {
+      clearTimeout(usernameTimeout);
+    }
+    
+    // Call the original Formik onChange
+    formikChange(e);
+    
+    // Don't check if too short
+    if (!username || username.length < 3) {
+      setUsernameStatus(null);
+      return;
+    }
+    
+    // Set a new timeout to check username availability after 500ms of user stopping typing
+    const timeoutId = setTimeout(() => {
+      // Call the function without await here
+      checkUsernameAvailability(username);
+    }, 500);
+    
+    setUsernameTimeout(timeoutId);
+  };
+
+  // Add email checking function
+  const checkEmailAvailability = async (email) => {
+    if (!email || !email.includes('@')) return;
+    
+    setIsCheckingEmail(true);
+    setEmailStatus(null);
+    
+    try {
+      const response = await axiosInstance.get(`/auth/check-email?email=${email}`);
+      
+      if (response.data && response.data.available) {
+        setEmailStatus('available');
+      } else {
+        setEmailStatus('taken');
+      }
+    } catch (error) {
+      // If endpoint doesn't exist or error occurs, assume email is ok
+      setEmailStatus(null);
+    } finally {
+      setIsCheckingEmail(false);
+    }
+  };
+
+  // Add email change handler with debounce
+  const handleEmailChange = (e, formikChange) => {
+    const email = e.target.value;
+    
+    // Clear any previous timeout
+    if (emailTimeout) {
+      clearTimeout(emailTimeout);
+    }
+    
+    // Call the original Formik onChange
+    formikChange(e);
+    
+    // Don't check if invalid email
+    if (!email || !email.includes('@')) {
+      setEmailStatus(null);
+      return;
+    }
+    
+    // Set a new timeout to check email availability after typing stops
+    const timeoutId = setTimeout(() => {
+      // Call the function without await here
+      checkEmailAvailability(email);
+    }, 500);
+    
+    setEmailTimeout(timeoutId);
+  };
+
   const handleSubmit = async (values, { setSubmitting }) => {
     setError('');
     setSuccess('');
+
+    // If username is taken, prevent submission
+    if (usernameStatus === 'taken') {
+      setError('Username is already taken. Please choose a different username.');
+      setSubmitting(false);
+      return;
+    }
+    
+    // If email is taken, prevent submission
+    if (emailStatus === 'taken') {
+      setError('Email address is already registered. Please use a different email or try to login.');
+      setSubmitting(false);
+      return;
+    }
 
     try {
       // Call the register function from axiosInstance
@@ -101,16 +227,31 @@ const Register = () => {
         navigate('/login', { state: { message: 'Registration successful! Please login.' } });
       }
     } catch (error) {
-      if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        setError(`Registration failed: ${error.response.data.message || error.response.statusText || 'Server error'}`);
+      console.error('Registration error:', error);
+      
+      // Extract error message from response using improved logic for username errors
+      if (error.response && error.response.data) {
+        // Check specifically for username already exists error
+        if (error.response.data.message && error.response.data.message.includes('Username already exists')) {
+          setError('Username is already taken. Please choose a different username.');
+          setUsernameStatus('taken');
+        }
+        // Check for email already exists error
+        else if (error.response.data.message && error.response.data.message.includes('Email already exists')) {
+          setError('Email address is already registered. Please use a different email or try to login.');
+        }
+        // Use the message directly if available
+        else if (error.response.data.message) {
+          setError(error.response.data.message);
+        } else {
+          setError('Registration failed');
+        }
       } else if (error.request) {
         // The request was made but no response was received
-        setError('Registration failed: No response from server. Please try again later.');
+        setError('No response from server. Please try again later.');
       } else {
         // Something happened in setting up the request that triggered an Error
-        setError(`Registration failed: ${error.message}`);
+        setError(error.message || 'An unexpected error occurred');
       }
     } finally {
       setSubmitting(false);
@@ -135,17 +276,9 @@ const Register = () => {
             Illuminate Your Financial Future
           </Typography>
 
-          {error && (
-            <Box className={styles.errorMessage}>
-              {error}
-            </Box>
-          )}
+          <AuthError message={error} visible={!!error} />
 
-          {success && (
-            <Box className={styles.successMessage}>
-              {success}
-            </Box>
-          )}
+          <AuthSuccess message={success} visible={!!success} />
 
           {!success && (
             <Formik
@@ -159,7 +292,7 @@ const Register = () => {
               validationSchema={RegisterSchema}
               onSubmit={handleSubmit}
             >
-              {({ errors, touched, isSubmitting, handleSubmit: formikSubmit }) => (
+              {({ errors, touched, isSubmitting, handleSubmit: formikSubmit, handleChange }) => (
                 <Form>
                   <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 1.5 }}>
                     <FormControl className={styles.formField}>
@@ -168,6 +301,7 @@ const Register = () => {
                         {({ field, meta }) => (
                           <TextField
                             {...field}
+                            onChange={(e) => handleUsernameChange(e, field.onChange)}
                             id="username"
                             placeholder="Type your username"
                             autoComplete="username"
@@ -176,12 +310,39 @@ const Register = () => {
                             variant="outlined"
                             size="small"
                             className={styles.inputField}
-                            error={meta.touched && Boolean(meta.error)}
-                            helperText={meta.touched && meta.error}
+                            error={meta.touched && (Boolean(meta.error) || usernameStatus === 'taken')}
+                            helperText={
+                              meta.touched ? (
+                                usernameStatus === 'available' ? (
+                                  <Typography component="span" sx={{ color: 'green', display: 'flex', alignItems: 'center', fontSize: '0.75rem' }}>
+                                    <CheckCircle fontSize="small" sx={{ mr: 0.5, fontSize: '0.9rem' }} />
+                                    Username available
+                                  </Typography>
+                                ) : usernameStatus === 'taken' ? (
+                                  <Typography component="span" sx={{ color: 'error.main', display: 'flex', alignItems: 'center', fontSize: '0.75rem' }}>
+                                    <Error fontSize="small" sx={{ mr: 0.5, fontSize: '0.9rem' }} />
+                                    Username already taken
+                                  </Typography>
+                                ) : meta.error
+                              ) : null
+                            }
                             InputProps={{
                               startAdornment: (
                                 <InputAdornment position="start">
                                   <Person fontSize="small" sx={{ color: '#888' }} />
+                                </InputAdornment>
+                              ),
+                              endAdornment: (
+                                <InputAdornment position="end">
+                                  {isCheckingUsername && (
+                                    <CircularProgress size={16} />
+                                  )}
+                                  {!isCheckingUsername && usernameStatus === 'available' && (
+                                    <CheckCircle fontSize="small" sx={{ color: 'green' }} />
+                                  )}
+                                  {!isCheckingUsername && usernameStatus === 'taken' && (
+                                    <Error fontSize="small" color="error" />
+                                  )}
                                 </InputAdornment>
                               ),
                             }}
@@ -196,6 +357,7 @@ const Register = () => {
                         {({ field, meta }) => (
                           <TextField
                             {...field}
+                            onChange={(e) => handleEmailChange(e, field.onChange)}
                             id="email"
                             placeholder="Type your email"
                             autoComplete="email"
@@ -203,12 +365,39 @@ const Register = () => {
                             variant="outlined"
                             size="small"
                             className={styles.inputField}
-                            error={meta.touched && Boolean(meta.error)}
-                            helperText={meta.touched && meta.error}
+                            error={meta.touched && (Boolean(meta.error) || emailStatus === 'taken')}
+                            helperText={
+                              meta.touched ? (
+                                emailStatus === 'available' ? (
+                                  <Typography component="span" sx={{ color: 'green', display: 'flex', alignItems: 'center', fontSize: '0.75rem' }}>
+                                    <CheckCircle fontSize="small" sx={{ mr: 0.5, fontSize: '0.9rem' }} />
+                                    Email available
+                                  </Typography>
+                                ) : emailStatus === 'taken' ? (
+                                  <Typography component="span" sx={{ color: 'error.main', display: 'flex', alignItems: 'center', fontSize: '0.75rem' }}>
+                                    <Error fontSize="small" sx={{ mr: 0.5, fontSize: '0.9rem' }} />
+                                    Email already registered
+                                  </Typography>
+                                ) : meta.error
+                              ) : null
+                            }
                             InputProps={{
                               startAdornment: (
                                 <InputAdornment position="start">
                                   <Email fontSize="small" sx={{ color: '#888' }} />
+                                </InputAdornment>
+                              ),
+                              endAdornment: (
+                                <InputAdornment position="end">
+                                  {isCheckingEmail && (
+                                    <CircularProgress size={16} />
+                                  )}
+                                  {!isCheckingEmail && emailStatus === 'available' && (
+                                    <CheckCircle fontSize="small" sx={{ color: 'green' }} />
+                                  )}
+                                  {!isCheckingEmail && emailStatus === 'taken' && (
+                                    <Error fontSize="small" color="error" />
+                                  )}
                                 </InputAdornment>
                               ),
                             }}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams, Link as RouterLink } from 'react-router-dom';
+import { useNavigate, useParams, useLocation, Link as RouterLink } from 'react-router-dom';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
 import { resetPassword, verifyResetToken } from '../../config/axiosInstance';
@@ -33,7 +33,14 @@ const ResetPasswordSchema = Yup.object().shape({
 
 const ResetPassword = () => {
   const navigate = useNavigate();
-  const { token } = useParams();
+  const { token: pathToken } = useParams();
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const queryToken = queryParams.get('token');
+  
+  // Use path parameter first, then query parameter
+  const token = pathToken || queryToken;
+  
   const [message, setMessage] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
   const [isTokenValid, setIsTokenValid] = useState(false);

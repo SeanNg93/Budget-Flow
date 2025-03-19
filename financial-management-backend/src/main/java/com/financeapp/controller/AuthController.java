@@ -2,6 +2,7 @@ package com.financeapp.controller;
 
 import com.financeapp.dto.LoginRequest;
 import com.financeapp.dto.JwtResponse;
+import com.financeapp.exception.AuthenticationException;
 import com.financeapp.model.Role;
 import com.financeapp.model.User;
 import com.financeapp.repository.RoleRepository;
@@ -13,10 +14,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -45,9 +48,39 @@ public class AuthController {
         logger.info("Login attempt for user: {}", loginRequest.getUsername());
         
         try {
+            // First check if the user exists
+            Optional<User> userOptional = userRepository.findByUsername(loginRequest.getUsername());
+            if (userOptional.isEmpty()) {
+                // Check if it exists as an email
+                userOptional = userRepository.findByEmail(loginRequest.getUsername());
+                if (userOptional.isEmpty()) {
+                    logger.warn("Login failed: Account not found for username/email: {}", loginRequest.getUsername());
+                    throw AuthenticationException.accountNotFound();
+                }
+            }
+            
+            // Check if account is enabled
+            User user = userOptional.get();
+            if (!user.isEnabled()) {
+                logger.warn("Login failed: Account not activated for user: {}", loginRequest.getUsername());
+                throw AuthenticationException.accountDisabled();
+            }
+            
+            // Check if account is pending deletion
+            if (user.isPendingDeletion()) {
+                logger.warn("Login failed: Account pending deletion for user: {}", loginRequest.getUsername());
+                throw AuthenticationException.accountLocked();
+            }
+            
             // Authenticate the user
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+            Authentication authentication;
+            try {
+                authentication = authenticationManager.authenticate(
+                        new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+            } catch (BadCredentialsException e) {
+                logger.warn("Login failed: Incorrect password for user: {}", loginRequest.getUsername());
+                throw AuthenticationException.invalidCredentials();
+            }
 
             // Set the authentication in the security context
             SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -57,10 +90,6 @@ public class AuthController {
             
             // Get user details from the authentication
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            
-            // Get the user from the database to include additional information
-            User user = userRepository.findByUsername(userDetails.getUsername())
-                    .orElseThrow(() -> new RuntimeException("User not found"));
             
             // Extract roles as strings
             List<String> roles = user.getRoles().stream()
@@ -77,9 +106,20 @@ public class AuthController {
                     user.getEmail(),
                     roles
             ));
+        } catch (AuthenticationException e) {
+            // The custom exception already has the right message, just return it
+            logger.error("Authentication failed: {}", e.getMessage());
+            return ResponseEntity.status(e.getStatus()).body(Map.of(
+                "error", "Authentication failed",
+                "message", e.getMessage(),
+                "code", e.getErrorCode()
+            ));
         } catch (Exception e) {
             logger.error("Login failed for user: {}", loginRequest.getUsername(), e);
-            return ResponseEntity.badRequest().body(Map.of("message", "Login failed: " + e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of(
+                "error", "Authentication failed",
+                "message", "An unexpected error occurred. Please try again later."
+            ));
         }
     }
 
@@ -130,5 +170,45 @@ public class AuthController {
     public ResponseEntity<?> test() {
         logger.info("Test endpoint accessed");
         return ResponseEntity.ok(Map.of("message", "Auth controller is working!"));
+    }
+
+    /**
+     * Check if a username is available
+     */
+    @GetMapping("/check-username")
+    public ResponseEntity<?> checkUsernameAvailability(@RequestParam String username) {
+        logger.info("Checking username availability: {}", username);
+        
+        // Validate the username
+        if (username == null || username.trim().isEmpty() || username.length() < 3) {
+            return ResponseEntity.badRequest().body(Map.of("available", false, "message", "Username is invalid"));
+        }
+        
+        // Check if username exists
+        boolean isAvailable = userRepository.findByUsername(username).isEmpty();
+        
+        logger.info("Username {} is {}", username, isAvailable ? "available" : "taken");
+        
+        return ResponseEntity.ok(Map.of("available", isAvailable));
+    }
+
+    /**
+     * Check if an email is available
+     */
+    @GetMapping("/check-email")
+    public ResponseEntity<?> checkEmailAvailability(@RequestParam String email) {
+        logger.info("Checking email availability: {}", email);
+        
+        // Validate the email (basic validation)
+        if (email == null || email.trim().isEmpty() || !email.contains("@")) {
+            return ResponseEntity.badRequest().body(Map.of("available", false, "message", "Email is invalid"));
+        }
+        
+        // Check if email exists
+        boolean isAvailable = userRepository.findByEmail(email).isEmpty();
+        
+        logger.info("Email {} is {}", email, isAvailable ? "available" : "taken");
+        
+        return ResponseEntity.ok(Map.of("available", isAvailable));
     }
 }

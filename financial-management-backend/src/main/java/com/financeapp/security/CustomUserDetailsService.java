@@ -1,5 +1,6 @@
 package com.financeapp.security;
 
+import com.financeapp.exception.AuthenticationException;
 import com.financeapp.model.User;
 import com.financeapp.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -30,12 +31,17 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .or(() -> userRepository.findByEmail(usernameOrEmail))
                 .orElseThrow(() -> {
                     logger.error("User not found with username or email: {}", usernameOrEmail);
-                    return new UsernameNotFoundException("User not found with username or email: " + usernameOrEmail);
+                    return AuthenticationException.accountNotFound();
                 });
 
         if (!user.isEnabled()) {
             logger.error("User account is not activated: {}", usernameOrEmail);
-            throw new UsernameNotFoundException("User account is not activated. Please check your email for activation link.");
+            throw AuthenticationException.accountDisabled();
+        }
+
+        if (user.isPendingDeletion()) {
+            logger.error("User account is pending deletion: {}", usernameOrEmail);
+            throw AuthenticationException.accountLocked();
         }
 
         List<GrantedAuthority> authorities = user.getRoles().stream()

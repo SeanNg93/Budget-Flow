@@ -181,12 +181,78 @@
   background-color: rgba(52, 199, 89, 0.1);
   color: #34c759;
   border: 1px solid rgba(52, 199, 89, 0.2);
+  animation: fadeIn 0.5s ease-in-out;
+  box-shadow: 0 2px 8px rgba(52, 199, 89, 0.15);
+  margin: 1rem 0;
+  padding: 0.8rem;
+  font-size: 0.9rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .errorMessage {
   background-color: rgba(255, 59, 48, 0.1);
   color: #ff3b30;
   border: 1px solid rgba(255, 59, 48, 0.2);
+  animation: fadeInShake 0.5s ease-in-out;
+  box-shadow: 0 2px 8px rgba(255, 59, 48, 0.15);
+  margin: 1rem 0;
+  padding: 0.8rem;
+  font-size: 0.9rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@keyframes fadeInShake {
+  0% {
+    opacity: 0;
+    transform: translateX(0);
+  }
+  10% {
+    opacity: 0.5;
+    transform: translateX(-5px);
+  }
+  20% {
+    transform: translateX(5px);
+  }
+  30% {
+    transform: translateX(-3px);
+  }
+  40% {
+    transform: translateX(3px);
+  }
+  50% {
+    transform: translateX(-2px);
+  }
+  60% {
+    transform: translateX(2px);
+  }
+  70% {
+    transform: translateX(-1px);
+  }
+  80% {
+    transform: translateX(1px);
+  }
+  90% {
+    transform: translateX(-0px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 /* Loading Container */

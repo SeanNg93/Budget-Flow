@@ -121,7 +121,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
 
   const calculateAvailableBalance = (total, walletsList, excludeWalletId = null) => {
     const usedBalance = walletsList.reduce((sum, wallet) => {
-      // Skip the wallet being edited when calculating used balance
+      // Skip the wallet being edited or deleted when calculating used balance
       if (wallet.id !== excludeWalletId) {
         return sum + wallet.balance;
       }
@@ -267,22 +267,35 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
     setError('');
     
     try {
+      // Find the wallet to be deleted to get its balance
+      const deletedWallet = wallets.find(wallet => wallet.id === deleteWalletId);
+      const deletedBalance = deletedWallet ? deletedWallet.balance : 0;
+      
       // Call API to delete wallet
       await FinanceService.deleteAccount(deleteWalletId);
       
       // Close confirmation dialog
       setDeleteConfirmOpen(false);
       
-      // Update local state immediately instead of fetching again
-      setWallets(prevWallets => prevWallets.filter(wallet => wallet.id !== deleteWalletId));
+      // Update local state immediately 
+      const updatedWallets = wallets.filter(wallet => wallet.id !== deleteWalletId);
+      
+      // Recalculate the available balance based on updated wallets
+      // No need to wait for API response - we can update our state directly
+      const newAvailableBalance = totalBalance - updatedWallets.reduce((sum, wallet) => sum + wallet.balance, 0);
+      
+      // Update both states
+      setWallets(updatedWallets);
+      setAvailableBalance(newAvailableBalance);
       
       // Reset state
       setDeleteWalletId(null);
       setDeleteWalletName('');
       
-      // Notify parent component
+      // Update parent component without triggering a full reload
       if (onWalletUpdated) {
-        onWalletUpdated();
+        // Pass false to prevent full reload, but still notify parent of the change
+        onWalletUpdated(false);
       }
     } catch (err) {
       console.error('Error deleting wallet:', err);
@@ -292,7 +305,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
       } else {
         setError('Failed to delete wallet. Please try again.');
       }
-      // Keep the dialog open to show the error
+      // Close the dialog to show the error
       setDeleteConfirmOpen(false);
     } finally {
       setDeleting(false);

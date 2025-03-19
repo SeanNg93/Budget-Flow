@@ -52,7 +52,7 @@ public class UserService {
         user.setResetPasswordTokenExpiry(LocalDateTime.now().plusMinutes(tokenExpiryMinutes));
         userRepository.save(user);
 
-        String resetLink = frontendUrl + "/reset-password?token=" + token;
+        String resetLink = frontendUrl + "/reset-password/" + token;
 
         Map<String, String> response = new HashMap<>();
         response.put("success", "true");
