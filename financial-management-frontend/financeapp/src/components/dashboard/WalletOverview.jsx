@@ -343,18 +343,20 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
               const isShared = isSharedWallet(wallet.id);
               return (
                 <Box key={wallet.id} className={`${styles.walletItem} ${styles[colorClass]}`}>
+                  {/* Position the menu button in the top right corner circle */}
+                  <IconButton
+                    size="small"
+                    className={styles.walletMenuButtonCircle}
+                    onClick={(e) => handleWalletMenuOpen(e, wallet)}
+                  >
+                    <MoreVertIcon fontSize="small" />
+                  </IconButton>
+                  
                   <Box className={styles.walletHeader}>
                     <Typography variant="h6" className={styles.walletName}>
                       {getWalletIcon(wallet.accountType)}
                       {wallet.accountName}
                     </Typography>
-                    <IconButton
-                      size="small"
-                      className={styles.walletMenuButton}
-                      onClick={(e) => handleWalletMenuOpen(e, wallet)}
-                    >
-                      <MoreVertIcon fontSize="small" />
-                    </IconButton>
                   </Box>
                   <Typography variant="h4" className={styles.walletBalance}>
                     ${wallet.balance.toFixed(2)}
