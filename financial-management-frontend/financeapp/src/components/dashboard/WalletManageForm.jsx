@@ -564,7 +564,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
             color="primary"
             startIcon={<SwapHorizIcon />}
             onClick={handleOpenTransferDialog}
-            disabled={editMode || loading || wallets.length < 2}
+            disabled={editMode || loading || wallets.length < 1}
             className={`${styles.transferButton} ${styles.compactButton}`}
           >
             Transfer
