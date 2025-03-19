@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { styled, alpha } from '@mui/material/styles';
+import React, { useState, useEffect, useRef } from 'react';
+import { alpha } from '@mui/material/styles';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
@@ -26,103 +26,27 @@ import ListItemText from '@mui/material/ListItemText';
 import DeleteIcon from '@mui/icons-material/Delete';
 import NotificationMenu from './NotificationMenu';
 import ProfileDialog from '../user/ProfileDialog';
+import FinanceService from '../../services/FinanceService';
+import AddIcon from '@mui/icons-material/Add';
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
+import SendIcon from '@mui/icons-material/Send';
+import ShareIcon from '@mui/icons-material/Share';
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import ReceiptIcon from '@mui/icons-material/Receipt';
+import CategoryIcon from '@mui/icons-material/Category';
+import ClickAwayListener from '@mui/material/ClickAwayListener';
+import Popper from '@mui/material/Popper';
+import Fade from '@mui/material/Fade';
+import Paper from '@mui/material/Paper';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemButton from '@mui/material/ListItemButton';
+import styles from '../../styles/appNavbar.module.css';
 
 const API_BASE_URL = "http://localhost:8080";
 const DEFAULT_AVATAR = "/default-avatar.svg";
 
 const drawerWidth = 280;
-
-const AppBarStyled = styled(AppBar, {
-  shouldForwardProp: (prop) => prop !== 'open',
-})(({ theme, open }) => ({
-  transition: theme.transitions.create(['margin', 'width'], {
-    easing: theme.transitions.easing.sharp,
-    duration: theme.transitions.duration.leavingScreen,
-  }),
-  backdropFilter: 'blur(10px)',
-  backgroundColor: 'rgba(255, 255, 255, 0.8)',
-  color: theme.palette.text.primary,
-  boxShadow: 'none',
-  borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
-  ...(open && {
-    width: `calc(100% - ${drawerWidth}px)`,
-    marginLeft: `${drawerWidth}px`,
-    transition: theme.transitions.create(['margin', 'width'], {
-      easing: theme.transitions.easing.easeOut,
-      duration: theme.transitions.duration.enteringScreen,
-    }),
-  }),
-}));
-
-const Search = styled('div')(({ theme }) => ({
-  position: 'relative',
-  borderRadius: 20,
-  backgroundColor: alpha(theme.palette.common.black, 0.05),
-  '&:hover': {
-    backgroundColor: alpha(theme.palette.common.black, 0.08),
-  },
-  marginRight: theme.spacing(2),
-  marginLeft: 0,
-  width: '100%',
-  [theme.breakpoints.up('sm')]: {
-    marginLeft: theme.spacing(3),
-    width: 'auto',
-  },
-}));
-
-const SearchIconWrapper = styled('div')(({ theme }) => ({
-  padding: theme.spacing(0, 2),
-  height: '100%',
-  position: 'absolute',
-  pointerEvents: 'none',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  color: theme.palette.text.secondary,
-}));
-
-const StyledInputBase = styled(InputBase)(({ theme }) => ({
-  color: theme.palette.text.primary,
-  '& .MuiInputBase-input': {
-    padding: theme.spacing(1, 1, 1, 0),
-    // vertical padding + font size from searchIcon
-    paddingLeft: `calc(1em + ${theme.spacing(4)})`,
-    transition: theme.transitions.create('width'),
-    width: '100%',
-    [theme.breakpoints.up('md')]: {
-      width: '20ch',
-    },
-  },
-}));
-
-const StyledBadge = styled(Badge)(({ theme }) => ({
-  '& .MuiBadge-badge': {
-    backgroundColor: theme.palette.error.main,
-    color: theme.palette.error.contrastText,
-    fontSize: 10,
-    height: 16,
-    minWidth: 16,
-    padding: '0 4px',
-  },
-}));
-
-const StyledMenu = styled(Menu)(({ theme }) => ({
-  '& .MuiPaper-root': {
-    borderRadius: 12,
-    marginTop: theme.spacing(1),
-    boxShadow: '0px 5px 15px rgba(0, 0, 0, 0.15)',
-    minWidth: 180,
-  },
-  '& .MuiMenuItem-root': {
-    padding: theme.spacing(1.5, 2),
-    '&:hover': {
-      backgroundColor: alpha(theme.palette.primary.main, 0.08),
-    },
-  },
-  '& .MuiDivider-root': {
-    margin: theme.spacing(1, 0),
-  },
-}));
 
 const AppNavbar = ({ open, handleDrawerOpen }) => {
   const navigate = useNavigate();
@@ -134,9 +58,62 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
   const [fullName, setFullName] = useState(null);
   const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [wallets, setWallets] = useState([]);
+  const [transactions, setTransactions] = useState([]);
+  const [searchFocused, setSearchFocused] = useState(false);
+  const searchRef = useRef(null);
+
+  const searchActions = [
+    { 
+      id: 'new-wallet', 
+      name: 'Create New Wallet', 
+      description: 'Create a new wallet to manage your money',
+      icon: <AddIcon color="primary" />,
+      action: () => navigate('/dashboard', { state: { openWalletForm: true } })
+    },
+    { 
+      id: 'transfer-money', 
+      name: 'Transfer Money', 
+      description: 'Transfer money between wallets',
+      icon: <SwapHorizIcon color="primary" />,
+      action: () => navigate('/dashboard', { state: { openTransferDialog: true } }) 
+    },
+    { 
+      id: 'send-money', 
+      name: 'Send Money', 
+      description: 'Send money to another user',
+      icon: <SendIcon color="primary" />,
+      action: () => navigate('/dashboard', { state: { openUserTransferDialog: true } }) 
+    },
+    { 
+      id: 'share-wallet', 
+      name: 'Share Wallet', 
+      description: 'Share a wallet with another user',
+      icon: <ShareIcon color="primary" />,
+      action: () => navigate('/dashboard', { state: { openShareWalletDialog: true } }) 
+    },
+    { 
+      id: 'new-transaction', 
+      name: 'New Transaction', 
+      description: 'Add a new income or expense',
+      icon: <ReceiptIcon color="primary" />,
+      action: () => navigate('/dashboard', { state: { openTransactionForm: true } }) 
+    },
+    { 
+      id: 'manage-categories', 
+      name: 'Manage Categories', 
+      description: 'Create or edit transaction categories',
+      icon: <CategoryIcon color="primary" />,
+      action: () => navigate('/dashboard', { state: { openCategoryForm: true } }) 
+    }
+  ];
 
   useEffect(() => {
     fetchUserProfile();
+    fetchSearchData();
   }, []);
 
   const fetchUserProfile = async () => {
@@ -169,6 +146,108 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
     } catch (err) {
       console.error("Error fetching profile picture:", err);
     }
+  };
+
+  const fetchSearchData = async () => {
+    try {
+      // Fetch wallets
+      const walletsResponse = await FinanceService.getAccounts();
+      if (walletsResponse.data) {
+        setWallets(walletsResponse.data);
+      }
+      
+      // Fetch recent transactions
+      const transactionsResponse = await FinanceService.getTransactions();
+      if (transactionsResponse.data) {
+        // Limit to most recent 20 transactions for performance
+        setTransactions(transactionsResponse.data.slice(0, 20));
+      }
+    } catch (error) {
+      console.error('Error fetching search data:', error);
+    }
+  };
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchValue(value);
+    
+    if (value.trim() === '') {
+      setSearchResults([]);
+      return;
+    }
+    
+    // Search across different data sources
+    const results = [];
+    const lowerCaseQuery = value.toLowerCase();
+    
+    // Search in predefined actions
+    const matchingActions = searchActions.filter(action => 
+      action.name.toLowerCase().includes(lowerCaseQuery) || 
+      action.description.toLowerCase().includes(lowerCaseQuery)
+    );
+    results.push(...matchingActions.map(action => ({
+      type: 'action',
+      item: action
+    })));
+    
+    // Search in wallets
+    const matchingWallets = wallets.filter(wallet => 
+      wallet.accountName.toLowerCase().includes(lowerCaseQuery)
+    );
+    results.push(...matchingWallets.map(wallet => ({
+      type: 'wallet',
+      item: wallet
+    })));
+    
+    // Search in transactions
+    const matchingTransactions = transactions.filter(transaction => 
+      (transaction.description && transaction.description.toLowerCase().includes(lowerCaseQuery)) ||
+      (transaction.category && transaction.category.name.toLowerCase().includes(lowerCaseQuery))
+    );
+    results.push(...matchingTransactions.map(transaction => ({
+      type: 'transaction',
+      item: transaction
+    })));
+    
+    setSearchResults(results);
+    setShowSearchResults(true);
+  };
+  
+  const handleSearchFocus = () => {
+    setSearchFocused(true);
+    setShowSearchResults(true);
+  };
+  
+  const handleSearchBlur = () => {
+    // Don't hide results immediately to allow clicking on them
+    setTimeout(() => {
+      if (!searchFocused) {
+        setShowSearchResults(false);
+      }
+    }, 200);
+  };
+  
+  const handleResultClick = (result) => {
+    setShowSearchResults(false);
+    
+    if (result.type === 'action') {
+      // Execute the action function
+      result.item.action();
+    } else if (result.type === 'wallet') {
+      // Navigate to wallet details or show wallet management dialog
+      navigate('/dashboard', { state: { selectedWallet: result.item.id } });
+    } else if (result.type === 'transaction') {
+      // Navigate to transaction details or show transaction dialog
+      navigate('/dashboard', { state: { selectedTransaction: result.item.id } });
+    }
+    
+    // Clear search after selection
+    setSearchValue('');
+  };
+  
+  const handleClickAway = () => {
+    setSearchFocused(false);
+    setShowSearchResults(false);
   };
 
   const isMenuOpen = Boolean(anchorEl);
@@ -218,7 +297,7 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
 
   const menuId = 'primary-search-account-menu';
   const renderMenu = (
-    <StyledMenu
+    <Menu
       anchorEl={anchorEl}
       anchorOrigin={{
         vertical: 'bottom',
@@ -232,6 +311,9 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
       }}
       open={isMenuOpen}
       onClose={handleMenuClose}
+      classes={{
+        paper: styles.menuPaper
+      }}
     >
       <Box sx={{ px: 2, py: 1 }}>
         <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
@@ -241,18 +323,13 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
           {userData.email || 'user@example.com'}
         </Typography>
       </Box>
-      <Divider />
-      <MenuItem onClick={handleProfile}>Profile</MenuItem>
-      <MenuItem onClick={handleChangePassword}>Change Password</MenuItem>
-      <Divider />
+      <Divider className={styles.menuDivider} />
+      <MenuItem onClick={handleProfile} className={styles.menuItem}>Profile</MenuItem>
+      <MenuItem onClick={handleChangePassword} className={styles.menuItem}>Change Password</MenuItem>
+      <Divider className={styles.menuDivider} />
       <MenuItem 
         onClick={handleDeleteAccount}
-        sx={{ 
-          color: '#d32f2f',  // màu đỏ của Material UI error
-          '&:hover': {
-            backgroundColor: 'rgba(211, 47, 47, 0.04)' // màu đỏ nhạt khi hover
-          }
-        }}
+        className={`${styles.menuItem} ${styles.deleteMenuItem}`}
       >
         <ListItemText 
           primary="Delete Account" 
@@ -261,13 +338,13 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
           }} 
         />
       </MenuItem>
-      <MenuItem onClick={handleLogout}>Logout</MenuItem>
-    </StyledMenu>
+      <MenuItem onClick={handleLogout} className={styles.menuItem}>Logout</MenuItem>
+    </Menu>
   );
 
   const mobileMenuId = 'primary-search-account-menu-mobile';
   const renderMobileMenu = (
-    <StyledMenu
+    <Menu
       anchorEl={mobileMoreAnchorEl}
       anchorOrigin={{
         vertical: 'top',
@@ -281,12 +358,15 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
       }}
       open={isMobileMenuOpen}
       onClose={handleMobileMenuClose}
+      classes={{
+        paper: styles.menuPaper
+      }}
     >
-      <MenuItem>
+      <MenuItem className={styles.menuItem}>
         <NotificationMenu />
         <Typography variant="body1" sx={{ ml: 1 }}>Notifications</Typography>
       </MenuItem>
-      <MenuItem onClick={handleProfileMenuOpen}>
+      <MenuItem onClick={handleProfileMenuOpen} className={styles.menuItem}>
         <IconButton
           size="medium"
           aria-label="account of current user"
@@ -310,12 +390,23 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
         </IconButton>
         <Typography variant="body1" sx={{ ml: 1 }}>Profile</Typography>
       </MenuItem>
-    </StyledMenu>
+    </Menu>
   );
 
   return (
     <>
-      <AppBarStyled position="fixed" open={open}>
+      <AppBar 
+        position="fixed" 
+        className={styles.appBar} 
+        sx={{
+          width: open ? `calc(100% - ${drawerWidth}px)` : '100%',
+          marginLeft: open ? `${drawerWidth}px` : 0,
+          transition: (theme) => theme.transitions.create(['margin', 'width'], {
+            easing: theme.transitions.easing[open ? 'easeOut' : 'sharp'],
+            duration: theme.transitions.duration[open ? 'enteringScreen' : 'leavingScreen'],
+          }),
+        }}
+      >
         <Toolbar>
           <IconButton
             color="inherit"
@@ -339,15 +430,73 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
             Budget Flow
           </Typography>
           
-          <Search>
-            <SearchIconWrapper>
-              <SearchIcon />
-            </SearchIconWrapper>
-            <StyledInputBase
-              placeholder="Search…"
-              inputProps={{ 'aria-label': 'search' }}
-            />
-          </Search>
+          <ClickAwayListener onClickAway={handleClickAway}>
+            <Box sx={{ position: 'relative', width: { xs: '100%', sm: 'auto' }, ml: 2, maxWidth: '400px' }}>
+              <div className={styles.search} ref={searchRef}>
+                <div className={styles.searchIconWrapper}>
+                  <SearchIcon />
+                </div>
+                <InputBase
+                  placeholder="Search…"
+                  inputProps={{ 'aria-label': 'search' }}
+                  value={searchValue}
+                  onChange={handleSearchChange}
+                  onFocus={handleSearchFocus}
+                  onBlur={handleSearchBlur}
+                  classes={{
+                    root: styles.inputRoot,
+                    input: styles.inputInput,
+                  }}
+                  fullWidth
+                />
+              </div>
+              
+              {showSearchResults && searchResults.length > 0 && (
+                <Paper className={styles.searchResultsContainer}>
+                  <List className={styles.searchResultsList}>
+                    {searchResults.map((result, index) => (
+                      <ListItem
+                        key={`${result.type}-${index}`}
+                        disablePadding
+                        divider={index < searchResults.length - 1}
+                      >
+                        <ListItemButton
+                          onClick={() => handleResultClick(result)}
+                          className={styles.listItemButton}
+                        >
+                          <ListItemIcon className={styles.listItemIcon}>
+                            {result.type === 'action' ? (
+                              result.item.icon
+                            ) : result.type === 'wallet' ? (
+                              <AccountBalanceWalletIcon color="primary" />
+                            ) : (
+                              <ReceiptIcon color="primary" />
+                            )}
+                          </ListItemIcon>
+                          <ListItemText 
+                            primary={
+                              <Typography variant="body2" className={styles.resultTitle}>
+                                {result.type === 'action' ? result.item.name :
+                                 result.type === 'wallet' ? result.item.accountName :
+                                 result.item.description || `Transaction #${result.item.id}`}
+                              </Typography>
+                            }
+                            secondary={
+                              <Typography variant="caption" className={styles.resultDescription}>
+                                {result.type === 'action' ? result.item.description :
+                                 result.type === 'wallet' ? `$${result.item.balance.toFixed(2)}` :
+                                 `$${result.item.amount.toFixed(2)} - ${result.item.category?.name || 'Uncategorized'}`}
+                              </Typography>
+                            }
+                          />
+                        </ListItemButton>
+                      </ListItem>
+                    ))}
+                  </List>
+                </Paper>
+              )}
+            </Box>
+          </ClickAwayListener>
           
           <Box sx={{ flexGrow: 1 }} />
           
@@ -356,26 +505,14 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
             
             <Box 
               onClick={handleProfileMenuOpen}
-              sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                ml: 1,
-                cursor: 'pointer',
-                borderRadius: 2,
-                p: 0.5,
-                '&:hover': {
-                  backgroundColor: alpha('#000', 0.04)
-                }
-              }}
+              className={styles.profileButton}
             >
               <Avatar 
                 src={profilePicture || DEFAULT_AVATAR}
                 alt={fullName || userData.username || 'User'}
+                className={styles.avatar}
                 sx={{ 
-                  width: 36, 
-                  height: 36,
                   bgcolor: !profilePicture ? 'primary.main' : 'transparent',
-                  fontWeight: 'bold'
                 }}
               >
                 {!profilePicture && (fullName || userData.username) ? (fullName || userData.username).charAt(0).toUpperCase() : null}
@@ -397,7 +534,7 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
             </IconButton>
           </Box>
         </Toolbar>
-      </AppBarStyled>
+      </AppBar>
       {renderMobileMenu}
       {renderMenu}
       <ChangePassword open={changePasswordOpen} onClose={handleChangePasswordClose} />
