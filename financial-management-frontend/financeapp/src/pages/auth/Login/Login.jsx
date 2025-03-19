@@ -6,6 +6,7 @@ import { login } from '../../../config/axiosInstance';
 import AuthService from "@/services/auth.service";
 import { useGoogleLogin } from "@react-oauth/google";
 import styles from '../../../styles/auth.module.css';
+import AuthError from '../../../components/AuthError';
 
 // Material UI imports
 import {
@@ -95,19 +96,25 @@ const Login = () => {
         
         navigate('/dashboard');
       } else {
-        setError('Login failed: No token received from server');
+        setError('No token received from server');
       }
     } catch (error) {
-      if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        setError(`Login failed: ${error.response.data.message || error.response.statusText || 'Server error'}`);
+      console.error('Login error:', error);
+      
+      // Extract error message from response using simplified logic
+      if (error.response && error.response.data) {
+        // Use the message directly if available
+        if (error.response.data.message) {
+          setError(error.response.data.message);
+        } else {
+          setError('Authentication failed');
+        }
       } else if (error.request) {
         // The request was made but no response was received
-        setError('Login failed: No response from server. Please try again later.');
+        setError('No response from server. Please try again later.');
       } else {
         // Something happened in setting up the request that triggered an Error
-        setError(`Login failed: ${error.message}`);
+        setError(error.message || 'An unexpected error occurred');
       }
     } finally {
       setSubmitting(false);
@@ -159,11 +166,7 @@ const Login = () => {
             Illuminate Your Financial Future
           </Typography>
 
-          {error && (
-            <Box className={styles.errorMessage}>
-              {error}
-            </Box>
-          )}
+          <AuthError message={error} visible={!!error} />
 
           <Formik
             initialValues={{ username: '', password: '' }}
