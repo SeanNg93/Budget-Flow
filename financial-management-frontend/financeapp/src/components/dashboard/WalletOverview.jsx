@@ -25,10 +25,10 @@ import styles from '../../styles/dashboard.module.css';
 import { getWalletColorClass } from '../../utils/colorUtils';
 import ShareWalletForm from './ShareWalletForm';
 
-const WalletOverview = ({ onManageWallets }) => {
+const WalletOverview = ({ onManageWallets, externalWallets }) => {
   const [wallets, setWallets] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
   const [slideDirection, setSlideDirection] = useState(null);
   const walletsPerPage = 4;
@@ -42,10 +42,21 @@ const WalletOverview = ({ onManageWallets }) => {
   const [walletToShare, setWalletToShare] = useState(null);
 
   useEffect(() => {
-    fetchWallets();
-  }, []);
+    // If external wallets are provided, use them
+    if (externalWallets && externalWallets.length > 0) {
+      setWallets(externalWallets);
+    } else {
+      // Otherwise fetch wallets
+      fetchWallets();
+    }
+  }, [externalWallets]);
 
   const fetchWallets = async () => {
+    // Only fetch if external wallets are not provided
+    if (externalWallets && externalWallets.length > 0) {
+      return;
+    }
+    
     setLoading(true);
     try {
       const response = await FinanceService.getWallets();

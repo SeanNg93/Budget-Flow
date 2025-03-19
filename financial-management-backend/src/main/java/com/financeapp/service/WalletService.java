@@ -126,8 +126,28 @@ public class WalletService {
     }
 
     @Transactional
-    public void deleteWallet(Long id) {
+    public void deleteWallet(Long id, Long userId) {
         Wallet wallet = getWalletById(id);
+        
+        // Check if the user is the owner of the wallet
+        if (!wallet.getUser().getId().equals(userId)) {
+            // If not the owner, check if the wallet is shared with this user
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+            
+            // Find the shared wallet relationship
+            List<SharedWallet> sharedWallets = sharedWalletRepository.findByWalletAndSharedWith(wallet, user);
+            
+            if (sharedWallets.isEmpty()) {
+                throw new IllegalArgumentException("You don't have permission to delete this wallet");
+            }
+            
+            // Remove the shared wallet relationship instead of deleting the actual wallet
+            sharedWalletRepository.deleteAll(sharedWallets);
+            return;
+        }
+        
+        // If the user is the owner, delete the wallet
         walletRepository.delete(wallet);
     }
 

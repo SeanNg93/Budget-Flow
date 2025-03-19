@@ -270,11 +270,13 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
       
       // Close confirmation dialog
       setDeleteConfirmOpen(false);
+      
+      // Update local state immediately instead of fetching again
+      setWallets(prevWallets => prevWallets.filter(wallet => wallet.id !== deleteWalletId));
+      
+      // Reset state
       setDeleteWalletId(null);
       setDeleteWalletName('');
-      
-      // Refresh wallets list
-      fetchFinancialData();
       
       // Notify parent component
       if (onWalletUpdated) {
@@ -282,7 +284,14 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
       }
     } catch (err) {
       console.error('Error deleting wallet:', err);
-      setError(err.response?.data?.message || 'Failed to delete wallet. Please try again.');
+      // Handle the specific case where the wallet is shared and user doesn't have permission
+      if (err.response?.data?.error) {
+        setError(err.response.data.error);
+      } else {
+        setError('Failed to delete wallet. Please try again.');
+      }
+      // Keep the dialog open to show the error
+      setDeleteConfirmOpen(false);
     } finally {
       setDeleting(false);
     }

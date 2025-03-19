@@ -192,25 +192,31 @@ public class SharedWalletService {
     }
     
     /**
-     * Remove a shared wallet
-     * 
-     * @param sharedWalletId ID of the shared wallet
-     * @param userId ID of the user removing the share (must be owner or shared user)
+     * Removes a shared wallet relationship.
+     * If the user is the owner, the sharing relationship is removed.
+     * If the user is a recipient, the sharing relationship is removed from their view.
+     *
+     * @param sharedWalletId The ID of the shared wallet to remove
+     * @param userId The ID of the user who wants to remove the shared wallet
+     * @throws IllegalArgumentException if the user has no permission to remove the shared wallet
      */
     @Transactional
     public void removeSharedWallet(Long sharedWalletId, Long userId) {
         SharedWallet sharedWallet = sharedWalletRepository.findById(sharedWalletId)
-                .orElseThrow(() -> new RuntimeException("Shared wallet not found with id: " + sharedWalletId));
+                .orElseThrow(() -> new IllegalArgumentException("Shared wallet not found"));
         
-        // Verify user has rights to remove the share
-        boolean isOwner = sharedWallet.getOwner().getId().equals(userId);
-        boolean isSharedWith = sharedWallet.getSharedWith().getId().equals(userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
         
-        if (!isOwner && !isSharedWith) {
+        // Check if the user is the owner or the recipient of the shared wallet
+        if (sharedWallet.getOwner().getId().equals(userId) || 
+            sharedWallet.getSharedWith().getId().equals(userId)) {
+            
+            // Remove the shared wallet relationship only, not the actual wallet
+            sharedWalletRepository.delete(sharedWallet);
+        } else {
             throw new IllegalArgumentException("You do not have permission to remove this shared wallet");
         }
-        
-        sharedWalletRepository.delete(sharedWallet);
     }
     
     /**
