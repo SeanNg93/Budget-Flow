@@ -22,10 +22,12 @@ import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import SendIcon from '@mui/icons-material/Send';
 import FinanceService from '../../services/FinanceService';
 import styles from '../../styles/dashboard.module.css';
 import { getWalletColorClass } from '../../utils/colorUtils';
 import ShareWalletForm from './ShareWalletForm';
+import UserTransferForm from './UserTransferForm';
 
 const WalletOverview = ({ onManageWallets, externalWallets }) => {
   const [wallets, setWallets] = useState([]);
@@ -44,6 +46,9 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
   // Add state for share wallet dialog
   const [shareWalletDialogOpen, setShareWalletDialogOpen] = useState(false);
   const [walletToShare, setWalletToShare] = useState(null);
+  
+  // Add state for send money dialog
+  const [sendMoneyDialogOpen, setSendMoneyDialogOpen] = useState(false);
 
   useEffect(() => {
     // If external wallets are provided, use them
@@ -201,6 +206,21 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
     // Refresh wallet list after sharing
     fetchWallets();
   };
+  
+  // Add functions for send money
+  const handleSendMoney = () => {
+    setSendMoneyDialogOpen(true);
+    handleWalletMenuClose();
+  };
+  
+  const handleSendMoneyClose = () => {
+    setSendMoneyDialogOpen(false);
+  };
+  
+  const handleSendMoneyCompleted = () => {
+    handleSendMoneyClose();
+    fetchWallets();
+  };
 
   // Reset animation after it completes
   useEffect(() => {
@@ -339,6 +359,10 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
                   <Typography variant="h4" className={styles.walletBalance}>
                     ${wallet.balance.toFixed(2)}
                   </Typography>
+                  
+                  {/* Add a spacer div that will push the wallet type to the bottom */}
+                  <Box sx={{ flexGrow: 1 }}></Box>
+                  
                   <Divider sx={{ my: 1, opacity: 0.6 }} />
                   <Typography 
                     variant="body2" 
@@ -404,6 +428,10 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
         onClose={handleWalletMenuClose}
         classes={{ paper: styles.dashboardMenuPaper }}
       >
+        <MenuItem onClick={handleSendMoney} className={styles.dashboardMenuItem}>
+          <SendIcon fontSize="small" className={styles.dashboardMenuIcon} />
+          <span>Send Money</span>
+        </MenuItem>
         <MenuItem onClick={handleShareWallet} className={styles.dashboardMenuItem}>
           <PersonAddIcon fontSize="small" className={styles.dashboardMenuIcon} />
           <span>Share Wallet</span>
@@ -417,6 +445,16 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
           handleClose={handleShareWalletClose}
           wallet={walletToShare}
           onWalletShared={handleWalletShared}
+        />
+      )}
+      
+      {/* Send Money Dialog */}
+      {selectedWalletForMenu && (
+        <UserTransferForm
+          open={sendMoneyDialogOpen}
+          handleClose={handleSendMoneyClose}
+          onTransferCompleted={handleSendMoneyCompleted}
+          defaultSourceWallet={selectedWalletForMenu}
         />
       )}
     </Paper>

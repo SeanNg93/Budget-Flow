@@ -509,6 +509,7 @@
     border: 1px solid rgba(0, 0, 0, 0.03);
     position: relative;
     overflow: hidden;
+    height: 175px; /* Set a consistent height for all wallet cards */
   }
 
   .walletItem:hover {
@@ -616,7 +617,7 @@
   .walletType {
     font-size: 0.85rem;
     color: rgba(0, 0, 0, 0.6);
-    margin-top: auto;
+    margin-top: auto; /* Push to the bottom of the container */
     position: relative;
     z-index: 1;
     font-weight: 500;

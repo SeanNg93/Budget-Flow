@@ -15,7 +15,7 @@ import {
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import styles from '../../styles/delete-account.module.css';
 
-export default function DeleteAccountDialog({ open, handleClose }) {
+export default function DeleteAccountDialog({ open, onClose }) {
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
@@ -98,7 +98,7 @@ export default function DeleteAccountDialog({ open, handleClose }) {
     const handleCancel = () => {
         setPassword('');
         setError('');
-        handleClose();
+        onClose();
     };
 
     return (

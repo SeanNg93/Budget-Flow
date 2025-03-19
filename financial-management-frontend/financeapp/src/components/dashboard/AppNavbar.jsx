@@ -25,6 +25,7 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import DeleteIcon from '@mui/icons-material/Delete';
 import NotificationMenu from './NotificationMenu';
+import ProfileDialog from '../user/ProfileDialog';
 
 const API_BASE_URL = "http://localhost:8080";
 const DEFAULT_AVATAR = "/default-avatar.svg";
@@ -132,6 +133,7 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
   const [profilePicture, setProfilePicture] = useState(null);
   const [fullName, setFullName] = useState(null);
   const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchUserProfile();
@@ -191,7 +193,7 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
 
   const handleProfile = () => {
     handleMenuClose();
-    navigate('/profile');
+    setProfileDialogOpen(true);
   };
 
   const handleLogout = () => {
@@ -401,8 +403,9 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
       <ChangePassword open={changePasswordOpen} onClose={handleChangePasswordClose} />
       <DeleteAccountDialog 
         open={deleteAccountOpen}
-        handleClose={() => setDeleteAccountOpen(false)}
+        onClose={() => setDeleteAccountOpen(false)}
       />
+      <ProfileDialog open={profileDialogOpen} onClose={() => setProfileDialogOpen(false)} />
     </>
   );
 };

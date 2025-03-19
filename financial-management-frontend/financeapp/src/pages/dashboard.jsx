@@ -57,6 +57,7 @@ import AddBalanceForm from '../components/dashboard/AddBalanceForm';
 import EditBalanceForm from '../components/dashboard/EditBalanceForm';
 import PendingDeletionAlert from '../components/dashboard/PendingDeletionAlert';
 import WalletOverview from '../components/dashboard/WalletOverview';
+import ProfileDialog from '../components/user/ProfileDialog';
 
 // Import theme
 import AppTheme from '../shared-theme/AppTheme';
@@ -136,6 +137,7 @@ export default function Dashboard() {
   const [walletManageFormOpen, setWalletManageFormOpen] = useState(false);
   const [balanceMenuAnchorEl, setBalanceMenuAnchorEl] = useState(null);
   const [error, setError] = useState(null);
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
 
   // New state for the unified finance action panel
   const [financeActionPanelOpen, setFinanceActionPanelOpen] = useState(false);
@@ -435,7 +437,11 @@ export default function Dashboard() {
       <Box sx={{ display: 'flex' }}>
         <CssBaseline />
         <AppNavbar open={open} handleDrawerOpen={handleDrawerOpen} />
-        <SideMenu open={open} handleDrawerClose={handleDrawerClose} />
+        <SideMenu 
+          open={open} 
+          handleDrawerClose={handleDrawerClose} 
+          setProfileDialogOpen={setProfileDialogOpen}
+        />
         <PendingDeletionAlert />
         <Main open={open}>
           <DrawerHeader />
@@ -856,6 +862,12 @@ export default function Dashboard() {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Profile Dialog */}
+      <ProfileDialog 
+        open={profileDialogOpen} 
+        onClose={() => setProfileDialogOpen(false)} 
+      />
     </AppTheme>
   );
 }

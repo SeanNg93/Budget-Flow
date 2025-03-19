@@ -31,7 +31,7 @@ import {
   ErrorOutline as ErrorIcon
 } from '@mui/icons-material';
 
-const UserTransferForm = ({ open, handleClose, onTransferCompleted }) => {
+const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourceWallet = null }) => {
   // Wallets state
   const [wallets, setWallets] = useState([]);
   const [sourceWalletId, setSourceWalletId] = useState('');
@@ -55,6 +55,13 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted }) => {
     }
   }, [open]);
   
+  // Set default wallet if provided
+  useEffect(() => {
+    if (defaultSourceWallet && open) {
+      setSourceWalletId(defaultSourceWallet.id.toString());
+    }
+  }, [defaultSourceWallet, open]);
+  
   // When search query changes, search for users
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
@@ -73,8 +80,10 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted }) => {
       const response = await FinanceService.getWallets();
       setWallets(response.data);
       
-      // Set first wallet as default if available
-      if (response.data.length > 0) {
+      // Set default wallet if provided, otherwise use first wallet
+      if (defaultSourceWallet) {
+        setSourceWalletId(defaultSourceWallet.id.toString());
+      } else if (response.data.length > 0) {
         setSourceWalletId(response.data[0].id.toString());
       }
     } catch (error) {
