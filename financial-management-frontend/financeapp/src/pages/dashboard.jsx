@@ -267,22 +267,29 @@ export default function Dashboard() {
       updateFinancialSummary();
     } else {
       // Otherwise just update the necessary parts
-      // First update financial data
-      FinanceService.getTotalBalance().then(response => {
-        if (response && response.data) {
-          // Update only the balance-related properties in financialData
-          setFinancialData(prevData => ({
-            ...prevData,
-            totalBalance: response.data.totalBalance || 0
-          }));
-        }
-      }).catch(error => {
-        console.error("Error updating balance:", error);
-      });
+      // First update financial data locally
+      updateLocalFinancialSummary();
       
       // Then update wallets list
       updateWallets();
     }
+  };
+
+  // Function to update financial summary without API call
+  const updateLocalFinancialSummary = () => {
+    // We need to maintain the same total balance
+    // The real change is in the allocation between wallets and available funds
+    
+    setFinancialData(prevData => {
+      // Keep the same total but recalculate components
+      const walletBalance = wallets.reduce((total, wallet) => total + wallet.balance, 0);
+      return {
+        ...prevData,
+        // Total balance remains the same
+        allocatedBalance: walletBalance,
+        availableBalance: prevData.totalBalance - walletBalance
+      };
+    });
   };
 
   // Function to update only wallets

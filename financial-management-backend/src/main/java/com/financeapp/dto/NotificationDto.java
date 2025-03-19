@@ -18,4 +18,6 @@ public class NotificationDto {
     private boolean read;
     private LocalDateTime createdAt;
     private String data; // Additional JSON data
+    private Long senderId; 
+    private String actionLink;
 } 
