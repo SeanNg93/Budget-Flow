@@ -40,6 +40,9 @@
   position: relative;
   margin-top: 10px;
   min-height: 240px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .loadingContainer,
@@ -51,100 +54,57 @@
   height: 240px;
 }
 
-/* Simple Chart Styles */
-.simpleChartContainer {
-  width: 100%;
-  height: 240px; /* Reduced height */
-  display: flex;
-  flex-direction: column;
-}
-
-/* Chart Legend */
-.chartLegend {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 8px; /* Reduced margin */
-}
-
-.legendItem {
+/* Chart Header Controls */
+.headerControls {
   display: flex;
   align-items: center;
-  margin: 0 12px;
 }
 
-.legendColor {
-  width: 12px; /* Smaller color box */
-  height: 12px;
-  border-radius: 3px;
-  margin-right: 6px;
-}
-
-.simpleBarChart {
+.timeRangeControls {
   display: flex;
-  height: 300px;
-  align-items: flex-end;
-  justify-content: space-around;
-  padding: 0 16px;
-  position: relative;
-}
-
-.barGroup {
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  width: 100%;
-  max-width: 80px;
 }
 
-.barLabel {
+.timeRangeLabel {
+  font-size: 14px;
+  font-weight: 500;
+  margin: 0 4px;
+  min-width: 60px;
   text-align: center;
-  margin-top: 8px;
-  width: 100%;
 }
 
-.bars {
+.navButton {
+  padding: 6px;
+}
+
+.navButton:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.navButton:disabled {
+  opacity: 0.5;
+  color: rgba(0, 0, 0, 0.26);
+}
+
+.exportButton {
+  transform: scale(0.85);
+  margin-left: 12px;
+}
+
+.exportButton:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+/* Time Range Toggle Styles (legacy) */
+.timeRangeToggle {
   display: flex;
-  height: 250px;
-  align-items: flex-end;
-  width: 100%;
   justify-content: center;
-  gap: 4px;
+  align-items: center;
+  margin: 10px 0;
 }
 
-.incomeBar, .expenseBar {
-  width: calc(50% - 2px);
-  transition: height 0.3s ease;
-  position: relative;
-  border-radius: 4px 4px 0 0;
-}
-
-.incomeBar {
-  background-color: #4caf50;
-}
-
-.expenseBar {
-  background-color: #f44336;
-}
-
-.barTooltip {
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: rgba(0, 0, 0, 0.7);
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  white-space: nowrap;
-  opacity: 0;
-  transition: opacity 0.2s;
-  pointer-events: none;
-}
-
-.incomeBar:hover .barTooltip, 
-.expenseBar:hover .barTooltip {
-  opacity: 1;
+.timeRangeButton {
+  padding: 4px;
 }
 
 /* Summary Section Styles */
@@ -155,6 +115,7 @@
   margin-bottom: 10px;
   justify-content: space-between;
   padding: 0 5px;
+  margin-top: 5px;
 }
 
 .summaryItem {
@@ -163,9 +124,17 @@
   align-items: flex-start;
   padding: 10px;
   border-radius: 8px;
-  background-color: var(--summary-bg);
+  background-color: rgba(0, 0, 0, 0.03);
   flex: 1;
   min-width: 120px;
+  margin-right: 8px;
+  padding-left: 12px;
+  padding-right: 12px;
+  align-items: center;
+}
+
+.summaryItem:last-child {
+  margin-right: 0;
 }
 
 .summaryLabel {
@@ -244,4 +213,18 @@
 .actionButtons {
   display: flex;
   gap: 8px;
+}
+
+/* Main chart content container - ensures vertical centering */
+.chartContentContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Chart content wrapper */
+.chartContentWrapper {
+  display: flex;
+  flex-direction: column;
 } 
