@@ -17,8 +17,10 @@ public class SharedWalletDto {
     private String walletName;
     private Long ownerId;
     private String ownerUsername;
+    private String ownerProfilePictureUrl;
     private Long sharedWithId;
     private String sharedWithUsername;
+    private String sharedWithProfilePictureUrl;
     private boolean accepted;
     private LocalDateTime createdAt;
 } 

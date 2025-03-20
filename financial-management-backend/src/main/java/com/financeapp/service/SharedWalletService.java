@@ -23,16 +23,19 @@ public class SharedWalletService {
     private final WalletRepository walletRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
+    private final UserProfileService userProfileService;
 
     @Autowired
     public SharedWalletService(SharedWalletRepository sharedWalletRepository, 
                                WalletRepository walletRepository, 
                                UserRepository userRepository,
-                               NotificationService notificationService) {
+                               NotificationService notificationService,
+                               UserProfileService userProfileService) {
         this.sharedWalletRepository = sharedWalletRepository;
         this.walletRepository = walletRepository;
         this.userRepository = userRepository;
         this.notificationService = notificationService;
+        this.userProfileService = userProfileService;
     }
 
     /**
@@ -223,14 +226,29 @@ public class SharedWalletService {
      * Map SharedWallet entity to SharedWalletDto
      */
     private SharedWalletDto mapToDto(SharedWallet sharedWallet) {
+        String ownerProfilePictureUrl = null;
+        String sharedWithProfilePictureUrl = null;
+        try {
+            ownerProfilePictureUrl = userProfileService.getUserProfileByUsername(sharedWallet.getOwner().getUsername()).getProfilePictureUrl();
+        } catch (Exception e) {
+            // leave as null if not available
+        }
+        try {
+            sharedWithProfilePictureUrl = userProfileService.getUserProfileByUsername(sharedWallet.getSharedWith().getUsername()).getProfilePictureUrl();
+        } catch (Exception e) {
+            // leave as null if not available
+        }
+
         return SharedWalletDto.builder()
                 .id(sharedWallet.getId())
                 .walletId(sharedWallet.getWallet().getId())
                 .walletName(sharedWallet.getWallet().getAccountName())
                 .ownerId(sharedWallet.getOwner().getId())
                 .ownerUsername(sharedWallet.getOwner().getUsername())
+                .ownerProfilePictureUrl(ownerProfilePictureUrl)
                 .sharedWithId(sharedWallet.getSharedWith().getId())
                 .sharedWithUsername(sharedWallet.getSharedWith().getUsername())
+                .sharedWithProfilePictureUrl(sharedWithProfilePictureUrl)
                 .accepted(sharedWallet.isAccepted())
                 .createdAt(sharedWallet.getCreatedAt())
                 .build();
