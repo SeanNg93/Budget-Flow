@@ -521,19 +521,20 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
               size="small"
               sx={{ 
                 mb: 0.5,
-                '& .MuiInputBase-root': { height: '40px' }
+                '& .MuiInputBase-root': { height: '36px' },
+                '& .MuiSelect-select': { fontSize: '0.8rem' }
               }}
               renderValue={(selected) => {
                 if (!selected) {
-                  return <Typography sx={{ color: 'text.secondary' }}>Select a wallet</Typography>;
+                  return <Typography sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>Select a wallet</Typography>;
                 }
                 const account = accounts.find(a => a.id === selected);
-                return account ? account.accountName : '';
+                return <Typography sx={{ fontSize: '0.8rem' }}>{account ? account.accountName : ''}</Typography>;
               }}
             >
               <MenuItem value="" disabled>Select a wallet</MenuItem>
               {accounts.map((account) => (
-                <MenuItem key={account.id} value={account.id}>
+                <MenuItem key={account.id} value={account.id} sx={{ fontSize: '0.8rem' }}>
                   {account.accountName}
                 </MenuItem>
               ))}
@@ -588,23 +589,24 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
               size="small"
               sx={{ 
                 mb: 0.5,
-                '& .MuiInputBase-root': { height: '40px' }
+                '& .MuiInputBase-root': { height: '36px' },
+                '& .MuiSelect-select': { fontSize: '0.8rem' }
               }}
               renderValue={(selected) => {
                 if (!selected) {
-                  return <em>Select a category</em>;
+                  return <Typography sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>Select a category</Typography>;
                 }
                 const category = categories.find(c => c.id === selected);
-                return category ? category.categoryName : '';
+                return <Typography sx={{ fontSize: '0.8rem' }}>{category ? category.categoryName : ''}</Typography>;
               }}
             >
               <MenuItem value="" disabled>
-                <em>Select a category</em>
+                <Typography sx={{ fontSize: '0.8rem' }}>Select a category</Typography>
               </MenuItem>
               {categories
                 .filter(category => category.type === formData.transactionType)
                 .map((category) => (
-                <MenuItem key={category.id} value={category.id}>
+                <MenuItem key={category.id} value={category.id} sx={{ fontSize: '0.8rem' }}>
                   {category.categoryName}
                 </MenuItem>
               ))}
@@ -635,7 +637,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
                 disabled={loading}
                 size="small"
                 className={`${styles.inputField} ${styles.amountField}`}
-                sx={{ '& .MuiInputBase-root': { height: '40px' } }}
+                sx={{ '& .MuiInputBase-root': { height: '36px' } }}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">$</InputAdornment>
@@ -657,6 +659,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
                 value={formData.transactionDate}
                 onChange={handleDateChange}
                 disabled={loading}
+                format="dd/MM/yyyy"
                 slotProps={{
                   textField: {
                     error: !!errors.transactionDate,
@@ -664,7 +667,10 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
                     className: styles.dateField,
                     fullWidth: true,
                     size: "small",
-                    sx: { '& .MuiInputBase-root': { height: '40px' } }
+                    sx: { 
+                      '& .MuiInputBase-root': { height: '36px' },
+                      '& .MuiInputBase-input': { fontSize: '0.8rem' }
+                    }
                   }
                 }}
               />
@@ -712,12 +718,12 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
           disabled={loading || submitting}
         >
           <ToggleButton value="EXPENSE" aria-label="expense" className={styles.expenseToggle}>
-            <ArrowUpwardIcon fontSize="small" />
-            <span style={{ marginLeft: '4px' }}>Expense</span>
+            <ArrowUpwardIcon fontSize="small" sx={{ fontSize: '0.9rem' }} />
+            <span style={{ marginLeft: '3px' }}>Expense</span>
           </ToggleButton>
           <ToggleButton value="INCOME" aria-label="income" className={styles.incomeToggle}>
-            <ArrowDownwardIcon fontSize="small" />
-            <span style={{ marginLeft: '4px' }}>Income</span>
+            <ArrowDownwardIcon fontSize="small" sx={{ fontSize: '0.9rem' }} />
+            <span style={{ marginLeft: '3px' }}>Income</span>
           </ToggleButton>
         </ToggleButtonGroup>
 
@@ -733,13 +739,13 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
           )}
           <Button 
             variant="contained" 
-            color="primary" 
+            color={formData.transactionType === 'EXPENSE' ? 'error' : 'success'}
             onClick={handleSubmit}
             disabled={submitting || loading}
-            startIcon={submitting ? <CircularProgress size={20} /> : null}
+            startIcon={submitting ? <CircularProgress size={18} /> : null}
             className={styles.saveTransactionButton}
           >
-            {submitting ? 'Saving...' : formData.transactionType === 'EXPENSE' ? 'Save Expense Transaction' : 'Save Income Transaction'}
+            {submitting ? 'Saving...' : formData.transactionType === 'EXPENSE' ? 'Save Expense' : 'Save Income'}
           </Button>
         </Box>
       </Box>
@@ -934,12 +940,12 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
       <DialogTitle className={styles.dialogTitle}>
         {formData.transactionType === 'EXPENSE' ? 
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <ArrowUpwardIcon sx={{ mr: 1, color: '#ff3b30', fontSize: '1.3rem' }} />
-            {initialData ? 'Edit Expense' : 'Add Expense'}
+            <ArrowUpwardIcon sx={{ mr: 0.8, color: '#ff3b30', fontSize: '1.1rem' }} />
+            {initialData ? 'Edit Expense' : 'Add Transaction'}
           </Box> : 
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <ArrowDownwardIcon sx={{ mr: 1, color: '#34c759', fontSize: '1.3rem' }} />
-            {initialData ? 'Edit Income' : 'Add Income'}
+            <ArrowDownwardIcon sx={{ mr: 0.8, color: '#34c759', fontSize: '1.1rem' }} />
+            {initialData ? 'Edit Income' : 'Add Transaction'}
           </Box>
         }
       </DialogTitle>

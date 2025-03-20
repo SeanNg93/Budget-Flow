@@ -6,12 +6,12 @@
   padding: 0 4px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .formControl {
   width: 100%;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 /* Labels */
@@ -19,44 +19,44 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
 
 .labelText {
   font-weight: 600;
   color: rgba(0, 0, 0, 0.7);
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   display: flex;
   align-items: center;
 }
 
 .labelIcon {
-  margin-right: 6px;
-  font-size: 1rem;
+  margin-right: 5px;
+  font-size: 0.9rem;
   color: #007aff;
 }
 
 /* Wallet Balance Display */
 .walletBalance {
-  margin-left: 8px;
+  margin-left: 6px;
   color: rgba(0, 0, 0, 0.6);
   font-weight: normal;
   display: inline-flex;
   align-items: center;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
 }
 
 /* Action Buttons */
 .actionButtonsContainer {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 1px;
 }
 
 .addIconButton,
 .editButton,
 .deleteButton {
-  padding: 4px;
+  padding: 3px;
   border-radius: 4px;
   transition: all 0.2s ease;
   margin: 0;
@@ -72,7 +72,7 @@
 .addIconButton svg,
 .editButton svg,
 .deleteButton svg {
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
 
 .addIconButton,
@@ -89,7 +89,7 @@
 .selectField {
   border-radius: 8px;
   background-color: #f5f5f7;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   transition: all 0.2s ease;
 }
 
@@ -106,7 +106,26 @@
 /* Ensure MUI input base height */
 .selectField .MuiInputBase-root,
 .inputField .MuiInputBase-root {
-  height: 40px;
+  height: 36px !important;
+}
+
+/* Dropdown menu text size */
+.selectField .MuiSelect-select {
+  font-size: 0.8rem;
+}
+
+/* Menu Items */
+.MuiMenuItem-root {
+  font-size: 0.8rem !important;
+}
+
+/* Make sure the font size is applied to menu items globally */
+:global(.MuiMenuItem-root) {
+  font-size: 0.8rem !important;
+}
+
+:global(.MuiListItemText-primary) {
+  font-size: 0.8rem !important;
 }
 
 /* Specific Field Adjustments */
@@ -115,54 +134,69 @@
 }
 
 .amountField input {
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   color: #007aff;
 }
 
 .descriptionField textarea {
-  min-height: 60px;
-  font-size: 0.9rem;
+  min-height: 50px;
+  font-size: 0.85rem;
 }
 
 .dateField {
   width: 100%;
   background-color: #f5f5f7;
   border-radius: 8px;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+}
+
+.dateField .MuiInputBase-root {
+  height: 36px !important;
+}
+
+/* Date field specific styles */
+.dateField input {
+  font-size: 0.8rem !important;
+  padding: 8px !important;
 }
 
 /* Divider */
 .divider {
   background-color: rgba(0, 0, 0, 0.06);
-  margin: 12px 0;
+  margin: 10px 0;
   height: 1px;
 }
 
 /* Transaction Type Toggle */
 .typeToggle {
-  border-radius: 8px;
+  border-radius: 6px;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  transform: scale(0.98);
+  transform-origin: left center;
 }
 
 .typeToggle .MuiToggleButton-root {
   border: none;
-  padding: 6px 12px;
-  font-size: 0.85rem;
+  padding: 6px 14px;
+  font-size: 0.82rem;
   font-weight: 600;
   text-transform: none;
   min-width: 100px;
   transition: all 0.2s ease;
+  height: 36px;
 }
 
 .expenseToggle {
   color: #ff3b30;
+  border-right: 1px solid rgba(0, 0, 0, 0.05) !important;
 }
 
 .expenseToggle.Mui-selected {
-  background-color: rgba(255, 59, 48, 0.1) !important;
+  background-color: rgba(255, 59, 48, 0.12) !important;
   color: #ff3b30 !important;
+  font-weight: 700;
 }
 
 .incomeToggle {
@@ -170,64 +204,112 @@
 }
 
 .incomeToggle.Mui-selected {
-  background-color: rgba(52, 199, 89, 0.1) !important;
+  background-color: rgba(52, 199, 89, 0.12) !important;
   color: #34c759 !important;
+  font-weight: 700;
 }
 
 /* Dialog Styles */
 .dialogPaper {
   border-radius: 16px !important;
-  box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.15) !important;
+  box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.15) !important;
   overflow: hidden;
+  max-width: 95%;
 }
 
 .dialogTitle {
   font-weight: 700;
-  padding: 16px 20px 10px;
-  font-size: 1.2rem;
+  padding: 14px 18px 8px;
+  font-size: 1.1rem;
   background-color: #ffffff;
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .dialogContent {
-  padding: 16px 20px;
+  padding: 14px 18px;
   background-color: #ffffff;
 }
 
 .dialogActions {
-  padding: 10px 20px 16px;
+  padding: 8px 18px 14px;
   background-color: #ffffff;
 }
 
 /* Buttons */
 .cancelButton {
-  margin-right: 10px;
+  margin-right: 8px;
   color: #666;
   text-transform: none;
+  font-size: 0.8rem;
+  padding: 5px 12px;
+  height: 36px;
+  min-width: 80px;
 }
 
 .saveTransactionButton {
   background-color: #007aff;
-  color: white;
-  border-radius: 10px;
-  padding: 8px 16px;
+  color: white !important;
+  border-radius: 8px;
+  padding: 6px 16px;
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   text-transform: none;
   box-shadow: none;
   transition: all 0.2s ease;
   white-space: nowrap;
+  height: 36px;
+  transform: scale(0.98);
+  transform-origin: right center;
+  min-width: 110px;
 }
 
 .saveTransactionButton:hover {
   background-color: #0062cc;
-  transform: scale(1.02);
-  box-shadow: 0 2px 6px rgba(0, 98, 204, 0.3);
+  transform: scale(0.97);
+  box-shadow: 0 2px 4px rgba(0, 98, 204, 0.3);
+}
+
+/* Error button color override */
+.saveTransactionButton.MuiButton-containedError {
+  background-color: #ff3b30;
+  color: white !important;
+}
+
+.saveTransactionButton.MuiButton-containedError:hover {
+  background-color: #e0352b;
+  box-shadow: 0 2px 4px rgba(224, 53, 43, 0.3);
+  color: white !important;
+}
+
+/* Success button color override (for Income) */
+.saveTransactionButton.MuiButton-containedSuccess {
+  background-color: #34c759;
+  color: white !important;
+}
+
+.saveTransactionButton.MuiButton-containedSuccess:hover {
+  background-color: #2eb350;
+  box-shadow: 0 2px 4px rgba(46, 179, 80, 0.3);
+  color: white !important;
 }
 
 /* Additional dialogs' button styles */
 .dialogActions button {
-  border-radius: 10px;
+  border-radius: 8px;
   text-transform: none;
   font-weight: 500;
+  font-size: 0.8rem;
+}
+
+/* Add styles for wrapping the long "Save Transaction" button text */
+@media (max-width: 480px) {
+  .saveTransactionButton {
+    max-width: 140px;
+    white-space: normal;
+    font-size: 0.7rem;
+    line-height: 1.1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 }

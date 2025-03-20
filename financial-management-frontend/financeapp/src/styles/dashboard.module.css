@@ -266,7 +266,7 @@
 
 .cardTitle {
   font-weight: 500 !important;
-  font-size: calc(1.1rem * var(--scale-factor)) !important;
+  font-size: calc(1rem * var(--scale-factor)) !important;
   color: #1f1f1f;
 }
 
