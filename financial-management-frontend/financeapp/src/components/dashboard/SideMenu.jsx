@@ -20,6 +20,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import LogoutIcon from '@mui/icons-material/Logout';
 import Avatar from '@mui/material/Avatar';
 import axios from 'axios';
+import { useUser } from '../../context/UserContext';
 
 const API_BASE_URL = "http://localhost:8080";
 const DEFAULT_AVATAR = "/default-avatar.svg";
@@ -54,45 +55,10 @@ const SideMenu = ({ open, handleDrawerClose, setProfileDialogOpen }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-  const [profilePicture, setProfilePicture] = useState(null);
-  const [fullName, setFullName] = useState(null);
   
-  useEffect(() => {
-    fetchUserProfile();
-  }, []);
+  // Use context for user profile data
+  const { profileData } = useUser();
 
-  const fetchUserProfile = async () => {
-    try {
-      const token = localStorage.getItem('userToken');
-      if (!token || !userData.id) return;
-
-      const response = await axios.get(`${API_BASE_URL}/api/user/profile/${userData.id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (response.data) {
-        // Set full name
-        if (response.data.fullName) {
-          setFullName(response.data.fullName);
-        }
-        
-        // Set profile picture
-        if (response.data.profilePictureUrl) {
-          // Make sure the URL is absolute
-          let profilePicUrl = response.data.profilePictureUrl;
-          if (!profilePicUrl.startsWith('http')) {
-            profilePicUrl = `${API_BASE_URL}${profilePicUrl}`;
-          }
-          setProfilePicture(profilePicUrl);
-        }
-      }
-    } catch (err) {
-      console.error("Error fetching profile picture:", err);
-    }
-  };
-  
   const handleLogout = () => {
     localStorage.removeItem('userToken');
     localStorage.removeItem('userData');
@@ -136,21 +102,21 @@ const SideMenu = ({ open, handleDrawerClose, setProfileDialogOpen }) => {
       <DrawerHeader>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <Avatar 
-            src={profilePicture || DEFAULT_AVATAR}
-            alt={fullName || userData.username || 'User'}
+            src={profileData.profilePicture || DEFAULT_AVATAR}
+            alt={profileData.fullName || userData.username || 'User'}
             sx={{ 
               width: 40, 
               height: 40, 
-              bgcolor: !profilePicture ? 'primary.main' : 'transparent',
+              bgcolor: !profileData.profilePicture ? 'primary.main' : 'transparent',
               mr: 2,
               fontWeight: 'bold'
             }}
           >
-            {!profilePicture && (fullName || userData.username) ? (fullName || userData.username).charAt(0).toUpperCase() : null}
+            {!profileData.profilePicture && (profileData.fullName || userData.username) ? (profileData.fullName || userData.username).charAt(0).toUpperCase() : null}
           </Avatar>
           <Box>
             <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-              {fullName || userData.username || 'User'}
+              {profileData.fullName || userData.username || 'User'}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               {userData.email || 'user@example.com'}

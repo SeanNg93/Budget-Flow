@@ -24,6 +24,7 @@ import BadgeIcon from '@mui/icons-material/Badge';
 import InfoIcon from '@mui/icons-material/Info';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { useUser } from '../../context/UserContext';
 
 import '../../styles/ProfileDialog.css';
 
@@ -37,6 +38,9 @@ export default function ProfileDialog({ open, onClose, handleClose, onProfileUpd
   const [avatarPreview, setAvatarPreview] = useState(DEFAULT_AVATAR);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // Get the user context
+  const { updateProfilePicture, updateFullName, updateProfile } = useUser();
 
   useEffect(() => {
     if (open) {
@@ -97,6 +101,9 @@ export default function ProfileDialog({ open, onClose, handleClose, onProfileUpd
       setProfile(profileData);
       setEditedProfile(profileData);
       setAvatarPreview(profileData.profilePictureUrl || DEFAULT_AVATAR);
+      
+      // Update the context with the profile data
+      updateProfile(profileData);
     } catch (err) {
       setError(`Failed to load profile data: ${err.message}`);
     } finally {
@@ -174,6 +181,9 @@ export default function ProfileDialog({ open, onClose, handleClose, onProfileUpd
           ? `${updatedProfile.profilePictureUrl}?t=${timestamp}`
           : `${API_BASE_URL}${updatedProfile.profilePictureUrl}?t=${timestamp}`;
         setAvatarPreview(profilePicUrl);
+        
+        // Update the Context with the new profile picture URL
+        updateProfilePicture(updatedProfile.profilePictureUrl);
       }
       
       toast.success("Profile picture updated successfully!");
@@ -218,6 +228,15 @@ export default function ProfileDialog({ open, onClose, handleClose, onProfileUpd
       setProfile(updatedProfile);
       setEditedProfile(updatedProfile);
       setIsEditing(false);
+      
+      // Update the Context with the updated profile
+      updateProfile(updatedProfile);
+      
+      // Also update the full name specifically
+      if (updatedProfile.fullName) {
+        updateFullName(updatedProfile.fullName);
+      }
+      
       toast.success("Profile updated successfully!");
     } catch (err) {
       toast.error("Failed to update profile. Please try again.");
