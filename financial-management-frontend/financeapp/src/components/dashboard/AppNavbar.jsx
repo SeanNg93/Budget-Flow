@@ -35,6 +35,7 @@ import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import styles from '../../styles/appNavbar.module.css';
+import { useUser } from '../../context/UserContext';
 
 const API_BASE_URL = "http://localhost:8080";
 const DEFAULT_AVATAR = "/default-avatar.svg";
@@ -47,8 +48,6 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = useState(null);
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-  const [profilePicture, setProfilePicture] = useState(null);
-  const [fullName, setFullName] = useState(null);
   const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
@@ -58,6 +57,9 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
   const [transactions, setTransactions] = useState([]);
   const [searchFocused, setSearchFocused] = useState(false);
   const searchRef = useRef(null);
+  
+  // Use our context to get the profile data
+  const { profileData } = useUser();
 
   const searchActions = [
     { 
@@ -105,41 +107,8 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
   ];
 
   useEffect(() => {
-    fetchUserProfile();
     fetchSearchData();
   }, []);
-
-  const fetchUserProfile = async () => {
-    try {
-      const token = localStorage.getItem('userToken');
-      if (!token || !userData.id) return;
-
-      const response = await axios.get(`${API_BASE_URL}/api/user/profile/${userData.id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (response.data) {
-        // Set full name
-        if (response.data.fullName) {
-          setFullName(response.data.fullName);
-        }
-        
-        // Set profile picture
-        if (response.data.profilePictureUrl) {
-          // Make sure the URL is absolute
-          let profilePicUrl = response.data.profilePictureUrl;
-          if (!profilePicUrl.startsWith('http')) {
-            profilePicUrl = `${API_BASE_URL}${profilePicUrl}`;
-          }
-          setProfilePicture(profilePicUrl);
-        }
-      }
-    } catch (err) {
-      console.error("Error fetching profile picture:", err);
-    }
-  };
 
   const fetchSearchData = async () => {
     try {
@@ -310,7 +279,7 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
     >
       <Box sx={{ px: 2, py: 1 }}>
         <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-          {fullName || userData.username || 'User'}
+          {profileData.fullName || userData.username || 'User'}
         </Typography>
         <Typography variant="body2" color="text.secondary">
           {userData.email || 'user@example.com'}
@@ -368,17 +337,17 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
           color="inherit"
         >
           <Avatar 
-            src={profilePicture || DEFAULT_AVATAR}
-            alt={fullName || userData.username || 'User'}
+            src={profileData.profilePicture || DEFAULT_AVATAR}
+            alt={profileData.fullName || userData.username || 'User'}
             sx={{ 
               width: 32, 
               height: 32, 
-              bgcolor: !profilePicture ? 'primary.main' : 'transparent',
+              bgcolor: !profileData.profilePicture ? 'primary.main' : 'transparent',
               fontWeight: 'bold',
               fontSize: '0.9rem'
             }}
           >
-            {!profilePicture && (fullName || userData.username) ? (fullName || userData.username).charAt(0).toUpperCase() : null}
+            {!profileData.profilePicture && (profileData.fullName || userData.username) ? (profileData.fullName || userData.username).charAt(0).toUpperCase() : null}
           </Avatar>
         </IconButton>
         <Typography variant="body1" sx={{ ml: 1 }}>Profile</Typography>
@@ -501,14 +470,14 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
               className={styles.profileButton}
             >
               <Avatar 
-                src={profilePicture || DEFAULT_AVATAR}
-                alt={fullName || userData.username || 'User'}
+                src={profileData.profilePicture || DEFAULT_AVATAR}
+                alt={profileData.fullName || userData.username || 'User'}
                 className={styles.avatar}
                 sx={{ 
-                  bgcolor: !profilePicture ? 'primary.main' : 'transparent',
+                  bgcolor: !profileData.profilePicture ? 'primary.main' : 'transparent',
                 }}
               >
-                {!profilePicture && (fullName || userData.username) ? (fullName || userData.username).charAt(0).toUpperCase() : null}
+                {!profileData.profilePicture && (profileData.fullName || userData.username) ? (profileData.fullName || userData.username).charAt(0).toUpperCase() : null}
               </Avatar>
               <KeyboardArrowDownIcon sx={{ ml: 0.5, color: 'text.secondary', fontSize: 20 }} />
             </Box>
