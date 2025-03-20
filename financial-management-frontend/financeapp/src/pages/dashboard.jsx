@@ -60,6 +60,12 @@ import WalletOverview from '../components/dashboard/WalletOverview';
 import ProfileDialog from '../components/user/ProfileDialog';
 import UserTransferForm from '../components/dashboard/UserTransferForm';
 import ShareWalletForm from '../components/dashboard/ShareWalletForm';
+import FinanceChart from '../components/dashboard/FinanceChart';
+import SimpleFinanceChart from '../components/dashboard/SimpleFinanceChart';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
+import ToggleButton from '@mui/material/ToggleButton';
+import BarChartIcon from '@mui/icons-material/BarChart';
+import ShowChartIcon from '@mui/icons-material/ShowChart';
 
 // Import theme
 import AppTheme from '../shared-theme/AppTheme';
@@ -150,6 +156,9 @@ export default function Dashboard() {
 
   // New state for the unified finance action panel
   const [financeActionPanelOpen, setFinanceActionPanelOpen] = useState(false);
+
+  // New state for chart type
+  const [chartType, setChartType] = useState('simple'); // 'advanced' or 'simple'
 
   useEffect(() => {
     checkAuth();
@@ -527,6 +536,12 @@ export default function Dashboard() {
   // Simplified one-liner function
   const handleProfileUpdated = () => { fetchUserProfile(); };
 
+  const handleChartTypeChange = (event, newChartType) => {
+    if (newChartType !== null) {
+      setChartType(newChartType);
+    }
+  };
+
   if (loading) {
     return (
       <Box className={styles.loadingContainer}>
@@ -575,7 +590,7 @@ export default function Dashboard() {
                     </Paper>
                   </Grid>
                   
-                  {/* Summary Cards */}
+                  {/* Summary Cards Row */}
                   <Grid item xs={12} md={3}>
                     <Card className={`${styles.summaryCard} ${styles.balanceCard}`}>
                       <CardHeader 
@@ -747,12 +762,31 @@ export default function Dashboard() {
                     </Card>
                   </Grid>
                   
-                  {/* Wallet Overview */}
+                  {/* Wallet Overview and Chart Side by Side */}
                   <Grid item xs={12}>
-                    <WalletOverview 
-                      onManageWallets={handleManageWallets} 
-                      externalWallets={wallets}
-                    />
+                    <Grid container spacing={2.4}>
+                      {/* Wallet Overview */}
+                      <Grid item xs={12} md={6}>
+                        <WalletOverview 
+                          onManageWallets={handleManageWallets} 
+                          externalWallets={wallets}
+                        />
+                      </Grid>
+                      
+                      {/* Financial Chart */}
+                      <Grid item xs={12} md={6}>
+                        {chartType === 'advanced' ? 
+                          <FinanceChart 
+                            chartType={chartType} 
+                            onChartTypeChange={handleChartTypeChange} 
+                          /> : 
+                          <SimpleFinanceChart 
+                            chartType={chartType} 
+                            onChartTypeChange={handleChartTypeChange} 
+                          />
+                        }
+                      </Grid>
+                    </Grid>
                   </Grid>
                   
                   {/* Recent Transactions */}
