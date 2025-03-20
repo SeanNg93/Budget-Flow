@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Button,
   Dialog,
@@ -18,12 +18,20 @@ import {
   ListItemText,
   IconButton,
   Divider,
+  Fade,
+  Slide,
+  Zoom
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ShareIcon from '@mui/icons-material/Share';
 import SearchIcon from '@mui/icons-material/Search';
 import FinanceService from '../../services/FinanceService';
 import styles from '../../styles/shareWalletForm.module.css';
+
+// Create a SlideTransition component with forwardRef
+const SlideTransition = React.forwardRef(function Transition(props, ref) {
+  return <Slide direction="up" ref={ref} {...props} />;
+});
 
 const ShareWalletForm = ({ open, handleClose, wallet, onWalletShared }) => {
   const [loading, setLoading] = useState(false);
@@ -33,6 +41,19 @@ const ShareWalletForm = ({ open, handleClose, wallet, onWalletShared }) => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [sharing, setSharing] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+
+  // Add refs for transitions
+  const dialogRef = useRef(null);
+  const errorAlertRef = useRef(null);
+  const successAlertRef = useRef(null);
+  const searchResultsRef = useRef(null);
+
+  useEffect(() => {
+    if (open) {
+      setIsClosing(false);
+    }
+  }, [open]);
 
   useEffect(() => {
     if (searchQuery.length >= 2) {
@@ -41,6 +62,14 @@ const ShareWalletForm = ({ open, handleClose, wallet, onWalletShared }) => {
       setSearchResults([]);
     }
   }, [searchQuery]);
+
+  // Modified close handler function with animation support
+  const closeWithAnimation = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      handleClose();
+    }, 400); // Match the transition timeout
+  };
 
   const searchUsers = async (query) => {
     setLoading(true);
@@ -87,7 +116,7 @@ const ShareWalletForm = ({ open, handleClose, wallet, onWalletShared }) => {
           onWalletShared();
         }
         
-        handleClose();
+        closeWithAnimation();
       }, 2000);
     } catch (err) {
       console.error('Error sharing wallet:', err);
@@ -106,18 +135,26 @@ const ShareWalletForm = ({ open, handleClose, wallet, onWalletShared }) => {
 
   return (
     <Dialog 
-      open={open} 
-      onClose={handleClose}
+      open={open && !isClosing} 
+      onClose={closeWithAnimation}
       maxWidth="sm"
       fullWidth
       classes={{ paper: styles.dialogPaper }}
+      TransitionComponent={SlideTransition}
+      TransitionProps={{
+        nodeRef: dialogRef,
+        mountOnEnter: true,
+        unmountOnExit: true,
+        timeout: 400
+      }}
+      ref={dialogRef}
     >
       <DialogTitle className={styles.dialogTitle}>
         <Box className={styles.headerContainer}>
           <Typography variant="h6" className={styles.title}>
             Share Wallet: {wallet?.accountName}
           </Typography>
-          <IconButton aria-label="close" onClick={handleClose} size="small">
+          <IconButton aria-label="close" onClick={closeWithAnimation} size="small">
             <CloseIcon />
           </IconButton>
         </Box>
@@ -125,22 +162,28 @@ const ShareWalletForm = ({ open, handleClose, wallet, onWalletShared }) => {
       
       <DialogContent className={styles.dialogContent}>
         {error && (
-          <Alert 
-            severity="error" 
-            className={styles.alert}
-            onClose={() => setError('')}
-          >
-            {error}
-          </Alert>
+          <Fade in={!!error} timeout={300} nodeRef={errorAlertRef}>
+            <Alert 
+              severity="error" 
+              className={styles.alert}
+              onClose={() => setError('')}
+              ref={errorAlertRef}
+            >
+              {error}
+            </Alert>
+          </Fade>
         )}
         
         {success && (
-          <Alert 
-            severity="success" 
-            className={styles.alert}
-          >
-            {success}
-          </Alert>
+          <Fade in={!!success} timeout={300} nodeRef={successAlertRef}>
+            <Alert 
+              severity="success" 
+              className={styles.alert}
+              ref={successAlertRef}
+            >
+              {success}
+            </Alert>
+          </Fade>
         )}
         
         <Box className={styles.formContainer}>
@@ -225,7 +268,7 @@ const ShareWalletForm = ({ open, handleClose, wallet, onWalletShared }) => {
       
       <DialogActions className={styles.dialogActions}>
         <Button 
-          onClick={handleClose} 
+          onClick={closeWithAnimation} 
           className={styles.cancelButton}
           disabled={sharing}
         >

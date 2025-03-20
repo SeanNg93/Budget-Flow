@@ -713,11 +713,12 @@
   color: white;
   font-weight: 500;
   text-transform: none;
-  padding: calc(6px * var(--scale-factor)) calc(15px * var(--scale-factor));
+  padding: calc(6px * var(--scale-factor)) calc(12px * var(--scale-factor));
   border-radius: calc(7px * var(--scale-factor));
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   box-shadow: 0 2px 7px rgba(0, 122, 255, 0.2), 0 1px 3px rgba(0, 0, 0, 0.05);
   font-size: calc(0.95rem * var(--scale-factor));
+  min-width: auto;
 }
 
 .manageWalletsButton:hover {

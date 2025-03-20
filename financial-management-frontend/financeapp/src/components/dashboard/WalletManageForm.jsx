@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Button, 
   Dialog, 
@@ -25,6 +25,9 @@ import {
   InputAdornment,
   Menu,
   Tooltip,
+  Fade,
+  Slide,
+  Zoom
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -44,6 +47,16 @@ import WalletForm from './WalletForm';
 import UserTransferForm from './UserTransferForm';
 import ShareWalletForm from './ShareWalletForm';
 import styles from '../../styles/walletManage.module.css';
+
+// Create transition components with forwardRef
+const SlideTransition = React.forwardRef(function Transition(props, ref) {
+  return <Slide direction="up" ref={ref} {...props} />;
+});
+
+// Create a FadeTransition component with forwardRef
+const FadeTransition = React.forwardRef(function Transition(props, ref) {
+  return <Fade ref={ref} {...props} />;
+});
 
 const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false, initialOpenTransfer = false }) => {
   const [wallets, setWallets] = useState([]);
@@ -87,6 +100,14 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
   // Add state for share wallet dialog
   const [shareWalletDialogOpen, setShareWalletDialogOpen] = useState(false);
   const [walletToShare, setWalletToShare] = useState(null);
+
+  // Add refs for transitions
+  const newWalletDialogRef = useRef(null);
+  const transferDialogRef = useRef(null);
+  const deleteDialogRef = useRef(null);
+  const errorAlertRef = useRef(null);
+  const transferErrorRef = useRef(null);
+  const dialogRef = useRef(null);
 
   useEffect(() => {
     if (open) {
@@ -749,6 +770,14 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
         PaperProps={{
           className: styles.confirmDialog
         }}
+        TransitionComponent={FadeTransition}
+        TransitionProps={{
+          nodeRef: deleteDialogRef,
+          mountOnEnter: true,
+          unmountOnExit: true,
+          timeout: 400
+        }}
+        ref={deleteDialogRef}
       >
         <DialogTitle className={styles.confirmTitle}>Confirm Deletion</DialogTitle>
         <DialogContent>
@@ -784,6 +813,14 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
         PaperProps={{
           className: styles.walletFormDialog
         }}
+        TransitionComponent={FadeTransition}
+        TransitionProps={{
+          nodeRef: newWalletDialogRef,
+          mountOnEnter: true,
+          unmountOnExit: true,
+          timeout: 400
+        }}
+        ref={newWalletDialogRef}
       >
         <DialogTitle>Add New Wallet</DialogTitle>
         <DialogContent>
@@ -804,13 +841,23 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
         PaperProps={{
           className: styles.transferDialog
         }}
+        TransitionComponent={FadeTransition}
+        TransitionProps={{
+          nodeRef: transferDialogRef,
+          mountOnEnter: true,
+          unmountOnExit: true,
+          timeout: 400
+        }}
+        ref={transferDialogRef}
       >
         <DialogTitle className={styles.transferTitle}>Transfer Money</DialogTitle>
         <DialogContent>
           {transferError && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {transferError}
-            </Alert>
+            <Fade in={!!transferError} timeout={300} nodeRef={transferErrorRef}>
+              <Alert severity="error" sx={{ mb: 2 }} ref={transferErrorRef}>
+                {transferError}
+              </Alert>
+            </Fade>
           )}
           
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -945,12 +992,20 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
   return (
     <Dialog 
       open={open} 
-      onClose={handleClose}
+      onClose={embedded ? null : handleClose}
       maxWidth="sm"
-      fullWidth
       PaperProps={{
-        className: styles.dialogPaper
+        className: styles.dialogPaper,
+        style: { width: '65%', maxWidth: '650px' }
       }}
+      TransitionComponent={FadeTransition}
+      TransitionProps={{
+        nodeRef: dialogRef,
+        mountOnEnter: true,
+        unmountOnExit: true,
+        timeout: 400
+      }}
+      ref={dialogRef}
     >
       <DialogTitle className={styles.dialogTitle}>
         <Box className={styles.headerContainer}>

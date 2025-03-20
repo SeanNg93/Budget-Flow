@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Button, 
   Dialog, 
@@ -22,7 +22,10 @@ import {
   Divider,
   Paper,
   ToggleButtonGroup,
-  ToggleButton
+  ToggleButton,
+  Fade,
+  Slide,
+  Zoom
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers';
 import AddIcon from '@mui/icons-material/Add';
@@ -39,6 +42,11 @@ import FinanceService from '../../services/FinanceService';
 import WalletForm from './WalletForm';
 import CategoryForm from './CategoryForm';
 import styles from '../../styles/transactionForm.module.css';
+
+// Create a SlideTransition component with forwardRef
+const SlideTransition = React.forwardRef(function Transition(props, ref) {
+  return <Slide direction="up" ref={ref} {...props} />;
+});
 
 const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = false, initialData = null }) => {
   const [accounts, setAccounts] = useState([]);
@@ -70,6 +78,16 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
   const [deleteWalletOpen, setDeleteWalletOpen] = useState(false);
   const [deleteWalletId, setDeleteWalletId] = useState(null);
   const [deleteWalletName, setDeleteWalletName] = useState('');
+
+  // Add refs for transitions
+  const dialogRef = useRef(null);
+  const errorAlertRef = useRef(null);
+  const successAlertRef = useRef(null);
+  const categoryFormDialogRef = useRef(null);
+  const editCategoryDialogRef = useRef(null);
+  const deleteCategoryDialogRef = useRef(null);
+  const editWalletDialogRef = useRef(null);
+  const deleteWalletDialogRef = useRef(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -461,7 +479,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
   // Form content that will be used in both embedded and non-embedded modes
   const formContent = (
     <Box className={styles.formContainer}>
-      {error && <Alert severity="error" className={styles.errorAlert}>{error}</Alert>}
+      {error && <Alert severity="error" className={styles.errorAlert} ref={errorAlertRef}>{error}</Alert>}
       
       <Paper elevation={0} sx={{ p: 1.5, borderRadius: '12px', bgcolor: '#f9f9fb', mb: 1.5 }}>
         {/* Wallet and Category Section */}
@@ -756,6 +774,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
         onClose={handleEditCategoryClose}
         maxWidth="xs"
         PaperProps={{ sx: { borderRadius: '16px', boxShadow: '0px 8px 24px rgba(0, 0, 0, 0.15)' } }}
+        ref={editCategoryDialogRef}
       >
         <DialogTitle sx={{ pb: 1, fontWeight: 600 }}>Edit Category</DialogTitle>
         <DialogContent sx={{ pt: 1 }}>
@@ -791,6 +810,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
         onClose={handleDeleteCategoryClose}
         maxWidth="xs"
         PaperProps={{ sx: { borderRadius: '16px', boxShadow: '0px 8px 24px rgba(0, 0, 0, 0.15)' } }}
+        ref={deleteCategoryDialogRef}
       >
         <DialogTitle sx={{ pb: 1, fontWeight: 600 }}>Delete Category</DialogTitle>
         <DialogContent sx={{ pt: 1 }}>
@@ -822,6 +842,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
         onClose={handleEditWalletClose}
         maxWidth="xs"
         PaperProps={{ sx: { borderRadius: '16px', boxShadow: '0px 8px 24px rgba(0, 0, 0, 0.15)' } }}
+        ref={editWalletDialogRef}
       >
         <DialogTitle sx={{ pb: 1, fontWeight: 600 }}>Edit Wallet</DialogTitle>
         <DialogContent sx={{ pt: 1 }}>
@@ -857,6 +878,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
         onClose={handleDeleteWalletClose}
         maxWidth="xs"
         PaperProps={{ sx: { borderRadius: '16px', boxShadow: '0px 8px 24px rgba(0, 0, 0, 0.15)' } }}
+        ref={deleteWalletDialogRef}
       >
         <DialogTitle sx={{ pb: 1, fontWeight: 600 }}>Delete Wallet</DialogTitle>
         <DialogContent sx={{ pt: 1 }}>
@@ -888,6 +910,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
         onClose={() => setAccountFormOpen(false)}
         maxWidth="sm"
         PaperProps={{ sx: { borderRadius: '16px', boxShadow: '0px 8px 24px rgba(0, 0, 0, 0.15)' } }}
+        ref={categoryFormDialogRef}
       >
         <DialogTitle sx={{ pb: 1, fontWeight: 600 }}>Add Wallet</DialogTitle>
         <DialogContent sx={{ pt: 1 }}>
@@ -906,6 +929,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
         onClose={() => setCategoryFormOpen(false)}
         maxWidth="sm"
         PaperProps={{ sx: { borderRadius: '16px', boxShadow: '0px 8px 24px rgba(0, 0, 0, 0.15)' } }}
+        ref={categoryFormDialogRef}
       >
         <DialogTitle sx={{ pb: 1, fontWeight: 600 }}>Add Category</DialogTitle>
         <DialogContent sx={{ pt: 1 }}>
@@ -936,6 +960,14 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
       PaperProps={{
         className: styles.dialogPaper
       }}
+      TransitionComponent={SlideTransition}
+      TransitionProps={{
+        nodeRef: dialogRef,
+        mountOnEnter: true,
+        unmountOnExit: true,
+        timeout: 400
+      }}
+      ref={dialogRef}
     >
       <DialogTitle className={styles.dialogTitle}>
         {formData.transactionType === 'EXPENSE' ? 

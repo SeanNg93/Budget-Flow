@@ -1,21 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   Dialog, 
   DialogContent, 
   DialogTitle,
   Box,
   IconButton,
-  Typography
+  Typography,
+  Fade,
+  Slide,
+  Zoom
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import TransactionForm from './TransactionForm';
 import styles from '../../styles/walletManage.module.css';
+
+// Create a SlideTransition component with forwardRef
+const SlideTransition = React.forwardRef(function Transition(props, ref) {
+  return <Slide direction="up" ref={ref} {...props} />;
+});
 
 const FinanceActionPanel = ({ 
   open, 
   handleClose, 
   onTransactionAdded
 }) => {
+  // Add ref for transition
+  const dialogRef = useRef(null);
+
   const handleTransactionClose = () => {
     if (onTransactionAdded) onTransactionAdded();
     handleClose();
@@ -35,6 +46,14 @@ const FinanceActionPanel = ({
           margin: '16px'
         }
       }}
+      TransitionComponent={SlideTransition}
+      TransitionProps={{
+        nodeRef: dialogRef,
+        mountOnEnter: true,
+        unmountOnExit: true,
+        timeout: 400
+      }}
+      ref={dialogRef}
     >
       <DialogTitle className={styles.dialogTitle} sx={{ py: 1.5 }}>
         <Box className={styles.headerContainer}>

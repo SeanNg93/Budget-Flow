@@ -1,7 +1,7 @@
 /* Main container */
 .profileContainer {
   padding: 2rem 1rem;
-  max-width: 800px;
+  max-width: 700px;
   margin: 0 auto;
 }
 
@@ -9,44 +9,323 @@
 .profileCard {
   border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
   background-color: #ffffff;
   transition: all 0.3s ease;
 }
 
 /* Profile header */
 .profileHeader {
-  padding: 1.5rem;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  padding: 1.25rem 1.5rem;
+  background: #f5f5f7;
   position: relative;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.03);
 }
 
 .profileTitle {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 600;
-  color: #212529;
+  color: #1d1d1f;
   margin: 0;
+  letter-spacing: -0.02em;
 }
 
 .editButton {
-  background-color: #007aff !important;
+  background-color: #0071e3 !important;
   color: white !important;
-  border-radius: 20px !important;
+  border-radius: 18px !important;
   padding: 0.4rem 1.2rem !important;
   font-size: 0.85rem !important;
   font-weight: 500 !important;
   text-transform: none !important;
-  box-shadow: 0 4px 10px rgba(0, 122, 255, 0.25) !important;
+  box-shadow: 0 2px 6px rgba(0, 113, 227, 0.25) !important;
   transition: all 0.2s ease !important;
+  letter-spacing: -0.01em !important;
 }
 
 .editButton:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(0, 122, 255, 0.35) !important;
+  box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3) !important;
+  background-color: #0077ed !important;
+}
+
+/* Compact User section */
+.userSectionCompact {
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+}
+
+.avatarContainer {
+  position: relative;
+  margin-right: 1.25rem;
+}
+
+.avatarCompact {
+  width: 76px !important;
+  height: 76px !important;
+  border: 2px solid #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+}
+
+.uploadButtonRight {
+  position: absolute !important;
+  bottom: 0 !important;
+  right: -10px !important;
+  background-color: #0071e3 !important;
+  color: white !important;
+  width: 32px !important;
+  height: 32px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+  transition: all 0.2s ease !important;
+}
+
+.uploadButtonRight:hover {
+  transform: translateY(-2px);
+  background-color: #0077ed !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2) !important;
+}
+
+.userInfoCompact {
+  flex: 1;
+}
+
+.userNameCompact {
+  font-size: 1.2rem !important;
+  font-weight: 600 !important;
+  color: #1d1d1f !important;
+  margin-bottom: 0.25rem !important;
+  letter-spacing: -0.02em !important;
+}
+
+.userRoleCompact {
+  font-size: 0.85rem !important;
+  color: #86868b !important;
+  display: flex !important;
+  align-items: center !important;
+  letter-spacing: -0.01em !important;
+}
+
+.userRoleIcon {
+  font-size: 0.95rem !important;
+  margin-right: 0.5rem !important;
+  color: #0071e3 !important;
+}
+
+/* Compact Details section */
+.detailsSectionCompact {
+  padding: 1.5rem;
+}
+
+.sectionTitleCompact {
+  font-size: 1.05rem !important;
+  font-weight: 600 !important;
+  color: #1d1d1f !important;
+  margin-bottom: 1.25rem !important;
+  position: relative;
+  padding-bottom: 0.5rem;
+  letter-spacing: -0.01em !important;
+}
+
+.sectionTitleCompact::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 40px;
+  height: 2px;
+  background-color: #0071e3;
+  border-radius: 1px;
+}
+
+.fieldContainerCompact {
+  margin-bottom: 1rem;
+}
+
+.fieldLabel {
+  display: block;
+  color: #86868b;
+  font-weight: 500 !important;
+  margin-bottom: 0.25rem !important;
+  font-size: 0.75rem !important;
+  letter-spacing: -0.01em !important;
+}
+
+.fieldValue {
+  color: #1d1d1f;
+  font-size: 0.9rem !important;
+  font-weight: 450 !important;
+  letter-spacing: -0.01em !important;
+}
+
+.textField {
+  margin-top: 0.25rem !important;
+}
+
+.textField :global(.MuiOutlinedInput-root) {
+  background-color: #f5f5f7;
+  border-radius: 8px;
+}
+
+.textField :global(.MuiOutlinedInput-notchedOutline) {
+  border-color: transparent;
+  transition: all 0.2s;
+}
+
+.textField :global(.Mui-focused .MuiOutlinedInput-notchedOutline) {
+  border-color: #0071e3;
+  border-width: 1px;
+}
+
+.textField input, .textField textarea {
+  font-size: 0.9rem !important;
+  padding: 10px 14px !important;
+  letter-spacing: -0.01em !important;
+}
+
+.textField input[type="date"] {
+  padding: 8px 12px;
+  font-size: 0.9rem;
+}
+
+/* Compact action buttons */
+.actionButtonsCompact {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  background-color: #f5f5f7;
+  border-top: 1px solid rgba(0, 0, 0, 0.03);
+}
+
+.cancelButton {
+  border-radius: 18px !important;
+  padding: 0.4rem 1.2rem !important;
+  font-size: 0.85rem !important;
+  font-weight: 500 !important;
+  text-transform: none !important;
+  border: none !important;
+  color: #6e6e73 !important;
+  transition: all 0.2s ease !important;
+  letter-spacing: -0.01em !important;
+}
+
+.cancelButton:hover {
+  background-color: rgba(0, 0, 0, 0.06) !important;
+  color: #1d1d1f !important;
+}
+
+.saveButton {
+  background-color: #0071e3 !important;
+  color: white !important;
+  border-radius: 18px !important;
+  padding: 0.4rem 1.2rem !important;
+  font-size: 0.85rem !important;
+  font-weight: 500 !important;
+  text-transform: none !important;
+  box-shadow: 0 2px 6px rgba(0, 113, 227, 0.25) !important;
+  transition: all 0.2s ease !important;
+  letter-spacing: -0.01em !important;
+}
+
+.saveButton:hover {
+  background-color: #0077ed !important;
+  box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3) !important;
+  transform: translateY(-2px);
+}
+
+/* Loading container */
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 80vh;
+}
+
+/* Error container */
+.errorContainer {
+  padding: 2rem;
+  text-align: center;
+}
+
+.bioFieldCompact {
+  background-color: #f5f5f7;
+  padding: 0.9rem;
+  border-radius: 8px;
+  min-height: 50px;
+}
+
+.fieldGridCompact {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+}
+
+/* Floating edit button for mobile */
+.floatingEditButton {
+  position: fixed !important;
+  bottom: 2rem !important;
+  right: 2rem !important;
+  width: 56px !important;
+  height: 56px !important;
+  border-radius: 50% !important;
+  background-color: #0071e3 !important;
+  color: white !important;
+  box-shadow: 0 4px 16px rgba(0, 113, 227, 0.4) !important;
+  z-index: 1000 !important;
+  display: none !important;
+  transition: all 0.3s ease !important;
+}
+
+.floatingEditButton:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 6px 20px rgba(0, 113, 227, 0.5) !important;
+  background-color: #0077ed !important;
+}
+
+@media (max-width: 600px) {
+  .fieldGridCompact {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .userSectionCompact {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .avatarContainer {
+    margin-right: 0;
+    margin-bottom: 1.25rem;
+  }
+  
+  .userInfoCompact {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .editButton {
+    display: none !important;
+  }
+  
+  .floatingEditButton {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
+  
+  .sectionTitleCompact::after {
+    left: 50%;
+    transform: translateX(-50%);
+  }
 }
 
 /* Navigation buttons container */
@@ -83,43 +362,6 @@
 .backButtonIcon {
   margin-right: 0.5rem !important;
   font-size: 1.1rem !important;
-}
-
-/* Floating edit button for mobile */
-.floatingEditButton {
-  position: fixed !important;
-  bottom: 2rem !important;
-  right: 2rem !important;
-  width: 56px !important;
-  height: 56px !important;
-  border-radius: 50% !important;
-  background-color: #007aff !important;
-  color: white !important;
-  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.35) !important;
-  z-index: 1000 !important;
-  display: none !important;
-}
-
-.floatingEditButton:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 16px rgba(0, 122, 255, 0.45) !important;
-}
-
-@media (max-width: 768px) {
-  .editButton {
-    display: none !important;
-  }
-  
-  .floatingEditButton {
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-  }
-  
-  .navButtonsContainer {
-    justify-content: center;
-    padding: 1rem;
-  }
 }
 
 /* User section */
