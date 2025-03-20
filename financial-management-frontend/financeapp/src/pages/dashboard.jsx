@@ -76,12 +76,12 @@ import FinanceService from '../services/FinanceService';
 // Define the backend API base URL
 const API_BASE_URL = "http://localhost:8080";
 
-const drawerWidth = 240;
+const drawerWidth = 225;
 
 const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(
   ({ theme, open }) => ({
     flexGrow: 1,
-    padding: theme.spacing(3),
+    padding: theme.spacing(2.8),
     transition: theme.transitions.create('margin', {
       easing: theme.transitions.easing.sharp,
       duration: theme.transitions.duration.leavingScreen,
@@ -106,6 +106,7 @@ const DrawerHeader = styled('div')(({ theme }) => ({
   padding: theme.spacing(0, 1),
   ...theme.mixins.toolbar,
   justifyContent: 'flex-end',
+  minHeight: '48px !important',
 }));
 
 const themeComponents = {
@@ -550,7 +551,7 @@ export default function Dashboard() {
           <Container maxWidth="lg" className={styles.dashboardContainer}>
             <Box className={styles.dashboardBackdrop}>
               <Box className={styles.contentContainer}>
-                <Grid container spacing={3}>
+                <Grid container spacing={2.4}>
                   {/* Welcome Card */}
                   <Grid item xs={12}>
                     <Paper className={styles.welcomeCard}>
@@ -582,7 +583,7 @@ export default function Dashboard() {
                           <Box className={styles.cardHeaderContent}>
                             <Box className={styles.cardTitleContainer}>
                               <AccountBalanceWalletIcon 
-                                sx={{ mr: 1, color: '#007aff' }} 
+                                sx={{ mr: 1, color: '#007aff', fontSize: '1.33rem' }} 
                               />
                               <Typography 
                                 variant="h6" 
@@ -652,7 +653,7 @@ export default function Dashboard() {
                         title={
                           <Box className={styles.cardTitleContainer}>
                             <TrendingUpIcon 
-                              sx={{ mr: 1, color: '#34c759' }} 
+                              sx={{ mr: 1, color: '#34c759', fontSize: '1.33rem' }} 
                             />
                             <Typography 
                               variant="h6" 
@@ -685,7 +686,7 @@ export default function Dashboard() {
                         title={
                           <Box className={styles.cardTitleContainer}>
                             <TrendingDownIcon 
-                              sx={{ mr: 1, color: '#ff3b30' }} 
+                              sx={{ mr: 1, color: '#ff3b30', fontSize: '1.33rem' }} 
                             />
                             <Typography 
                               variant="h6" 
@@ -718,7 +719,7 @@ export default function Dashboard() {
                         title={
                           <Box className={styles.cardTitleContainer}>
                             <SavingsIcon 
-                              sx={{ mr: 1, color: financialData.netSavings >= 0 ? '#34c759' : '#ff3b30' }} 
+                              sx={{ mr: 1, color: financialData.netSavings >= 0 ? '#34c759' : '#ff3b30', fontSize: '1.33rem' }} 
                             />
                             <Typography 
                               variant="h6" 
@@ -774,6 +775,7 @@ export default function Dashboard() {
                           onClick={openFinanceActionPanel}
                           className={styles.addNewButton}
                           elevation={3}
+                          size="small"
                         >
                           Add New
                         </Button>
