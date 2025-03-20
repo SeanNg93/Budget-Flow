@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Button, 
   Dialog, 
@@ -10,9 +10,16 @@ import {
   Box,
   InputAdornment,
   CircularProgress,
-  Alert
+  Alert,
+  Fade,
+  Slide
 } from '@mui/material';
 import FinanceService from '../../services/FinanceService';
+
+// Create a SlideTransition component with forwardRef
+const SlideTransition = React.forwardRef(function Transition(props, ref) {
+  return <Slide direction="up" ref={ref} {...props} />;
+});
 
 const AddBalanceForm = ({ open, handleClose, onBalanceAdded }) => {
   const [loading, setLoading] = useState(false);
@@ -21,6 +28,12 @@ const AddBalanceForm = ({ open, handleClose, onBalanceAdded }) => {
   const [success, setSuccess] = useState('');
   const [currentBalance, setCurrentBalance] = useState(0);
   const [totalWalletBalance, setTotalWalletBalance] = useState(0);
+
+  // Add refs for transition components
+  const dialogRef = useRef(null);
+  const alertErrorRef = useRef(null);
+  const alertSuccessRef = useRef(null);
+  const alertInfoRef = useRef(null);
 
   useEffect(() => {
     if (open) {
@@ -128,21 +141,44 @@ const AddBalanceForm = ({ open, handleClose, onBalanceAdded }) => {
   };
 
   return (
-    <Dialog open={open} onClose={handleFormClose} fullWidth maxWidth="xs">
+    <Dialog 
+      open={open} 
+      onClose={handleFormClose} 
+      fullWidth 
+      maxWidth="xs"
+      TransitionComponent={SlideTransition}
+      TransitionProps={{
+        nodeRef: dialogRef,
+        mountOnEnter: true,
+        unmountOnExit: true,
+        timeout: 400
+      }}
+      ref={dialogRef}
+    >
       <DialogTitle>Add to Total Balance</DialogTitle>
       <form onSubmit={handleSubmit}>
         <DialogContent>
-          {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-          {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
+          {error && (
+            <Fade in={!!error} timeout={300} nodeRef={alertErrorRef}>
+              <Alert severity="error" sx={{ mb: 2 }} ref={alertErrorRef}>{error}</Alert>
+            </Fade>
+          )}
+          {success && (
+            <Fade in={!!success} timeout={300} nodeRef={alertSuccessRef}>
+              <Alert severity="success" sx={{ mb: 2 }} ref={alertSuccessRef}>{success}</Alert>
+            </Fade>
+          )}
           
           <Box sx={{ mb: 2 }}>
-            <Alert severity="info">
-              Current balance: {currentBalance.toFixed(2)}
-              <br/>
-              Wallet total: {totalWalletBalance.toFixed(2)}
-              <br/>
-              Available for allocation: {(currentBalance - totalWalletBalance).toFixed(2)}
-            </Alert>
+            <Fade in={open} timeout={400} nodeRef={alertInfoRef}>
+              <Alert severity="info" ref={alertInfoRef}>
+                Current balance: {currentBalance.toFixed(2)}
+                <br/>
+                Wallet total: {totalWalletBalance.toFixed(2)}
+                <br/>
+                Available for allocation: {(currentBalance - totalWalletBalance).toFixed(2)}
+              </Alert>
+            </Fade>
           </Box>
           
           <TextField

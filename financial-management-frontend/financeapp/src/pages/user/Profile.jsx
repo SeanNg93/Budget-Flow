@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -17,7 +17,9 @@ import {
   Paper,
   Stack,
   useTheme,
-  Fab
+  Fab,
+  Fade,
+  Zoom
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
@@ -46,6 +48,12 @@ export default function Profile() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  
+  // Refs for transitions
+  const errorFadeRef = useRef(null);
+  const noProfileFadeRef = useRef(null);
+  const contentFadeRef = useRef(null);
+  const fabZoomRef = useRef(null);
 
   // Get the authentication token and user data from localStorage
   const getAuthToken = () => localStorage.getItem("userToken");
@@ -248,306 +256,306 @@ export default function Profile() {
   if (isLoading) {
     return (
       <Box className={styles.loadingContainer}>
-        <CircularProgress size={50} thickness={4} style={{ color: '#007aff' }} />
+        <CircularProgress size={50} thickness={4} style={{ color: '#0071e3' }} />
       </Box>
     );
   }
 
   if (error) {
     return (
-      <Container maxWidth="md" className={styles.errorContainer}>
-        <Alert 
-          severity="error" 
-          action={
-            <Button
-              color="inherit"
-              size="small"
-              onClick={() => navigate('/login')}
-            >
-              Go to Login
-            </Button>
-          }
-        >
-          {error}
-        </Alert>
-      </Container>
+      <Fade in={!!error} nodeRef={errorFadeRef} timeout={300}>
+        <Container ref={errorFadeRef} maxWidth="md" className={styles.errorContainer}>
+          <Alert 
+            severity="error" 
+            action={
+              <Button
+                color="inherit"
+                size="small"
+                onClick={() => navigate('/login')}
+              >
+                Go to Login
+              </Button>
+            }
+          >
+            {error}
+          </Alert>
+        </Container>
+      </Fade>
     );
   }
 
   if (!profile) {
     return (
-      <Container maxWidth="md" className={styles.errorContainer}>
-        <Alert 
-          severity="warning" 
-          action={
-            <Button
-              color="inherit"
-              size="small"
-              onClick={() => navigate('/login')}
-            >
-              Go to Login
-            </Button>
-          }
-        >
-          No profile data available. Please log in again.
-        </Alert>
-      </Container>
+      <Fade in={true} nodeRef={noProfileFadeRef} timeout={300}>
+        <Container ref={noProfileFadeRef} maxWidth="md" className={styles.errorContainer}>
+          <Alert 
+            severity="warning" 
+            action={
+              <Button
+                color="inherit"
+                size="small"
+                onClick={() => navigate('/login')}
+              >
+                Go to Login
+              </Button>
+            }
+          >
+            No profile data available. Please log in again.
+          </Alert>
+        </Container>
+      </Fade>
     );
   }
 
   return (
-    <Container className={styles.profileContainer}>
-      <Paper elevation={3} className={styles.profileCard}>
-        {/* Header */}
-        <Box className={styles.profileHeader}>
-          <Typography variant="h5" className={styles.profileTitle}>
-            Profile Information
-          </Typography>
-          
-          {!isEditing && (
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<EditIcon />}
-              onClick={handleEditToggle}
-              className={styles.editButton}
-            >
-              Edit Profile
-            </Button>
-          )}
-        </Box>
-        
-        {/* User Section */}
-        <Box className={styles.userSection}>
-          <Box className={styles.avatarContainer}>
-            <Avatar 
-              src={avatarPreview} 
-              alt={profile.fullName || profile.username}
-              className={styles.avatar}
-              imgProps={{
-                onError: (e) => {
-                  e.target.src = DEFAULT_AVATAR;
-                }
-              }}
-            />
-            <input
-              accept="image/*"
-              style={{ display: 'none' }}
-              id="avatar-upload"
-              type="file"
-              onChange={handleAvatarChange}
-            />
-            <label htmlFor="avatar-upload">
-              <IconButton 
-                component="span" 
-                className={styles.uploadButton}
-                size="small"
+    <Fade in={true} nodeRef={contentFadeRef} timeout={500}>
+      <Container ref={contentFadeRef} className={styles.profileContainer}>
+        <Paper elevation={3} className={styles.profileCard}>
+          {/* Header */}
+          <Box className={styles.profileHeader}>
+            <Typography variant="h5" className={styles.profileTitle}>
+              Profile Information
+            </Typography>
+            
+            {!isEditing && (
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<EditIcon />}
+                onClick={handleEditToggle}
+                className={styles.editButton}
               >
-                <PhotoCameraIcon />
-              </IconButton>
-            </label>
-          </Box>
-          
-          <Box className={styles.userInfo}>
-            <Typography variant="h5" className={styles.userName}>
-              {profile.fullName || profile.username}
-            </Typography>
-            
-            <Typography variant="body1" className={styles.userRole}>
-              <BadgeIcon className={styles.userRoleIcon} />
-              {profile.role || "User"}
-            </Typography>
-          </Box>
-        </Box>
-        
-        {/* Details Section */}
-        <Box className={styles.detailsSection}>
-          <Typography variant="h6" className={styles.sectionTitle}>
-            Personal Information
-          </Typography>
-          
-          <Box className={styles.fieldGrid}>
-            <Box className={styles.fieldContainer}>
-              <Typography variant="caption" className={styles.fieldLabel}>
-                <PersonIcon fontSize="small" sx={{ mr: 0.5, verticalAlign: 'text-bottom' }} />
-                Full Name
-              </Typography>
-              {isEditing ? (
-                <TextField
-                  fullWidth
-                  name="fullName"
-                  value={editedProfile.fullName || ""}
-                  onChange={handleInputChange}
-                  variant="outlined"
-                  size="small"
-                  className={styles.textField}
-                  placeholder="Enter your full name"
-                />
-              ) : (
-                <Typography variant="body1" className={styles.fieldValue}>
-                  {profile.fullName || profile.username}
-                </Typography>
-              )}
-            </Box>
-            
-            <Box className={styles.fieldContainer}>
-              <Typography variant="caption" className={styles.fieldLabel}>
-                <EmailIcon fontSize="small" sx={{ mr: 0.5, verticalAlign: 'text-bottom' }} />
-                Email
-              </Typography>
-              <Typography variant="body1" className={styles.fieldValue}>
-                {profile.email}
-              </Typography>
-            </Box>
-            
-            <Box className={styles.fieldContainer}>
-              <Typography variant="caption" className={styles.fieldLabel}>
-                <PhoneIcon fontSize="small" sx={{ mr: 0.5, verticalAlign: 'text-bottom' }} />
-                Phone Number
-              </Typography>
-              {isEditing ? (
-                <TextField
-                  fullWidth
-                  name="phone"
-                  value={editedProfile.phone || ""}
-                  onChange={handleInputChange}
-                  variant="outlined"
-                  size="small"
-                  className={styles.textField}
-                  placeholder="Enter your phone number"
-                />
-              ) : (
-                <Typography variant="body1" className={styles.fieldValue}>
-                  {profile.phone || "Not provided"}
-                </Typography>
-              )}
-            </Box>
-            
-            <Box className={styles.fieldContainer}>
-              <Typography variant="caption" className={styles.fieldLabel}>
-                <CalendarTodayIcon fontSize="small" sx={{ mr: 0.5, verticalAlign: 'text-bottom' }} />
-                Date of Birth
-              </Typography>
-              {isEditing ? (
-                <TextField
-                  fullWidth
-                  name="dateOfBirth"
-                  type="date"
-                  value={editedProfile.dateOfBirth || ""}
-                  onChange={handleInputChange}
-                  variant="outlined"
-                  size="small"
-                  className={styles.textField}
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                />
-              ) : (
-                <Typography variant="body1" className={styles.fieldValue}>
-                  {profile.dateOfBirth || "Not provided"}
-                </Typography>
-              )}
-            </Box>
-            
-            <Box className={styles.fieldContainer}>
-              <Typography variant="caption" className={styles.fieldLabel}>
-                <LocationOnIcon fontSize="small" sx={{ mr: 0.5, verticalAlign: 'text-bottom' }} />
-                Address
-              </Typography>
-              {isEditing ? (
-                <TextField
-                  fullWidth
-                  name="address"
-                  value={editedProfile.address || ""}
-                  onChange={handleInputChange}
-                  variant="outlined"
-                  size="small"
-                  className={styles.textField}
-                  placeholder="Enter your address"
-                />
-              ) : (
-                <Typography variant="body1" className={styles.fieldValue}>
-                  {profile.address || "Not provided"}
-                </Typography>
-              )}
-            </Box>
-          </Box>
-          
-          <Box className={styles.fieldContainer} sx={{ mt: 3 }}>
-            <Typography variant="caption" className={styles.fieldLabel}>
-              <InfoIcon fontSize="small" sx={{ mr: 0.5, verticalAlign: 'text-bottom' }} />
-              Bio
-            </Typography>
-            {isEditing ? (
-              <TextField
-                fullWidth
-                multiline
-                rows={4}
-                name="bio"
-                value={editedProfile.bio || ""}
-                onChange={handleInputChange}
-                variant="outlined"
-                size="small"
-                className={styles.textField}
-                placeholder="Tell us about yourself"
-              />
-            ) : (
-              <Box className={styles.bioField}>
-                <Typography variant="body1" className={styles.fieldValue}>
-                  {profile.bio || "No bio provided"}
-                </Typography>
-              </Box>
+                Edit Profile
+              </Button>
             )}
           </Box>
-        </Box>
+          
+          {/* User Section */}
+          <Box className={styles.userSectionCompact}>
+            <Box className={styles.avatarContainer}>
+              <Avatar 
+                src={avatarPreview} 
+                alt={profile.fullName || profile.username}
+                className={styles.avatarCompact}
+                imgProps={{
+                  onError: (e) => {
+                    e.target.src = DEFAULT_AVATAR;
+                  }
+                }}
+              />
+              <input
+                accept="image/*"
+                style={{ display: 'none' }}
+                id="avatar-upload"
+                type="file"
+                onChange={handleAvatarChange}
+              />
+              <label htmlFor="avatar-upload">
+                <IconButton 
+                  component="span" 
+                  className={styles.uploadButtonRight}
+                  size="small"
+                >
+                  <PhotoCameraIcon />
+                </IconButton>
+              </label>
+            </Box>
+            
+            <Box className={styles.userInfoCompact}>
+              <Typography variant="h6" className={styles.userNameCompact}>
+                {profile.fullName || profile.username}
+              </Typography>
+              
+              <Typography variant="body2" className={styles.userRoleCompact}>
+                <BadgeIcon fontSize="small" className={styles.userRoleIcon} />
+                {profile.role || "User"}
+              </Typography>
+            </Box>
+          </Box>
+          
+          {/* Details Section */}
+          <Box className={styles.detailsSectionCompact}>
+            <Typography variant="subtitle1" className={styles.sectionTitleCompact}>
+              Personal Information
+            </Typography>
+            
+            <Box className={styles.fieldGridCompact}>
+              <Box className={styles.fieldContainerCompact}>
+                <Typography variant="caption" className={styles.fieldLabel}>
+                  <PersonIcon fontSize="small" sx={{ mr: 0.5, verticalAlign: 'text-bottom' }} />
+                  Full Name
+                </Typography>
+                {isEditing ? (
+                  <TextField
+                    fullWidth
+                    name="fullName"
+                    value={editedProfile.fullName || ""}
+                    onChange={handleInputChange}
+                    variant="outlined"
+                    size="small"
+                    className={styles.textField}
+                    placeholder="Enter your full name"
+                  />
+                ) : (
+                  <Typography variant="body2" className={styles.fieldValue}>
+                    {profile.fullName || profile.username}
+                  </Typography>
+                )}
+              </Box>
+              
+              <Box className={styles.fieldContainerCompact}>
+                <Typography variant="caption" className={styles.fieldLabel}>
+                  <EmailIcon fontSize="small" sx={{ mr: 0.5, verticalAlign: 'text-bottom' }} />
+                  Email
+                </Typography>
+                <Typography variant="body2" className={styles.fieldValue}>
+                  {profile.email}
+                </Typography>
+              </Box>
+              
+              <Box className={styles.fieldContainerCompact}>
+                <Typography variant="caption" className={styles.fieldLabel}>
+                  <PhoneIcon fontSize="small" sx={{ mr: 0.5, verticalAlign: 'text-bottom' }} />
+                  Phone Number
+                </Typography>
+                {isEditing ? (
+                  <TextField
+                    fullWidth
+                    name="phone"
+                    value={editedProfile.phone || ""}
+                    onChange={handleInputChange}
+                    variant="outlined"
+                    size="small"
+                    className={styles.textField}
+                    placeholder="Enter your phone number"
+                  />
+                ) : (
+                  <Typography variant="body2" className={styles.fieldValue}>
+                    {profile.phone || "Not provided"}
+                  </Typography>
+                )}
+              </Box>
+              
+              <Box className={styles.fieldContainerCompact}>
+                <Typography variant="caption" className={styles.fieldLabel}>
+                  <CalendarTodayIcon fontSize="small" sx={{ mr: 0.5, verticalAlign: 'text-bottom' }} />
+                  Date of Birth
+                </Typography>
+                {isEditing ? (
+                  <TextField
+                    fullWidth
+                    name="dateOfBirth"
+                    type="date"
+                    value={editedProfile.dateOfBirth || ""}
+                    onChange={handleInputChange}
+                    variant="outlined"
+                    size="small"
+                    className={styles.textField}
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
+                  />
+                ) : (
+                  <Typography variant="body2" className={styles.fieldValue}>
+                    {profile.dateOfBirth || "Not provided"}
+                  </Typography>
+                )}
+              </Box>
+              
+              <Box className={styles.fieldContainerCompact}>
+                <Typography variant="caption" className={styles.fieldLabel}>
+                  <LocationOnIcon fontSize="small" sx={{ mr: 0.5, verticalAlign: 'text-bottom' }} />
+                  Address
+                </Typography>
+                {isEditing ? (
+                  <TextField
+                    fullWidth
+                    name="address"
+                    value={editedProfile.address || ""}
+                    onChange={handleInputChange}
+                    variant="outlined"
+                    size="small"
+                    className={styles.textField}
+                    placeholder="Enter your address"
+                  />
+                ) : (
+                  <Typography variant="body2" className={styles.fieldValue}>
+                    {profile.address || "Not provided"}
+                  </Typography>
+                )}
+              </Box>
+            </Box>
+            
+            <Box className={styles.fieldContainerCompact} sx={{ mt: 2 }}>
+              <Typography variant="caption" className={styles.fieldLabel}>
+                <InfoIcon fontSize="small" sx={{ mr: 0.5, verticalAlign: 'text-bottom' }} />
+                Bio
+              </Typography>
+              {isEditing ? (
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={2}
+                  name="bio"
+                  value={editedProfile.bio || ""}
+                  onChange={handleInputChange}
+                  variant="outlined"
+                  size="small"
+                  className={styles.textField}
+                  placeholder="Tell us about yourself"
+                />
+              ) : (
+                <Box className={styles.bioFieldCompact}>
+                  <Typography variant="body2" className={styles.fieldValue}>
+                    {profile.bio || "No bio provided"}
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+          </Box>
+          
+          {/* Action Buttons */}
+          {isEditing ? (
+            <Box className={styles.actionButtonsCompact}>
+              <Button
+                variant="outlined"
+                color="inherit"
+                onClick={handleEditToggle}
+                startIcon={<CancelIcon />}
+                className={styles.cancelButton}
+                size="small"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleSave}
+                startIcon={<SaveIcon />}
+                className={styles.saveButton}
+                size="small"
+              >
+                Save
+              </Button>
+            </Box>
+          ) : null}
+        </Paper>
         
-        {/* Action Buttons */}
-        {isEditing ? (
-          <Box className={styles.actionButtons}>
-            <Button
-              variant="outlined"
-              color="inherit"
+        {/* Floating Edit Button for Mobile */}
+        {!isEditing && (
+          <Zoom in={!isEditing} nodeRef={fabZoomRef}>
+            <Fab 
+              ref={fabZoomRef}
+              color="primary" 
+              aria-label="edit profile"
+              className={styles.floatingEditButton}
               onClick={handleEditToggle}
-              startIcon={<CancelIcon />}
-              className={styles.cancelButton}
             >
-              Cancel
-            </Button>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleSave}
-              startIcon={<SaveIcon />}
-              className={styles.saveButton}
-            >
-              Save Changes
-            </Button>
-          </Box>
-        ) : (
-          <Box className={styles.navButtonsContainer}>
-            <Button
-              variant="outlined"
-              startIcon={<ArrowBackIcon className={styles.backButtonIcon} />}
-              onClick={() => navigate('/dashboard')}
-              className={styles.backButton}
-            >
-              Back to Dashboard
-            </Button>
-          </Box>
+              <EditIcon />
+            </Fab>
+          </Zoom>
         )}
-      </Paper>
-      
-      {/* Floating Edit Button for Mobile */}
-      {!isEditing && (
-        <Fab 
-          color="primary" 
-          aria-label="edit profile"
-          className={styles.floatingEditButton}
-          onClick={handleEditToggle}
-        >
-          <EditIcon />
-        </Fab>
-      )}
-    </Container>
+      </Container>
+    </Fade>
   );
 } 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import FinanceService from '../../services/FinanceService';
 import {
   Dialog,
@@ -23,6 +23,9 @@ import {
   ListItemAvatar,
   ListItemText,
   Divider,
+  Fade,
+  Slide,
+  Zoom
 } from '@mui/material';
 import { 
   Send as SendIcon, 
@@ -30,6 +33,11 @@ import {
   Person as PersonIcon,
   ErrorOutline as ErrorIcon
 } from '@mui/icons-material';
+
+// Create transition components with forwardRef
+const SlideTransition = React.forwardRef(function Transition(props, ref) {
+  return <Slide direction="up" ref={ref} {...props} />;
+});
 
 const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourceWallet = null }) => {
   // Wallets state
@@ -47,6 +55,12 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourc
   const [error, setError] = useState('');
   const [transferring, setTransferring] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  // Add refs for transitions
+  const dialogRef = useRef(null);
+  const errorAlertRef = useRef(null);
+  const successAlertRef = useRef(null);
+  const searchResultsRef = useRef(null);
   
   // Load wallets when component mounts
   useEffect(() => {
@@ -195,6 +209,14 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourc
           padding: '8px'
         }
       }}
+      TransitionComponent={SlideTransition}
+      TransitionProps={{
+        nodeRef: dialogRef,
+        mountOnEnter: true,
+        unmountOnExit: true,
+        timeout: 400
+      }}
+      ref={dialogRef}
     >
       <DialogTitle 
         style={{ 
@@ -221,23 +243,29 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourc
         
         {/* Error message */}
         {error && (
-          <Alert 
-            severity="error" 
-            icon={<ErrorIcon />}
-            style={{ marginBottom: '16px' }}
-          >
-            {error}
-          </Alert>
+          <Fade in={!!error} timeout={300} nodeRef={errorAlertRef}>
+            <Alert 
+              severity="error" 
+              icon={<ErrorIcon />}
+              style={{ marginBottom: '16px' }}
+              ref={errorAlertRef}
+            >
+              {error}
+            </Alert>
+          </Fade>
         )}
         
         {/* Success message */}
         {success && (
-          <Alert 
-            severity="success" 
-            style={{ marginBottom: '16px' }}
-          >
-            Transfer completed successfully!
-          </Alert>
+          <Fade in={success} timeout={300} nodeRef={successAlertRef}>
+            <Alert 
+              severity="success" 
+              style={{ marginBottom: '16px' }}
+              ref={successAlertRef}
+            >
+              Transfer completed successfully!
+            </Alert>
+          </Fade>
         )}
         
         <Box sx={{ my: 3 }}>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Button, 
   Dialog, 
@@ -16,13 +16,20 @@ import {
   InputAdornment,
   CircularProgress,
   Alert,
-  Typography
+  Typography,
+  Fade,
+  Slide,
+  Zoom
 } from '@mui/material';
 import FinanceService from '../../services/FinanceService';
 import styles from '../../styles/walletForm.module.css';
 import { generateRandomColorIndex, saveWalletColor } from '../../utils/colorUtils';
 
-const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compact = false }) => {
+const SlideTransition = React.forwardRef(function Transition(props, ref) {
+  return <Slide direction="up" ref={ref} {...props} />;
+});
+
+const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compact = false, wallet = null }) => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     accountName: '',
@@ -36,6 +43,11 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
   const [totalBalance, setTotalBalance] = useState(0);
   const [usedBalance, setUsedBalance] = useState(0);
   const [availableBalance, setAvailableBalance] = useState(0);
+
+  // Add refs for transitions
+  const dialogRef = useRef(null);
+  const errorAlertRef = useRef(null);
+  const infoAlertRef = useRef(null);
 
   useEffect(() => {
     if (open) {
@@ -162,20 +174,22 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
   const formContent = (
     <Box className={styles.formContainer}>
       {error && (
-        <Alert 
-          severity="error" 
-          className={compact ? styles.alertCompact : styles.alertContainer}
-        >
-          {error}
-        </Alert>
+        <Fade in={!!error} timeout={300} nodeRef={errorAlertRef}>
+          <Alert severity="error" sx={{ mb: 2 }} ref={errorAlertRef}>{error}</Alert>
+        </Fade>
       )}
       
-      <Box className={styles.alertContainer}>
-        <Alert severity="info">
-          Available balance: {availableBalance.toFixed(2)} 
-          {availableBalance <= 0 && " (No funds available for new wallets)"}
-        </Alert>
-      </Box>
+      <Fade in={open} timeout={300} nodeRef={infoAlertRef}>
+        <Box sx={{ mb: 2 }} ref={infoAlertRef}>
+          <Alert severity="info">
+            Total Balance: ${totalBalance.toFixed(2)}
+            <br />
+            Used: ${usedBalance.toFixed(2)}
+            <br />
+            Available: ${availableBalance.toFixed(2)}
+          </Alert>
+        </Box>
+      </Fade>
       
       <Grid container spacing={compact ? 1 : 2} sx={{ mt: compact ? 0 : 0.5 }}>
         {compact ? (
@@ -312,16 +326,50 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
     <Dialog 
       open={open} 
       onClose={handleClose} 
-      maxWidth="sm" 
-      fullWidth
-      PaperProps={{
-        className: styles.dialogPaper
+      fullWidth 
+      maxWidth="sm"
+      TransitionComponent={SlideTransition}
+      TransitionProps={{
+        nodeRef: dialogRef,
+        mountOnEnter: true,
+        unmountOnExit: true,
+        timeout: 400
       }}
+      ref={dialogRef}
     >
-      <DialogTitle className={styles.dialogTitle}>Add Wallet</DialogTitle>
-      <DialogContent className={styles.dialogContent}>
+      <DialogTitle>{wallet ? 'Edit Wallet' : 'New Wallet'}</DialogTitle>
+      <DialogContent>
+        {error && (
+          <Fade in={!!error} timeout={300} nodeRef={errorAlertRef}>
+            <Alert severity="error" sx={{ mb: 2 }} ref={errorAlertRef}>{error}</Alert>
+          </Fade>
+        )}
+        
+        <Fade in={open} timeout={300} nodeRef={infoAlertRef}>
+          <Box sx={{ mb: 2 }} ref={infoAlertRef}>
+            <Alert severity="info">
+              Total Balance: ${totalBalance.toFixed(2)}
+              <br />
+              Used: ${usedBalance.toFixed(2)}
+              <br />
+              Available: ${availableBalance.toFixed(2)}
+            </Alert>
+          </Box>
+        </Fade>
+        
         {formContent}
       </DialogContent>
+      <DialogActions>
+        <Button onClick={handleClose} disabled={submitting}>Cancel</Button>
+        <Button 
+          onClick={handleSubmit}
+          variant="contained" 
+          color="primary" 
+          disabled={submitting}
+        >
+          {submitting ? <CircularProgress size={24} /> : wallet ? 'Update Wallet' : 'Create Wallet'}
+        </Button>
+      </DialogActions>
     </Dialog>
   );
 };

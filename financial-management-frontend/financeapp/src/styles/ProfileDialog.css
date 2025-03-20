@@ -2,32 +2,36 @@
 .profile-dialog .MuiPaper-root {
   border-radius: 16px;
   overflow: hidden;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
 }
 
 .profile-dialog .dialog-title {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 1.25rem 1.5rem;
+  background: #f5f5f7;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.03);
 }
 
 .profile-dialog .close-button {
-  color: #6c757d;
+  color: #8e8e93;
   transition: all 0.2s ease;
+  width: 36px;
+  height: 36px;
 }
 
 .profile-dialog .close-button:hover {
-  background-color: rgba(108, 117, 125, 0.1);
-  color: #495057;
+  background-color: rgba(0, 0, 0, 0.06);
+  color: #1d1d1f;
 }
 
 .profile-dialog .profile-title {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 600;
-  color: #212529;
+  color: #1d1d1f;
   margin: 0;
+  letter-spacing: -0.02em;
 }
 
 .profile-dialog .dialog-content {
@@ -47,227 +51,262 @@
   background-color: #ffffff;
 }
 
-/* User section */
-.profile-dialog .user-section {
-  padding: 2rem;
+/* Compact User section */
+.profile-dialog .user-section-compact {
+  padding: 1.5rem;
   display: flex;
   align-items: center;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.03);
   background-color: #ffffff;
 }
 
 .profile-dialog .avatar-container {
   position: relative;
-  margin-right: 2rem;
+  margin-right: 1.25rem;
 }
 
 .profile-dialog .avatar {
-  width: 100px !important;
-  height: 100px !important;
-  border: 3px solid #fff;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  width: 76px !important;
+  height: 76px !important;
+  border: 2px solid #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
   transition: all 0.3s ease;
 }
 
-.profile-dialog .upload-button {
+.profile-dialog .upload-button-right {
   position: absolute !important;
   bottom: 0 !important;
-  left: 0 !important;
-  background-color: #007aff !important;
+  right: -10px !important;
+  background-color: #0071e3 !important;
   color: white !important;
   width: 32px !important;
   height: 32px !important;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
   transition: all 0.2s ease !important;
 }
 
-.profile-dialog .upload-button:hover {
+.profile-dialog .upload-button-right:hover {
   transform: translateY(-2px);
-  background-color: #0062cc !important;
-  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.25) !important;
+  background-color: #0077ed !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2) !important;
 }
 
-.profile-dialog .user-info {
+.profile-dialog .user-info-compact {
   flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .profile-dialog .user-name {
-  font-size: 1.5rem !important;
+  font-size: 1.2rem !important;
   font-weight: 600 !important;
-  color: #212529 !important;
+  color: #1d1d1f !important;
   margin-bottom: 0.25rem !important;
+  letter-spacing: -0.02em !important;
 }
 
 .profile-dialog .user-role {
-  font-size: 0.9rem !important;
-  color: #6c757d !important;
+  font-size: 0.85rem !important;
+  color: #86868b !important;
   display: flex !important;
   align-items: center !important;
-  margin-bottom: 1rem !important;
+  margin-bottom: 0.75rem !important;
+  letter-spacing: -0.01em !important;
 }
 
 .profile-dialog .user-role-icon {
-  font-size: 1rem !important;
+  font-size: 0.95rem !important;
   margin-right: 0.5rem !important;
-  color: #007aff !important;
+  color: #0071e3 !important;
 }
 
-.profile-dialog .edit-button {
-  background-color: #007aff !important;
-  color: white !important;
-  border-radius: 20px !important;
-  padding: 0.4rem 1.2rem !important;
-  font-size: 0.85rem !important;
+.profile-dialog .edit-button-compact {
+  align-self: flex-start;
+  border-radius: 18px !important;
+  padding: 0.35rem 0.9rem !important;
+  font-size: 0.8rem !important;
   font-weight: 500 !important;
   text-transform: none !important;
-  box-shadow: 0 4px 10px rgba(0, 122, 255, 0.25) !important;
   transition: all 0.2s ease !important;
+  border: 1px solid rgba(0, 113, 227, 0.5) !important;
+  color: #0071e3 !important;
+  letter-spacing: -0.01em !important;
 }
 
-.profile-dialog .edit-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(0, 122, 255, 0.35) !important;
+.profile-dialog .edit-button-compact:hover {
+  background-color: rgba(0, 113, 227, 0.05) !important;
+  border-color: #0071e3 !important;
 }
 
-/* Details section */
-.profile-dialog .details-section {
-  padding: 2rem;
+/* Compact Details section */
+.profile-dialog .details-section-compact {
+  padding: 1.5rem;
   background-color: #ffffff;
 }
 
-.profile-dialog .section-title {
-  font-size: 1.1rem !important;
+.profile-dialog .section-title-compact {
+  font-size: 1.05rem !important;
   font-weight: 600 !important;
-  color: #212529 !important;
-  margin-bottom: 1.5rem !important;
+  color: #1d1d1f !important;
+  margin-bottom: 1.25rem !important;
   position: relative;
   padding-bottom: 0.5rem;
+  letter-spacing: -0.01em !important;
 }
 
-.profile-dialog .section-title::after {
+.profile-dialog .section-title-compact::after {
   content: '';
   position: absolute;
   bottom: 0;
   left: 0;
-  width: 50px;
-  height: 3px;
-  background-color: #007aff;
-  border-radius: 3px;
+  width: 40px;
+  height: 2px;
+  background-color: #0071e3;
+  border-radius: 1px;
 }
 
-.profile-dialog .field-container {
-  margin-bottom: 1.5rem;
+.profile-dialog .field-container-compact {
+  margin-bottom: 1rem;
 }
 
 .profile-dialog .field-label {
   display: block;
-  color: #6c757d;
+  color: #86868b;
   font-weight: 500 !important;
-  margin-bottom: 0.5rem !important;
-  font-size: 0.85rem !important;
+  margin-bottom: 0.25rem !important;
+  font-size: 0.75rem !important;
+  letter-spacing: -0.01em !important;
 }
 
 .profile-dialog .field-value {
-  color: #212529;
-  font-size: 1rem !important;
-  font-weight: 500 !important;
+  color: #1d1d1f;
+  font-size: 0.9rem !important;
+  font-weight: 450 !important;
+  letter-spacing: -0.01em !important;
 }
 
 .profile-dialog .text-field {
   margin-top: 0.25rem !important;
 }
 
+.profile-dialog .text-field .MuiOutlinedInput-root {
+  background-color: #f5f5f7;
+  border-radius: 8px;
+}
+
+.profile-dialog .text-field .MuiOutlinedInput-notchedOutline {
+  border-color: transparent;
+  transition: all 0.2s;
+}
+
+.profile-dialog .text-field .Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: #0071e3;
+  border-width: 1px;
+}
+
 .profile-dialog .text-field input, 
 .profile-dialog .text-field textarea {
-  font-size: 1rem !important;
+  font-size: 0.9rem !important;
+  padding: 10px 14px !important;
+  letter-spacing: -0.01em !important;
 }
 
 .profile-dialog .text-field input[type="date"] {
   padding: 8px 12px;
-  font-size: 1rem;
+  font-size: 0.9rem;
 }
 
-.profile-dialog .bio-container {
-  margin-top: 1.5rem;
+.profile-dialog .bio-container-compact {
+  margin-top: 1rem;
 }
 
-.profile-dialog .bio-field {
-  background-color: #f8f9fa;
-  padding: 1rem;
+.profile-dialog .bio-field-compact {
+  background-color: #f5f5f7;
+  padding: 0.9rem;
   border-radius: 8px;
-  min-height: 80px;
+  min-height: 50px;
 }
 
-/* Action buttons */
-.profile-dialog .action-buttons {
+/* Compact Action buttons */
+.profile-dialog .action-buttons-compact {
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
-  padding: 1.5rem 2rem;
-  background-color: #f8f9fa;
-  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 1.25rem 1.5rem;
+  background-color: #f5f5f7;
+  border-top: 1px solid rgba(0, 0, 0, 0.03);
 }
 
 .profile-dialog .cancel-button {
-  border-radius: 20px !important;
-  padding: 0.5rem 1.5rem !important;
-  font-size: 0.9rem !important;
+  border-radius: 18px !important;
+  padding: 0.4rem 1.2rem !important;
+  font-size: 0.85rem !important;
   font-weight: 500 !important;
   text-transform: none !important;
+  transition: all 0.2s ease !important;
+  border: none !important;
+  color: #6e6e73 !important;
+  letter-spacing: -0.01em !important;
 }
 
 .profile-dialog .cancel-button:hover {
-  background-color: rgba(108, 117, 125, 0.1) !important;
+  background-color: rgba(0, 0, 0, 0.06) !important;
+  color: #1d1d1f !important;
 }
 
 .profile-dialog .save-button {
-  background-color: #007aff !important;
+  background-color: #0071e3 !important;
   color: white !important;
-  border-radius: 20px !important;
-  padding: 0.5rem 1.5rem !important;
-  font-size: 0.9rem !important;
+  border-radius: 18px !important;
+  padding: 0.4rem 1.2rem !important;
+  font-size: 0.85rem !important;
   font-weight: 500 !important;
   text-transform: none !important;
-  box-shadow: 0 4px 10px rgba(0, 122, 255, 0.25) !important;
+  box-shadow: 0 2px 6px rgba(0, 113, 227, 0.25) !important;
+  letter-spacing: -0.01em !important;
+  transition: all 0.2s ease !important;
 }
 
 .profile-dialog .save-button:hover {
-  background-color: #0062cc !important;
-  box-shadow: 0 6px 15px rgba(0, 122, 255, 0.35) !important;
+  background-color: #0077ed !important;
+  box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3) !important;
 }
 
-.profile-dialog .field-grid {
+.profile-dialog .field-grid-compact {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
 @media (max-width: 600px) {
-  .field-grid {
+  .profile-dialog .field-grid-compact {
     grid-template-columns: 1fr;
   }
 }
 
-/* Responsive styles */
 @media (max-width: 768px) {
-  .profile-dialog .user-section {
+  .profile-dialog .user-section-compact {
     flex-direction: column;
+    align-items: center;
     text-align: center;
   }
   
   .profile-dialog .avatar-container {
     margin-right: 0;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.25rem;
   }
   
-  .profile-dialog .user-info {
+  .profile-dialog .user-info-compact {
     display: flex;
     flex-direction: column;
     align-items: center;
   }
   
-  .profile-dialog .field-grid {
+  .profile-dialog .edit-button-compact {
+    align-self: center;
+  }
+  
+  .profile-dialog .field-grid-compact {
     grid-template-columns: 1fr;
-    gap: 1rem;
   }
 } 
