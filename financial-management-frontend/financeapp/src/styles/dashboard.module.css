@@ -2,10 +2,41 @@
 .dashboardContainer {
     display: flex;
     flex-direction: column;
-    height: 100vh;
-    background-color: #f8f9fa;
+    background-color: transparent;
     margin-top: 2rem;
     margin-bottom: 2rem;
+    position: relative;
+    z-index: 1;
+  }
+  
+  /* Adding a backdrop container for the whole dashboard content */
+  .dashboardBackdrop {
+    background-color: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+    padding: 24px;
+    margin-bottom: 2rem;
+    width: 100%;
+    min-height: calc(100vh - 100px);
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* For browsers that don't support backdrop-filter */
+  @supports not (backdrop-filter: blur(10px)) {
+    .dashboardBackdrop {
+      background-color: rgba(255, 255, 255, 0.95);
+    }
+  }
+  
+  /* Container for all the cards in the dashboard */
+  .contentContainer {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
   }
   
   /* --- Thanh điều hướng (Navbar) --- */
