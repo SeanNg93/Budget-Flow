@@ -59,6 +59,8 @@ CREATE TABLE user_profiles (
     join_date VARCHAR(20),
     profile_picture_path VARCHAR(255),
     role VARCHAR(50),
+    date_of_birth DATE,
+    address TEXT,
     total_balance DECIMAL(15,2) NOT NULL DEFAULT 0.00,
     currency VARCHAR(3) NOT NULL DEFAULT 'USD',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

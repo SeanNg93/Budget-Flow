@@ -38,7 +38,7 @@ public class UserProfileController {
     private final UserProfileService userProfileService;
     private final UserRepository userRepository;
     private final UserProfileRepository userProfileRepository;
-    
+
     @Value("${app.upload.dir:uploads/profile-pictures}")
     private String uploadDir;
 
@@ -50,7 +50,7 @@ public class UserProfileController {
     public ResponseEntity<UserProfileDto> getCurrentUserProfile(Authentication authentication) {
         String username = authentication.getName();
         log.info("Getting profile for current user: {}", username);
-        
+
         try {
             UserProfileDto profile = userProfileService.getUserProfileByUsername(username);
             return ResponseEntity.ok(profile);
@@ -67,7 +67,7 @@ public class UserProfileController {
     @PreAuthorize("hasRole('ADMIN') or @userSecurity.isCurrentUser(#userId)")
     public ResponseEntity<UserProfileDto> getUserProfile(@PathVariable Long userId) {
         log.info("Getting profile for user ID: {}", userId);
-        
+
         try {
             UserProfileDto profile = userProfileService.getUserProfile(userId);
             return ResponseEntity.ok(profile);
@@ -85,9 +85,9 @@ public class UserProfileController {
     public ResponseEntity<UserProfileDto> updateUserProfile(
             @PathVariable Long userId,
             @RequestBody UserProfileDto profileDto) {
-        
+
         log.info("Updating profile for user ID: {}", userId);
-        
+
         try {
             UserProfileDto updatedProfile = userProfileService.updateUserProfile(userId, profileDto);
             log.info("Profile updated successfully for user ID: {}", userId);
@@ -106,14 +106,14 @@ public class UserProfileController {
     public ResponseEntity<UserProfileDto> uploadProfilePicture(
             @PathVariable Long userId,
             @RequestParam("file") MultipartFile file) {
-        
+
         log.info("Uploading profile picture for user ID: {}", userId);
-        
+
         if (file.isEmpty()) {
             log.warn("Empty file uploaded for user ID: {}", userId);
             return ResponseEntity.badRequest().build();
         }
-        
+
         try {
             UserProfileDto updatedProfile = userProfileService.uploadProfilePicture(userId, file);
             log.info("Profile picture uploaded successfully for user ID: {}", userId);
@@ -130,7 +130,7 @@ public class UserProfileController {
     @GetMapping("/picture/{userId}")
     public ResponseEntity<Resource> getProfilePicture(@PathVariable Long userId) {
         log.info("Getting profile picture for user ID: {}", userId);
-        
+
         try {
             Optional<User> userOpt = userRepository.findById(userId);
             if (userOpt.isEmpty()) {
@@ -140,21 +140,21 @@ public class UserProfileController {
 
             User user = userOpt.get();
             Optional<UserProfile> profileOpt = userProfileRepository.findByUser(user);
-            
+
             if (profileOpt.isEmpty() || profileOpt.get().getProfilePicturePath() == null) {
                 log.warn("Profile or profile picture not found for user ID: {}", userId);
                 return ResponseEntity.notFound().build();
             }
-            
+
             String filePath = profileOpt.get().getProfilePicturePath();
             return getResourceFromPath(filePath);
-            
+
         } catch (Exception e) {
             log.error("Error getting profile picture for user ID {}: {}", userId, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-    
+
     /**
      * Helper method to get a resource from a file path
      */
@@ -162,7 +162,7 @@ public class UserProfileController {
         try {
             Path path = Paths.get(filePath);
             Resource resource = new UrlResource(path.toUri());
-            
+
             if (resource.exists() && resource.isReadable()) {
                 return ResponseEntity.ok()
                         .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + path.getFileName() + "\"")
@@ -177,4 +177,4 @@ public class UserProfileController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-} 
+}
