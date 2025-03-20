@@ -1,0 +1,230 @@
+/* Chart Container Styles */
+.chartCard {
+  background-color: var(--card-background);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  position: relative;
+  max-height: 418px;
+  overflow: hidden;
+}
+
+.chartCard:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.filterContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 0 10px;
+  flex-wrap: wrap;
+}
+
+.formControl {
+  min-width: 160px !important;
+  width: 100%;
+}
+
+.formControl > div {
+  width: 100%;
+  display: flex;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.chartContainer {
+  position: relative;
+  margin-top: 10px;
+  min-height: 240px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loadingContainer,
+.errorContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 240px;
+}
+
+/* Chart Header Controls */
+.headerControls {
+  display: flex;
+  align-items: center;
+}
+
+.timeRangeControls {
+  display: flex;
+  align-items: center;
+}
+
+.timeRangeLabel {
+  font-size: 14px;
+  font-weight: 500;
+  margin: 0 4px;
+  min-width: 60px;
+  text-align: center;
+}
+
+.navButton {
+  padding: 6px;
+}
+
+.navButton:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.navButton:disabled {
+  opacity: 0.5;
+  color: rgba(0, 0, 0, 0.26);
+}
+
+.exportButton {
+  transform: scale(0.85);
+  margin-left: 12px;
+}
+
+.exportButton:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+/* Time Range Toggle Styles (legacy) */
+.timeRangeToggle {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 10px 0;
+}
+
+.timeRangeButton {
+  padding: 4px;
+}
+
+/* Summary Section Styles */
+.summaryContainer {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 10px;
+  margin-bottom: 10px;
+  justify-content: space-between;
+  padding: 0 5px;
+  margin-top: 5px;
+}
+
+.summaryItem {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 10px;
+  border-radius: 8px;
+  background-color: rgba(0, 0, 0, 0.03);
+  flex: 1;
+  min-width: 120px;
+  margin-right: 8px;
+  padding-left: 12px;
+  padding-right: 12px;
+  align-items: center;
+}
+
+.summaryItem:last-child {
+  margin-right: 0;
+}
+
+.summaryLabel {
+  font-size: 11px !important;
+  color: var(--text-secondary);
+  margin-bottom: 4px !important;
+}
+
+.summaryValue {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+}
+
+/* Smaller fonts for chart section */
+.chartCard h6 {
+  font-size: 0.95rem !important;
+}
+
+.chartCard .MuiTypography-subtitle2 {
+  font-size: 0.78rem !important;
+}
+
+.chartCard .MuiTypography-caption {
+  font-size: 0.7rem !important;
+}
+
+.chartCard .MuiTypography-body2 {
+  font-size: 0.78rem !important;
+}
+
+/* Fixing dropdown menu issue */
+:global(.MuiSelect-select) {
+  padding-right: 32px !important;
+  width: 100% !important;
+  min-width: 160px !important; /* Increased from 130px */
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  font-size: 0.875rem !important; /* Slightly smaller font */
+}
+
+:global(.MuiMenuItem-root) {
+  font-size: 0.875rem !important; /* Consistent menu item font size */
+  min-height: 32px !important; /* Slightly smaller height */
+}
+
+@media (max-width: 768px) {
+  .summaryContainer {
+    flex-direction: row;
+    gap: 4px;
+  }
+  
+  .summaryItem {
+    width: 33.33%;
+    padding: 4px 0;
+  }
+  
+  .summaryItem:not(:last-child) {
+    border-right: 1px solid #e0e0e0;
+    border-bottom: none;
+  }
+}
+
+.chartTitleContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.chartTitle {
+  font-size: 16px !important;
+  font-weight: 600 !important;
+}
+
+.actionButtons {
+  display: flex;
+  gap: 8px;
+}
+
+/* Main chart content container - ensures vertical centering */
+.chartContentContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Chart content wrapper */
+.chartContentWrapper {
+  display: flex;
+  flex-direction: column;
+} 

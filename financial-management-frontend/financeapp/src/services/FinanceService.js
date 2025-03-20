@@ -103,6 +103,77 @@ export const getFinancialSummary = () => {
   return axiosInstance.get('/transactions/summary');
 };
 
+// New method for chart data
+export const getFinancialDataByDateRange = (startDate, endDate, categoryId = 'all') => {
+  // Format dates properly to match backend expectations (YYYY-MM-DDTHH:mm:ss.sssZ format)
+  const formatDateForApi = (date) => {
+    if (!date) return null;
+    
+    // If already a string in proper format, return as is
+    if (typeof date === 'string' && date.includes('T')) {
+      return date;
+    }
+    
+    // Convert Date object to ISO string
+    const dateObj = date instanceof Date ? date : new Date(date);
+    return dateObj.toISOString();
+  };
+
+  const formattedStartDate = formatDateForApi(startDate);
+  const formattedEndDate = formatDateForApi(endDate);
+  
+  if (!formattedStartDate || !formattedEndDate) {
+    console.error('Invalid date format provided');
+    return Promise.resolve({
+      data: {
+        chartData: [],
+        summaryData: {
+          totalIncome: 0,
+          totalExpenses: 0,
+          netSavings: 0
+        }
+      }
+    });
+  }
+  
+  let url = `/transactions/chart-data?startDate=${formattedStartDate}&endDate=${formattedEndDate}`;
+  
+  if (categoryId && categoryId !== 'all') {
+    url += `&categoryId=${categoryId}`;
+  }
+  
+  // Determine automatic interval based on date range
+  const diffTime = Math.abs(new Date(endDate) - new Date(startDate));
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  let interval = 'day';
+  if (diffDays > 14 && diffDays <= 90) {
+    interval = 'week';
+  } else if (diffDays > 90 && diffDays <= 730) {
+    interval = 'month';
+  } else if (diffDays > 730) {
+    interval = 'year';
+  }
+  
+  url += `&interval=${interval}`;
+  
+  return axiosInstance.get(url).catch(error => {
+    console.error('Error fetching chart data:', error);
+    
+    // Return mock data structure for client-side rendering
+    return {
+      data: {
+        chartData: [],
+        summaryData: {
+          totalIncome: 0,
+          totalExpenses: 0,
+          netSavings: 0
+        }
+      }
+    };
+  });
+};
+
 // Category services
 export const getCategories = () => {
   return axiosInstance.get('/categories').catch(error => {
@@ -319,6 +390,7 @@ const FinanceService = {
   updateTransaction,
   deleteTransaction,
   getFinancialSummary,
+  getFinancialDataByDateRange,
   
   // Category functions
   getCategories,

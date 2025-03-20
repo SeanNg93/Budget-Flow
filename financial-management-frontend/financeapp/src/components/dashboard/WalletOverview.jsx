@@ -335,7 +335,7 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
             <IconButton 
               className={styles.walletNavButton} 
               onClick={handlePrevPage}
-              sx={{ left: -18 }}
+              sx={{ left: -20 }}
               disabled={!!slideDirection}
             >
               <ArrowBackIosNewIcon fontSize="small" />
@@ -395,7 +395,7 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
             <IconButton 
               className={styles.walletNavButton} 
               onClick={handleNextPage}
-              sx={{ right: -18 }}
+              sx={{ right: -20 }}
               disabled={!!slideDirection}
             >
               <ArrowForwardIosIcon fontSize="small" />

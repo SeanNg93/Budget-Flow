@@ -16,6 +16,10 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 
 /**
  * Controller for managing financial transactions
@@ -208,6 +212,77 @@ public class TransactionController {
         } catch (Exception e) {
             log.error("Error getting financial summary: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/chart-data")
+    public ResponseEntity<?> getChartData(
+            @RequestParam String startDate,
+            @RequestParam String endDate,
+            @RequestParam(required = false, defaultValue = "day") String interval,
+            @RequestParam(required = false) Integer categoryId) {
+        
+        try {
+            // Get current user
+            User currentUser = securityUtils.getCurrentUser();
+            if (currentUser == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
+            }
+
+            // Parse dates - handle both ISO format and date-only format
+            DateTimeFormatter isoFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            
+            LocalDateTime start;
+            LocalDateTime end;
+            
+            try {
+                // Try ISO format first
+                start = LocalDateTime.parse(startDate, isoFormatter);
+            } catch (Exception e) {
+                try {
+                    // Try date-only format
+                    start = LocalDate.parse(startDate, dateFormatter).atStartOfDay();
+                } catch (Exception ex) {
+                    return ResponseEntity.badRequest().body("Invalid start date format");
+                }
+            }
+            
+            try {
+                // Try ISO format first
+                end = LocalDateTime.parse(endDate, isoFormatter);
+            } catch (Exception e) {
+                try {
+                    // Try date-only format and set to end of day
+                    end = LocalDate.parse(endDate, dateFormatter).atTime(23, 59, 59);
+                } catch (Exception ex) {
+                    return ResponseEntity.badRequest().body("Invalid end date format");
+                }
+            }
+            
+            // Validate interval
+            if (!Arrays.asList("day", "week", "month", "year").contains(interval)) {
+                interval = "day"; // Default to day if invalid
+            }
+            
+            // Get financial data for chart
+            List<Map<String, Object>> chartData = transactionService.getFinancialDataByDateRange(
+                    currentUser.getId(), start, end, categoryId, interval);
+            
+            // Get summary data
+            Map<String, Object> summaryData = transactionService.getFinancialSummaryByDateRange(
+                    currentUser.getId(), start, end, categoryId);
+            
+            // Build response
+            Map<String, Object> response = new HashMap<>();
+            response.put("chartData", chartData);
+            response.put("summaryData", summaryData);
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error retrieving chart data: " + e.getMessage());
         }
     }
 } 

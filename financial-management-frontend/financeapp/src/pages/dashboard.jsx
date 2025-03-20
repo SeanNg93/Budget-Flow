@@ -60,6 +60,11 @@ import WalletOverview from '../components/dashboard/WalletOverview';
 import ProfileDialog from '../components/user/ProfileDialog';
 import UserTransferForm from '../components/dashboard/UserTransferForm';
 import ShareWalletForm from '../components/dashboard/ShareWalletForm';
+import FinanceChart from '../components/dashboard/FinanceChart';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
+import ToggleButton from '@mui/material/ToggleButton';
+import BarChartIcon from '@mui/icons-material/BarChart';
+import ShowChartIcon from '@mui/icons-material/ShowChart';
 
 // Import theme
 import AppTheme from '../shared-theme/AppTheme';
@@ -575,7 +580,7 @@ export default function Dashboard() {
                     </Paper>
                   </Grid>
                   
-                  {/* Summary Cards */}
+                  {/* Summary Cards Row */}
                   <Grid item xs={12} md={3}>
                     <Card className={`${styles.summaryCard} ${styles.balanceCard}`}>
                       <CardHeader 
@@ -747,12 +752,22 @@ export default function Dashboard() {
                     </Card>
                   </Grid>
                   
-                  {/* Wallet Overview */}
+                  {/* Wallet Overview and Chart Side by Side */}
                   <Grid item xs={12}>
-                    <WalletOverview 
-                      onManageWallets={handleManageWallets} 
-                      externalWallets={wallets}
-                    />
+                    <Grid container spacing={2.4}>
+                      {/* Wallet Overview */}
+                      <Grid item xs={12} md={6}>
+                        <WalletOverview 
+                          onManageWallets={handleManageWallets} 
+                          externalWallets={wallets}
+                        />
+                      </Grid>
+                      
+                      {/* Financial Chart */}
+                      <Grid item xs={12} md={6}>
+                        <FinanceChart />
+                      </Grid>
+                    </Grid>
                   </Grid>
                   
                   {/* Recent Transactions */}
