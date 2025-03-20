@@ -23,14 +23,16 @@ import {
   Typography,
   Grid,
   Divider,
-  CircularProgress
+  CircularProgress,
+  InputLabel,
+  Slider
 } from '@mui/material';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import ToggleButton from '@mui/material/ToggleButton';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import ShowChartIcon from '@mui/icons-material/ShowChart';
-import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
+import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear } from 'date-fns';
 import styles from '../../styles/financeChart.module.css';
 import FinanceService from '../../services/FinanceService';
 
@@ -41,48 +43,38 @@ const FinanceChart = ({ chartType = 'advanced', onChartTypeChange }) => {
   const [startDate, setStartDate] = useState(startOfMonth(new Date()));
   const [endDate, setEndDate] = useState(endOfMonth(new Date()));
   const [customDateRange, setCustomDateRange] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [categories, setCategories] = useState([]);
   const [summaryData, setSummaryData] = useState({
     totalIncome: 0,
     totalExpenses: 0,
     netSavings: 0
   });
   const [renderError, setRenderError] = useState(false);
+  const [timeSliderValue, setTimeSliderValue] = useState(1); // Default to month (1)
+
+  // Time range slider marks
+  const timeMarks = [
+    { value: 0, label: 'Week' },
+    { value: 1, label: 'Month' },
+    { value: 2, label: 'Quarter' },
+    { value: 3, label: 'Year' }
+  ];
+
+  // Map slider value to time range
+  useEffect(() => {
+    const ranges = ['week', 'month', 'quarter', 'year'];
+    setTimeRange(ranges[timeSliderValue]);
+  }, [timeSliderValue]);
 
   // Fetch chart data based on time range
   useEffect(() => {
     fetchChartData();
-  }, [timeRange, startDate, endDate, selectedCategory]);
-
-  // Fetch categories
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
-  const fetchCategories = async () => {
-    try {
-      // Replace with actual service call when API is available
-      const response = await FinanceService.getCategories();
-      setCategories(response.data || []);
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-      // Use placeholder data for now
-      setCategories([
-        { id: 'food', name: 'Food' },
-        { id: 'transportation', name: 'Transportation' },
-        { id: 'housing', name: 'Housing' },
-        { id: 'entertainment', name: 'Entertainment' },
-        { id: 'utilities', name: 'Utilities' }
-      ]);
-    }
-  };
+  }, [timeRange, startDate, endDate]);
 
   const fetchChartData = async () => {
     setLoading(true);
     try {
       // Use the new service method to fetch chart data
-      const response = await FinanceService.getFinancialDataByDateRange(startDate, endDate, selectedCategory);
+      const response = await FinanceService.getFinancialDataByDateRange(startDate, endDate);
       
       // Check if we have real data from API
       if (response.data && response.data.chartData && response.data.chartData.length > 0) {
@@ -145,6 +137,23 @@ const FinanceChart = ({ chartType = 'advanced', onChartTypeChange }) => {
           expenses: expenses
         });
       }
+    } else if (timeRange === 'quarter') {
+      // Generate monthly data for a quarter
+      const monthNames = ['Month 1', 'Month 2', 'Month 3'];
+      
+      for (let i = 0; i < 3; i++) {
+        const income = Math.floor(Math.random() * 5000) + 1000;
+        const expenses = Math.floor(Math.random() * 4000) + 800;
+        
+        totalIncome += income;
+        totalExpenses += expenses;
+        
+        mockData.push({
+          name: monthNames[i],
+          income: income,
+          expenses: expenses
+        });
+      }
     } else if (timeRange === 'year') {
       // Generate monthly data for a year
       const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -196,24 +205,26 @@ const FinanceChart = ({ chartType = 'advanced', onChartTypeChange }) => {
     };
   };
 
-  const handleTimeRangeChange = (event) => {
-    const newTimeRange = event.target.value;
-    setTimeRange(newTimeRange);
-    setCustomDateRange(newTimeRange === 'custom');
+  const handleTimeSliderChange = (event, newValue) => {
+    setTimeSliderValue(newValue);
     
     // Update date range based on selected time period
     const today = new Date();
     
-    switch (newTimeRange) {
-      case 'week':
+    switch (newValue) {
+      case 0: // week
         setStartDate(startOfWeek(today, { weekStartsOn: 1 }));
         setEndDate(endOfWeek(today, { weekStartsOn: 1 }));
         break;
-      case 'month':
+      case 1: // month
         setStartDate(startOfMonth(today));
         setEndDate(endOfMonth(today));
         break;
-      case 'year':
+      case 2: // quarter
+        setStartDate(startOfQuarter(today));
+        setEndDate(endOfQuarter(today));
+        break;
+      case 3: // year
         setStartDate(startOfYear(today));
         setEndDate(endOfYear(today));
         break;
@@ -221,10 +232,6 @@ const FinanceChart = ({ chartType = 'advanced', onChartTypeChange }) => {
         // Keep current dates for custom
         break;
     }
-  };
-
-  const handleCategoryChange = (event) => {
-    setSelectedCategory(event.target.value);
   };
 
   const exportToExcel = () => {
@@ -242,8 +249,7 @@ const FinanceChart = ({ chartType = 'advanced', onChartTypeChange }) => {
   return (
     <Card className={styles.chartCard}>
       <CardHeader
-        title="Income vs Expenses"
-        subheader="Financial performance over time"
+        title="Financial performance over time"
         action={
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <ToggleButtonGroup
@@ -252,157 +258,131 @@ const FinanceChart = ({ chartType = 'advanced', onChartTypeChange }) => {
               onChange={onChartTypeChange}
               aria-label="chart type"
               size="small"
-              sx={{ mr: 1 }}
+              sx={{ mr: 1, transform: 'scale(0.85)', transformOrigin: 'right' }}
             >
               <ToggleButton value="advanced" aria-label="advanced chart">
-                <BarChartIcon />
+                <BarChartIcon fontSize="small" />
               </ToggleButton>
               <ToggleButton value="simple" aria-label="simple chart">
-                <ShowChartIcon />
+                <ShowChartIcon fontSize="small" />
               </ToggleButton>
             </ToggleButtonGroup>
-            <IconButton onClick={exportToExcel} title="Export to Excel">
-              <FileDownloadIcon />
+            <IconButton 
+              onClick={exportToExcel} 
+              title="Export to Excel"
+              size="small"
+              sx={{ transform: 'scale(0.85)' }}
+            >
+              <FileDownloadIcon fontSize="small" />
             </IconButton>
           </Box>
         }
       />
       <Divider />
       <CardContent>
-        {/* Filters Row */}
-        <Grid container spacing={2} className={styles.filterContainer}>
-          <Grid item xs={12} sm={6} md={3}>
-            <FormControl fullWidth size="small">
-              <Select
-                value={timeRange}
-                onChange={handleTimeRangeChange}
-                displayEmpty
-              >
-                <MenuItem value="week">This Week</MenuItem>
-                <MenuItem value="month">This Month</MenuItem>
-                <MenuItem value="year">This Year</MenuItem>
-                <MenuItem value="custom">Custom Range</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          
-          {customDateRange && (
-            <>
-              <Grid item xs={12} sm={6} md={3}>
-                <TextField
-                  label="Start Date"
-                  type="date"
-                  value={format(startDate, 'yyyy-MM-dd')}
-                  onChange={(e) => setStartDate(new Date(e.target.value))}
-                  fullWidth
-                  size="small"
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <TextField
-                  label="End Date"
-                  type="date"
-                  value={format(endDate, 'yyyy-MM-dd')}
-                  onChange={(e) => setEndDate(new Date(e.target.value))}
-                  fullWidth
-                  size="small"
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                  inputProps={{
-                    min: format(startDate, 'yyyy-MM-dd')
-                  }}
-                />
-              </Grid>
-            </>
-          )}
-          
-          <Grid item xs={12} sm={6} md={3}>
-            <FormControl fullWidth size="small">
-              <Select
-                value={selectedCategory}
-                onChange={handleCategoryChange}
-                displayEmpty
-              >
-                <MenuItem value="all">All Categories</MenuItem>
-                {categories.map((category) => (
-                  <MenuItem key={category.id} value={category.id}>{category.name}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-        </Grid>
-        
-        {/* Summary Section */}
-        <Box className={styles.summaryContainer}>
-          <Box className={styles.summaryItem}>
-            <Typography variant="subtitle2" color="textSecondary">Total Income</Typography>
-            <Typography variant="h6" color="primary">{formatCurrency(summaryData.totalIncome)}</Typography>
-          </Box>
-          <Box className={styles.summaryItem}>
-            <Typography variant="subtitle2" color="textSecondary">Total Expenses</Typography>
-            <Typography variant="h6" color="error">{formatCurrency(summaryData.totalExpenses)}</Typography>
-          </Box>
-          <Box className={styles.summaryItem}>
-            <Typography variant="subtitle2" color="textSecondary">Net Savings</Typography>
-            <Typography 
-              variant="h6" 
-              color={summaryData.netSavings >= 0 ? "success" : "error"}
-            >
-              {formatCurrency(summaryData.netSavings)}
-            </Typography>
-          </Box>
-        </Box>
-        
-        {/* Chart */}
-        <Box className={styles.chartContainer}>
-          {loading ? (
-            <Box className={styles.loadingContainer}>
-              <CircularProgress />
-            </Box>
-          ) : renderError ? (
-            <Box className={styles.errorContainer}>
-              <Typography color="error" align="center">
-                Unable to render chart. Please try again later.
-              </Typography>
-              <Box mt={2}>
-                <Button 
-                  variant="outlined"
-                  color="primary"
-                  onClick={() => {
-                    setRenderError(false);
-                    fetchChartData();
-                  }}
+        <Box sx={{ display: 'flex' }}>
+          {/* Main Chart Content */}
+          <Box sx={{ flex: 1 }}>
+            {/* Summary Section */}
+            <Box className={styles.summaryContainer}>
+              <Box className={styles.summaryItem}>
+                <Typography className={styles.summaryLabel}>Total Income</Typography>
+                <Typography className={styles.summaryValue} color="primary">{formatCurrency(summaryData.totalIncome)}</Typography>
+              </Box>
+              <Box className={styles.summaryItem}>
+                <Typography className={styles.summaryLabel}>Total Expenses</Typography>
+                <Typography className={styles.summaryValue} color="error">{formatCurrency(summaryData.totalExpenses)}</Typography>
+              </Box>
+              <Box className={styles.summaryItem}>
+                <Typography className={styles.summaryLabel}>Net Savings</Typography>
+                <Typography 
+                  className={styles.summaryValue}
+                  color={summaryData.netSavings >= 0 ? "success" : "error"}
                 >
-                  Retry
-                </Button>
+                  {formatCurrency(summaryData.netSavings)}
+                </Typography>
               </Box>
             </Box>
-          ) : (
-            <ResponsiveContainer width="100%" height={350}>
-              <BarChart
-                data={chartData}
-                margin={{
-                  top: 20,
-                  right: 30,
-                  left: 20,
-                  bottom: 5,
-                }}
-                onError={() => setRenderError(true)}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip formatter={(value) => formatCurrency(value)} />
-                <Legend />
-                <Bar dataKey="income" name="Income" fill="#4caf50" />
-                <Bar dataKey="expenses" name="Expenses" fill="#f44336" />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
+            
+            {/* Chart */}
+            <Box className={styles.chartContainer}>
+              {loading ? (
+                <Box className={styles.loadingContainer}>
+                  <CircularProgress />
+                </Box>
+              ) : renderError ? (
+                <Box className={styles.errorContainer}>
+                  <Typography color="error" align="center">
+                    Unable to render chart. Please try again later.
+                  </Typography>
+                  <Box mt={2}>
+                    <Button 
+                      variant="outlined"
+                      color="primary"
+                      onClick={() => {
+                        setRenderError(false);
+                        fetchChartData();
+                      }}
+                    >
+                      Retry
+                    </Button>
+                  </Box>
+                </Box>
+              ) : (
+                <ResponsiveContainer width="100%" height={240}>
+                  <BarChart
+                    data={chartData}
+                    margin={{
+                      top: 5,
+                      right: 20,
+                      left: 10,
+                      bottom: 5,
+                    }}
+                    onError={() => setRenderError(true)}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                    <YAxis tick={{ fontSize: 11 }} />
+                    <Tooltip formatter={(value) => formatCurrency(value)} />
+                    <Legend wrapperStyle={{ fontSize: '11px' }} />
+                    <Bar dataKey="income" name="Income" fill="#4caf50" />
+                    <Bar dataKey="expenses" name="Expenses" fill="#f44336" />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </Box>
+          </Box>
+          
+          {/* Time Range Slider (Vertical on right side) */}
+          <Box sx={{ width: 60, pl: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <Typography 
+              variant="caption" 
+              sx={{ 
+                transform: 'rotate(-90deg)', 
+                transformOrigin: 'center', 
+                whiteSpace: 'nowrap',
+                mb: 2
+              }}
+            >
+              Time Range
+            </Typography>
+            <Slider
+              orientation="vertical"
+              value={timeSliderValue}
+              onChange={handleTimeSliderChange}
+              step={null}
+              marks={timeMarks}
+              min={0}
+              max={3}
+              sx={{ 
+                height: 180,
+                '& .MuiSlider-markLabel': {
+                  fontSize: '10px',
+                  transform: 'translateX(20px)'
+                }
+              }}
+            />
+          </Box>
         </Box>
       </CardContent>
     </Card>

@@ -1,12 +1,13 @@
 /* Chart Container Styles */
 .chartCard {
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  background-color: var(--card-background);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  position: relative;
+  max-height: 418px;
   overflow: hidden;
-  transition: box-shadow 0.3s ease;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
 }
 
 .chartCard:hover {
@@ -14,65 +15,68 @@
 }
 
 .filterContainer {
-  margin-bottom: 16px;
-  padding: 16px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 0 10px;
+  flex-wrap: wrap;
+}
+
+.formControl {
+  min-width: 160px !important;
+  width: 100%;
+}
+
+.formControl > div {
+  width: 100%;
+  display: flex;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .chartContainer {
-  margin-top: 16px;
-  width: 100%;
-  flex-grow: 1;
-  min-height: 350px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: relative;
+  margin-top: 10px;
+  min-height: 240px;
 }
 
-.loadingContainer {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  height: 350px;
-}
-
+.loadingContainer,
 .errorContainer {
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
-  width: 100%;
-  height: 350px;
-  background-color: rgba(244, 67, 54, 0.05);
-  border-radius: 8px;
-  padding: 16px;
+  justify-content: center;
+  height: 240px;
 }
 
 /* Simple Chart Styles */
 .simpleChartContainer {
   width: 100%;
-  height: 350px;
+  height: 240px; /* Reduced height */
   display: flex;
   flex-direction: column;
 }
 
+/* Chart Legend */
 .chartLegend {
   display: flex;
   justify-content: center;
-  margin-bottom: 16px;
+  margin-bottom: 8px; /* Reduced margin */
 }
 
 .legendItem {
   display: flex;
   align-items: center;
-  margin: 0 16px;
+  margin: 0 12px;
 }
 
 .legendColor {
-  width: 16px;
-  height: 16px;
-  border-radius: 4px;
-  margin-right: 8px;
+  width: 12px; /* Smaller color box */
+  height: 12px;
+  border-radius: 3px;
+  margin-right: 6px;
 }
 
 .simpleBarChart {
@@ -146,40 +150,98 @@
 /* Summary Section Styles */
 .summaryContainer {
   display: flex;
+  flex-wrap: nowrap;
+  gap: 10px;
+  margin-bottom: 10px;
   justify-content: space-between;
-  margin: 16px 0;
-  padding: 16px;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  flex-wrap: wrap;
+  padding: 0 5px;
 }
 
 .summaryItem {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
+  padding: 10px;
+  border-radius: 8px;
+  background-color: var(--summary-bg);
   flex: 1;
-  min-width: 160px;
-  padding: 8px 0;
+  min-width: 120px;
 }
 
-.summaryItem:not(:last-child) {
-  border-right: 1px solid #e0e0e0;
+.summaryLabel {
+  font-size: 11px !important;
+  color: var(--text-secondary);
+  margin-bottom: 4px !important;
+}
+
+.summaryValue {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+}
+
+/* Smaller fonts for chart section */
+.chartCard h6 {
+  font-size: 0.95rem !important;
+}
+
+.chartCard .MuiTypography-subtitle2 {
+  font-size: 0.78rem !important;
+}
+
+.chartCard .MuiTypography-caption {
+  font-size: 0.7rem !important;
+}
+
+.chartCard .MuiTypography-body2 {
+  font-size: 0.78rem !important;
+}
+
+/* Fixing dropdown menu issue */
+:global(.MuiSelect-select) {
+  padding-right: 32px !important;
+  width: 100% !important;
+  min-width: 160px !important; /* Increased from 130px */
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  font-size: 0.875rem !important; /* Slightly smaller font */
+}
+
+:global(.MuiMenuItem-root) {
+  font-size: 0.875rem !important; /* Consistent menu item font size */
+  min-height: 32px !important; /* Slightly smaller height */
 }
 
 @media (max-width: 768px) {
   .summaryContainer {
-    flex-direction: column;
-    gap: 12px;
+    flex-direction: row;
+    gap: 4px;
   }
   
   .summaryItem {
-    width: 100%;
-    padding: 8px 0;
+    width: 33.33%;
+    padding: 4px 0;
   }
   
   .summaryItem:not(:last-child) {
-    border-right: none;
-    border-bottom: 1px solid #e0e0e0;
+    border-right: 1px solid #e0e0e0;
+    border-bottom: none;
   }
+}
+
+.chartTitleContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.chartTitle {
+  font-size: 16px !important;
+  font-weight: 600 !important;
+}
+
+.actionButtons {
+  display: flex;
+  gap: 8px;
 } 
