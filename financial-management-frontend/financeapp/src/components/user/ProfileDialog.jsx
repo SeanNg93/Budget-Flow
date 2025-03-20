@@ -30,7 +30,7 @@ import '../../styles/ProfileDialog.css';
 const API_BASE_URL = "http://localhost:8080";
 const DEFAULT_AVATAR = "/default-avatar.svg";
 
-export default function ProfileDialog({ open, onClose }) {
+export default function ProfileDialog({ open, onClose, handleClose, onProfileUpdated }) {
   const [profile, setProfile] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedProfile, setEditedProfile] = useState({});
@@ -230,7 +230,12 @@ export default function ProfileDialog({ open, onClose }) {
       setIsEditing(false);
       setEditedProfile(profile);
     }
-    onClose();
+    // Use the appropriate closing function (handleClose takes priority if available)
+    if (handleClose) {
+      handleClose();
+    } else if (onClose) {
+      onClose();
+    }
   };
 
   if (isLoading) {
