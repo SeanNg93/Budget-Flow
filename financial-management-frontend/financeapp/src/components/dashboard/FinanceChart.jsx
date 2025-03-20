@@ -42,6 +42,8 @@ const FinanceChart = () => {
   });
   const [renderError, setRenderError] = useState(false);
   const [timeRangeIndex, setTimeRangeIndex] = useState(3); // Default to week (3)
+  const [incomeLabelClicks, setIncomeLabelClicks] = useState(0);
+  const [mockDataMode, setMockDataMode] = useState(false);
 
   // Time range options
   const timeRangeOptions = [
@@ -67,28 +69,49 @@ const FinanceChart = () => {
       // Use the new service method to fetch chart data
       const response = await FinanceService.getFinancialDataByDateRange(startDate, endDate);
       
-      // Check if we have real data from API
-      if (response.data && response.data.chartData && response.data.chartData.length > 0) {
-        setChartData(response.data.chartData);
-        setSummaryData(response.data.summaryData);
-      } else {
-        // Use mock data if API returned empty results
+      // If mock data mode is active, use mock data
+      if (mockDataMode) {
         const mockData = generateMockData();
         setChartData(mockData.chartData);
         setSummaryData(mockData.summaryData);
+      } 
+      // Otherwise use real data
+      else if (response.data && response.data.chartData && response.data.chartData.length > 0) {
+        setChartData(response.data.chartData);
+        setSummaryData(response.data.summaryData);
+      } else {
+        // Show empty chart when no real data exists
+        setChartData([]);
+        setSummaryData({
+          totalIncome: 0,
+          totalExpenses: 0,
+          netSavings: 0
+        });
       }
     } catch (error) {
       console.error('Error fetching chart data:', error);
-      // Fallback to mock data
-      const mockData = generateMockData();
-      setChartData(mockData.chartData);
-      setSummaryData(mockData.summaryData);
+      
+      // If mock data mode is active, use mock data even on error
+      if (mockDataMode) {
+        const mockData = generateMockData();
+        setChartData(mockData.chartData);
+        setSummaryData(mockData.summaryData);
+      } else {
+        // Show empty chart instead of mock data on error
+        setChartData([]);
+        setSummaryData({
+          totalIncome: 0,
+          totalExpenses: 0,
+          netSavings: 0
+        });
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const generateMockData = () => {
+    // This function is kept for reference but is no longer used in production
     // Generate realistic mock data based on selected time range
     const mockData = [];
     let totalIncome = 0;
@@ -228,6 +251,26 @@ const FinanceChart = () => {
     }).format(amount);
   };
 
+  // Handle clicks on the income label (secret feature)
+  const handleIncomeLabelClick = () => {
+    if (mockDataMode) {
+      // If already in mock mode, turn it off and reset clicks
+      setMockDataMode(false);
+      setIncomeLabelClicks(0);
+      fetchChartData(); // Refresh with real data
+    } else {
+      // Count clicks
+      const newClickCount = incomeLabelClicks + 1;
+      setIncomeLabelClicks(newClickCount);
+      
+      // If clicked 5 times, activate mock data mode
+      if (newClickCount >= 5) {
+        setMockDataMode(true);
+        fetchChartData(); // Refresh with mock data
+      }
+    }
+  };
+
   return (
     <Card className={styles.chartCard}>
       <CardHeader
@@ -277,7 +320,28 @@ const FinanceChart = () => {
         <Box className={styles.chartContentWrapper}>
           {/* Summary Section */}
           <Box className={styles.summaryContainer}>
-            <Box className={styles.summaryItem}>
+            <Box 
+              className={styles.summaryItem} 
+              onClick={handleIncomeLabelClick}
+              sx={{ 
+                cursor: 'pointer',
+                position: 'relative',
+                ...(mockDataMode && {
+                  '&::after': {
+                    content: '"DEMO"',
+                    position: 'absolute',
+                    top: '-5px',
+                    right: '-5px',
+                    fontSize: '9px',
+                    backgroundColor: 'primary.main',
+                    color: 'white',
+                    padding: '2px 4px',
+                    borderRadius: '4px',
+                    opacity: 0.8
+                  }
+                })
+              }}
+            >
               <Typography className={styles.summaryLabel}>Total Income</Typography>
               <Typography className={styles.summaryValue} color="primary">{formatCurrency(summaryData.totalIncome)}</Typography>
             </Box>
@@ -319,6 +383,15 @@ const FinanceChart = () => {
                     Retry
                   </Button>
                 </Box>
+              </Box>
+            ) : chartData.length === 0 ? (
+              <Box className={styles.loadingContainer} sx={{ bgcolor: 'rgba(0, 0, 0, 0.01)' }}>
+                <Typography color="textSecondary" align="center">
+                  No financial data available for this time period.
+                </Typography>
+                <Typography color="textSecondary" align="center" variant="body2" sx={{ mt: 1 }}>
+                  Add transactions to see your financial performance chart.
+                </Typography>
               </Box>
             ) : (
               <ResponsiveContainer width="100%" height={240}>
