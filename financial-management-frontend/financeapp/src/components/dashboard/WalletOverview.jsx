@@ -104,7 +104,9 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
             ownerId: sharedWallet.ownerId,
             sharedWithId: sharedWallet.sharedWithId,
             sharedWithUsername: sharedWallet.sharedWithUsername,
-            walletName: sharedWallet.walletName
+            walletName: sharedWallet.walletName,
+            ownerProfilePictureUrl: sharedWallet.ownerProfilePictureUrl,
+            sharedWithProfilePictureUrl: sharedWallet.sharedWithProfilePictureUrl
           };
         }
       });
@@ -119,7 +121,9 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
             ownerId: sharedWallet.ownerId,
             sharedWithId: sharedWallet.sharedWithId,
             sharedWithUsername: sharedWallet.sharedWithUsername,
-            walletName: sharedWallet.walletName
+            walletName: sharedWallet.walletName,
+            ownerProfilePictureUrl: sharedWallet.ownerProfilePictureUrl,
+            sharedWithProfilePictureUrl: sharedWallet.sharedWithProfilePictureUrl
           };
         }
       });
@@ -237,28 +241,29 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
     const info = getSharedWalletInfo(walletId);
     const isOwner = isWalletOwner(walletId);
     
-    // For owner: show avatar of person it's shared with
-    // For recipient: show avatar of the owner
+    // For owner: show avatar of person it's shared with; for recipient: show avatar of the owner
+    const avatarUrl = isOwner ? info.sharedWithProfilePictureUrl : info.ownerProfilePictureUrl;
     const username = isOwner ? info.sharedWithUsername : info.ownerUsername;
     
     const tooltipTitle = isOwner 
       ? `Shared with: ${info.sharedWithUsername}`
       : `Owner: ${info.ownerUsername}`;
-
+    
     return (
       <Tooltip title={tooltipTitle}>
         <Avatar 
+          src={avatarUrl || undefined}
           sx={{ 
             width: 24, 
             height: 24, 
             fontSize: '0.8rem',
             marginLeft: '8px',
-            backgroundColor: '#1976d2',
+            backgroundColor: avatarUrl ? 'transparent' : '#1976d2',
             border: '2px solid white',
             cursor: 'pointer'
           }}
         >
-          {username ? username.charAt(0).toUpperCase() : 'U'}
+          {!avatarUrl && (username ? username.charAt(0).toUpperCase() : 'U')}
         </Avatar>
       </Tooltip>
     );
