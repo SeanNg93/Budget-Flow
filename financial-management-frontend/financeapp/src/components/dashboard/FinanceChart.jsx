@@ -129,10 +129,10 @@ const FinanceChart = () => {
         });
       }
     } else if (timeRange === 'quarter') {
-      // Generate monthly data for a quarter
-      const monthNames = ['Month 1', 'Month 2', 'Month 3'];
+      // Generate quarterly data (4 quarters)
+      const quarterNames = ['Q1', 'Q2', 'Q3', 'Q4'];
       
-      for (let i = 0; i < 3; i++) {
+      for (let i = 0; i < 4; i++) {
         const income = Math.floor(Math.random() * 5000) + 1000;
         const expenses = Math.floor(Math.random() * 4000) + 800;
         
@@ -140,7 +140,7 @@ const FinanceChart = () => {
         totalExpenses += expenses;
         
         mockData.push({
-          name: monthNames[i],
+          name: quarterNames[i],
           income: income,
           expenses: expenses
         });
@@ -331,6 +331,8 @@ const FinanceChart = () => {
                     bottom: 5,
                   }}
                   onError={() => setRenderError(true)}
+                  barSize={timeRange === 'quarter' ? 30 : 40}
+                  barGap={5}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" tick={{ fontSize: 11 }} />
