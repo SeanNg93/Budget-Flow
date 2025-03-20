@@ -483,16 +483,23 @@
 
 .walletsContainer {
   position: relative;
-  padding: 0 2.5rem;
+  padding: 0 1rem;
+  width: 100%;
+  overflow: hidden;
+  max-width: 1100px;
+  margin: 0 auto;
 }
 
 .walletsList {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(2, 1fr);
-  gap: calc(15px * var(--scale-factor));
+  grid-template-rows: repeat(2, auto);
+  gap: calc(12px * var(--scale-factor));
   position: relative;
   transition: all 0.3s ease-out;
+  width: 100%;
+  margin: 0 auto;
+  padding: calc(4px * var(--scale-factor));
 }
 
 /* Slide animations for wallet pagination */
@@ -551,7 +558,7 @@
 .walletItem {
   background-color: rgba(255, 255, 255, 0.8);
   border-radius: calc(15px * var(--scale-factor));
-  padding: calc(18px * var(--scale-factor));
+  padding: calc(16px * var(--scale-factor)) calc(20px * var(--scale-factor));
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
   display: flex;
   flex-direction: column;
@@ -559,7 +566,10 @@
   border: 1px solid rgba(0, 0, 0, 0.03);
   position: relative;
   overflow: hidden;
-  height: calc(165px * var(--scale-factor)); /* Adjusted height for wallet cards */
+  height: calc(135px * var(--scale-factor));
+  min-width: auto;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .walletItem:hover {
@@ -623,6 +633,10 @@
   position: relative;
   z-index: 1;
   flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-right: calc(24px * var(--scale-factor));
 }
 
 .walletIcon {
@@ -723,8 +737,8 @@
   z-index: 5;
   background-color: rgba(255, 255, 255, 0.8) !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
 }
 
 .walletNavButton:hover {
@@ -847,4 +861,67 @@
 /* Font scaling for all text elements */
 body, button, input, select, textarea {
   font-size: calc(1rem * var(--scale-factor));
+}
+
+@media (max-width: 767px) {
+  .walletsList {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  .walletItem {
+    height: calc(130px * var(--scale-factor));
+    margin-bottom: calc(8px * var(--scale-factor));
+    min-width: 0;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  .walletsList {
+    grid-template-columns: repeat(2, 1fr);
+    gap: calc(10px * var(--scale-factor));
+    width: 100%;
+  }
+}
+
+@media (min-width: 992px) {
+  .walletsList {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+}
+
+@media (min-width: 1200px) {
+  .walletsContainer {
+    padding: 0 0.5rem;
+  }
+  
+  .walletsList {
+    grid-template-columns: repeat(2, 1fr);
+    gap: calc(14px * var(--scale-factor));
+    max-width: 950px;
+  }
+}
+
+/* Ensure visibility of the content even with reduced height */
+.walletBalance {
+  font-size: calc(1.4rem * var(--scale-factor)) !important;
+  font-weight: 600;
+  margin: calc(4px * var(--scale-factor)) 0 calc(8px * var(--scale-factor));
+  position: relative;
+  z-index: 1;
+}
+
+/* Ensure type label is always visible */
+.walletType {
+  font-size: calc(0.8rem * var(--scale-factor));
+  color: rgba(0, 0, 0, 0.6);
+  margin-top: auto;
+  position: relative;
+  z-index: 1;
+  font-weight: 500;
+  padding-top: calc(4px * var(--scale-factor));
 }
