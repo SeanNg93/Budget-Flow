@@ -1,798 +1,850 @@
+/* --- Global Scale Adjustments --- */
+:root {
+  --scale-factor: 0.88;
+}
+
 /* --- Tổng thể trang Dashboard --- */
 .dashboardContainer {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    background-color: #f8f9fa;
-    margin-top: 2rem;
-    margin-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  margin-top: calc(1.9rem * var(--scale-factor));
+  margin-bottom: calc(1.9rem * var(--scale-factor));
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 1600px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: calc(16px * var(--scale-factor));
+  padding-right: calc(16px * var(--scale-factor));
+}
+
+/* Adding a backdrop container for the whole dashboard content */
+.dashboardBackdrop {
+  background-color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: calc(15px * var(--scale-factor));
+  box-shadow: 0 7px 30px rgba(0, 0, 0, 0.05);
+  padding: calc(22px * var(--scale-factor));
+  margin-bottom: calc(1.9rem * var(--scale-factor));
+  width: calc(100% * var(--scale-factor));
+  max-width: calc(1400px * var(--scale-factor));
+  min-height: calc((100vh - 95px) * var(--scale-factor));
+  display: flex;
+  flex-direction: column;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* For browsers that don't support backdrop-filter */
+@supports not (backdrop-filter: blur(10px)) {
+  .dashboardBackdrop {
+    background-color: rgba(255, 255, 255, 0.95);
   }
+}
+
+/* Container for all the cards in the dashboard */
+.contentContainer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+/* --- Thanh điều hướng (Navbar) --- */
+.navbar {
+  background-color: #007bff;
+  color: white;
+  padding: 0.9rem 1.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.navbar h1 {
+  font-size: 1.35rem;
+  font-weight: bold;
+  margin: 0;
+}
+
+.logoutButton {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.9rem;
+  font-weight: bold;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.logoutButton:hover {
+  background-color: #c82333;
+}
+
+/* --- Khu vực nội dung chính --- */
+.content {
+  display: flex;
+  flex: 1;
+  padding: 2rem;
+}
+
+/* --- Sidebar bên trái --- */
+.sidebar {
+  width: 250px;
+  background-color: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  height: fit-content;
+}
+
+.userInfo {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.userInfo h3 {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.userInfo p {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.sidebarNav ul {
+  list-style: none;
+  padding: 0;
+}
+
+.sidebarNav li {
+  margin-bottom: 1rem;
+}
+
+.sidebarNav a {
+  text-decoration: none;
+  color: #007bff;
+  font-weight: bold;
+  padding: 0.5rem 1rem;
+  display: block;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+}
+
+.sidebarNav a:hover {
+  opacity: 0.8;
+}
+
+/* --- Nút Xóa tài khoản --- */
+.deleteAccountButton {
+  color: white !important;
+  background-color: #dc3545;
+  text-align: center;
+  padding: 0.5rem 1rem;
+  display: block;
+  border-radius: 5px;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+}
+
+.deleteAccountButton:hover {
+  background-color: #c82333;
+}
+
+/* --- Loading state display --- */
+.loading {
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  padding: 2rem;
+  color: #007bff;
+}
+
+.navbarContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+/* Loading container */
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+/* Welcome card */
+.welcomeCard {
+  padding: calc(1.4rem * var(--scale-factor));
+  display: flex;
+  flex-direction: column;
+  background-color: #ffffff;
+  border-radius: calc(0.95rem * var(--scale-factor));
+  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.welcomeHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.welcomeTitle {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-size: calc(1.9rem * var(--scale-factor)) !important;
+}
+
+.welcomeSubtitle {
+  margin-top: calc(0.47rem * var(--scale-factor));
+  font-size: calc(0.97rem * var(--scale-factor));
+}
+
+.addButton {
+  border-radius: 0.67rem;
+  padding-left: 1.35rem;
+  padding-right: 1.35rem;
+  padding-top: 0.54rem;
+  padding-bottom: 0.54rem;
+  font-weight: 600;
+  box-shadow: none;
+}
+
+/* Summary cards */
+.summaryCard {
+  height: 100%;
+  position: relative;
+  border-radius: calc(0.95rem * var(--scale-factor));
+  overflow: hidden;
+  box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.3s ease-in-out, border 0.3s ease-in-out;
+  border: 1px solid transparent;
+}
+
+/* Default glow effect for all cards */
+.summaryCard:hover {
+  box-shadow: 0px 0px 15px rgba(0, 122, 255, 0.3);
+}
+
+/* Add specific card classes for targeting in dashboard.jsx */
+.balanceCard:hover {
+  box-shadow: 0px 0px 15px rgba(0, 122, 255, 0.4);
+  border: 1px solid rgba(0, 122, 255, 0.2);
+}
+
+.incomeCard:hover {
+  box-shadow: 0px 0px 15px rgba(52, 199, 89, 0.4);
+  border: 1px solid rgba(52, 199, 89, 0.2);
+}
+
+.expenseCard:hover {
+  box-shadow: 0px 0px 15px rgba(255, 59, 48, 0.4);
+  border: 1px solid rgba(255, 59, 48, 0.2);
+}
+
+.savingsCard:hover {
+  box-shadow: 0px 0px 15px rgba(52, 199, 89, 0.4);
+  border: 1px solid rgba(52, 199, 89, 0.2);
+}
+
+.cardTitleContainer {
+  display: flex;
+  align-items: center;
+  flex-grow: 1;
+}
+
+.cardTitle {
+  font-weight: 500 !important;
+  font-size: calc(1rem * var(--scale-factor)) !important;
+  color: #1f1f1f;
+}
+
+.cardHeaderContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.addIconButton {
+  margin-left: 8px !important;
+}
+
+.moreOptionsButton {
+  padding: 4px !important;
+}
+
+.menuPaper {
+  border-radius: 12px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px !important;
+  min-height: 40px;
+}
+
+.menuIcon {
+  margin-right: 8px;
+  font-size: 18px !important;
+}
+
+.balanceAmount, .incomeAmount, .expenseAmount, .savingsAmount {
+  font-weight: 600 !important;
+  font-size: calc(1.65rem * var(--scale-factor)) !important;
+  letter-spacing: -0.5px;
+}
+
+.incomeAmount {
+  color: #34c759; /* Apple's green color */
+}
+
+.expenseAmount {
+  color: #ff3b30; /* Apple's red color */
+}
+
+/* Transactions section */
+.transactionsCard {
+  padding: 1.35rem;
+  display: flex;
+  flex-direction: column;
+  border-radius: 0.9rem;
+  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.transactionsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.35rem;
+}
+
+.sectionTitle {
+  font-weight: 600;
+  color: #333;
+  font-size: calc(1.33rem * var(--scale-factor)) !important;
+}
+
+/* Add New button in Recent Transactions */
+.addNewButton {
+  background-color: #007aff;
+  color: white;
+  font-weight: 500;
+  text-transform: none;
+  padding: calc(6px * var(--scale-factor)) calc(15px * var(--scale-factor));
+  border-radius: calc(7px * var(--scale-factor));
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: 0 2px 7px rgba(0, 122, 255, 0.2), 0 1px 3px rgba(0, 0, 0, 0.05);
+  position: relative;
+  top: 0;
+  border: none;
+  z-index: 1;
+  font-size: calc(0.95rem * var(--scale-factor));
+}
+
+.addNewButton:hover {
+  background-color: #0062cc;
+  box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3), 0 2px 5px rgba(0, 0, 0, 0.07);
+  transform: none !important;
+}
+
+.addNewButton:active {
+  background-color: #005bb5;
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.2), 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Keep existing addTransactionButton for compatibility */
+.addTransactionButton {
+  font-weight: 500;
+  text-transform: none;
+  padding: 6px 16px;
+  border-radius: 8px;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.2), 0 1px 3px rgba(0, 0, 0, 0.05);
+  position: relative;
+  top: 0;
+  border: none;
+  backdrop-filter: blur(20px);
+  transform: none !important;
+}
+
+.addTransactionButton:hover {
+  background-color: #0062cc;
+  box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3), 0 2px 5px rgba(0, 0, 0, 0.07);
+  transform: none !important;
+}
+
+.addTransactionButton:active {
+  background-color: #005bb5;
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.2), 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.loadingBox {
+  display: flex;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.tableContainer {
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.tableHeaderCell {
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.6);
+  font-size: calc(0.82rem * var(--scale-factor));
+}
+
+.tableRow:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.tableCell {
+  font-size: calc(0.9rem * var(--scale-factor));
+}
+
+.tableCellBold {
+  font-size: calc(0.9rem * var(--scale-factor));
+  font-weight: 500;
+}
+
+.incomeTag,
+.expenseTag {
+  display: inline-block;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+  border-radius: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.incomeTag {
+  background-color: rgba(52, 199, 89, 0.1);
+  color: #34c759;
+}
+
+.expenseTag {
+  background-color: rgba(255, 59, 48, 0.1);
+  color: #ff3b30;
+}
+
+.emptyTransactionsBox {
+  padding: 2rem;
+  text-align: center;
+  background-color: rgba(0, 0, 0, 0.02);
+  border-radius: 0.75rem;
+}
+
+.addFirstTransactionButton {
+  margin-top: 1rem;
+  border-radius: 0.75rem;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  font-weight: 600;
+  box-shadow: none;
+}
+
+/* --- Wallet Overview Section --- */
+.walletOverviewCard {
+  background-color: white;
+  border-radius: 11px;
+  padding: 1.35rem;
+  margin-bottom: 0.45rem;
+  box-shadow: 0 2px 9px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+  width: 49%;
+  margin-left: 0;
+}
+
+.walletOverviewHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.walletsContainer {
+  position: relative;
+  padding: 0 2.5rem;
+}
+
+.walletsList {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: calc(15px * var(--scale-factor));
+  position: relative;
+  transition: all 0.3s ease-out;
+}
+
+/* Slide animations for wallet pagination */
+.slideLeft {
+  animation: slideOutLeft 0.2s forwards, slideInRight 0.2s 0.2s forwards;
+}
+
+.slideRight {
+  animation: slideOutRight 0.2s forwards, slideInLeft 0.2s 0.2s forwards;
+}
+
+@keyframes slideOutLeft {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-30px);
+    opacity: 0;
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(30px);
+    opacity: 0;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.walletItem {
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: calc(15px * var(--scale-factor));
+  padding: calc(18px * var(--scale-factor));
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid rgba(0, 0, 0, 0.03);
+  position: relative;
+  overflow: hidden;
+  height: calc(165px * var(--scale-factor)); /* Adjusted height for wallet cards */
+}
+
+.walletItem:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+}
+
+.walletItem::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 80px;
+  width: 80px;
+  border-radius: 50%;
+  background-color: rgba(0, 122, 255, 0.05);
+  transform: translate(25%, -25%);
+  z-index: 0;
+}
   
-  /* --- Thanh điều hướng (Navbar) --- */
-  .navbar {
-    background-color: #007bff;
-    color: white;
-    padding: 1rem 2rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
+.walletHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  position: relative;
+  z-index: 1;
+}
   
-  .navbar h1 {
-    font-size: 1.5rem;
-    font-weight: bold;
-    margin: 0;
-  }
+.walletMenuButton {
+  color: rgba(0, 0, 0, 0.54);
+  padding: 4px;
+  margin-right: -8px;
+}
   
-  .logoutButton {
-    background-color: #dc3545;
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
-    font-size: 1rem;
-    font-weight: bold;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-  }
+.walletMenuButton:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+/* New style for the menu button in the circle */
+.walletMenuButtonCircle {
+  position: absolute !important;
+  top: 12px !important;
+  right: 12px !important;
+  z-index: 2 !important;
+  padding: 4px !important;
+  color: rgba(0, 0, 0, 0.54) !important;
+  background-color: transparent !important;
+}
   
-  .logoutButton:hover {
-    background-color: #c82333;
+.walletMenuButtonCircle:hover {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+}
+
+.walletName {
+  font-weight: 600;
+  font-size: calc(1.05rem * var(--scale-factor));
+  color: #333;
+  display: flex;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+  flex: 1;
+}
+
+.walletIcon {
+  margin-right: 10px;
+  font-size: 1.2rem;
+}
+
+.walletBalance {
+  font-size: calc(1.4rem * var(--scale-factor)) !important;
+  font-weight: 600;
+  margin: calc(8px * var(--scale-factor)) 0 calc(12px * var(--scale-factor));
+  position: relative;
+  z-index: 1;
+}
+
+/* Wallet color schemes */
+.walletColor1 .walletIcon, .walletColor1 .walletBalance {
+  color: #007aff; /* Blue */
+}
+
+.walletColor2 .walletIcon, .walletColor2 .walletBalance {
+  color: #34c759; /* Green */
+}
+
+.walletColor3 .walletIcon, .walletColor3 .walletBalance {
+  color: #ff9500; /* Orange */
+}
+
+.walletColor4 .walletIcon, .walletColor4 .walletBalance {
+  color: #ff3b30; /* Red */
+}
+
+.walletColor5 .walletIcon, .walletColor5 .walletBalance {
+  color: #5856d6; /* Purple */
+}
+
+.walletColor6 .walletIcon, .walletColor6 .walletBalance {
+  color: #af52de; /* Pink/Purple */
+}
+
+.walletColor7 .walletIcon, .walletColor7 .walletBalance {
+  color: #ff2d55; /* Pink */
+}
+
+.walletColor8 .walletIcon, .walletColor8 .walletBalance {
+  color: #5ac8fa; /* Light Blue */
+}
+
+.walletColor9 .walletIcon, .walletColor9 .walletBalance {
+  color: #ffcc00; /* Yellow */
+}
+
+.walletColor10 .walletIcon, .walletColor10 .walletBalance {
+  color: #4cd964; /* Mint */
+}
+
+.walletType {
+  font-size: calc(0.8rem * var(--scale-factor));
+  color: rgba(0, 0, 0, 0.6);
+  margin-top: auto;
+  position: relative;
+  z-index: 1;
+  font-weight: 500;
+}
+
+.walletActions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.manageWalletsButton {
+  background-color: #007aff;
+  color: white;
+  font-weight: 500;
+  text-transform: none;
+  padding: calc(6px * var(--scale-factor)) calc(15px * var(--scale-factor));
+  border-radius: calc(7px * var(--scale-factor));
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: 0 2px 7px rgba(0, 122, 255, 0.2), 0 1px 3px rgba(0, 0, 0, 0.05);
+  font-size: calc(0.95rem * var(--scale-factor));
+}
+
+.manageWalletsButton:hover {
+  background-color: #0062cc;
+  box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3), 0 2px 5px rgba(0, 0, 0, 0.07);
+}
+
+.manageWalletsButton:active {
+  background-color: #005bb5;
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.2), 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.walletNavButton {
+  position: absolute !important;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 5;
+  background-color: rgba(255, 255, 255, 0.8) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  width: 36px;
+  height: 36px;
+}
+
+.walletNavButton:hover {
+  background-color: white !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.paginationDots {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+  gap: 8px;
+}
+
+.paginationDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: rgba(0, 122, 255, 0.3);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.activeDot {
+  background-color: #007aff;
+  transform: scale(1.2);
+}
+
+@keyframes slideRight {
+  from {
+    transform: translateX(-10px);
+    opacity: 0;
   }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideLeft {
+  from {
+    transform: translateX(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* --- Recent Transactions Section --- */
+.transactionsCard {
+  background-color: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  margin-top: 0;
+}
+
+.transactionsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.sectionTitle {
+  font-weight: 600;
+  color: #333;
+}
+
+.addTransactionButton {
+  font-weight: 500;
+  text-transform: none;
+  padding: 6px 16px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.15);
+}
+
+.addTransactionButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.25);
+}
+
+.loadingBox {
+  display: flex;
+  justify-content: center;
+  padding: 2rem 0;
+}
+
+.tableContainer {
+  overflow-x: auto;
+}
+
+/* Dashboard Menu Styles */
+.dashboardMenuPaper {
+  border-radius: 12px;
+  box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.1);
+  min-width: 160px;
+  margin-top: 8px;
+}
   
-  /* --- Khu vực nội dung chính --- */
-  .content {
-    display: flex;
-    flex: 1;
-    padding: 2rem;
-  }
+.dashboardMenuItem {
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+}
   
-  /* --- Sidebar bên trái --- */
-  .sidebar {
-    width: 250px;
-    background-color: white;
-    padding: 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    height: fit-content;
-  }
+.dashboardMenuItem:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
   
-  .userInfo {
-    text-align: center;
-    margin-bottom: 1.5rem;
-  }
-  
-  .userInfo h3 {
-    font-size: 1.2rem;
-    font-weight: bold;
-    margin-bottom: 0.5rem;
-  }
-  
-  .userInfo p {
-    color: #666;
-    font-size: 0.9rem;
-  }
-  
-  .sidebarNav ul {
-    list-style: none;
-    padding: 0;
-  }
-  
-  .sidebarNav li {
-    margin-bottom: 1rem;
-  }
-  
-  .sidebarNav a {
-    text-decoration: none;
-    color: #007bff;
-    font-weight: bold;
-    padding: 0.5rem 1rem;
-    display: block;
-    border-radius: 5px;
-    transition: background-color 0.3s ease;
-  }
-  
-  .sidebarNav a:hover {
-    opacity: 0.8;
-  }
-  
-  /* --- Nút Xóa tài khoản --- */
-  .deleteAccountButton {
-    color: white !important;
-    background-color: #dc3545;
-    text-align: center;
-    padding: 0.5rem 1rem;
-    display: block;
-    border-radius: 5px;
-    font-weight: bold;
-    transition: background-color 0.3s ease;
-  }
-  
-  .deleteAccountButton:hover {
-    background-color: #c82333;
-  }
-  
-  /* --- Loading state display --- */
-  .loading {
-    text-align: center;
-    font-size: 1.2rem;
-    font-weight: bold;
-    padding: 2rem;
-    color: #007bff;
-  }
-  
-  .navbarContent {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-  }
-
-  /* Loading container */
-  .loadingContainer {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-  }
-
-  /* Welcome card */
-  .welcomeCard {
-    padding: 1.5rem;
-    display: flex;
-    flex-direction: column;
-    background-color: #ffffff;
-    border-radius: 1rem;
-    box-shadow: 0px 2px 12px rgba(0, 0, 0, 0.08);
-  }
-
-  .welcomeHeader {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .welcomeTitle {
-    font-weight: 700;
-    letter-spacing: -0.02em;
-  }
-
-  .welcomeSubtitle {
-    margin-top: 0.5rem;
-    font-size: 1.05rem;
-  }
-
-  .addButton {
-    border-radius: 0.75rem;
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-    padding-top: 0.6rem;
-    padding-bottom: 0.6rem;
-    font-weight: 600;
-    box-shadow: none;
-  }
-
-  /* Summary cards */
-  .summaryCard {
-    height: 100%;
-    position: relative;
-    border-radius: 1rem;
-    overflow: hidden;
-    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.05);
-    transition: box-shadow 0.3s ease-in-out, border 0.3s ease-in-out;
-    border: 1px solid transparent;
-  }
-
-  /* Default glow effect for all cards */
-  .summaryCard:hover {
-    box-shadow: 0px 0px 15px rgba(0, 122, 255, 0.3);
-  }
-
-  /* Add specific card classes for targeting in dashboard.jsx */
-  .balanceCard:hover {
-    box-shadow: 0px 0px 15px rgba(0, 122, 255, 0.4);
-    border: 1px solid rgba(0, 122, 255, 0.2);
-  }
-
-  .incomeCard:hover {
-    box-shadow: 0px 0px 15px rgba(52, 199, 89, 0.4);
-    border: 1px solid rgba(52, 199, 89, 0.2);
-  }
-
-  .expenseCard:hover {
-    box-shadow: 0px 0px 15px rgba(255, 59, 48, 0.4);
-    border: 1px solid rgba(255, 59, 48, 0.2);
-  }
-
-  .savingsCard:hover {
-    box-shadow: 0px 0px 15px rgba(52, 199, 89, 0.4);
-    border: 1px solid rgba(52, 199, 89, 0.2);
-  }
-
-  .cardTitleContainer {
-    display: flex;
-    align-items: center;
-    flex-grow: 1;
-  }
-
-  .cardTitle {
-    font-weight: 500 !important;
-    font-size: 1rem !important;
-    color: #1f1f1f;
-  }
-
-  .cardHeaderContent {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-  }
-
-  .addIconButton {
-    margin-left: 8px !important;
-  }
-
-  .moreOptionsButton {
-    padding: 4px !important;
-  }
-
-  .menuPaper {
-    border-radius: 12px !important;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
-  }
-
-  .menuItem {
-    display: flex;
-    align-items: center;
-    padding: 8px 16px !important;
-    min-height: 40px;
-  }
-
-  .menuIcon {
-    margin-right: 8px;
-    font-size: 18px !important;
-  }
-
-  .balanceAmount, .incomeAmount, .expenseAmount, .savingsAmount {
-    font-weight: 600 !important;
-    font-size: 1.75rem !important;
-    letter-spacing: -0.5px;
-  }
-
-  .incomeAmount {
-    color: #34c759; /* Apple's green color */
-  }
-
-  .expenseAmount {
-    color: #ff3b30; /* Apple's red color */
-  }
-
-  /* Transactions section */
-  .transactionsCard {
-    padding: 1.5rem;
-    display: flex;
-    flex-direction: column;
-    border-radius: 1rem;
-    box-shadow: 0px 2px 12px rgba(0, 0, 0, 0.08);
-  }
-
-  .transactionsHeader {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-  }
-
-  .sectionTitle {
-    font-weight: 600;
-    color: #333;
-  }
-
-  /* Add New button in Recent Transactions */
-  .addNewButton {
-    background-color: #007aff;
-    color: white;
-    font-weight: 500;
-    text-transform: none;
-    padding: 6px 16px;
-    border-radius: 8px;
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.2), 0 1px 3px rgba(0, 0, 0, 0.05);
-    position: relative;
-    top: 0;
-    border: none;
-    z-index: 1;
-  }
-
-  .addNewButton:hover {
-    background-color: #0062cc;
-    box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3), 0 2px 5px rgba(0, 0, 0, 0.07);
-    transform: none !important;
-  }
-
-  .addNewButton:active {
-    background-color: #005bb5;
-    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.2), 0 1px 3px rgba(0, 0, 0, 0.05);
-  }
-
-  /* Keep existing addTransactionButton for compatibility */
-  .addTransactionButton {
-    font-weight: 500;
-    text-transform: none;
-    padding: 6px 16px;
-    border-radius: 8px;
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.2), 0 1px 3px rgba(0, 0, 0, 0.05);
-    position: relative;
-    top: 0;
-    border: none;
-    backdrop-filter: blur(20px);
-    transform: none !important;
-  }
-
-  .addTransactionButton:hover {
-    background-color: #0062cc;
-    box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3), 0 2px 5px rgba(0, 0, 0, 0.07);
-    transform: none !important;
-  }
-
-  .addTransactionButton:active {
-    background-color: #005bb5;
-    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.2), 0 1px 3px rgba(0, 0, 0, 0.05);
-  }
-
-  .loadingBox {
-    display: flex;
-    justify-content: center;
-    padding: 1rem;
-  }
-
-  .tableContainer {
-    border-radius: 0.75rem;
-    overflow: hidden;
-  }
-
-  .tableHeaderCell {
-    font-weight: 600;
-    color: rgba(0, 0, 0, 0.6);
-    font-size: 0.875rem;
-  }
-
-  .tableRow:hover {
-    background-color: rgba(0, 0, 0, 0.02);
-  }
-
-  .tableCell {
-    font-size: 0.95rem;
-  }
-
-  .tableCellBold {
-    font-size: 0.95rem;
-    font-weight: 500;
-  }
-
-  .incomeTag,
-  .expenseTag {
-    display: inline-block;
-    padding-left: 0.75rem;
-    padding-right: 0.75rem;
-    padding-top: 0.25rem;
-    padding-bottom: 0.25rem;
-    border-radius: 0.5rem;
-    font-size: 0.8rem;
-    font-weight: 600;
-  }
-
-  .incomeTag {
-    background-color: rgba(52, 199, 89, 0.1);
-    color: #34c759;
-  }
-
-  .expenseTag {
-    background-color: rgba(255, 59, 48, 0.1);
-    color: #ff3b30;
-  }
-
-  .emptyTransactionsBox {
-    padding: 2rem;
-    text-align: center;
-    background-color: rgba(0, 0, 0, 0.02);
-    border-radius: 0.75rem;
-  }
-
-  .addFirstTransactionButton {
-    margin-top: 1rem;
-    border-radius: 0.75rem;
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
-    font-weight: 600;
-    box-shadow: none;
-  }
-
-  /* --- Wallet Overview Section --- */
-  .walletOverviewCard {
-    background-color: white;
-    border-radius: 12px;
-    padding: 1.5rem;
-    margin-bottom: 0.5rem;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    transition: all 0.2s ease;
-    width: 49%;
-    margin-left: 0;
-  }
-
-  .walletOverviewHeader {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-  }
-
-  .walletsContainer {
-    position: relative;
-    padding: 0 2.5rem;
-  }
-
-  .walletsList {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: repeat(2, 1fr);
-    gap: 16px;
-    position: relative;
-    transition: all 0.3s ease-out;
-  }
-
-  /* Slide animations for wallet pagination */
-  .slideLeft {
-    animation: slideOutLeft 0.2s forwards, slideInRight 0.2s 0.2s forwards;
-  }
-
-  .slideRight {
-    animation: slideOutRight 0.2s forwards, slideInLeft 0.2s 0.2s forwards;
-  }
-
-  @keyframes slideOutLeft {
-    from {
-      transform: translateX(0);
-      opacity: 1;
-    }
-    to {
-      transform: translateX(-30px);
-      opacity: 0;
-    }
-  }
-
-  @keyframes slideOutRight {
-    from {
-      transform: translateX(0);
-      opacity: 1;
-    }
-    to {
-      transform: translateX(30px);
-      opacity: 0;
-    }
-  }
-
-  @keyframes slideInRight {
-    from {
-      transform: translateX(30px);
-      opacity: 0;
-    }
-    to {
-      transform: translateX(0);
-      opacity: 1;
-    }
-  }
-
-  @keyframes slideInLeft {
-    from {
-      transform: translateX(-30px);
-      opacity: 0;
-    }
-    to {
-      transform: translateX(0);
-      opacity: 1;
-    }
-  }
-
-  .walletItem {
-    background-color: rgba(255, 255, 255, 0.8);
-    border-radius: 16px;
-    padding: 20px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-    display: flex;
-    flex-direction: column;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    border: 1px solid rgba(0, 0, 0, 0.03);
-    position: relative;
-    overflow: hidden;
-    height: 175px; /* Set a consistent height for all wallet cards */
-  }
-
-  .walletItem:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
-  }
-
-  .walletItem::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    height: 80px;
-    width: 80px;
-    border-radius: 50%;
-    background-color: rgba(0, 122, 255, 0.05);
-    transform: translate(25%, -25%);
-    z-index: 0;
-  }
-  
-  .walletHeader {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 6px;
-    position: relative;
-    z-index: 1;
-  }
-  
-  .walletMenuButton {
-    color: rgba(0, 0, 0, 0.54);
-    padding: 4px;
-    margin-right: -8px;
-  }
-  
-  .walletMenuButton:hover {
-    background-color: rgba(0, 0, 0, 0.04);
-  }
-
-  /* New style for the menu button in the circle */
-  .walletMenuButtonCircle {
-    position: absolute !important;
-    top: 12px !important;
-    right: 12px !important;
-    z-index: 2 !important;
-    padding: 4px !important;
-    color: rgba(0, 0, 0, 0.54) !important;
-    background-color: transparent !important;
-  }
-  
-  .walletMenuButtonCircle:hover {
-    background-color: rgba(0, 0, 0, 0.04) !important;
-  }
-
-  .walletName {
-    font-weight: 600;
-    font-size: 1.1rem;
-    color: #333;
-    display: flex;
-    align-items: center;
-    position: relative;
-    z-index: 1;
-    flex: 1;
-  }
-
-  .walletIcon {
-    margin-right: 10px;
-    font-size: 1.3rem;
-  }
-
-  .walletBalance {
-    font-size: 1.5rem !important;
-    font-weight: 600;
-    margin: 8px 0 12px;
-    position: relative;
-    z-index: 1;
-  }
-
-  /* Wallet color schemes */
-  .walletColor1 .walletIcon, .walletColor1 .walletBalance {
-    color: #007aff; /* Blue */
-  }
-
-  .walletColor2 .walletIcon, .walletColor2 .walletBalance {
-    color: #34c759; /* Green */
-  }
-
-  .walletColor3 .walletIcon, .walletColor3 .walletBalance {
-    color: #ff9500; /* Orange */
-  }
-
-  .walletColor4 .walletIcon, .walletColor4 .walletBalance {
-    color: #ff3b30; /* Red */
-  }
-
-  .walletColor5 .walletIcon, .walletColor5 .walletBalance {
-    color: #5856d6; /* Purple */
-  }
-
-  .walletColor6 .walletIcon, .walletColor6 .walletBalance {
-    color: #af52de; /* Pink/Purple */
-  }
-
-  .walletColor7 .walletIcon, .walletColor7 .walletBalance {
-    color: #ff2d55; /* Pink */
-  }
-
-  .walletColor8 .walletIcon, .walletColor8 .walletBalance {
-    color: #5ac8fa; /* Light Blue */
-  }
-
-  .walletColor9 .walletIcon, .walletColor9 .walletBalance {
-    color: #ffcc00; /* Yellow */
-  }
-
-  .walletColor10 .walletIcon, .walletColor10 .walletBalance {
-    color: #4cd964; /* Mint */
-  }
-
-  .walletType {
-    font-size: 0.85rem;
-    color: rgba(0, 0, 0, 0.6);
-    margin-top: auto; /* Push to the bottom of the container */
-    position: relative;
-    z-index: 1;
-    font-weight: 500;
-  }
-
-  .walletActions {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 12px;
-  }
-
-  .manageWalletsButton {
-    background-color: #007aff;
-    color: white;
-    font-weight: 500;
-    text-transform: none;
-    padding: 6px 16px;
-    border-radius: 8px;
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.2), 0 1px 3px rgba(0, 0, 0, 0.05);
-    position: relative;
-    top: 0;
-    border: none;
-    backdrop-filter: blur(20px);
-  }
-
-  .manageWalletsButton:hover {
-    background-color: #0062cc;
-    box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3), 0 2px 5px rgba(0, 0, 0, 0.07);
-  }
-
-  .manageWalletsButton:active {
-    background-color: #005bb5;
-    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.2), 0 1px 3px rgba(0, 0, 0, 0.05);
-  }
-
-  .walletNavButton {
-    position: absolute !important;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 5;
-    background-color: rgba(255, 255, 255, 0.8) !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
-    width: 36px;
-    height: 36px;
-  }
-
-  .walletNavButton:hover {
-    background-color: white !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-  }
-
-  .paginationDots {
-    display: flex;
-    justify-content: center;
-    margin-top: 16px;
-    gap: 8px;
-  }
-
-  .paginationDot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background-color: rgba(0, 122, 255, 0.3);
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-
-  .activeDot {
-    background-color: #007aff;
-    transform: scale(1.2);
-  }
-
-  @keyframes slideRight {
-    from {
-      transform: translateX(-10px);
-      opacity: 0;
-    }
-    to {
-      transform: translateX(0);
-      opacity: 1;
-    }
-  }
-
-  @keyframes slideLeft {
-    from {
-      transform: translateX(10px);
-      opacity: 0;
-    }
-    to {
-      transform: translateX(0);
-      opacity: 1;
-    }
-  }
-
-  /* --- Recent Transactions Section --- */
-  .transactionsCard {
-    background-color: white;
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    margin-top: 0;
-  }
-
-  .transactionsHeader {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-  }
-
-  .sectionTitle {
-    font-weight: 600;
-    color: #333;
-  }
-
-  .addTransactionButton {
-    font-weight: 500;
-    text-transform: none;
-    padding: 6px 16px;
-    border-radius: 8px;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.15);
-  }
-
-  .addTransactionButton:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.25);
-  }
-
-  .loadingBox {
-    display: flex;
-    justify-content: center;
-    padding: 2rem 0;
-  }
-
-  .tableContainer {
-    overflow-x: auto;
-  }
-
-  /* Dashboard Menu Styles */
-  .dashboardMenuPaper {
-    border-radius: 12px;
-    box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.1);
-    min-width: 160px;
-    margin-top: 8px;
-  }
-  
-  .dashboardMenuItem {
-    padding: 8px 16px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.9rem;
-  }
-  
-  .dashboardMenuItem:hover {
-    background-color: rgba(0, 0, 0, 0.04);
-  }
-  
-  .dashboardMenuIcon {
-    color: rgba(0, 0, 0, 0.6);
-  }
+.dashboardMenuIcon {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+/* Font scaling for all text elements */
+body, button, input, select, textarea {
+  font-size: calc(1rem * var(--scale-factor));
+}

@@ -76,19 +76,20 @@ import FinanceService from '../services/FinanceService';
 // Define the backend API base URL
 const API_BASE_URL = "http://localhost:8080";
 
-const drawerWidth = 240;
+const drawerWidth = 225;
 
 const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(
   ({ theme, open }) => ({
     flexGrow: 1,
-    padding: theme.spacing(3),
+    padding: theme.spacing(2.8),
     transition: theme.transitions.create('margin', {
       easing: theme.transitions.easing.sharp,
       duration: theme.transitions.duration.leavingScreen,
     }),
     marginLeft: `-${drawerWidth}px`,
-    backgroundColor: theme.palette.background.default,
+    backgroundColor: theme.palette.mode === 'light' ? '#f8f9fa' : theme.palette.background.default,
     minHeight: '100vh',
+    position: 'relative',
     ...(open && {
       transition: theme.transitions.create('margin', {
         easing: theme.transitions.easing.easeOut,
@@ -105,6 +106,7 @@ const DrawerHeader = styled('div')(({ theme }) => ({
   padding: theme.spacing(0, 1),
   ...theme.mixins.toolbar,
   justifyContent: 'flex-end',
+  minHeight: '48px !important',
 }));
 
 const themeComponents = {
@@ -547,316 +549,321 @@ export default function Dashboard() {
         <Main open={open}>
           <DrawerHeader />
           <Container maxWidth="lg" className={styles.dashboardContainer}>
-            <Grid container spacing={3}>
-              {/* Welcome Card */}
-              <Grid item xs={12}>
-                <Paper className={styles.welcomeCard}>
-                  <Box className={styles.welcomeHeader}>
-                    <Typography 
-                      component="h1" 
-                      variant="h4" 
-                      color="text.primary" 
-                      className={styles.welcomeTitle}
-                    >
-                      Welcome, {userProfile?.fullName || user?.username || 'User'}!
-                    </Typography>
-                  </Box>
-                  <Typography 
-                    variant="body1" 
-                    color="text.secondary"
-                    className={styles.welcomeSubtitle}
-                  >
-                    This is your financial dashboard. Here you can manage your finances, track expenses, and plan your budget.
-                  </Typography>
-                </Paper>
-              </Grid>
-              
-              {/* Summary Cards */}
-              <Grid item xs={12} md={3}>
-                <Card className={`${styles.summaryCard} ${styles.balanceCard}`}>
-                  <CardHeader 
-                    title={
-                      <Box className={styles.cardHeaderContent}>
-                        <Box className={styles.cardTitleContainer}>
-                          <AccountBalanceWalletIcon 
-                            sx={{ mr: 1, color: '#007aff' }} 
-                          />
-                          <Typography 
-                            variant="h6" 
-                            component="div" 
-                            className={styles.cardTitle}
-                          >
-                            Total Balance
-                          </Typography>
-                          <IconButton 
-                            color="primary" 
-                            size="small" 
-                            onClick={() => setAddBalanceFormOpen(true)}
-                            className={styles.addIconButton}
-                          >
-                            <AddIcon fontSize="small" />
-                          </IconButton>
-                        </Box>
-                        <IconButton
-                          aria-label="more options"
-                          aria-controls="balance-menu"
-                          aria-haspopup="true"
-                          onClick={handleBalanceMenuOpen}
-                          size="small"
-                          className={styles.moreOptionsButton}
-                        >
-                          <MoreVertIcon fontSize="small" />
-                        </IconButton>
-                      </Box>
-                    } 
-                  />
-                  <Menu
-                    id="balance-menu"
-                    anchorEl={balanceMenuAnchorEl}
-                    keepMounted
-                    open={Boolean(balanceMenuAnchorEl)}
-                    onClose={handleBalanceMenuClose}
-                    PaperProps={{
-                      className: styles.menuPaper
-                    }}
-                  >
-                    <MenuItem onClick={handleEditBalance} className={styles.menuItem}>
-                      <EditIcon fontSize="small" className={styles.menuIcon} />
-                      Edit Balance
-                    </MenuItem>
-                    <MenuItem onClick={handleManageWallets} className={styles.menuItem}>
-                      <SettingsIcon fontSize="small" className={styles.menuIcon} />
-                      Manage Wallets
-                    </MenuItem>
-                  </Menu>
-                  <CardContent sx={{ pt: 0 }}>
-                    {loading ? (
-                      <CircularProgress size={24} />
-                    ) : (
-                      <Typography 
-                        variant="h4" 
-                        className={styles.balanceAmount}
-                      >
-                        {formatCurrency(financialData.totalBalance)}
-                      </Typography>
-                    )}
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} md={3}>
-                <Card className={`${styles.summaryCard} ${styles.incomeCard}`}>
-                  <CardHeader 
-                    title={
-                      <Box className={styles.cardTitleContainer}>
-                        <TrendingUpIcon 
-                          sx={{ mr: 1, color: '#34c759' }} 
-                        />
+            <Box className={styles.dashboardBackdrop}>
+              <Box className={styles.contentContainer}>
+                <Grid container spacing={2.4}>
+                  {/* Welcome Card */}
+                  <Grid item xs={12}>
+                    <Paper className={styles.welcomeCard}>
+                      <Box className={styles.welcomeHeader}>
                         <Typography 
-                          variant="h6" 
-                          component="div" 
-                          className={styles.cardTitle}
+                          component="h1" 
+                          variant="h4" 
+                          color="text.primary" 
+                          className={styles.welcomeTitle}
                         >
-                          Income
+                          Welcome, {userProfile?.fullName || user?.username || 'User'}!
                         </Typography>
                       </Box>
-                    } 
-                  />
-                  <CardContent sx={{ pt: 0 }}>
-                    {loading ? (
-                      <CircularProgress size={24} />
-                    ) : (
                       <Typography 
-                        variant="h4" 
-                        color="success.main"
-                        className={styles.incomeAmount}
+                        variant="body1" 
+                        color="text.secondary"
+                        className={styles.welcomeSubtitle}
                       >
-                        {formatCurrency(financialData.totalIncome)}
+                        This is your financial dashboard. Here you can manage your finances, track expenses, and plan your budget.
                       </Typography>
-                    )}
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} md={3}>
-                <Card className={`${styles.summaryCard} ${styles.expenseCard}`}>
-                  <CardHeader 
-                    title={
-                      <Box className={styles.cardTitleContainer}>
-                        <TrendingDownIcon 
-                          sx={{ mr: 1, color: '#ff3b30' }} 
-                        />
-                        <Typography 
-                          variant="h6" 
-                          component="div" 
-                          className={styles.cardTitle}
-                        >
-                          Expenses
-                        </Typography>
-                      </Box>
-                    } 
-                  />
-                  <CardContent sx={{ pt: 0 }}>
-                    {loading ? (
-                      <CircularProgress size={24} />
-                    ) : (
-                      <Typography 
-                        variant="h4" 
-                        color="error.main"
-                        className={styles.expenseAmount}
-                      >
-                        {formatCurrency(financialData.totalExpense)}
-                      </Typography>
-                    )}
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} md={3}>
-                <Card className={`${styles.summaryCard} ${styles.savingsCard}`}>
-                  <CardHeader 
-                    title={
-                      <Box className={styles.cardTitleContainer}>
-                        <SavingsIcon 
-                          sx={{ mr: 1, color: financialData.netSavings >= 0 ? '#34c759' : '#ff3b30' }} 
-                        />
-                        <Typography 
-                          variant="h6" 
-                          component="div" 
-                          className={styles.cardTitle}
-                        >
-                          Net Savings
-                        </Typography>
-                      </Box>
-                    } 
-                  />
-                  <CardContent sx={{ pt: 0 }}>
-                    {loading ? (
-                      <CircularProgress size={24} />
-                    ) : (
-                      <Typography 
-                        variant="h4" 
-                        color={financialData.netSavings >= 0 ? "success.main" : "error.main"}
-                        className={styles.savingsAmount}
-                      >
-                        {formatCurrency(financialData.netSavings)}
-                      </Typography>
-                    )}
-                  </CardContent>
-                </Card>
-              </Grid>
-              
-              {/* Wallet Overview */}
-              <Grid item xs={12}>
-                <WalletOverview 
-                  onManageWallets={handleManageWallets} 
-                  externalWallets={wallets}
-                />
-              </Grid>
-              
-              {/* Recent Transactions */}
-              <Grid item xs={12}>
-                <Paper 
-                  className={styles.transactionsCard}
-                >
-                  <Box className={styles.transactionsHeader}>
-                    <Typography 
-                      component="h2" 
-                      variant="h5" 
-                      className={styles.sectionTitle}
-                    >
-                      Recent Transactions
-                    </Typography>
-                    <Button 
-                      variant="contained" 
-                      color="primary" 
-                      startIcon={<AddIcon />}
-                      onClick={openFinanceActionPanel}
-                      className={styles.addNewButton}
-                      elevation={3}
-                    >
-                      Add New
-                    </Button>
-                  </Box>
+                    </Paper>
+                  </Grid>
                   
-                  {loading ? (
-                    <Box className={styles.loadingBox}>
-                      <CircularProgress />
-                    </Box>
-                  ) : transactions.length > 0 ? (
-                    <TableContainer className={styles.tableContainer}>
-                      <Table>
-                        <TableHead>
-                          <TableRow>
-                            <TableCell className={styles.tableHeaderCell}>Date</TableCell>
-                            <TableCell className={styles.tableHeaderCell}>Description</TableCell>
-                            <TableCell className={styles.tableHeaderCell}>Category</TableCell>
-                            <TableCell className={styles.tableHeaderCell}>Type</TableCell>
-                            <TableCell align="right" className={styles.tableHeaderCell}>Amount</TableCell>
-                            <TableCell className={styles.tableHeaderCell}>Actions</TableCell>
-                          </TableRow>
-                        </TableHead>
-                        <TableBody>
-                          {transactions.map((transaction) => (
-                            <TableRow 
-                              key={transaction.id}
-                              className={styles.tableRow}
-                            >
-                              <TableCell className={styles.tableCell}>{formatDate(transaction.transactionDate)}</TableCell>
-                              <TableCell className={styles.tableCellBold}>{transaction.description}</TableCell>
-                              <TableCell className={styles.tableCell}>
-                                {transaction.category ? transaction.category.categoryName : 
-                                 (transaction.categoryId ? `Category #${transaction.categoryId}` : 'Uncategorized')}
-                              </TableCell>
-                              <TableCell className={styles.tableCell}>
-                                <Box
-                                  className={transaction.transactionType === 'INCOME' 
-                                    ? styles.incomeTag 
-                                    : styles.expenseTag}
-                                >
-                                  {transaction.transactionType}
-                                </Box>
-                              </TableCell>
-                              <TableCell 
-                                align="right" 
-                                className={transaction.transactionType === 'INCOME' 
-                                  ? styles.incomeAmount 
-                                  : styles.expenseAmount}
+                  {/* Summary Cards */}
+                  <Grid item xs={12} md={3}>
+                    <Card className={`${styles.summaryCard} ${styles.balanceCard}`}>
+                      <CardHeader 
+                        title={
+                          <Box className={styles.cardHeaderContent}>
+                            <Box className={styles.cardTitleContainer}>
+                              <AccountBalanceWalletIcon 
+                                sx={{ mr: 1, color: '#007aff', fontSize: '1.33rem' }} 
+                              />
+                              <Typography 
+                                variant="h6" 
+                                component="div" 
+                                className={styles.cardTitle}
                               >
-                                {formatCurrency(transaction.amount)}
-                              </TableCell>
-                              <TableCell className={styles.tableCell}>
-                                <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                                  <IconButton 
-                                    size="small" 
-                                    color="primary" 
-                                    onClick={() => handleEditTransaction(transaction)}
-                                    className={styles.editButton}
+                                Total Balance
+                              </Typography>
+                              <IconButton 
+                                color="primary" 
+                                size="small" 
+                                onClick={() => setAddBalanceFormOpen(true)}
+                                className={styles.addIconButton}
+                              >
+                                <AddIcon fontSize="small" />
+                              </IconButton>
+                            </Box>
+                            <IconButton
+                              aria-label="more options"
+                              aria-controls="balance-menu"
+                              aria-haspopup="true"
+                              onClick={handleBalanceMenuOpen}
+                              size="small"
+                              className={styles.moreOptionsButton}
+                            >
+                              <MoreVertIcon fontSize="small" />
+                            </IconButton>
+                          </Box>
+                        } 
+                      />
+                      <Menu
+                        id="balance-menu"
+                        anchorEl={balanceMenuAnchorEl}
+                        keepMounted
+                        open={Boolean(balanceMenuAnchorEl)}
+                        onClose={handleBalanceMenuClose}
+                        PaperProps={{
+                          className: styles.menuPaper
+                        }}
+                      >
+                        <MenuItem onClick={handleEditBalance} className={styles.menuItem}>
+                          <EditIcon fontSize="small" className={styles.menuIcon} />
+                          Edit Balance
+                        </MenuItem>
+                        <MenuItem onClick={handleManageWallets} className={styles.menuItem}>
+                          <SettingsIcon fontSize="small" className={styles.menuIcon} />
+                          Manage Wallets
+                        </MenuItem>
+                      </Menu>
+                      <CardContent sx={{ pt: 0 }}>
+                        {loading ? (
+                          <CircularProgress size={24} />
+                        ) : (
+                          <Typography 
+                            variant="h4" 
+                            className={styles.balanceAmount}
+                          >
+                            {formatCurrency(financialData.totalBalance)}
+                          </Typography>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                  <Grid item xs={12} md={3}>
+                    <Card className={`${styles.summaryCard} ${styles.incomeCard}`}>
+                      <CardHeader 
+                        title={
+                          <Box className={styles.cardTitleContainer}>
+                            <TrendingUpIcon 
+                              sx={{ mr: 1, color: '#34c759', fontSize: '1.33rem' }} 
+                            />
+                            <Typography 
+                              variant="h6" 
+                              component="div" 
+                              className={styles.cardTitle}
+                            >
+                              Income
+                            </Typography>
+                          </Box>
+                        } 
+                      />
+                      <CardContent sx={{ pt: 0 }}>
+                        {loading ? (
+                          <CircularProgress size={24} />
+                        ) : (
+                          <Typography 
+                            variant="h4" 
+                            color="success.main"
+                            className={styles.incomeAmount}
+                          >
+                            {formatCurrency(financialData.totalIncome)}
+                          </Typography>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                  <Grid item xs={12} md={3}>
+                    <Card className={`${styles.summaryCard} ${styles.expenseCard}`}>
+                      <CardHeader 
+                        title={
+                          <Box className={styles.cardTitleContainer}>
+                            <TrendingDownIcon 
+                              sx={{ mr: 1, color: '#ff3b30', fontSize: '1.33rem' }} 
+                            />
+                            <Typography 
+                              variant="h6" 
+                              component="div" 
+                              className={styles.cardTitle}
+                            >
+                              Expenses
+                            </Typography>
+                          </Box>
+                        } 
+                      />
+                      <CardContent sx={{ pt: 0 }}>
+                        {loading ? (
+                          <CircularProgress size={24} />
+                        ) : (
+                          <Typography 
+                            variant="h4" 
+                            color="error.main"
+                            className={styles.expenseAmount}
+                          >
+                            {formatCurrency(financialData.totalExpense)}
+                          </Typography>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                  <Grid item xs={12} md={3}>
+                    <Card className={`${styles.summaryCard} ${styles.savingsCard}`}>
+                      <CardHeader 
+                        title={
+                          <Box className={styles.cardTitleContainer}>
+                            <SavingsIcon 
+                              sx={{ mr: 1, color: financialData.netSavings >= 0 ? '#34c759' : '#ff3b30', fontSize: '1.33rem' }} 
+                            />
+                            <Typography 
+                              variant="h6" 
+                              component="div" 
+                              className={styles.cardTitle}
+                            >
+                              Net Savings
+                            </Typography>
+                          </Box>
+                        } 
+                      />
+                      <CardContent sx={{ pt: 0 }}>
+                        {loading ? (
+                          <CircularProgress size={24} />
+                        ) : (
+                          <Typography 
+                            variant="h4" 
+                            color={financialData.netSavings >= 0 ? "success.main" : "error.main"}
+                            className={styles.savingsAmount}
+                          >
+                            {formatCurrency(financialData.netSavings)}
+                          </Typography>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                  
+                  {/* Wallet Overview */}
+                  <Grid item xs={12}>
+                    <WalletOverview 
+                      onManageWallets={handleManageWallets} 
+                      externalWallets={wallets}
+                    />
+                  </Grid>
+                  
+                  {/* Recent Transactions */}
+                  <Grid item xs={12}>
+                    <Paper 
+                      className={styles.transactionsCard}
+                    >
+                      <Box className={styles.transactionsHeader}>
+                        <Typography 
+                          component="h2" 
+                          variant="h5" 
+                          className={styles.sectionTitle}
+                        >
+                          Recent Transactions
+                        </Typography>
+                        <Button 
+                          variant="contained" 
+                          color="primary" 
+                          startIcon={<AddIcon />}
+                          onClick={openFinanceActionPanel}
+                          className={styles.addNewButton}
+                          elevation={3}
+                          size="small"
+                        >
+                          Add New
+                        </Button>
+                      </Box>
+                      
+                      {loading ? (
+                        <Box className={styles.loadingBox}>
+                          <CircularProgress />
+                        </Box>
+                      ) : transactions.length > 0 ? (
+                        <TableContainer className={styles.tableContainer}>
+                          <Table>
+                            <TableHead>
+                              <TableRow>
+                                <TableCell className={styles.tableHeaderCell}>Date</TableCell>
+                                <TableCell className={styles.tableHeaderCell}>Description</TableCell>
+                                <TableCell className={styles.tableHeaderCell}>Category</TableCell>
+                                <TableCell className={styles.tableHeaderCell}>Type</TableCell>
+                                <TableCell align="right" className={styles.tableHeaderCell}>Amount</TableCell>
+                                <TableCell className={styles.tableHeaderCell}>Actions</TableCell>
+                              </TableRow>
+                            </TableHead>
+                            <TableBody>
+                              {transactions.map((transaction) => (
+                                <TableRow 
+                                  key={transaction.id}
+                                  className={styles.tableRow}
+                                >
+                                  <TableCell className={styles.tableCell}>{formatDate(transaction.transactionDate)}</TableCell>
+                                  <TableCell className={styles.tableCellBold}>{transaction.description}</TableCell>
+                                  <TableCell className={styles.tableCell}>
+                                    {transaction.category ? transaction.category.categoryName : 
+                                     (transaction.categoryId ? `Category #${transaction.categoryId}` : 'Uncategorized')}
+                                  </TableCell>
+                                  <TableCell className={styles.tableCell}>
+                                    <Box
+                                      className={transaction.transactionType === 'INCOME' 
+                                        ? styles.incomeTag 
+                                        : styles.expenseTag}
+                                    >
+                                      {transaction.transactionType}
+                                    </Box>
+                                  </TableCell>
+                                  <TableCell 
+                                    align="right" 
+                                    className={transaction.transactionType === 'INCOME' 
+                                      ? styles.incomeAmount 
+                                      : styles.expenseAmount}
                                   >
-                                    <EditIcon fontSize="small" />
-                                  </IconButton>
-                                  <IconButton 
-                                    size="small" 
-                                    color="error" 
-                                    onClick={() => handleDeleteTransaction(transaction)}
-                                    className={styles.deleteButton}
-                                  >
-                                    <DeleteIcon fontSize="small" />
-                                  </IconButton>
-                                </Box>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </TableContainer>
-                  ) : (
-                    <Box className={styles.emptyTransactionsBox}>
-                      <Typography variant="body1" color="text.secondary">
-                        No transactions to display. Start adding your financial data to see it here.
-                      </Typography>
-                    </Box>
-                  )}
-                </Paper>
-              </Grid>
-            </Grid>
+                                    {formatCurrency(transaction.amount)}
+                                  </TableCell>
+                                  <TableCell className={styles.tableCell}>
+                                    <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                      <IconButton 
+                                        size="small" 
+                                        color="primary" 
+                                        onClick={() => handleEditTransaction(transaction)}
+                                        className={styles.editButton}
+                                      >
+                                        <EditIcon fontSize="small" />
+                                      </IconButton>
+                                      <IconButton 
+                                        size="small" 
+                                        color="error" 
+                                        onClick={() => handleDeleteTransaction(transaction)}
+                                        className={styles.deleteButton}
+                                      >
+                                        <DeleteIcon fontSize="small" />
+                                      </IconButton>
+                                    </Box>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </TableContainer>
+                      ) : (
+                        <Box className={styles.emptyTransactionsBox}>
+                          <Typography variant="body1" color="text.secondary">
+                            No transactions to display. Start adding your financial data to see it here.
+                          </Typography>
+                        </Box>
+                      )}
+                    </Paper>
+                  </Grid>
+                </Grid>
+              </Box>
+            </Box>
           </Container>
         </Main>
       </Box>
