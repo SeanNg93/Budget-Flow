@@ -182,6 +182,11 @@
   font-size: 1rem !important;
 }
 
+.profile-dialog .text-field input[type="date"] {
+  padding: 8px 12px;
+  font-size: 1rem;
+}
+
 .profile-dialog .bio-container {
   margin-top: 1.5rem;
 }
@@ -235,6 +240,12 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1.5rem;
+}
+
+@media (max-width: 600px) {
+  .field-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Responsive styles */

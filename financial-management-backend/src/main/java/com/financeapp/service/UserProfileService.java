@@ -19,6 +19,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
@@ -95,8 +96,12 @@ public class UserProfileService {
         profile.setFullName(profileDto.getFullName());
         profile.setPhone(profileDto.getPhone());
         profile.setBio(profileDto.getBio());
-        // Do not update role from the DTO to prevent users from changing their role
-        // profile.setRole(profileDto.getRole());
+        
+        // Thêm cập nhật các trường mới
+        if (profileDto.getDateOfBirth() != null && !profileDto.getDateOfBirth().isEmpty()) {
+            profile.setDateOfBirth(LocalDate.parse(profileDto.getDateOfBirth()));
+        }
+        profile.setAddress(profileDto.getAddress());
 
         // Save the profile
         UserProfile savedProfile = userProfileRepository.save(profile);
@@ -170,6 +175,8 @@ public class UserProfileService {
                 .role("User")
                 .totalBalance(BigDecimal.ZERO)
                 .currency("USD")
+                .dateOfBirth(null)
+                .address(null)
                 .build();
 
         UserProfile savedProfile = userProfileRepository.save(profile);
@@ -314,7 +321,6 @@ public class UserProfileService {
     private UserProfileDto mapToDto(UserProfile profile, User user) {
         String profilePictureUrl = null;
         if (profile.getProfilePicturePath() != null) {
-            // Convert file path to URL
             profilePictureUrl = baseUrl + "/uploads/" + Paths.get(profile.getProfilePicturePath()).getFileName();
         }
 
@@ -331,6 +337,9 @@ public class UserProfileService {
                 .profilePictureUrl(profilePictureUrl)
                 .totalBalance(profile.getTotalBalance())
                 .currency(profile.getCurrency())
+                .dateOfBirth(profile.getDateOfBirth() != null ? 
+                    profile.getDateOfBirth().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) : null)
+                .address(profile.getAddress())
                 .build();
     }
 }

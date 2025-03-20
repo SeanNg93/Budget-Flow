@@ -338,4 +338,10 @@
   .fieldGrid {
     grid-template-columns: 1fr;
   }
+}
+
+/* Style cho trường date input */
+.textField input[type="date"] {
+  padding: 8px 12px;
+  font-size: 1rem;
 } 

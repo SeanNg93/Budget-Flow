@@ -29,6 +29,8 @@ import BadgeIcon from "@mui/icons-material/Badge";
 import EmailIcon from "@mui/icons-material/Email";
 import PhoneIcon from "@mui/icons-material/Phone";
 import InfoIcon from "@mui/icons-material/Info";
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
 import styles from "../../styles/Profile.module.css";
 
 // Define the backend API base URL
@@ -417,6 +419,55 @@ export default function Profile() {
               ) : (
                 <Typography variant="body1" className={styles.fieldValue}>
                   {profile.phone || "Not provided"}
+                </Typography>
+              )}
+            </Box>
+            
+            <Box className={styles.fieldContainer}>
+              <Typography variant="caption" className={styles.fieldLabel}>
+                <CalendarTodayIcon fontSize="small" sx={{ mr: 0.5, verticalAlign: 'text-bottom' }} />
+                Date of Birth
+              </Typography>
+              {isEditing ? (
+                <TextField
+                  fullWidth
+                  name="dateOfBirth"
+                  type="date"
+                  value={editedProfile.dateOfBirth || ""}
+                  onChange={handleInputChange}
+                  variant="outlined"
+                  size="small"
+                  className={styles.textField}
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                />
+              ) : (
+                <Typography variant="body1" className={styles.fieldValue}>
+                  {profile.dateOfBirth || "Not provided"}
+                </Typography>
+              )}
+            </Box>
+            
+            <Box className={styles.fieldContainer}>
+              <Typography variant="caption" className={styles.fieldLabel}>
+                <LocationOnIcon fontSize="small" sx={{ mr: 0.5, verticalAlign: 'text-bottom' }} />
+                Address
+              </Typography>
+              {isEditing ? (
+                <TextField
+                  fullWidth
+                  name="address"
+                  value={editedProfile.address || ""}
+                  onChange={handleInputChange}
+                  variant="outlined"
+                  size="small"
+                  className={styles.textField}
+                  placeholder="Enter your address"
+                />
+              ) : (
+                <Typography variant="body1" className={styles.fieldValue}>
+                  {profile.address || "Not provided"}
                 </Typography>
               )}
             </Box>

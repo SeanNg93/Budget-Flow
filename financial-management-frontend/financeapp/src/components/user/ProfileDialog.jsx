@@ -22,6 +22,8 @@ import PhoneIcon from '@mui/icons-material/Phone';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import BadgeIcon from '@mui/icons-material/Badge';
 import InfoIcon from '@mui/icons-material/Info';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { useUser } from '../../context/UserContext';
@@ -473,6 +475,55 @@ export default function ProfileDialog({ open, onClose, handleClose, onProfileUpd
                 ) : (
                   <Typography variant="body1" className="field-value">
                     {profile.phone || "Not provided"}
+                  </Typography>
+                )}
+              </Box>
+              
+              <Box className="field-container">
+                <Typography variant="caption" className="field-label">
+                  <CalendarTodayIcon fontSize="small" sx={{ mr: 0.5, verticalAlign: 'text-bottom' }} />
+                  Date of Birth
+                </Typography>
+                {isEditing ? (
+                  <TextField
+                    fullWidth
+                    name="dateOfBirth"
+                    type="date"
+                    value={editedProfile.dateOfBirth || ""}
+                    onChange={handleInputChange}
+                    variant="outlined"
+                    size="small"
+                    className="text-field"
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
+                  />
+                ) : (
+                  <Typography variant="body1" className="field-value">
+                    {profile.dateOfBirth || "Not provided"}
+                  </Typography>
+                )}
+              </Box>
+              
+              <Box className="field-container">
+                <Typography variant="caption" className="field-label">
+                  <LocationOnIcon fontSize="small" sx={{ mr: 0.5, verticalAlign: 'text-bottom' }} />
+                  Address
+                </Typography>
+                {isEditing ? (
+                  <TextField
+                    fullWidth
+                    name="address"
+                    value={editedProfile.address || ""}
+                    onChange={handleInputChange}
+                    variant="outlined"
+                    size="small"
+                    className="text-field"
+                    placeholder="Enter your address"
+                  />
+                ) : (
+                  <Typography variant="body1" className="field-value">
+                    {profile.address || "Not provided"}
                   </Typography>
                 )}
               </Box>
