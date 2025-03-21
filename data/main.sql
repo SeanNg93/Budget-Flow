@@ -348,7 +348,113 @@ END //
 DELIMITER ;
 
 -- =============================================
--- PART 5: VERIFY SETUP
+-- PART 5: CREATE PROCEDURES FOR CHART DATA
+-- =============================================
+
+-- Drop procedures if they exist to avoid errors
+DROP PROCEDURE IF EXISTS get_financial_data_by_date_range;
+DROP PROCEDURE IF EXISTS determine_chart_interval;
+DROP VIEW IF EXISTS v_financial_summary;
+
+DELIMITER //
+
+-- Procedure to get financial data by date range for charts
+CREATE PROCEDURE get_financial_data_by_date_range(
+    IN p_user_id INT,
+    IN p_start_date TIMESTAMP,
+    IN p_end_date TIMESTAMP,
+    IN p_category_id INT,
+    IN p_interval VARCHAR(20) -- 'day', 'week', 'month', 'year'
+)
+BEGIN
+    DECLARE date_format_pattern VARCHAR(50);
+    
+    -- Set date format based on interval
+    CASE p_interval
+        WHEN 'day' THEN SET date_format_pattern = '%Y-%m-%d';
+        WHEN 'week' THEN SET date_format_pattern = '%Y-%u'; -- Year and week number
+        WHEN 'month' THEN SET date_format_pattern = '%Y-%m';
+        WHEN 'year' THEN SET date_format_pattern = '%Y';
+        ELSE SET date_format_pattern = '%Y-%m-%d'; -- Default to daily
+    END CASE;
+    
+    -- Get chart data grouped by date period
+    IF p_category_id IS NULL OR p_category_id = 0 THEN
+        -- Query without category filter
+        SELECT 
+            DATE_FORMAT(transaction_date, date_format_pattern) AS period,
+            SUM(CASE WHEN transaction_type = 'INCOME' THEN amount ELSE 0 END) AS income,
+            SUM(CASE WHEN transaction_type = 'EXPENSE' THEN amount ELSE 0 END) AS expenses
+        FROM transactions
+        WHERE user_id = p_user_id
+          AND transaction_date BETWEEN p_start_date AND p_end_date
+        GROUP BY period
+        ORDER BY MIN(transaction_date);
+    ELSE
+        -- Query with category filter
+        SELECT 
+            DATE_FORMAT(transaction_date, date_format_pattern) AS period,
+            SUM(CASE WHEN transaction_type = 'INCOME' THEN amount ELSE 0 END) AS income,
+            SUM(CASE WHEN transaction_type = 'EXPENSE' THEN amount ELSE 0 END) AS expenses
+        FROM transactions
+        WHERE user_id = p_user_id
+          AND transaction_date BETWEEN p_start_date AND p_end_date
+          AND category_id = p_category_id
+        GROUP BY period
+        ORDER BY MIN(transaction_date);
+    END IF;
+    
+    -- Get summary data
+    SELECT
+        SUM(CASE WHEN transaction_type = 'INCOME' THEN amount ELSE 0 END) AS total_income,
+        SUM(CASE WHEN transaction_type = 'EXPENSE' THEN amount ELSE 0 END) AS total_expenses,
+        SUM(CASE WHEN transaction_type = 'INCOME' THEN amount ELSE -amount END) AS net_savings
+    FROM transactions
+    WHERE user_id = p_user_id
+      AND transaction_date BETWEEN p_start_date AND p_end_date
+      AND (p_category_id IS NULL OR p_category_id = 0 OR category_id = p_category_id);
+END //
+
+-- Procedure to determine appropriate interval based on date range
+CREATE PROCEDURE determine_chart_interval(
+    IN p_start_date TIMESTAMP,
+    IN p_end_date TIMESTAMP,
+    OUT p_interval VARCHAR(20)
+)
+BEGIN
+    DECLARE days_difference INT;
+    
+    -- Calculate days between dates
+    SET days_difference = DATEDIFF(p_end_date, p_start_date);
+    
+    -- Set interval based on date range
+    IF days_difference <= 14 THEN
+        SET p_interval = 'day'; -- Daily for up to 2 weeks
+    ELSEIF days_difference <= 90 THEN
+        SET p_interval = 'week'; -- Weekly for up to 3 months
+    ELSEIF days_difference <= 730 THEN
+        SET p_interval = 'month'; -- Monthly for up to 2 years
+    ELSE
+        SET p_interval = 'year'; -- Yearly for longer periods
+    END IF;
+END //
+
+DELIMITER ;
+
+-- Add view to simplify chart data access
+CREATE OR REPLACE VIEW v_financial_summary AS
+SELECT 
+    user_id,
+    DATE_FORMAT(transaction_date, '%Y-%m') AS month,
+    SUM(CASE WHEN transaction_type = 'INCOME' THEN amount ELSE 0 END) AS monthly_income,
+    SUM(CASE WHEN transaction_type = 'EXPENSE' THEN amount ELSE 0 END) AS monthly_expenses,
+    SUM(CASE WHEN transaction_type = 'INCOME' THEN amount ELSE -amount END) AS monthly_net
+FROM transactions
+GROUP BY user_id, month
+ORDER BY user_id, month;
+
+-- =============================================
+-- PART 6: VERIFY SETUP
 -- =============================================
 -- Ensure all users have at least the ROLE_USER role (safety check)
 INSERT INTO user_roles (user_id, role_id)
