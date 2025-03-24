@@ -1193,19 +1193,6 @@ export default function Dashboard() {
                           </Typography>
                         </Box>
                       )}
-                      
-                      {/* Show count and active filter info */}
-                      {transactionFilterOpen && filteredTransactions.length > 0 && (
-                        <Box sx={{ pt: 2, px: 2, pb: 1 }}>
-                          <Typography variant="body2" color="text.secondary">
-                            Showing {transactions.length} of {filteredTransactions.length} matching transactions
-                            {filteredTransactions.length > 10 && ' (top 10 most recent)'}
-                            {filterTimeframe === 'custom' && customStartDate && customEndDate && 
-                              ` from ${formatDateForDisplay(customStartDate)} to ${formatDateForDisplay(customEndDate)}`
-                            }
-                          </Typography>
-                        </Box>
-                      )}
                     </Paper>
                   </Grid>
                 </Grid>
