@@ -34,6 +34,10 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import SavingsIcon from '@mui/icons-material/Savings';
 import SettingsIcon from '@mui/icons-material/Settings';
+import SearchIcon from '@mui/icons-material/Search';
+import CloseIcon from '@mui/icons-material/Close';
+import InputBase from '@mui/material/InputBase';
+import Fade from '@mui/material/Fade';
 import axios from 'axios';
 import styles from '../styles/dashboard.module.css';
 import {
@@ -181,6 +185,14 @@ export default function Dashboard() {
   const [customEndDate, setCustomEndDate] = useState(new Date());
   const [showCustomDateRange, setShowCustomDateRange] = useState(false);
 
+  // Add new state variables for transaction search
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const searchInputRef = useRef(null);
+  // Add a state to store all transactions
+  const [allTransactions, setAllTransactions] = useState([]);
+
   useEffect(() => {
     checkAuth();
   }, []);
@@ -322,6 +334,10 @@ export default function Dashboard() {
       
       // Update transactions
       setTransactions(transactionsResponse.data.slice(0, 5)); // Get only the 5 most recent
+      setFilteredTransactions(transactionsResponse.data.slice(0, 5));
+      
+      // Store all transactions for search functionality
+      setAllTransactions(transactionsResponse.data || []);
     } catch (error) {
       setError('Failed to load financial data. Please try again later.');
       // Use placeholder data if API fails
@@ -528,6 +544,9 @@ export default function Dashboard() {
       const transactionsResponse = await FinanceService.getTransactions();
       
       if (transactionsResponse.data && transactionsResponse.data.length > 0) {
+        // Store all transactions for searching
+        setAllTransactions(transactionsResponse.data);
+        
         // If we're not filtering, just get recent transactions
         if (!applyFilters) {
           setTransactions(transactionsResponse.data.slice(0, 5));
@@ -741,6 +760,97 @@ export default function Dashboard() {
       setCustomEndDate(date);
     }
   };
+
+  // Function to handle search input changes
+  const handleSearchChange = (event) => {
+    const value = event.target.value;
+    setSearchTerm(value);
+    
+    if (!value.trim()) {
+      setSearchResults([]);
+      // Reset transaction list when search is cleared
+      if (filteredTransactions.length > 0) {
+        setTransactions(filteredTransactions.slice(0, 10));
+      } else {
+        // If no filtered transactions, show the 5 most recent from all transactions
+        setTransactions(allTransactions.slice(0, 5));
+      }
+      return;
+    }
+    
+    // Filter transactions based on search term
+    const filtered = allTransactions.filter(transaction => {
+      const searchTermLower = value.toLowerCase();
+      
+      // Search in description
+      const descriptionMatch = transaction.description && 
+        transaction.description.toLowerCase().includes(searchTermLower);
+      
+      // Search in category - handle different category data structures
+      let categoryMatch = false;
+      if (transaction.category && transaction.category.categoryName) {
+        categoryMatch = transaction.category.categoryName.toLowerCase().includes(searchTermLower);
+      } else if (transaction.categoryName) {
+        categoryMatch = transaction.categoryName.toLowerCase().includes(searchTermLower);
+      }
+      
+      // Search in amount - convert amount to string and remove currency formatting
+      const amountStr = transaction.amount ? transaction.amount.toString() : '';
+      const amountMatch = amountStr.includes(value);
+      
+      // Return true if any field matches
+      return descriptionMatch || categoryMatch || amountMatch;
+    });
+    
+    setSearchResults(filtered);
+    
+    // If searching, update the displayed transactions
+    if (filtered.length > 0) {
+      setTransactions(filtered);
+    }
+  };
+
+  // Function to toggle search input visibility
+  const toggleSearch = () => {
+    if (searchOpen) {
+      // If search is open, close it properly
+      closeSearch();
+    } else {
+      // If search is closed, open it
+      setSearchOpen(true);
+      // Clear previous search when opening
+      setSearchTerm('');
+      setSearchResults([]);
+      // Focus the input field when it appears
+      setTimeout(() => {
+        if (searchInputRef.current) {
+          searchInputRef.current.focus();
+        }
+      }, 300); // Delay to wait for animation
+    }
+  };
+
+  // Function to close search
+  const closeSearch = () => {
+    setSearchOpen(false);
+    setSearchTerm('');
+    setSearchResults([]);
+    // Restore original transactions view
+    if (filteredTransactions.length > 0) {
+      setTransactions(filteredTransactions.slice(0, 10));
+    } else {
+      // If no filtered transactions, show the 5 most recent from all transactions
+      setTransactions(allTransactions.slice(0, 5));
+    }
+  };
+
+  // Determine which transactions to display
+  const displayTransactions = useMemo(() => {
+    if (searchTerm && searchResults.length > 0) {
+      return searchResults;
+    }
+    return transactions;
+  }, [searchTerm, searchResults, transactions]);
 
   if (loading) {
     return (
@@ -1028,7 +1138,50 @@ export default function Dashboard() {
                         >
                           Recent Transactions
                         </Typography>
-                        <Box sx={{ display: 'flex', gap: 1 }}>
+                        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                          {/* Search button and input */}
+                          <Box className={styles.searchContainer}>
+                            <Fade in={searchOpen} timeout={300}>
+                              <Box className={`${styles.searchInputContainer} ${searchOpen ? styles.searchOpen : ''}`}>
+                                <InputBase
+                                  placeholder="Search transactions..."
+                                  className={styles.searchInput}
+                                  value={searchTerm}
+                                  onChange={handleSearchChange}
+                                  inputRef={searchInputRef}
+                                  endAdornment={
+                                    searchTerm && (
+                                      <IconButton 
+                                        size="small" 
+                                        onClick={() => {
+                                          setSearchTerm('');
+                                          setSearchResults([]);
+                                          // Reset transaction list when search is cleared
+                                          if (filteredTransactions.length > 0) {
+                                            setTransactions(filteredTransactions.slice(0, 10));
+                                          } else {
+                                            // If no filtered transactions, show the 5 most recent from all transactions
+                                            setTransactions(allTransactions.slice(0, 5));
+                                          }
+                                        }}
+                                        className={styles.clearSearchButton}
+                                      >
+                                        <CloseIcon fontSize="small" />
+                                      </IconButton>
+                                    )
+                                  }
+                                />
+                              </Box>
+                            </Fade>
+                            <IconButton 
+                              size="small"
+                              onClick={toggleSearch}
+                              color={searchOpen ? "primary" : "default"}
+                              className={styles.searchButton}
+                            >
+                              {searchOpen ? <CloseIcon fontSize="small" /> : <SearchIcon fontSize="small" />}
+                            </IconButton>
+                          </Box>
                           <Button
                             variant="outlined"
                             size="small"
@@ -1200,7 +1353,7 @@ export default function Dashboard() {
                         <Box className={styles.loadingBox}>
                           <CircularProgress />
                         </Box>
-                      ) : transactions.length > 0 ? (
+                      ) : displayTransactions.length > 0 ? (
                         <TableContainer className={styles.tableContainer}>
                           <Table>
                             <TableHead>
@@ -1215,7 +1368,7 @@ export default function Dashboard() {
                               </TableRow>
                             </TableHead>
                             <TableBody>
-                              {transactions.map((transaction) => (
+                              {displayTransactions.map((transaction) => (
                                 <TableRow 
                                   key={transaction.id}
                                   className={styles.tableRow}
@@ -1272,11 +1425,22 @@ export default function Dashboard() {
                               ))}
                             </TableBody>
                           </Table>
+                          {/* Show search results message if searching */}
+                          {searchTerm && (
+                            <Box className={styles.searchResultsInfo}>
+                              <Typography variant="body2" color="textSecondary">
+                                Found {searchResults.length} {searchResults.length === 1 ? 'transaction' : 'transactions'} 
+                                matching "{searchTerm}"
+                              </Typography>
+                            </Box>
+                          )}
                         </TableContainer>
                       ) : (
                         <Box className={styles.emptyTransactionsBox}>
                           <Typography variant="body1" color="text.secondary">
-                            {transactionFilterOpen ? 'No transactions match your filter criteria.' : 'No transactions to display. Start adding your financial data to see it here.'}
+                            {searchTerm ? `No transactions found matching "${searchTerm}"` : 
+                             (transactionFilterOpen ? 'No transactions match your filter criteria.' : 
+                             'No transactions to display. Start adding your financial data to see it here.')}
                           </Typography>
                         </Box>
                       )}

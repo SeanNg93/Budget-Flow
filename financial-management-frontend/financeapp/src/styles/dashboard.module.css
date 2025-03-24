@@ -1080,3 +1080,98 @@ button.resetFilterButton {
   width: 16px;
   height: 16px;
 }
+
+/* Search functionality styles */
+.searchContainer {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.searchButton {
+  z-index: 2;
+  background-color: rgba(0, 0, 0, 0.02);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  transition: all 0.2s ease;
+}
+
+.searchButton:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.searchInputContainer {
+  position: absolute;
+  right: 32px;
+  overflow: hidden;
+  width: 0;
+  transition: width 0.3s ease, opacity 0.2s ease;
+  opacity: 0;
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1;
+  height: 32px;
+  display: flex;
+  align-items: center;
+}
+
+.searchOpen {
+  width: 200px;
+  opacity: 1;
+}
+
+.searchInput {
+  padding: 4px 12px;
+  font-size: 0.8rem;
+  width: 100%;
+}
+
+.clearSearchButton {
+  padding: 2px !important;
+  margin-right: 4px;
+}
+
+.searchResultsInfo {
+  padding: 8px 16px;
+  background-color: rgba(0, 0, 0, 0.02);
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Media queries for responsive search */
+@media (max-width: 599px) {
+  .searchOpen {
+    width: 150px;
+  }
+}
+
+@media (min-width: 600px) {
+  .searchOpen {
+    width: 200px;
+  }
+}
+
+@media (min-width: 960px) {
+  .searchOpen {
+    width: 250px;
+  }
+}
+
+/* More styles for showing active filters */
+.activeFilterChip {
+  font-size: 0.75rem;
+  height: 24px;
+  background-color: #f0f7ff;
+  color: #007aff;
+  margin-right: 8px;
+  border: 1px solid rgba(0, 122, 255, 0.2);
+}
+
+.activeFilterChip .MuiChip-deleteIcon {
+  color: #007aff;
+  width: 16px;
+  height: 16px;
+}
