@@ -49,6 +49,16 @@ public class CategoryService {
         TransactionCategory category = getCategoryById(categoryId);
         category.setCategoryName(categoryDetails.getCategoryName());
         category.setType(categoryDetails.getType());
+        
+        // Update the new fields if provided
+        if (categoryDetails.getSpendingLimit() != null) {
+            category.setSpendingLimit(categoryDetails.getSpendingLimit());
+        }
+        
+        if (categoryDetails.getWarningPercentage() != null) {
+            category.setWarningPercentage(categoryDetails.getWarningPercentage());
+        }
+        
         return categoryRepository.save(category);
     }
 

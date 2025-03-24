@@ -38,6 +38,8 @@ import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import CategoryIcon from '@mui/icons-material/Category';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import WarningIcon from '@mui/icons-material/Warning';
+import ErrorIcon from '@mui/icons-material/Error';
 import FinanceService from '../../services/FinanceService';
 import WalletForm from './WalletForm';
 import CategoryForm from './CategoryForm';
@@ -78,6 +80,10 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
   const [deleteWalletOpen, setDeleteWalletOpen] = useState(false);
   const [deleteWalletId, setDeleteWalletId] = useState(null);
   const [deleteWalletName, setDeleteWalletName] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [warningMessage, setWarningMessage] = useState('');
+  const [isWarningVisible, setIsWarningVisible] = useState(false);
+  const [isErrorVisible, setIsErrorVisible] = useState(false);
 
   // Add refs for transitions
   const dialogRef = useRef(null);
@@ -141,12 +147,55 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
     }
   }, [initialData]);
   
+  // Add a useEffect to handle category limit warnings
+  useEffect(() => {
+    const checkCategoryLimit = () => {
+      // Only check for expense transactions
+      if (formData.transactionType !== 'EXPENSE' || !formData.categoryId || !formData.amount) {
+        setWarningMessage('');
+        setIsWarningVisible(false);
+        setIsErrorVisible(false);
+        return;
+      }
+      
+      const category = categories.find(c => c.id.toString() === formData.categoryId);
+      setSelectedCategory(category);
+      
+      if (category && category.spendingLimit) {
+        const limit = parseFloat(category.spendingLimit);
+        const amount = parseFloat(formData.amount);
+        const warningThreshold = limit * (category.warningPercentage || 80) / 100;
+        
+        if (amount > limit) {
+          setWarningMessage(`Warning: You have exceeded your spending limit of $${limit.toFixed(2)} for this category!`);
+          setIsWarningVisible(false);
+          setIsErrorVisible(true);
+        } else if (amount > warningThreshold) {
+          setWarningMessage(`Careful, you are about to exceed your spending limit of $${limit.toFixed(2)} for this category.`);
+          setIsWarningVisible(true);
+          setIsErrorVisible(false);
+        } else {
+          setWarningMessage('');
+          setIsWarningVisible(false);
+          setIsErrorVisible(false);
+        }
+      } else {
+        setWarningMessage('');
+        setIsWarningVisible(false);
+        setIsErrorVisible(false);
+      }
+    };
+    
+    checkCategoryLimit();
+  }, [formData.amount, formData.categoryId, formData.transactionType, categories]);
+  
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
       [name]: value
     });
+    
     // Clear error for this field
     if (errors[name]) {
       setErrors({
