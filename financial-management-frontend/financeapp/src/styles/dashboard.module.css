@@ -344,15 +344,17 @@
   color: white;
   font-weight: 500;
   text-transform: none;
-  padding: calc(6px * var(--scale-factor)) calc(15px * var(--scale-factor));
-  border-radius: calc(7px * var(--scale-factor));
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  padding: 4px 12px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
   box-shadow: 0 2px 7px rgba(0, 122, 255, 0.2), 0 1px 3px rgba(0, 0, 0, 0.05);
   position: relative;
   top: 0;
   border: none;
   z-index: 1;
-  font-size: calc(0.95rem * var(--scale-factor));
+  font-size: 0.75rem !important;
+  height: 32px;
+  min-width: 70px;
 }
 
 .addNewButton:hover {
@@ -370,7 +372,7 @@
 .addTransactionButton {
   font-weight: 500;
   text-transform: none;
-  padding: 6px 16px;
+  padding: 4px 12px;
   border-radius: 8px;
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   box-shadow: 0 2px 8px rgba(0, 122, 255, 0.2), 0 1px 3px rgba(0, 0, 0, 0.05);
@@ -379,6 +381,9 @@
   border: none;
   backdrop-filter: blur(20px);
   transform: none !important;
+  font-size: 0.75rem !important;
+  height: 32px;
+  min-width: 70px;
 }
 
 .addTransactionButton:hover {
@@ -713,12 +718,13 @@
   color: white;
   font-weight: 500;
   text-transform: none;
-  padding: calc(6px * var(--scale-factor)) calc(12px * var(--scale-factor));
-  border-radius: calc(7px * var(--scale-factor));
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  padding: 4px 12px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
   box-shadow: 0 2px 7px rgba(0, 122, 255, 0.2), 0 1px 3px rgba(0, 0, 0, 0.05);
-  font-size: calc(0.95rem * var(--scale-factor));
-  min-width: auto;
+  font-size: 0.75rem;
+  height: 32px;
+  min-width: 70px;
 }
 
 .manageWalletsButton:hover {
@@ -829,7 +835,7 @@
 .addTransactionButton {
   font-weight: 500;
   text-transform: none;
-  padding: 6px 16px;
+  padding: 4px 12px;
   border-radius: 8px;
   transition: all 0.2s ease;
   box-shadow: 0 2px 8px rgba(0, 122, 255, 0.15);
@@ -940,4 +946,232 @@ body, button, input, select, textarea {
   z-index: 1;
   font-weight: 500;
   padding-top: calc(4px * var(--scale-factor));
+}
+
+/* Transaction Filter Controls */
+.filterButton, .addNewButton {
+  border-radius: 4px;
+  padding: 4px 12px;
+  font-size: 0.75rem;
+  height: 32px;
+  min-width: 70px;
+  font-weight: 500;
+  text-transform: none;
+  transition: all 0.2s ease;
+}
+
+.filterButton {
+  color: #007aff;
+  border-color: rgba(0, 122, 255, 0.5);
+}
+
+.filterButton:hover {
+  border-color: #007aff;
+  background-color: rgba(0, 122, 255, 0.08);
+}
+
+.filterControls {
+  padding: 12px;
+  background-color: rgba(0, 0, 0, 0.02);
+  border-radius: 8px;
+  margin: 8px 16px 16px;
+}
+
+.filterSelect {
+  background-color: white;
+  border-radius: 8px;
+  font-size: 0.8rem;
+}
+
+.filterSelect .MuiInputBase-input {
+  font-size: 0.8rem !important;
+  padding: 8px !important;
+}
+
+.filterSelect .MuiInputBase-root {
+  height: 32px;
+}
+
+/* New styles for date pickers */
+.filterDateField {
+  background-color: white;
+  border-radius: 8px;
+  font-size: 0.8rem;
+}
+
+.filterDateField .MuiInputBase-input {
+  font-size: 0.8rem !important;
+  padding: 8px !important;
+}
+
+.filterDateField .MuiInputBase-root {
+  height: 32px;
+}
+
+.filterDateField .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+.filterDateField:hover .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(0, 0, 0, 0.4);
+}
+
+.filterDateField.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: #007aff;
+}
+
+.resetFilterButton {
+  color: #007aff;
+  border: none;
+  background-color: transparent;
+  border-radius: 4px;
+  padding: 4px 12px;
+  font-size: 0.75rem;
+  height: 32px;
+  min-width: 70px;
+  font-weight: 500;
+  text-transform: none;
+  margin-right: 8px;
+  transition: all 0.2s ease;
+  box-shadow: none;
+}
+
+.resetFilterButton:hover {
+  background-color: rgba(0, 122, 255, 0.08);
+}
+
+/* Use a more specific selector to override MUI styles */
+button.resetFilterButton {
+  border: none !important;
+}
+
+.applyFilterButton {
+  background-color: #007aff;
+  color: white;
+  border-radius: 4px;
+  padding: 4px 12px;
+  font-size: 0.75rem;
+  height: 32px;
+  min-width: 70px;
+  font-weight: 500;
+  text-transform: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 7px rgba(0, 122, 255, 0.2), 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: none;
+}
+
+.applyFilterButton:hover {
+  background-color: #0062cc;
+  box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3), 0 2px 5px rgba(0, 0, 0, 0.07);
+}
+
+/* More styles for showing active filters */
+.activeFilterChip {
+  font-size: 0.75rem;
+  height: 24px;
+  background-color: #f0f7ff;
+  color: #007aff;
+  margin-right: 8px;
+  border: 1px solid rgba(0, 122, 255, 0.2);
+}
+
+.activeFilterChip .MuiChip-deleteIcon {
+  color: #007aff;
+  width: 16px;
+  height: 16px;
+}
+
+/* Search functionality styles */
+.searchContainer {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.searchButton {
+  z-index: 2;
+  background-color: rgba(0, 0, 0, 0.02);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  transition: all 0.2s ease;
+}
+
+.searchButton:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.searchInputContainer {
+  position: absolute;
+  right: 32px;
+  overflow: hidden;
+  width: 0;
+  transition: width 0.3s ease, opacity 0.2s ease;
+  opacity: 0;
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1;
+  height: 32px;
+  display: flex;
+  align-items: center;
+}
+
+.searchOpen {
+  width: 200px;
+  opacity: 1;
+}
+
+.searchInput {
+  padding: 4px 12px;
+  font-size: 0.8rem;
+  width: 100%;
+}
+
+.clearSearchButton {
+  padding: 2px !important;
+  margin-right: 4px;
+}
+
+.searchResultsInfo {
+  padding: 8px 16px;
+  background-color: rgba(0, 0, 0, 0.02);
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Media queries for responsive search */
+@media (max-width: 599px) {
+  .searchOpen {
+    width: 150px;
+  }
+}
+
+@media (min-width: 600px) {
+  .searchOpen {
+    width: 200px;
+  }
+}
+
+@media (min-width: 960px) {
+  .searchOpen {
+    width: 250px;
+  }
+}
+
+/* More styles for showing active filters */
+.activeFilterChip {
+  font-size: 0.75rem;
+  height: 24px;
+  background-color: #f0f7ff;
+  color: #007aff;
+  margin-right: 8px;
+  border: 1px solid rgba(0, 122, 255, 0.2);
+}
+
+.activeFilterChip .MuiChip-deleteIcon {
+  color: #007aff;
+  width: 16px;
+  height: 16px;
 }

@@ -34,6 +34,10 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import SavingsIcon from '@mui/icons-material/Savings';
 import SettingsIcon from '@mui/icons-material/Settings';
+import SearchIcon from '@mui/icons-material/Search';
+import CloseIcon from '@mui/icons-material/Close';
+import InputBase from '@mui/material/InputBase';
+import Fade from '@mui/material/Fade';
 import axios from 'axios';
 import styles from '../styles/dashboard.module.css';
 import {
@@ -44,6 +48,13 @@ import {
   DialogContentText,
 } from '@mui/material';
 import { toast } from 'react-toastify';
+import Collapse from '@mui/material/Collapse';
+import Select from '@mui/material/Select';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import { DatePicker } from '@mui/x-date-pickers';
+import { subDays, format } from 'date-fns';
 
 // Import dashboard components
 import SideMenu from '../components/dashboard/SideMenu';
@@ -144,6 +155,8 @@ export default function Dashboard() {
   const [transactionFormOpen, setTransactionFormOpen] = useState(false);
   const [accountFormOpen, setAccountFormOpen] = useState(false);
   const [categoryFormOpen, setCategoryFormOpen] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [allCategories, setAllCategories] = useState([]);
   const [addBalanceFormOpen, setAddBalanceFormOpen] = useState(false);
   const [editBalanceFormOpen, setEditBalanceFormOpen] = useState(false);
   const [walletManageFormOpen, setWalletManageFormOpen] = useState(false);
@@ -160,6 +173,26 @@ export default function Dashboard() {
 
   const [categoryManageFormOpen, setCategoryManageFormOpen] = useState(false);
 
+  // Add new state variables for transaction filtering
+  const [transactionFilterOpen, setTransactionFilterOpen] = useState(false);
+  const [filterTimeframe, setFilterTimeframe] = useState('week');
+  const [filterWalletId, setFilterWalletId] = useState('all');
+  const [filterCategoryId, setFilterCategoryId] = useState('all');
+  const [filteredTransactions, setFilteredTransactions] = useState([]);
+  const [isFiltering, setIsFiltering] = useState(false);
+  // Add state for custom date range
+  const [customStartDate, setCustomStartDate] = useState(subDays(new Date(), 7));
+  const [customEndDate, setCustomEndDate] = useState(new Date());
+  const [showCustomDateRange, setShowCustomDateRange] = useState(false);
+
+  // Add new state variables for transaction search
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const searchInputRef = useRef(null);
+  // Add a state to store all transactions
+  const [allTransactions, setAllTransactions] = useState([]);
+
   useEffect(() => {
     checkAuth();
   }, []);
@@ -168,6 +201,12 @@ export default function Dashboard() {
     if (user) {
       fetchFinancialData();
       fetchUserProfile();
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      fetchCategories();
     }
   }, [user]);
 
@@ -295,6 +334,10 @@ export default function Dashboard() {
       
       // Update transactions
       setTransactions(transactionsResponse.data.slice(0, 5)); // Get only the 5 most recent
+      setFilteredTransactions(transactionsResponse.data.slice(0, 5));
+      
+      // Store all transactions for search functionality
+      setAllTransactions(transactionsResponse.data || []);
     } catch (error) {
       setError('Failed to load financial data. Please try again later.');
       // Use placeholder data if API fails
@@ -325,10 +368,11 @@ export default function Dashboard() {
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-GB', {
       year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+      month: '2-digit',
+      day: '2-digit'
     });
   };
 
@@ -486,26 +530,175 @@ export default function Dashboard() {
     }
   };
 
-  // Function to fetch transactions
-  const fetchTransactions = async () => {
+  // Function to handle timeframe changes
+  const handleTimeframeChange = (event) => {
+    const value = event.target.value;
+    setFilterTimeframe(value);
+    setShowCustomDateRange(value === 'custom');
+  };
+
+  // Function to fetch transactions with filtering support
+  const fetchTransactions = async (applyFilters = false) => {
     try {
+      setIsFiltering(true);
       const transactionsResponse = await FinanceService.getTransactions();
       
-      // Ensure we're getting complete transaction data with categories
       if (transactionsResponse.data && transactionsResponse.data.length > 0) {
-        // Store the transactions with full details
-        setTransactions(transactionsResponse.data.slice(0, 5)); // Get only the 5 most recent
+        // Store all transactions for searching
+        setAllTransactions(transactionsResponse.data);
+        
+        // If we're not filtering, just get recent transactions
+        if (!applyFilters) {
+          setTransactions(transactionsResponse.data.slice(0, 5));
+          setFilteredTransactions(transactionsResponse.data.slice(0, 5));
+          setIsFiltering(false);
+          return;
+        }
+        
+        // Apply time filter
+        let filteredData = [...transactionsResponse.data];
+        const currentDate = new Date();
+        let startDate;
+        
+        if (filterTimeframe === 'custom') {
+          // Use custom date range if selected
+          startDate = new Date(customStartDate);
+          currentDate.setTime(new Date(customEndDate).getTime());
+        } else {
+          // Use predefined date ranges
+          switch (filterTimeframe) {
+            case 'day':
+              startDate = new Date(currentDate);
+              startDate.setDate(currentDate.getDate() - 1);
+              break;
+            case 'week':
+              startDate = new Date(currentDate);
+              startDate.setDate(currentDate.getDate() - 7);
+              break;
+            case 'month':
+              startDate = new Date(currentDate);
+              startDate.setMonth(currentDate.getMonth() - 1);
+              break;
+            case 'quarter':
+              startDate = new Date(currentDate);
+              startDate.setMonth(currentDate.getMonth() - 3);
+              break;
+            case 'year':
+              startDate = new Date(currentDate);
+              startDate.setFullYear(currentDate.getFullYear() - 1);
+              break;
+            default:
+              startDate = new Date(0); // Beginning of time
+          }
+        }
+        
+        // Filter by date
+        filteredData = filteredData.filter(transaction => {
+          const transactionDate = new Date(transaction.transactionDate);
+          return transactionDate >= startDate && transactionDate <= currentDate;
+        });
+        
+        // Filter by wallet if specified
+        if (filterWalletId !== 'all') {
+          filteredData = filteredData.filter(transaction => {
+            // Check different possible formats of wallet/account ID
+            if (transaction.wallet && transaction.wallet.id) {
+              return transaction.wallet.id.toString() === filterWalletId;
+            }
+            if (transaction.account && transaction.account.id) {
+              return transaction.account.id.toString() === filterWalletId;
+            }
+            if (transaction.accountId) {
+              return transaction.accountId.toString() === filterWalletId;
+            }
+            return false;
+          });
+        }
+        
+        // Filter by category if specified
+        if (filterCategoryId !== 'all') {
+          filteredData = filteredData.filter(transaction => {
+            // Check different possible formats of category ID
+            if (transaction.category && transaction.category.id) {
+              return transaction.category.id.toString() === filterCategoryId;
+            }
+            if (transaction.categoryId) {
+              return transaction.categoryId.toString() === filterCategoryId;
+            }
+            return false;
+          });
+        }
+        
+        // Set the filtered transactions
+        setFilteredTransactions(filteredData);
+        
+        // Also update the transactions to display
+        setTransactions(filteredData.slice(0, 10)); // Show up to 10 when filtering
       }
     } catch (error) {
       console.error('Error fetching transactions:', error);
+    } finally {
+      setIsFiltering(false);
     }
+  };
+
+  // Function to apply filters
+  const applyTransactionFilters = () => {
+    fetchTransactions(true);
+  };
+  
+  // Function to reset filters
+  const resetTransactionFilters = () => {
+    setFilterTimeframe('week');
+    setFilterWalletId('all');
+    setFilterCategoryId('all');
+    setShowCustomDateRange(false);
+    setCustomStartDate(subDays(new Date(), 7));
+    setCustomEndDate(new Date());
+    setTransactionFilterOpen(false);
+    fetchTransactions(false);
   };
 
   // Function to fetch categories
   const fetchCategories = async () => {
     try {
-      await FinanceService.getCategories();
-      // No need to set state as we're just ensuring the data is refreshed
+      // Get both INCOME and EXPENSE categories from API
+      const expenseCategoriesResponse = await FinanceService.getCategoriesByType('EXPENSE');
+      const incomeCategoriesResponse = await FinanceService.getCategoriesByType('INCOME');
+      
+      // Combine both types of categories
+      const allCategoriesData = [
+        ...(expenseCategoriesResponse.data || []),
+        ...(incomeCategoriesResponse.data || [])
+      ];
+      
+      // Store all categories for reference
+      setAllCategories(allCategoriesData);
+      
+      // Get transaction data to find used categories
+      const transactionsResponse = await FinanceService.getTransactions();
+      
+      if (transactionsResponse.data && transactionsResponse.data.length > 0) {
+        // Extract unique category IDs from transactions
+        const usedCategoryIds = new Set();
+        transactionsResponse.data.forEach(transaction => {
+          if (transaction.category && transaction.category.id) {
+            usedCategoryIds.add(transaction.category.id.toString());
+          } else if (transaction.categoryId) {
+            usedCategoryIds.add(transaction.categoryId.toString());
+          }
+        });
+        
+        // Filter to only categories that are used in transactions
+        const usedCategories = allCategoriesData.filter(category => 
+          usedCategoryIds.has(category.id.toString())
+        );
+        
+        setCategories(usedCategories);
+      } else {
+        // If no transactions, just show an empty list
+        setCategories([]);
+      }
     } catch (error) {
       console.error('Error fetching categories:', error);
     }
@@ -543,6 +736,121 @@ export default function Dashboard() {
     // If you have transactions that need updating due to category changes
     await fetchTransactions();
   };
+
+  // Helper function to format dates for display
+  const formatDateForDisplay = (date) => {
+    if (!date) return '';
+    return format(new Date(date), 'dd/MM/yyyy');
+  };
+
+  // Update to ensure end date is always after start date
+  const handleStartDateChange = (date) => {
+    setCustomStartDate(date);
+    // If end date is before start date, update end date
+    if (date && customEndDate && date > customEndDate) {
+      setCustomEndDate(date);
+    }
+  };
+
+  const handleEndDateChange = (date) => {
+    // Ensure end date is not before start date
+    if (date && customStartDate && date < customStartDate) {
+      setCustomEndDate(customStartDate);
+    } else {
+      setCustomEndDate(date);
+    }
+  };
+
+  // Function to handle search input changes
+  const handleSearchChange = (event) => {
+    const value = event.target.value;
+    setSearchTerm(value);
+    
+    if (!value.trim()) {
+      setSearchResults([]);
+      // Reset transaction list when search is cleared
+      if (filteredTransactions.length > 0) {
+        setTransactions(filteredTransactions.slice(0, 10));
+      } else {
+        // If no filtered transactions, show the 5 most recent from all transactions
+        setTransactions(allTransactions.slice(0, 5));
+      }
+      return;
+    }
+    
+    // Filter transactions based on search term
+    const filtered = allTransactions.filter(transaction => {
+      const searchTermLower = value.toLowerCase();
+      
+      // Search in description
+      const descriptionMatch = transaction.description && 
+        transaction.description.toLowerCase().includes(searchTermLower);
+      
+      // Search in category - handle different category data structures
+      let categoryMatch = false;
+      if (transaction.category && transaction.category.categoryName) {
+        categoryMatch = transaction.category.categoryName.toLowerCase().includes(searchTermLower);
+      } else if (transaction.categoryName) {
+        categoryMatch = transaction.categoryName.toLowerCase().includes(searchTermLower);
+      }
+      
+      // Search in amount - convert amount to string and remove currency formatting
+      const amountStr = transaction.amount ? transaction.amount.toString() : '';
+      const amountMatch = amountStr.includes(value);
+      
+      // Return true if any field matches
+      return descriptionMatch || categoryMatch || amountMatch;
+    });
+    
+    setSearchResults(filtered);
+    
+    // If searching, update the displayed transactions
+    if (filtered.length > 0) {
+      setTransactions(filtered);
+    }
+  };
+
+  // Function to toggle search input visibility
+  const toggleSearch = () => {
+    if (searchOpen) {
+      // If search is open, close it properly
+      closeSearch();
+    } else {
+      // If search is closed, open it
+      setSearchOpen(true);
+      // Clear previous search when opening
+      setSearchTerm('');
+      setSearchResults([]);
+      // Focus the input field when it appears
+      setTimeout(() => {
+        if (searchInputRef.current) {
+          searchInputRef.current.focus();
+        }
+      }, 300); // Delay to wait for animation
+    }
+  };
+
+  // Function to close search
+  const closeSearch = () => {
+    setSearchOpen(false);
+    setSearchTerm('');
+    setSearchResults([]);
+    // Restore original transactions view
+    if (filteredTransactions.length > 0) {
+      setTransactions(filteredTransactions.slice(0, 10));
+    } else {
+      // If no filtered transactions, show the 5 most recent from all transactions
+      setTransactions(allTransactions.slice(0, 5));
+    }
+  };
+
+  // Determine which transactions to display
+  const displayTransactions = useMemo(() => {
+    if (searchTerm && searchResults.length > 0) {
+      return searchResults;
+    }
+    return transactions;
+  }, [searchTerm, searchResults, transactions]);
 
   if (loading) {
     return (
@@ -817,7 +1125,7 @@ export default function Dashboard() {
                     </Grid>
                   </Grid>
                   
-                  {/* Recent Transactions */}
+                  {/* Recent Transactions Section with Filtering */}
                   <Grid item xs={12}>
                     <Paper 
                       className={styles.transactionsCard}
@@ -830,24 +1138,222 @@ export default function Dashboard() {
                         >
                           Recent Transactions
                         </Typography>
-                        <Button 
-                          variant="contained" 
-                          color="primary" 
-                          startIcon={<AddIcon />}
-                          onClick={() => setTransactionFormOpen(true)}
-                          className={styles.addNewButton}
-                          elevation={3}
-                          size="small"
-                        >
-                          Add New
-                        </Button>
+                        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                          {/* Search button and input */}
+                          <Box className={styles.searchContainer}>
+                            <Fade in={searchOpen} timeout={300}>
+                              <Box className={`${styles.searchInputContainer} ${searchOpen ? styles.searchOpen : ''}`}>
+                                <InputBase
+                                  placeholder="Search transactions..."
+                                  className={styles.searchInput}
+                                  value={searchTerm}
+                                  onChange={handleSearchChange}
+                                  inputRef={searchInputRef}
+                                  endAdornment={
+                                    searchTerm && (
+                                      <IconButton 
+                                        size="small" 
+                                        onClick={() => {
+                                          setSearchTerm('');
+                                          setSearchResults([]);
+                                          // Reset transaction list when search is cleared
+                                          if (filteredTransactions.length > 0) {
+                                            setTransactions(filteredTransactions.slice(0, 10));
+                                          } else {
+                                            // If no filtered transactions, show the 5 most recent from all transactions
+                                            setTransactions(allTransactions.slice(0, 5));
+                                          }
+                                        }}
+                                        className={styles.clearSearchButton}
+                                      >
+                                        <CloseIcon fontSize="small" />
+                                      </IconButton>
+                                    )
+                                  }
+                                />
+                              </Box>
+                            </Fade>
+                            <IconButton 
+                              size="small"
+                              onClick={toggleSearch}
+                              color={searchOpen ? "primary" : "default"}
+                              className={styles.searchButton}
+                            >
+                              {searchOpen ? <CloseIcon fontSize="small" /> : <SearchIcon fontSize="small" />}
+                            </IconButton>
+                          </Box>
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            startIcon={<FilterListIcon />}
+                            onClick={() => setTransactionFilterOpen(!transactionFilterOpen)}
+                            className={styles.filterButton}
+                          >
+                            Filter
+                          </Button>
+                          <Button 
+                            variant="contained" 
+                            color="primary" 
+                            startIcon={<AddIcon />}
+                            onClick={() => setTransactionFormOpen(true)}
+                            className={styles.addNewButton}
+                            elevation={3}
+                            size="small"
+                          >
+                            Add New
+                          </Button>
+                        </Box>
                       </Box>
                       
-                      {loading ? (
+                      {/* Filter Controls - Shown when filter button is clicked */}
+                      <Collapse in={transactionFilterOpen}>
+                        <Box className={styles.filterControls}>
+                          <Grid container spacing={2} alignItems="flex-end">
+                            <Grid item xs={12} sm={6} md={3}>
+                              <FormControl fullWidth size="small">
+                                <InputLabel id="time-period-label">Time Period</InputLabel>
+                                <Select
+                                  labelId="time-period-label"
+                                  value={filterTimeframe}
+                                  label="Time Period"
+                                  onChange={handleTimeframeChange}
+                                  className={styles.filterSelect}
+                                >
+                                  <MenuItem value="day">Last 24 Hours</MenuItem>
+                                  <MenuItem value="week">Last 7 Days</MenuItem>
+                                  <MenuItem value="month">Last 30 Days</MenuItem>
+                                  <MenuItem value="quarter">Last 3 Months</MenuItem>
+                                  <MenuItem value="year">Last Year</MenuItem>
+                                  <MenuItem value="all">All Time</MenuItem>
+                                  <MenuItem value="custom">Custom Range</MenuItem>
+                                </Select>
+                              </FormControl>
+                            </Grid>
+                            <Grid item xs={12} sm={6} md={3}>
+                              <FormControl fullWidth size="small">
+                                <InputLabel id="wallet-filter-label">Wallet</InputLabel>
+                                <Select
+                                  labelId="wallet-filter-label"
+                                  value={filterWalletId}
+                                  label="Wallet"
+                                  onChange={(e) => setFilterWalletId(e.target.value)}
+                                  className={styles.filterSelect}
+                                >
+                                  <MenuItem value="all">All Wallets</MenuItem>
+                                  {wallets.map((wallet) => (
+                                    <MenuItem key={wallet.id} value={wallet.id.toString()}>
+                                      {wallet.accountName}
+                                    </MenuItem>
+                                  ))}
+                                </Select>
+                              </FormControl>
+                            </Grid>
+                            <Grid item xs={12} sm={6} md={3}>
+                              <FormControl fullWidth size="small">
+                                <InputLabel id="category-filter-label">Category</InputLabel>
+                                <Select
+                                  labelId="category-filter-label"
+                                  value={filterCategoryId}
+                                  label="Category"
+                                  onChange={(e) => setFilterCategoryId(e.target.value)}
+                                  className={styles.filterSelect}
+                                >
+                                  <MenuItem value="all">All Categories</MenuItem>
+                                  {categories.map((category) => (
+                                    <MenuItem key={category.id} value={category.id.toString()}>
+                                      {category.categoryName} {category.type === 'INCOME' ? '(Income)' : '(Expense)'}
+                                    </MenuItem>
+                                  ))}
+                                </Select>
+                              </FormControl>
+                            </Grid>
+                            {/* Custom Date Range Fields */}
+                            <Grid item xs={12} sm={showCustomDateRange ? 12 : 6} md={showCustomDateRange ? 6 : 3} sx={{ display: 'flex', gap: 1 }}>
+                              {showCustomDateRange ? (
+                                <>
+                                  <Box sx={{ flex: 1 }}>
+                                    <DatePicker 
+                                      label="Start Date" 
+                                      value={customStartDate}
+                                      onChange={handleStartDateChange}
+                                      className={styles.filterDateField}
+                                      format='dd/MM/yyyy'
+                                      slotProps={{
+                                        textField: {
+                                          fullWidth: true,
+                                          size: "small"
+                                        }
+                                      }}
+                                    />
+                                  </Box>
+                                  <Box sx={{ flex: 1 }}>
+                                    <DatePicker 
+                                      label="End Date" 
+                                      value={customEndDate}
+                                      onChange={handleEndDateChange}
+                                      className={styles.filterDateField}
+                                      format='dd/MM/yyyy'
+                                      slotProps={{
+                                        textField: {
+                                          fullWidth: true,
+                                          size: "small"
+                                        }
+                                      }}
+                                    />
+                                  </Box>
+                                </>
+                              ) : (
+                                <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
+                                  <Button
+                                    color="primary"
+                                    onClick={resetTransactionFilters}
+                                    className={styles.resetFilterButton}
+                                    disabled={isFiltering}
+                                  >
+                                    Reset
+                                  </Button>
+                                  <Button
+                                    variant="contained"
+                                    color="primary"
+                                    onClick={applyTransactionFilters}
+                                    className={styles.applyFilterButton}
+                                    disabled={isFiltering}
+                                  >
+                                    {isFiltering ? 'Loading...' : 'Apply Filters'}
+                                  </Button>
+                                </Box>
+                              )}
+                            </Grid>
+                            {showCustomDateRange && (
+                              <Grid item xs={12} sm={12} md={6} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                <Button
+                                  color="primary"
+                                  onClick={resetTransactionFilters}
+                                  className={styles.resetFilterButton}
+                                  disabled={isFiltering}
+                                >
+                                  Reset
+                                </Button>
+                                <Button
+                                  variant="contained"
+                                  color="primary"
+                                  onClick={applyTransactionFilters}
+                                  className={styles.applyFilterButton}
+                                  disabled={isFiltering}
+                                >
+                                  {isFiltering ? 'Loading...' : 'Apply Filters'}
+                                </Button>
+                              </Grid>
+                            )}
+                          </Grid>
+                        </Box>
+                      </Collapse>
+                      
+                      {loading || isFiltering ? (
                         <Box className={styles.loadingBox}>
                           <CircularProgress />
                         </Box>
-                      ) : transactions.length > 0 ? (
+                      ) : displayTransactions.length > 0 ? (
                         <TableContainer className={styles.tableContainer}>
                           <Table>
                             <TableHead>
@@ -855,13 +1361,14 @@ export default function Dashboard() {
                                 <TableCell className={styles.tableHeaderCell}>Date</TableCell>
                                 <TableCell className={styles.tableHeaderCell}>Description</TableCell>
                                 <TableCell className={styles.tableHeaderCell}>Category</TableCell>
+                                <TableCell className={styles.tableHeaderCell}>Wallet</TableCell>
                                 <TableCell className={styles.tableHeaderCell}>Type</TableCell>
                                 <TableCell align="right" className={styles.tableHeaderCell}>Amount</TableCell>
                                 <TableCell className={styles.tableHeaderCell}>Actions</TableCell>
                               </TableRow>
                             </TableHead>
                             <TableBody>
-                              {transactions.map((transaction) => (
+                              {displayTransactions.map((transaction) => (
                                 <TableRow 
                                   key={transaction.id}
                                   className={styles.tableRow}
@@ -871,6 +1378,11 @@ export default function Dashboard() {
                                   <TableCell className={styles.tableCell}>
                                     {transaction.category ? transaction.category.categoryName : 
                                      (transaction.categoryId ? `Category #${transaction.categoryId}` : 'Uncategorized')}
+                                  </TableCell>
+                                  <TableCell className={styles.tableCell}>
+                                    {transaction.wallet ? transaction.wallet.accountName : 
+                                     (transaction.account ? transaction.account.accountName : 
+                                      (transaction.accountId ? accounts.find(a => a.id === transaction.accountId)?.accountName || `Wallet #${transaction.accountId}` : 'Unknown'))}
                                   </TableCell>
                                   <TableCell className={styles.tableCell}>
                                     <Box
@@ -913,11 +1425,22 @@ export default function Dashboard() {
                               ))}
                             </TableBody>
                           </Table>
+                          {/* Show search results message if searching */}
+                          {searchTerm && (
+                            <Box className={styles.searchResultsInfo}>
+                              <Typography variant="body2" color="textSecondary">
+                                Found {searchResults.length} {searchResults.length === 1 ? 'transaction' : 'transactions'} 
+                                matching "{searchTerm}"
+                              </Typography>
+                            </Box>
+                          )}
                         </TableContainer>
                       ) : (
                         <Box className={styles.emptyTransactionsBox}>
                           <Typography variant="body1" color="text.secondary">
-                            No transactions to display. Start adding your financial data to see it here.
+                            {searchTerm ? `No transactions found matching "${searchTerm}"` : 
+                             (transactionFilterOpen ? 'No transactions match your filter criteria.' : 
+                             'No transactions to display. Start adding your financial data to see it here.')}
                           </Typography>
                         </Box>
                       )}
