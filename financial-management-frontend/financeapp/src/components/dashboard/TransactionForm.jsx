@@ -84,6 +84,8 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
   const [warningMessage, setWarningMessage] = useState('');
   const [isWarningVisible, setIsWarningVisible] = useState(false);
   const [isErrorVisible, setIsErrorVisible] = useState(false);
+  const [categorySpendingData, setCategorySpendingData] = useState(null);
+  const [categoryExcessAmount, setCategoryExcessAmount] = useState(0);
 
   // Add refs for transitions
   const dialogRef = useRef(null);
@@ -188,6 +190,42 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
     
     checkCategoryLimit();
   }, [formData.amount, formData.categoryId, formData.transactionType, categories]);
+  
+  // Fetch category spending data when category changes
+  useEffect(() => {
+    const fetchCategorySpendingData = async () => {
+      if (!formData.categoryId || formData.transactionType !== 'EXPENSE') {
+        setCategorySpendingData(null);
+        setCategoryExcessAmount(0);
+        return;
+      }
+      
+      try {
+        const response = await FinanceService.getCategorySpendingProgress(parseInt(formData.categoryId, 10));
+        setCategorySpendingData(response.data);
+        
+        // Calculate if the category limit is exceeded with the current amount
+        if (response.data && response.data.limit > 0) {
+          const currentAmount = parseFloat(formData.amount) || 0;
+          const totalWithCurrentAmount = response.data.totalSpent + currentAmount;
+          
+          if (totalWithCurrentAmount > response.data.limit) {
+            setCategoryExcessAmount(totalWithCurrentAmount - response.data.limit);
+          } else {
+            setCategoryExcessAmount(0);
+          }
+        } else {
+          setCategoryExcessAmount(0);
+        }
+      } catch (err) {
+        console.error('Error fetching category spending data:', err);
+        setCategorySpendingData(null);
+        setCategoryExcessAmount(0);
+      }
+    };
+    
+    fetchCategorySpendingData();
+  }, [formData.categoryId, formData.transactionType, formData.amount]);
   
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -525,6 +563,19 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
     }
   };
 
+  // Add a helper function to calculate if the transaction would exceed warning threshold
+  const isExceedingWarningThreshold = () => {
+    if (!categorySpendingData || !categorySpendingData.warningThreshold) {
+      return false;
+    }
+    
+    const currentAmount = parseFloat(formData.amount) || 0;
+    const totalWithCurrentAmount = categorySpendingData.totalSpent + currentAmount;
+    
+    return totalWithCurrentAmount > categorySpendingData.warningThreshold && 
+           totalWithCurrentAmount <= categorySpendingData.limit;
+  };
+
   // Form content that will be used in both embedded and non-embedded modes
   const formContent = (
     <Box className={styles.formContainer}>
@@ -615,6 +666,18 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
               <Typography variant="subtitle2" className={styles.labelText}>
                 <CategoryIcon className={styles.labelIcon} />
                 Category
+                {formData.transactionType === 'EXPENSE' && categorySpendingData && categorySpendingData.limit > 0 && (
+                  <Typography 
+                    component="span" 
+                    variant="caption" 
+                    className={`${styles.categoryInfoText} ${categoryExcessAmount > 0 ? styles.categoryExceedingText : ''}`}
+                  >
+                    {categoryExcessAmount > 0 ? 
+                      `(Exceeding limit by $${categoryExcessAmount.toFixed(2)})` : 
+                      `(Limit: $${categorySpendingData.limit.toFixed(2)}, Left: $${Math.max(0, categorySpendingData.limit - categorySpendingData.totalSpent).toFixed(2)})`
+                    }
+                  </Typography>
+                )}
               </Typography>
               <Box className={styles.actionButtonsContainer}>
                 <IconButton 
@@ -679,6 +742,29 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
               ))}
             </Select>
             {errors.categoryId && <FormHelperText error>{errors.categoryId}</FormHelperText>}
+            
+            {/* Display category limit warnings under the dropdown */}
+            {formData.transactionType === 'EXPENSE' && categorySpendingData && categorySpendingData.limit > 0 && (
+              <Box className={styles.categoryInfoBox}>
+                {categoryExcessAmount > 0 ? (
+                  <Alert 
+                    severity="error" 
+                    icon={<ErrorIcon fontSize="small" />}
+                    className={styles.categoryAlert}
+                  >
+                    You are exceeding your spending limit for this category. Your total spending would be ${(categorySpendingData.totalSpent + parseFloat(formData.amount || 0)).toFixed(2)}.
+                  </Alert>
+                ) : isExceedingWarningThreshold() ? (
+                  <Alert 
+                    severity="warning" 
+                    icon={<WarningIcon fontSize="small" />}
+                    className={styles.categoryAlert}
+                  >
+                    You are approaching your spending limit of ${categorySpendingData.limit.toFixed(2)}. This transaction would bring your total to ${(categorySpendingData.totalSpent + parseFloat(formData.amount || 0)).toFixed(2)}.
+                  </Alert>
+                ) : null}
+              </Box>
+            )}
           </FormControl>
         </Box>
         

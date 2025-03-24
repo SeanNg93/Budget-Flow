@@ -298,10 +298,12 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
               textTransform: 'none',
               fontWeight: 500,
               fontSize: '0.9rem',
-              minWidth: 100
+              minWidth: 100,
+              color: 'rgba(0, 0, 0, 0.6)' // Default text color for non-selected tabs
             },
             '& .Mui-selected': {
               color: tabValue === 'EXPENSE' ? '#ff3b30' : '#34c759',
+              fontWeight: 600
             },
             '& .MuiTabs-indicator': {
               backgroundColor: tabValue === 'EXPENSE' ? '#ff3b30' : '#34c759',
