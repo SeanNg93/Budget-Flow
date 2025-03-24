@@ -204,6 +204,13 @@ public class TransactionService {
     }
 
     /**
+     * Get all transactions for a specific category
+     */
+    public List<Transaction> getTransactionsByCategoryId(Long categoryId) {
+        return transactionRepository.findByCategoryId(categoryId);
+    }
+
+    /**
      * Get financial data grouped by date range for chart visualization
      */
     public List<Map<String, Object>> getFinancialDataByDateRange(

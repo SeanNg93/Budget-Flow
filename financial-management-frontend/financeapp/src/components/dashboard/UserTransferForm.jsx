@@ -33,6 +33,7 @@ import {
   Person as PersonIcon,
   ErrorOutline as ErrorIcon
 } from '@mui/icons-material';
+import styles from '../../styles/walletManage.module.css';
 
 // Create transition components with forwardRef
 const SlideTransition = React.forwardRef(function Transition(props, ref) {
@@ -449,6 +450,7 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourc
         <Button 
           onClick={handleClose}
           variant="outlined"
+          className={styles.cancelButton}
           sx={{ 
             borderRadius: '12px',
             minWidth: '100px'
@@ -462,6 +464,7 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourc
           color="primary"
           disabled={!sourceWalletId || !selectedUser || !amount || transferring}
           startIcon={transferring ? <CircularProgress size={20} /> : <SendIcon />}
+          className={`${styles.standardButton} ${styles.transferButton}`}
           sx={{ 
             borderRadius: '12px',
             minWidth: '100px'

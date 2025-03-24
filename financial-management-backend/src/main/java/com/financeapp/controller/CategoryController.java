@@ -1,8 +1,10 @@
 package com.financeapp.controller;
 
+import com.financeapp.model.Transaction;
 import com.financeapp.model.TransactionCategory;
 import com.financeapp.model.User;
 import com.financeapp.service.CategoryService;
+import com.financeapp.service.TransactionService;
 import com.financeapp.utils.SecurityUtils;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +14,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Controller for managing transaction categories
@@ -24,6 +30,7 @@ public class CategoryController {
     private static final Logger logger = LoggerFactory.getLogger(CategoryController.class);
 
     private final CategoryService categoryService;
+    private final TransactionService transactionService;
     private final SecurityUtils securityUtils;
 
     /**
@@ -156,6 +163,74 @@ public class CategoryController {
         } catch (IllegalArgumentException e) {
             logger.error("Invalid category type: {}", type);
             return ResponseEntity.badRequest().build();
+        }
+    }
+
+    /**
+     * Get spending progress for a specific category
+     */
+    @GetMapping("/{id}/spending-progress")
+    public ResponseEntity<Map<String, Object>> getCategorySpendingProgress(@PathVariable Long id) {
+        User user = securityUtils.getCurrentUser();
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        
+        try {
+            TransactionCategory category = categoryService.getCategoryById(id);
+            
+            if (!isOwner(category, user)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+            
+            // Only process categories with spending limits or goals set
+            if (category.getSpendingLimit() == null) {
+                return ResponseEntity.badRequest().build();
+            }
+            
+            // Get all transactions for this category
+            List<Transaction> transactions = transactionService.getTransactionsByCategoryId(id);
+            
+            // Calculate total based on category type
+            BigDecimal totalSpent;
+            if (category.getType() == TransactionCategory.CategoryType.EXPENSE) {
+                totalSpent = transactions.stream()
+                    .filter(t -> t.getTransactionType() == Transaction.TransactionType.EXPENSE)
+                    .map(Transaction::getAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            } else {
+                totalSpent = transactions.stream()
+                    .filter(t -> t.getTransactionType() == Transaction.TransactionType.INCOME)
+                    .map(Transaction::getAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            }
+            
+            // Calculate percentage of limit spent or goal reached
+            BigDecimal limit = category.getSpendingLimit();
+            BigDecimal percentage = limit.compareTo(BigDecimal.ZERO) > 0 
+                ? totalSpent.multiply(new BigDecimal("100")).divide(limit, 2, RoundingMode.HALF_UP) 
+                : BigDecimal.ZERO;
+            
+            Map<String, Object> result = new HashMap<>();
+            result.put("totalSpent", totalSpent);
+            result.put("limit", limit);
+            result.put("percentage", percentage);
+            
+            // Add warning threshold for expense categories only
+            if (category.getType() == TransactionCategory.CategoryType.EXPENSE) {
+                int warningPercentage = category.getWarningPercentage() != null ? category.getWarningPercentage() : 80;
+                BigDecimal warningThreshold = limit.multiply(new BigDecimal(warningPercentage)).divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+                result.put("warningThreshold", warningThreshold);
+                result.put("warningPercentage", warningPercentage);
+            } else {
+                result.put("warningThreshold", BigDecimal.ZERO);
+                result.put("warningPercentage", 0);
+            }
+            
+            return ResponseEntity.ok(result);
+        } catch (EntityNotFoundException e) {
+            logger.error("Category not found with id: {}", id);
+            return ResponseEntity.notFound().build();
         }
     }
     

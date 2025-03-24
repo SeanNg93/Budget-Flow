@@ -19,6 +19,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import PersonIcon from '@mui/icons-material/Person';
 import LogoutIcon from '@mui/icons-material/Logout';
 import Avatar from '@mui/material/Avatar';
+import CategoryIcon from '@mui/icons-material/Category';
 import axios from 'axios';
 import { useUser } from '../../context/UserContext';
 
@@ -51,7 +52,7 @@ const StyledListItemButton = styled(ListItemButton)(({ theme }) => ({
   },
 }));
 
-const SideMenu = ({ open, handleDrawerClose, setProfileDialogOpen }) => {
+const SideMenu = ({ open, handleDrawerClose, setProfileDialogOpen, setCategoryManageFormOpen }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const userData = JSON.parse(localStorage.getItem('userData') || '{}');
@@ -69,6 +70,9 @@ const SideMenu = ({ open, handleDrawerClose, setProfileDialogOpen }) => {
     if (item.text === 'Profile') {
       // Open profile dialog instead of navigating
       setProfileDialogOpen(true);
+    } else if (item.text === 'Categories') {
+      // Open category manage dialog instead of navigating
+      setCategoryManageFormOpen(true);
     } else {
       // Navigate to the specified path for other items
       navigate(item.path);
@@ -78,6 +82,7 @@ const SideMenu = ({ open, handleDrawerClose, setProfileDialogOpen }) => {
   const menuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
     { text: 'Transactions', icon: <AccountBalanceWalletIcon />, path: '/transactions' },
+    { text: 'Categories', icon: <CategoryIcon />, path: '/categories' },
     { text: 'Reports', icon: <BarChartIcon />, path: '/reports' },
     { text: 'Profile', icon: <PersonIcon />, path: '/profile' },
     { text: 'Settings', icon: <SettingsIcon />, path: '/settings' },

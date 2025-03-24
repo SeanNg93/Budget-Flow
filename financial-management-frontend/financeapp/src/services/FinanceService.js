@@ -217,6 +217,23 @@ export const getCategoriesByType = (type) => {
   });
 };
 
+export const getCategorySpendingProgress = (categoryId) => {
+  return axiosInstance.get(`/categories/${categoryId}/spending-progress`).catch(error => {
+    // If we get a 403 or 404, return empty data
+    if (error.response && (error.response.status === 403 || error.response.status === 404)) {
+      return { 
+        data: { 
+          totalSpent: 0, 
+          limit: 0, 
+          percentage: 0, 
+          warningThreshold: 0 
+        } 
+      };
+    }
+    throw error;
+  });
+};
+
 // User Transfer services
 export const searchUsers = (query) => {
   return axiosInstance.get(`/wallets/search-users?query=${encodeURIComponent(query)}`);
@@ -399,6 +416,7 @@ const FinanceService = {
   updateCategory,
   deleteCategory,
   getCategoriesByType,
+  getCategorySpendingProgress,
   
   // User transfer functions
   searchUsers,

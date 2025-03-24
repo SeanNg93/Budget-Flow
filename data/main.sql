@@ -114,6 +114,8 @@ CREATE TABLE transaction_categories (
     user_id INT NOT NULL,
     category_name VARCHAR(100) NOT NULL,
     type VARCHAR(20) NOT NULL,
+    spending_limit DECIMAL(15,2),
+    warning_percentage INT DEFAULT 80,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 

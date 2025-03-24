@@ -788,6 +788,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
         <DialogActions className={styles.confirmActions}>
           <Button 
             onClick={handleDeleteCancel} 
+            variant="outlined"
             className={styles.cancelButton}
           >
             Cancel
@@ -798,7 +799,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
             variant="contained"
             disabled={deleting}
             startIcon={deleting ? <CircularProgress size={20} color="inherit" /> : null}
-            className={styles.deleteButton}
+            className={`${styles.standardButton} ${styles.deleteButton}`}
           >
             {deleting ? 'Deleting...' : 'Delete'}
           </Button>
@@ -947,6 +948,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
         <DialogActions className={styles.transferActions}>
           <Button 
             onClick={handleCloseTransferDialog} 
+            variant="outlined"
             className={styles.cancelButton}
           >
             Cancel
@@ -957,7 +959,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
             variant="contained"
             disabled={transferring}
             startIcon={transferring ? <CircularProgress size={20} color="inherit" /> : null}
-            className={styles.transferButton}
+            className={`${styles.standardButton} ${styles.transferButton}`}
           >
             {transferring ? 'Transferring...' : 'Transfer'}
           </Button>

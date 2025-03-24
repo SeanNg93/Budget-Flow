@@ -52,6 +52,7 @@ import TransactionForm from '../components/dashboard/TransactionForm';
 import WalletForm from '../components/dashboard/WalletForm';
 import WalletManageForm from '../components/dashboard/WalletManageForm';
 import CategoryForm from '../components/dashboard/CategoryForm';
+import CategoryManageForm from '../components/dashboard/CategoryManageForm';
 import FinanceActionPanel from '../components/dashboard/FinanceActionPanel';
 import AddBalanceForm from '../components/dashboard/AddBalanceForm';
 import EditBalanceForm from '../components/dashboard/EditBalanceForm';
@@ -153,8 +154,10 @@ export default function Dashboard() {
   const [transferDialogOpen, setTransferDialogOpen] = useState(false);
   const [selectedWallet, setSelectedWallet] = useState(null);
 
-  // New state for the unified finance action panel
+  // Finance action panel state
   const [financeActionPanelOpen, setFinanceActionPanelOpen] = useState(false);
+
+  const [categoryManageFormOpen, setCategoryManageFormOpen] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -532,6 +535,15 @@ export default function Dashboard() {
   // Simplified one-liner function
   const handleProfileUpdated = () => { fetchUserProfile(); };
 
+  // Add a handler for category updates
+  const handleCategoryUpdated = async () => {
+    toast.success('Categories updated successfully!');
+    // Refresh data as needed
+    await fetchCategories();
+    // If you have transactions that need updating due to category changes
+    await fetchTransactions();
+  };
+
   if (loading) {
     return (
       <Box className={styles.loadingContainer}>
@@ -549,6 +561,7 @@ export default function Dashboard() {
           open={open} 
           handleDrawerClose={handleDrawerClose} 
           setProfileDialogOpen={setProfileDialogOpen}
+          setCategoryManageFormOpen={setCategoryManageFormOpen} 
         />
         <PendingDeletionAlert />
         <Main open={open}>
@@ -887,7 +900,10 @@ export default function Dashboard() {
       <FinanceActionPanel 
         open={financeActionPanelOpen} 
         handleClose={() => setFinanceActionPanelOpen(false)} 
-        onTransactionAdded={handleTransactionAdded}
+        setTransactionFormOpen={setTransactionFormOpen}
+        setWalletManageFormOpen={setWalletManageFormOpen}
+        setCategoryManageFormOpen={setCategoryManageFormOpen}
+        setUserTransferDialogOpen={setUserTransferDialogOpen}
       />
       
       {/* Wallet Management Form */}
@@ -902,6 +918,8 @@ export default function Dashboard() {
         open={transactionFormOpen} 
         handleClose={() => setTransactionFormOpen(false)} 
         onTransactionAdded={handleTransactionAdded}
+        editTransaction={selectedTransaction}
+        isEditMode={editTransactionOpen}
       />
       
       <WalletForm 
@@ -914,6 +932,12 @@ export default function Dashboard() {
         open={categoryFormOpen} 
         handleClose={() => setCategoryFormOpen(false)} 
         onCategoryAdded={handleCategoryAdded}
+      />
+      
+      <CategoryManageForm 
+        open={categoryManageFormOpen} 
+        handleClose={() => setCategoryManageFormOpen(false)}
+        onCategoryUpdated={handleCategoryUpdated}
       />
       
       <AddBalanceForm 
