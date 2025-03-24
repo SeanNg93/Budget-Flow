@@ -941,3 +941,110 @@ body, button, input, select, textarea {
   font-weight: 500;
   padding-top: calc(4px * var(--scale-factor));
 }
+
+/* Transaction Filter Controls */
+.filterButton {
+  text-transform: none;
+  border-radius: 8px;
+  color: #007aff;
+  border-color: rgba(0, 122, 255, 0.5);
+  font-size: 0.8rem;
+  font-weight: 500;
+  height: 36px;
+  min-width: 80px;
+}
+
+.filterButton:hover {
+  background-color: rgba(0, 122, 255, 0.08);
+  border-color: #007aff;
+}
+
+.filterControls {
+  padding: 16px;
+  background-color: rgba(0, 0, 0, 0.02);
+  border-radius: 8px;
+  margin: 8px 16px 16px;
+}
+
+.filterSelect {
+  background-color: white;
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+.filterSelect .MuiInputBase-input {
+  font-size: 0.85rem !important;
+}
+
+/* New styles for date pickers */
+.filterDateField {
+  background-color: white;
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+.filterDateField .MuiInputBase-input {
+  font-size: 0.85rem !important;
+}
+
+.filterDateField .MuiInputBase-root {
+  height: 36px;
+}
+
+.filterDateField .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+.filterDateField:hover .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(0, 0, 0, 0.4);
+}
+
+.filterDateField.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: #007aff;
+}
+
+.resetFilterButton {
+  text-transform: none;
+  border-radius: 8px;
+  color: #666;
+  border-color: rgba(0, 0, 0, 0.2);
+  font-size: 0.8rem;
+  font-weight: 500;
+  min-width: 80px;
+}
+
+.resetFilterButton:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.4);
+}
+
+.applyFilterButton {
+  text-transform: none;
+  border-radius: 8px;
+  background-color: #007aff;
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 500;
+  min-width: 110px;
+  box-shadow: none;
+}
+
+.applyFilterButton:hover {
+  background-color: #0062cc;
+}
+
+/* More styles for showing active filters */
+.activeFilterChip {
+  font-size: 0.75rem;
+  height: 24px;
+  background-color: #f0f7ff;
+  color: #007aff;
+  margin-right: 8px;
+  border: 1px solid rgba(0, 122, 255, 0.2);
+}
+
+.activeFilterChip .MuiChip-deleteIcon {
+  color: #007aff;
+  width: 16px;
+  height: 16px;
+}

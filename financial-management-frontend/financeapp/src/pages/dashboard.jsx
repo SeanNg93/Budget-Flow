@@ -44,6 +44,13 @@ import {
   DialogContentText,
 } from '@mui/material';
 import { toast } from 'react-toastify';
+import Collapse from '@mui/material/Collapse';
+import Select from '@mui/material/Select';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import { DatePicker } from '@mui/x-date-pickers';
+import { subDays, format } from 'date-fns';
 
 // Import dashboard components
 import SideMenu from '../components/dashboard/SideMenu';
@@ -159,6 +166,17 @@ export default function Dashboard() {
   const [financeActionPanelOpen, setFinanceActionPanelOpen] = useState(false);
 
   const [categoryManageFormOpen, setCategoryManageFormOpen] = useState(false);
+
+  // Add new state variables for transaction filtering
+  const [transactionFilterOpen, setTransactionFilterOpen] = useState(false);
+  const [filterTimeframe, setFilterTimeframe] = useState('week');
+  const [filterWalletId, setFilterWalletId] = useState('all');
+  const [filteredTransactions, setFilteredTransactions] = useState([]);
+  const [isFiltering, setIsFiltering] = useState(false);
+  // Add state for custom date range
+  const [customStartDate, setCustomStartDate] = useState(subDays(new Date(), 7));
+  const [customEndDate, setCustomEndDate] = useState(new Date());
+  const [showCustomDateRange, setShowCustomDateRange] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -325,10 +343,11 @@ export default function Dashboard() {
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-GB', {
       year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+      month: '2-digit',
+      day: '2-digit'
     });
   };
 
@@ -486,19 +505,115 @@ export default function Dashboard() {
     }
   };
 
-  // Function to fetch transactions
-  const fetchTransactions = async () => {
+  // Function to handle timeframe changes
+  const handleTimeframeChange = (event) => {
+    const value = event.target.value;
+    setFilterTimeframe(value);
+    setShowCustomDateRange(value === 'custom');
+  };
+
+  // Function to fetch transactions with filtering support
+  const fetchTransactions = async (applyFilters = false) => {
     try {
+      setIsFiltering(true);
       const transactionsResponse = await FinanceService.getTransactions();
       
-      // Ensure we're getting complete transaction data with categories
       if (transactionsResponse.data && transactionsResponse.data.length > 0) {
-        // Store the transactions with full details
-        setTransactions(transactionsResponse.data.slice(0, 5)); // Get only the 5 most recent
+        // If we're not filtering, just get recent transactions
+        if (!applyFilters) {
+          setTransactions(transactionsResponse.data.slice(0, 5));
+          setFilteredTransactions(transactionsResponse.data.slice(0, 5));
+          setIsFiltering(false);
+          return;
+        }
+        
+        // Apply time filter
+        let filteredData = [...transactionsResponse.data];
+        const currentDate = new Date();
+        let startDate;
+        
+        if (filterTimeframe === 'custom') {
+          // Use custom date range if selected
+          startDate = new Date(customStartDate);
+          currentDate.setTime(new Date(customEndDate).getTime());
+        } else {
+          // Use predefined date ranges
+          switch (filterTimeframe) {
+            case 'day':
+              startDate = new Date(currentDate);
+              startDate.setDate(currentDate.getDate() - 1);
+              break;
+            case 'week':
+              startDate = new Date(currentDate);
+              startDate.setDate(currentDate.getDate() - 7);
+              break;
+            case 'month':
+              startDate = new Date(currentDate);
+              startDate.setMonth(currentDate.getMonth() - 1);
+              break;
+            case 'quarter':
+              startDate = new Date(currentDate);
+              startDate.setMonth(currentDate.getMonth() - 3);
+              break;
+            case 'year':
+              startDate = new Date(currentDate);
+              startDate.setFullYear(currentDate.getFullYear() - 1);
+              break;
+            default:
+              startDate = new Date(0); // Beginning of time
+          }
+        }
+        
+        // Filter by date
+        filteredData = filteredData.filter(transaction => {
+          const transactionDate = new Date(transaction.transactionDate);
+          return transactionDate >= startDate && transactionDate <= currentDate;
+        });
+        
+        // Filter by wallet if specified
+        if (filterWalletId !== 'all') {
+          filteredData = filteredData.filter(transaction => {
+            // Check different possible formats of wallet/account ID
+            if (transaction.wallet && transaction.wallet.id) {
+              return transaction.wallet.id.toString() === filterWalletId;
+            }
+            if (transaction.account && transaction.account.id) {
+              return transaction.account.id.toString() === filterWalletId;
+            }
+            if (transaction.accountId) {
+              return transaction.accountId.toString() === filterWalletId;
+            }
+            return false;
+          });
+        }
+        
+        // Set the filtered transactions
+        setFilteredTransactions(filteredData);
+        
+        // Also update the transactions to display
+        setTransactions(filteredData.slice(0, 10)); // Show up to 10 when filtering
       }
     } catch (error) {
       console.error('Error fetching transactions:', error);
+    } finally {
+      setIsFiltering(false);
     }
+  };
+
+  // Function to apply filters
+  const applyTransactionFilters = () => {
+    fetchTransactions(true);
+  };
+  
+  // Function to reset filters
+  const resetTransactionFilters = () => {
+    setFilterTimeframe('week');
+    setFilterWalletId('all');
+    setShowCustomDateRange(false);
+    setCustomStartDate(subDays(new Date(), 7));
+    setCustomEndDate(new Date());
+    setTransactionFilterOpen(false);
+    fetchTransactions(false);
   };
 
   // Function to fetch categories
@@ -542,6 +657,30 @@ export default function Dashboard() {
     await fetchCategories();
     // If you have transactions that need updating due to category changes
     await fetchTransactions();
+  };
+
+  // Helper function to format dates for display
+  const formatDateForDisplay = (date) => {
+    if (!date) return '';
+    return format(new Date(date), 'dd/MM/yyyy');
+  };
+
+  // Update to ensure end date is always after start date
+  const handleStartDateChange = (date) => {
+    setCustomStartDate(date);
+    // If end date is before start date, update end date
+    if (date && customEndDate && date > customEndDate) {
+      setCustomEndDate(date);
+    }
+  };
+
+  const handleEndDateChange = (date) => {
+    // Ensure end date is not before start date
+    if (date && customStartDate && date < customStartDate) {
+      setCustomEndDate(customStartDate);
+    } else {
+      setCustomEndDate(date);
+    }
   };
 
   if (loading) {
@@ -817,7 +956,7 @@ export default function Dashboard() {
                     </Grid>
                   </Grid>
                   
-                  {/* Recent Transactions */}
+                  {/* Recent Transactions Section with Filtering */}
                   <Grid item xs={12}>
                     <Paper 
                       className={styles.transactionsCard}
@@ -830,20 +969,147 @@ export default function Dashboard() {
                         >
                           Recent Transactions
                         </Typography>
-                        <Button 
-                          variant="contained" 
-                          color="primary" 
-                          startIcon={<AddIcon />}
-                          onClick={() => setTransactionFormOpen(true)}
-                          className={styles.addNewButton}
-                          elevation={3}
-                          size="small"
-                        >
-                          Add New
-                        </Button>
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            startIcon={<FilterListIcon />}
+                            onClick={() => setTransactionFilterOpen(!transactionFilterOpen)}
+                            className={styles.filterButton}
+                          >
+                            Filter
+                          </Button>
+                          <Button 
+                            variant="contained" 
+                            color="primary" 
+                            startIcon={<AddIcon />}
+                            onClick={() => setTransactionFormOpen(true)}
+                            className={styles.addNewButton}
+                            elevation={3}
+                            size="small"
+                          >
+                            Add New
+                          </Button>
+                        </Box>
                       </Box>
                       
-                      {loading ? (
+                      {/* Filter Controls - Shown when filter button is clicked */}
+                      <Collapse in={transactionFilterOpen}>
+                        <Box className={styles.filterControls}>
+                          <Grid container spacing={2} alignItems="flex-end">
+                            <Grid item xs={12} sm={4}>
+                              <FormControl fullWidth size="small">
+                                <InputLabel id="time-period-label">Time Period</InputLabel>
+                                <Select
+                                  labelId="time-period-label"
+                                  value={filterTimeframe}
+                                  label="Time Period"
+                                  onChange={handleTimeframeChange}
+                                  className={styles.filterSelect}
+                                >
+                                  <MenuItem value="day">Last 24 Hours</MenuItem>
+                                  <MenuItem value="week">Last 7 Days</MenuItem>
+                                  <MenuItem value="month">Last 30 Days</MenuItem>
+                                  <MenuItem value="quarter">Last 3 Months</MenuItem>
+                                  <MenuItem value="year">Last Year</MenuItem>
+                                  <MenuItem value="all">All Time</MenuItem>
+                                  <MenuItem value="custom">Custom Range</MenuItem>
+                                </Select>
+                              </FormControl>
+                            </Grid>
+                            <Grid item xs={12} sm={4}>
+                              <FormControl fullWidth size="small">
+                                <InputLabel id="wallet-filter-label">Wallet</InputLabel>
+                                <Select
+                                  labelId="wallet-filter-label"
+                                  value={filterWalletId}
+                                  label="Wallet"
+                                  onChange={(e) => setFilterWalletId(e.target.value)}
+                                  className={styles.filterSelect}
+                                >
+                                  <MenuItem value="all">All Wallets</MenuItem>
+                                  {wallets.map((wallet) => (
+                                    <MenuItem key={wallet.id} value={wallet.id.toString()}>
+                                      {wallet.accountName}
+                                    </MenuItem>
+                                  ))}
+                                </Select>
+                              </FormControl>
+                            </Grid>
+                            <Grid item xs={12} sm={4}>
+                              <Box sx={{ display: 'flex', gap: 1, justifyContent: { xs: 'flex-start', sm: 'flex-end' } }}>
+                                <Button 
+                                  variant="outlined" 
+                                  size="small"
+                                  onClick={resetTransactionFilters}
+                                  className={styles.resetFilterButton}
+                                >
+                                  Reset
+                                </Button>
+                                <Button 
+                                  variant="contained" 
+                                  size="small"
+                                  onClick={applyTransactionFilters}
+                                  className={styles.applyFilterButton}
+                                  disabled={isFiltering}
+                                >
+                                  {isFiltering ? 'Loading...' : 'Apply Filters'}
+                                </Button>
+                              </Box>
+                            </Grid>
+                            
+                            {/* Custom Date Range Pickers */}
+                            {showCustomDateRange && (
+                              <Grid item xs={12}>
+                                <Box sx={{ 
+                                  display: 'flex', 
+                                  gap: 2, 
+                                  mt: 2,
+                                  flexDirection: { xs: 'column', sm: 'row' } 
+                                }}>
+                                  <DatePicker
+                                    label="Start Date"
+                                    value={customStartDate}
+                                    onChange={handleStartDateChange}
+                                    format="dd/MM/yyyy"
+                                    slotProps={{
+                                      textField: {
+                                        fullWidth: true,
+                                        size: "small",
+                                        className: styles.filterDateField
+                                      }
+                                    }}
+                                    maxDate={customEndDate}
+                                  />
+                                  <DatePicker
+                                    label="End Date"
+                                    value={customEndDate}
+                                    onChange={handleEndDateChange}
+                                    format="dd/MM/yyyy"
+                                    slotProps={{
+                                      textField: {
+                                        fullWidth: true,
+                                        size: "small",
+                                        className: styles.filterDateField
+                                      }
+                                    }}
+                                    minDate={customStartDate}
+                                  />
+                                </Box>
+                                {customStartDate && customEndDate && (
+                                  <Box sx={{ mt: 1 }}>
+                                    <Typography variant="caption" color="text.secondary">
+                                      Showing transactions from {formatDateForDisplay(customStartDate)} to {formatDateForDisplay(customEndDate)}
+                                    </Typography>
+                                  </Box>
+                                )}
+                              </Grid>
+                            )}
+                          </Grid>
+                        </Box>
+                      </Collapse>
+                      
+                      {loading || isFiltering ? (
                         <Box className={styles.loadingBox}>
                           <CircularProgress />
                         </Box>
@@ -855,6 +1121,7 @@ export default function Dashboard() {
                                 <TableCell className={styles.tableHeaderCell}>Date</TableCell>
                                 <TableCell className={styles.tableHeaderCell}>Description</TableCell>
                                 <TableCell className={styles.tableHeaderCell}>Category</TableCell>
+                                <TableCell className={styles.tableHeaderCell}>Wallet</TableCell>
                                 <TableCell className={styles.tableHeaderCell}>Type</TableCell>
                                 <TableCell align="right" className={styles.tableHeaderCell}>Amount</TableCell>
                                 <TableCell className={styles.tableHeaderCell}>Actions</TableCell>
@@ -871,6 +1138,11 @@ export default function Dashboard() {
                                   <TableCell className={styles.tableCell}>
                                     {transaction.category ? transaction.category.categoryName : 
                                      (transaction.categoryId ? `Category #${transaction.categoryId}` : 'Uncategorized')}
+                                  </TableCell>
+                                  <TableCell className={styles.tableCell}>
+                                    {transaction.wallet ? transaction.wallet.accountName : 
+                                     (transaction.account ? transaction.account.accountName : 
+                                      (transaction.accountId ? accounts.find(a => a.id === transaction.accountId)?.accountName || `Wallet #${transaction.accountId}` : 'Unknown'))}
                                   </TableCell>
                                   <TableCell className={styles.tableCell}>
                                     <Box
@@ -917,7 +1189,20 @@ export default function Dashboard() {
                       ) : (
                         <Box className={styles.emptyTransactionsBox}>
                           <Typography variant="body1" color="text.secondary">
-                            No transactions to display. Start adding your financial data to see it here.
+                            {transactionFilterOpen ? 'No transactions match your filter criteria.' : 'No transactions to display. Start adding your financial data to see it here.'}
+                          </Typography>
+                        </Box>
+                      )}
+                      
+                      {/* Show count and active filter info */}
+                      {transactionFilterOpen && filteredTransactions.length > 0 && (
+                        <Box sx={{ pt: 2, px: 2, pb: 1 }}>
+                          <Typography variant="body2" color="text.secondary">
+                            Showing {transactions.length} of {filteredTransactions.length} matching transactions
+                            {filteredTransactions.length > 10 && ' (top 10 most recent)'}
+                            {filterTimeframe === 'custom' && customStartDate && customEndDate && 
+                              ` from ${formatDateForDisplay(customStartDate)} to ${formatDateForDisplay(customEndDate)}`
+                            }
                           </Typography>
                         </Box>
                       )}
