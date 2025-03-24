@@ -598,7 +598,7 @@ export default function Dashboard() {
                             fontWeight: 500
                           }}
                         >
-                          Click here
+                          Click here  
                         </span>{' '}
                         for quick navigation.
                       </Typography>

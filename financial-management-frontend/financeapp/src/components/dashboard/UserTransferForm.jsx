@@ -14,7 +14,6 @@ import {
   MenuItem,
   CircularProgress,
   Alert,
-  Autocomplete,
   InputAdornment,
   Paper,
   Avatar,
@@ -25,12 +24,12 @@ import {
   Divider,
   Fade,
   Slide,
-  Zoom
+  IconButton
 } from '@mui/material';
 import { 
   Send as SendIcon, 
   Search as SearchIcon,
-  Person as PersonIcon,
+  Close as CloseIcon,
   ErrorOutline as ErrorIcon
 } from '@mui/icons-material';
 import styles from '../../styles/walletManage.module.css';
@@ -61,12 +60,17 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourc
   const dialogRef = useRef(null);
   const errorAlertRef = useRef(null);
   const successAlertRef = useRef(null);
-  const searchResultsRef = useRef(null);
   
   // Load wallets when component mounts
   useEffect(() => {
     if (open) {
       loadWallets();
+      // Reset form
+      setSearchQuery('');
+      setSelectedUser(null);
+      setAmount('');
+      setError('');
+      setSuccess(false);
     }
   }, [open]);
   
@@ -160,7 +164,7 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourc
     setSuccess(false);
     
     try {
-      const result = await FinanceService.transferToUser(
+      await FinanceService.transferToUser(
         parseInt(sourceWalletId),
         selectedUser.id.toString(),
         parseFloat(amount)
@@ -193,22 +197,17 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourc
     setSelectedUser(null);
     setSearchQuery('');
     setSearchResults([]);
-    setAmount('');
-    setError('');
-    setSuccess(false);
   };
   
   return (
     <Dialog 
       open={open} 
       onClose={handleClose}
-      maxWidth="sm"
+      maxWidth="xs"
       fullWidth
       PaperProps={{
-        style: {
-          borderRadius: '16px',
-          padding: '8px'
-        }
+        className: styles.dialogPaper,
+        style: { width: '450px', maxWidth: '95vw' }
       }}
       TransitionComponent={SlideTransition}
       TransitionProps={{
@@ -219,36 +218,36 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourc
       }}
       ref={dialogRef}
     >
-      <DialogTitle 
-        style={{ 
-          fontWeight: 'bold', 
-          fontSize: '1.5rem',
-          textAlign: 'center',
-          paddingBottom: 0
-        }}
-      >
-        Transfer Money to Other User
+      <DialogTitle className={styles.dialogTitle}>
+        <Box className={styles.headerContainer}>
+          <Typography variant="h6" className={styles.title}>
+            Transfer Money
+          </Typography>
+          <IconButton 
+            aria-label="close" 
+            onClick={handleClose} 
+            size="small"
+            sx={{
+              color: 'rgba(0, 0, 0, 0.54)',
+              '&:hover': {
+                backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                color: '#007aff'
+              }
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </Box>
       </DialogTitle>
       
-      <DialogContent>
-        {/* Description */}
-        <Typography 
-          variant="body2" 
-          color="text.secondary" 
-          align="center" 
-          style={{ marginBottom: '24px' }}
-        >
-          Transfer money from your wallet to another user's account.
-          The recipient will receive the funds in their total balance.
-        </Typography>
-        
+      <DialogContent className={styles.dialogContent} sx={{ px: 2, py: 1 }}>
         {/* Error message */}
         {error && (
           <Fade in={!!error} timeout={300} nodeRef={errorAlertRef}>
             <Alert 
               severity="error" 
               icon={<ErrorIcon />}
-              style={{ marginBottom: '16px' }}
+              style={{ marginBottom: '12px' }}
               ref={errorAlertRef}
             >
               {error}
@@ -261,7 +260,7 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourc
           <Fade in={success} timeout={300} nodeRef={successAlertRef}>
             <Alert 
               severity="success" 
-              style={{ marginBottom: '16px' }}
+              style={{ marginBottom: '12px' }}
               ref={successAlertRef}
             >
               Transfer completed successfully!
@@ -269,18 +268,20 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourc
           </Fade>
         )}
         
-        <Box sx={{ my: 3 }}>
+        <Box sx={{ pt: 1 }}>
           {/* Source wallet selector */}
-          <FormControl fullWidth sx={{ mb: 3 }}>
-            <Typography variant="subtitle2" gutterBottom>
-              From
+          <FormControl fullWidth sx={{ mb: 2 }} size="small">
+            <Typography variant="body2" gutterBottom sx={{ fontWeight: 500, color: 'text.secondary' }}>
+              From Wallet
             </Typography>
             <Select
               value={sourceWalletId}
               onChange={(e) => setSourceWalletId(e.target.value)}
               displayEmpty
+              size="small"
               sx={{
-                borderRadius: '12px',
+                borderRadius: '8px',
+                fontSize: '0.9rem',
                 '& .MuiOutlinedInput-notchedOutline': {
                   borderColor: 'rgba(0, 0, 0, 0.1)'
                 }
@@ -298,28 +299,30 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourc
           </FormControl>
           
           {/* User search */}
-          <FormControl fullWidth sx={{ mb: 3 }}>
-            <Typography variant="subtitle2" gutterBottom>
-              To
+          <FormControl fullWidth sx={{ mb: 2 }} size="small">
+            <Typography variant="body2" gutterBottom sx={{ fontWeight: 500, color: 'text.secondary' }}>
+              To User
             </Typography>
             <TextField
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search for user by name or username"
+              placeholder="Search by name or username"
+              size="small"
               fullWidth
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <SearchIcon />
+                    <SearchIcon fontSize="small" />
                   </InputAdornment>
                 ),
                 endAdornment: searching ? (
                   <InputAdornment position="end">
-                    <CircularProgress size={20} />
+                    <CircularProgress size={16} />
                   </InputAdornment>
                 ) : null,
                 sx: {
-                  borderRadius: '12px',
+                  borderRadius: '8px',
+                  fontSize: '0.9rem',
                   '& .MuiOutlinedInput-notchedOutline': {
                     borderColor: 'rgba(0, 0, 0, 0.1)'
                   }
@@ -330,42 +333,50 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourc
             {/* Search results */}
             {searchResults.length > 0 && !selectedUser && (
               <Paper 
-                elevation={3} 
+                elevation={2} 
                 sx={{ 
-                  mt: 1, 
-                  maxHeight: '200px', 
+                  mt: 0.5, 
+                  maxHeight: '180px', 
                   overflow: 'auto',
-                  borderRadius: '12px'
+                  borderRadius: '8px'
                 }}
               >
-                <List dense>
+                <List dense sx={{ py: 0.5 }}>
                   {searchResults.map((user, index) => (
                     <React.Fragment key={user.id}>
                       <ListItem 
                         button 
                         onClick={() => handleSelectUser(user)}
+                        dense
                         sx={{ 
-                          py: 1,
+                          py: 0.5,
                           '&:hover': {
-                            backgroundColor: 'rgba(0, 0, 0, 0.04)'
+                            backgroundColor: 'rgba(0, 122, 255, 0.08)'
                           }
                         }}
                       >
-                        <ListItemAvatar>
+                        <ListItemAvatar sx={{ minWidth: 40 }}>
                           <Avatar 
                             src={user.profilePicture} 
                             alt={user.username}
-                            sx={{ backgroundColor: 'primary.main' }}
+                            sx={{ 
+                              width: 30, 
+                              height: 30,
+                              backgroundColor: 'primary.main',
+                              fontSize: '0.85rem'
+                            }}
                           >
                             {user.fullName ? user.fullName.charAt(0).toUpperCase() : user.username.charAt(0).toUpperCase()}
                           </Avatar>
                         </ListItemAvatar>
                         <ListItemText 
-                          primary={user.fullName || user.username} 
+                          primary={user.fullName || user.username}
                           secondary={user.fullName ? `@${user.username}` : ''}
+                          primaryTypographyProps={{ fontSize: '0.9rem' }}
+                          secondaryTypographyProps={{ fontSize: '0.75rem' }}
                         />
                       </ListItem>
-                      {index < searchResults.length - 1 && <Divider component="li" />}
+                      {index < searchResults.length - 1 && <Divider component="li" variant="middle" />}
                     </React.Fragment>
                   ))}
                 </List>
@@ -377,12 +388,13 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourc
               <Paper 
                 elevation={1} 
                 sx={{ 
-                  mt: 1, 
-                  p: 1, 
+                  mt: 0.5, 
+                  p: 0.75, 
                   display: 'flex', 
                   alignItems: 'center',
-                  borderRadius: '12px',
-                  backgroundColor: 'rgba(0, 0, 0, 0.04)'
+                  borderRadius: '8px',
+                  backgroundColor: 'rgba(0, 122, 255, 0.05)',
+                  border: '1px solid rgba(0, 122, 255, 0.1)'
                 }}
               >
                 <Avatar 
@@ -390,17 +402,20 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourc
                   alt={selectedUser.username}
                   sx={{ 
                     backgroundColor: 'primary.main',
-                    mr: 1
+                    mr: 1,
+                    width: 28,
+                    height: 28,
+                    fontSize: '0.85rem'
                   }}
                 >
                   {selectedUser.fullName ? selectedUser.fullName.charAt(0).toUpperCase() : selectedUser.username.charAt(0).toUpperCase()}
                 </Avatar>
                 <Box>
-                  <Typography variant="body1">
+                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
                     {selectedUser.fullName || selectedUser.username}
                   </Typography>
                   {selectedUser.fullName && (
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="caption" color="text.secondary">
                       @{selectedUser.username}
                     </Typography>
                   )}
@@ -409,7 +424,12 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourc
                   <Button 
                     size="small" 
                     onClick={handleReset}
-                    sx={{ minWidth: 'auto', p: 0.5 }}
+                    sx={{ 
+                      minWidth: 'auto', 
+                      p: 0.5, 
+                      fontSize: '0.75rem',
+                      color: 'primary.main'
+                    }}
                   >
                     Change
                   </Button>
@@ -419,8 +439,8 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourc
           </FormControl>
           
           {/* Amount input */}
-          <FormControl fullWidth sx={{ mb: 3 }}>
-            <Typography variant="subtitle2" gutterBottom>
+          <FormControl fullWidth sx={{ mb: 1 }} size="small">
+            <Typography variant="body2" gutterBottom sx={{ fontWeight: 500, color: 'text.secondary' }}>
               Amount
             </Typography>
             <TextField
@@ -428,6 +448,7 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourc
               onChange={(e) => setAmount(e.target.value)}
               placeholder="0.00"
               type="number"
+              size="small"
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -435,7 +456,8 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourc
                   </InputAdornment>
                 ),
                 sx: {
-                  borderRadius: '12px',
+                  borderRadius: '8px',
+                  fontSize: '0.9rem',
                   '& .MuiOutlinedInput-notchedOutline': {
                     borderColor: 'rgba(0, 0, 0, 0.1)'
                   }
@@ -446,15 +468,13 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourc
         </Box>
       </DialogContent>
       
-      <DialogActions sx={{ px: 3, pb: 3, justifyContent: 'space-between' }}>
+      <DialogActions sx={{ px: 2, pb: 2, pt: 0.5, justifyContent: 'flex-end' }}>
         <Button 
           onClick={handleClose}
           variant="outlined"
           className={styles.cancelButton}
-          sx={{ 
-            borderRadius: '12px',
-            minWidth: '100px'
-          }}
+          size="small"
+          sx={{ mr: 1 }}
         >
           Cancel
         </Button>
@@ -463,12 +483,9 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourc
           variant="contained"
           color="primary"
           disabled={!sourceWalletId || !selectedUser || !amount || transferring}
-          startIcon={transferring ? <CircularProgress size={20} /> : <SendIcon />}
+          startIcon={transferring ? <CircularProgress size={16} /> : <SendIcon />}
           className={`${styles.standardButton} ${styles.transferButton}`}
-          sx={{ 
-            borderRadius: '12px',
-            minWidth: '100px'
-          }}
+          size="small"
         >
           {transferring ? 'Sending...' : 'Send Money'}
         </Button>
