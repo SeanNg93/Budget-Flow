@@ -490,7 +490,6 @@ export default function Dashboard() {
   const fetchTransactions = async () => {
     try {
       const transactionsResponse = await FinanceService.getTransactions();
-      console.log('Fetched transactions:', transactionsResponse.data); // Log to check response data
       
       // Ensure we're getting complete transaction data with categories
       if (transactionsResponse.data && transactionsResponse.data.length > 0) {
@@ -953,8 +952,6 @@ export default function Dashboard() {
         open={transactionFormOpen} 
         handleClose={() => setTransactionFormOpen(false)} 
         onTransactionAdded={handleTransactionAdded}
-        editTransaction={selectedTransaction}
-        isEditMode={editTransactionOpen}
       />
       
       <WalletForm 
@@ -1001,7 +998,7 @@ export default function Dashboard() {
             setEditTransactionOpen(false);
             setSelectedTransaction(null);
           }} 
-          transaction={selectedTransaction}
+          initialData={selectedTransaction}
           onTransactionAdded={handleTransactionAdded}
         />
       )}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   Button, 
   Dialog, 
@@ -87,6 +87,9 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
   const [categorySpendingData, setCategorySpendingData] = useState(null);
   const [categoryExcessAmount, setCategoryExcessAmount] = useState(0);
 
+  // Track if form has been initialized with initial data
+  const formInitialized = useRef(false);
+
   // Add refs for transitions
   const dialogRef = useRef(null);
   const errorAlertRef = useRef(null);
@@ -96,6 +99,74 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
   const deleteCategoryDialogRef = useRef(null);
   const editWalletDialogRef = useRef(null);
   const deleteWalletDialogRef = useRef(null);
+
+  // Helper function to fetch category spending data - memoize with useCallback
+  const fetchCategorySpendingData = useCallback(async (catId) => {
+    if (!catId || catId === '' || formData.transactionType !== 'EXPENSE') {
+      setCategorySpendingData(null);
+      return;
+    }
+    
+    try {
+      const catIdNumber = parseInt(catId, 10);
+      
+      // First check if this category has a spending limit to avoid unnecessary API calls
+      const category = categories.find(c => c.id.toString() === catId.toString());
+      
+      // Skip API call if category doesn't exist or doesn't have a spending limit
+      if (!category || !category.spendingLimit) {
+        setCategorySpendingData(null);
+        setCategoryExcessAmount(0);
+        return;
+      }
+      
+      const response = await FinanceService.getCategorySpendingProgress(catIdNumber);
+      
+      // Handle case when editing an existing transaction
+      if (initialData && initialData.category && initialData.category.id.toString() === catId.toString() && initialData.transactionType === 'EXPENSE') {
+        // Subtract the original transaction amount from the total spent
+        const originalAmount = parseFloat(initialData.amount) || 0;
+        const adjustedTotalSpent = Math.max(0, response.data.totalSpent - originalAmount);
+        
+        // Create adjusted response data
+        const adjustedData = {
+          ...response.data,
+          totalSpent: adjustedTotalSpent,
+          percentage: (adjustedTotalSpent / response.data.limit) * 100
+        };
+        
+        setCategorySpendingData(adjustedData);
+        
+        // Recalculate excess amount with adjusted total
+        const newAmount = parseFloat(formData.amount || 0);
+        if (adjustedData.limit && newAmount > 0) {
+          const newTotal = adjustedTotalSpent + newAmount;
+          if (newTotal > adjustedData.limit) {
+            setCategoryExcessAmount(newTotal - adjustedData.limit);
+          } else {
+            setCategoryExcessAmount(0);
+          }
+        }
+      } else {
+        // Normal case (not editing an existing transaction in the same category)
+        setCategorySpendingData(response.data);
+        
+        // Set excess amount if applicable
+        const amount = parseFloat(formData.amount || 0);
+        if (response.data.limit && amount > 0) {
+          const newTotal = response.data.totalSpent + amount;
+          if (newTotal > response.data.limit) {
+            setCategoryExcessAmount(newTotal - response.data.limit);
+          } else {
+            setCategoryExcessAmount(0);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching category spending data:', err);
+      setCategorySpendingData(null);
+    }
+  }, [formData.transactionType, formData.amount, categories, initialData]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -112,11 +183,11 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
         const categoriesResponse = await FinanceService.getCategories();
         setCategories(categoriesResponse.data || []);
         
-        // Set default account if available
-        if (accountsResponse.data && accountsResponse.data.length > 0) {
+        // Set default account if available and not editing
+        if (!initialData && accountsResponse.data && accountsResponse.data.length > 0) {
           setFormData(prev => ({
             ...prev,
-            accountId: accountsResponse.data[0].id
+            accountId: accountsResponse.data[0].id.toString()
           }));
         }
       } catch (err) {
@@ -133,23 +204,59 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
     
     if (open) {
       fetchData();
+      
+      // Reset the initialization flag when the dialog opens
+      if (!initialData) {
+        formInitialized.current = false;
+      }
     }
-  }, [open]);
+  }, [open, initialData]);
   
   useEffect(() => {
-    if (initialData) {
+    if (open && initialData && !formInitialized.current && categories.length > 0) {
+      formInitialized.current = true;
+      
+      // Handle different possible formats of wallet property
+      let accountId = '';
+      if (initialData.wallet?.id) {
+        accountId = initialData.wallet.id.toString();
+      } else if (initialData.accountId) {
+        accountId = initialData.accountId.toString();
+      } else if (initialData.account?.id) {
+        accountId = initialData.account.id.toString();
+      }
+
+      // Handle different possible formats of category property
+      let categoryId = '';
+      if (initialData.category?.id) {
+        categoryId = initialData.category.id.toString();
+      } else if (initialData.categoryId) {
+        categoryId = initialData.categoryId.toString();
+      }
+      
+      // Ensure amount is properly converted to string
+      const amountStr = initialData.amount ? String(initialData.amount) : '';
+      
+      // Update form data
       setFormData({
-        accountId: initialData.wallet.id.toString(),
-        transactionType: initialData.transactionType,
-        amount: initialData.amount.toString(),
+        accountId: accountId,
+        transactionType: initialData.transactionType || 'EXPENSE',
+        amount: amountStr,
         description: initialData.description || '',
-        categoryId: initialData.category ? initialData.category.id.toString() : '',
+        categoryId: categoryId,
         transactionDate: initialData.transactionDate ? new Date(initialData.transactionDate) : new Date()
       });
+      
+      // Load the category spending data if needed
+      if (categoryId && initialData.transactionType === 'EXPENSE') {
+        setTimeout(() => {
+          fetchCategorySpendingData(categoryId);
+        }, 100);
+      }
     }
-  }, [initialData]);
+  }, [initialData, open, categories.length, fetchCategorySpendingData]);
   
-  // Add a useEffect to handle category limit warnings
+  // Update the useEffect for the checkCategoryLimit function
   useEffect(() => {
     const checkCategoryLimit = () => {
       // Only check for expense transactions
@@ -160,7 +267,9 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
         return;
       }
       
-      const category = categories.find(c => c.id.toString() === formData.categoryId);
+      // Convert categoryId to string for safe comparison
+      const categoryIdStr = formData.categoryId.toString();
+      const category = categories.find(c => c.id.toString() === categoryIdStr);
       setSelectedCategory(category);
       
       if (category && category.spendingLimit) {
@@ -193,53 +302,76 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
   
   // Fetch category spending data when category changes
   useEffect(() => {
-    const fetchCategorySpendingData = async () => {
-      if (!formData.categoryId || formData.transactionType !== 'EXPENSE') {
-        setCategorySpendingData(null);
-        setCategoryExcessAmount(0);
-        return;
+    // Call our helper function to fetch category spending data
+    if (formData.categoryId) {
+      fetchCategorySpendingData(formData.categoryId);
+    } else {
+      setCategorySpendingData(null);
+      setCategoryExcessAmount(0);
+    }
+  }, [formData.categoryId, formData.transactionType, formData.amount, fetchCategorySpendingData]);
+  
+  // Update selected category when categoryId changes
+  useEffect(() => {
+    if (formData.categoryId && categories.length > 0) {
+      // Convert to string for consistent comparison
+      const categoryIdStr = formData.categoryId.toString();
+      const category = categories.find(c => c.id.toString() === categoryIdStr);
+      if (category) {
+        setSelectedCategory(category);
+      } else {
+        setSelectedCategory(null);
       }
-      
-      try {
-        const response = await FinanceService.getCategorySpendingProgress(parseInt(formData.categoryId, 10));
-        setCategorySpendingData(response.data);
-        
-        // Calculate if the category limit is exceeded with the current amount
-        if (response.data && response.data.limit > 0) {
-          const currentAmount = parseFloat(formData.amount) || 0;
-          const totalWithCurrentAmount = response.data.totalSpent + currentAmount;
-          
-          if (totalWithCurrentAmount > response.data.limit) {
-            setCategoryExcessAmount(totalWithCurrentAmount - response.data.limit);
-          } else {
-            setCategoryExcessAmount(0);
-          }
-        } else {
-          setCategoryExcessAmount(0);
-        }
-      } catch (err) {
-        console.error('Error fetching category spending data:', err);
-        setCategorySpendingData(null);
-        setCategoryExcessAmount(0);
-      }
-    };
-    
-    fetchCategorySpendingData();
-  }, [formData.categoryId, formData.transactionType, formData.amount]);
+    } else {
+      setSelectedCategory(null);
+    }
+  }, [formData.categoryId, categories]);
   
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
-    });
     
-    // Clear error for this field
-    if (errors[name]) {
+    if (name === 'amount') {
+      if (value === '' || /^(\d*\.?\d{0,2}|\.\d{0,2})$/.test(value)) {
+        setFormData(prev => ({
+          ...prev,
+          [name]: value
+        }));
+      }
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
+        if (errors[name]) {
       setErrors({
         ...errors,
         [name]: ''
       });
+    }
+  };
+  
+  // Add a handler for when the amount field loses focus
+  const handleAmountBlur = (e) => {
+    const value = e.target.value.trim();
+    
+    // If the field is empty, leave it as is
+    if (value === '') {
+      return;
+    }
+    
+    // Format the number with 2 decimal places
+    try {
+      const floatValue = parseFloat(value);
+      if (!isNaN(floatValue)) {
+        setFormData(prev => ({
+          ...prev,
+          amount: floatValue.toFixed(2)
+        }));
+      }
+    } catch (err) {
+      // If parsing fails, leave the value as is
+      console.error('Error formatting amount:', err);
     }
   };
   
@@ -261,9 +393,17 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
     if (!formData.accountId) {
       newErrors.accountId = 'Account is required';
     }
-    if (!formData.amount || isNaN(formData.amount) || parseFloat(formData.amount) <= 0) {
-      newErrors.amount = 'Valid amount is required';
+    
+    // Improved amount validation
+    if (!formData.amount || formData.amount === '') {
+      newErrors.amount = 'Amount is required';
+    } else {
+      const numAmount = parseFloat(formData.amount);
+      if (isNaN(numAmount) || numAmount <= 0) {
+        newErrors.amount = 'Amount must be a positive number';
+      }
     }
+    
     if (!formData.description) {
       newErrors.description = 'Description is required';
     }
@@ -283,13 +423,14 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
     setError(null);
     
     try {
-      // Parse category ID properly
-      const categoryId = formData.categoryId ? parseInt(formData.categoryId, 10) : null;
+      // Parse category ID properly - handle both string and number formats
+      const categoryId = formData.categoryId ? parseInt(formData.categoryId.toString(), 10) : null;
       
       // Get full category details if categoryId is provided
       let categoryDetails = null;
       if (categoryId) {
-        const category = categories.find(cat => cat.id === categoryId);
+        // Find the category using string comparison for safety
+        const category = categories.find(cat => cat.id.toString() === categoryId.toString());
         if (category) {
           categoryDetails = {
             id: categoryId,
@@ -308,8 +449,6 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
         transactionDate: formData.transactionDate
       };
       
-      console.log('Sending transaction data:', transactionData);
-      
       let response;
       let isUpdate = false;
       
@@ -321,12 +460,14 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
         // Create new transaction
         response = await FinanceService.createTransaction(
           transactionData, 
-          parseInt(formData.accountId, 10)
+          parseInt(formData.accountId.toString(), 10)
         );
       }
       
-      // Reset form
-      resetForm();
+      // Only reset form for new transactions, not for edits
+      if (!initialData) {
+        resetForm();
+      }
       
       // Close dialog and notify parent
       if (onTransactionAdded) {
@@ -356,8 +497,13 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
   };
   
   const resetForm = () => {
+    // Don't reset if we're editing (initialData exists)
+    if (initialData) {
+      return;
+    }
+    
     setFormData({
-      accountId: accounts.length > 0 ? accounts[0].id : '',
+      accountId: accounts.length > 0 ? accounts[0].id.toString() : '',
       transactionType: 'EXPENSE',
       amount: '',
       description: '',
@@ -576,6 +722,26 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
            totalWithCurrentAmount <= categorySpendingData.limit;
   };
 
+  const renderValue = (selected) => {
+    if (!selected) {
+      return <Typography sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>Select a category</Typography>;
+    }
+    // Convert to string for safe comparison
+    const selectedStr = selected.toString();
+    const category = categories.find(c => c.id.toString() === selectedStr);
+    return <Typography sx={{ fontSize: '0.8rem' }}>{category ? category.categoryName : ''}</Typography>;
+  };
+
+  // Use this version of handleClose in the component
+  const handleDialogClose = () => {
+    // Reset form data
+    resetForm();
+    // Reset the initialization flag
+    formInitialized.current = false;
+    // Call the parent's handleClose function
+    handleClose();
+  };
+
   // Form content that will be used in both embedded and non-embedded modes
   const formContent = (
     <Box className={styles.formContainer}>
@@ -646,13 +812,15 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
                 if (!selected) {
                   return <Typography sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>Select a wallet</Typography>;
                 }
-                const account = accounts.find(a => a.id === selected);
+                // Use toString() for consistent string comparison
+                const selectedStr = selected.toString();
+                const account = accounts.find(a => a.id.toString() === selectedStr);
                 return <Typography sx={{ fontSize: '0.8rem' }}>{account ? account.accountName : ''}</Typography>;
               }}
             >
               <MenuItem value="" disabled>Select a wallet</MenuItem>
               {accounts.map((account) => (
-                <MenuItem key={account.id} value={account.id} sx={{ fontSize: '0.8rem' }}>
+                <MenuItem key={account.id} value={account.id.toString()} sx={{ fontSize: '0.8rem' }}>
                   {account.accountName}
                 </MenuItem>
               ))}
@@ -674,7 +842,9 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
                   >
                     {categoryExcessAmount > 0 ? 
                       `(Exceeding limit by $${categoryExcessAmount.toFixed(2)})` : 
-                      `(Limit: $${categorySpendingData.limit.toFixed(2)}, Left: $${Math.max(0, categorySpendingData.limit - categorySpendingData.totalSpent).toFixed(2)})`
+                      initialData ?
+                        `(Limit: $${categorySpendingData.limit.toFixed(2)}, Current: $${categorySpendingData.totalSpent.toFixed(2)})` :
+                        `(Limit: $${categorySpendingData.limit.toFixed(2)}, Left: $${Math.max(0, categorySpendingData.limit - categorySpendingData.totalSpent).toFixed(2)})`
                     }
                   </Typography>
                 )}
@@ -722,13 +892,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
                 '& .MuiInputBase-root': { height: '36px' },
                 '& .MuiSelect-select': { fontSize: '0.8rem' }
               }}
-              renderValue={(selected) => {
-                if (!selected) {
-                  return <Typography sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>Select a category</Typography>;
-                }
-                const category = categories.find(c => c.id === selected);
-                return <Typography sx={{ fontSize: '0.8rem' }}>{category ? category.categoryName : ''}</Typography>;
-              }}
+              renderValue={renderValue}
             >
               <MenuItem value="" disabled>
                 <Typography sx={{ fontSize: '0.8rem' }}>Select a category</Typography>
@@ -736,7 +900,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
               {categories
                 .filter(category => category.type === formData.transactionType)
                 .map((category) => (
-                <MenuItem key={category.id} value={category.id} sx={{ fontSize: '0.8rem' }}>
+                <MenuItem key={category.id} value={category.id.toString()} sx={{ fontSize: '0.8rem' }}>
                   {category.categoryName}
                 </MenuItem>
               ))}
@@ -752,7 +916,10 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
                     icon={<ErrorIcon fontSize="small" />}
                     className={styles.categoryAlert}
                   >
-                    You are exceeding your spending limit for this category. Your total spending would be ${(categorySpendingData.totalSpent + parseFloat(formData.amount || 0)).toFixed(2)}.
+                    {initialData ? 
+                      `This transaction would exceed your spending limit for this category. Your updated total spending would be $${(categorySpendingData.totalSpent + parseFloat(formData.amount || 0)).toFixed(2)}.` :
+                      `You are exceeding your spending limit for this category. Your total spending would be $${(categorySpendingData.totalSpent + parseFloat(formData.amount || 0)).toFixed(2)}.`
+                    }
                   </Alert>
                 ) : isExceedingWarningThreshold() ? (
                   <Alert 
@@ -760,7 +927,10 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
                     icon={<WarningIcon fontSize="small" />}
                     className={styles.categoryAlert}
                   >
-                    You are approaching your spending limit of ${categorySpendingData.limit.toFixed(2)}. This transaction would bring your total to ${(categorySpendingData.totalSpent + parseFloat(formData.amount || 0)).toFixed(2)}.
+                    {initialData ?
+                      `You are approaching your spending limit of $${categorySpendingData.limit.toFixed(2)}. This transaction would update your total to $${(categorySpendingData.totalSpent + parseFloat(formData.amount || 0)).toFixed(2)}.` :
+                      `You are approaching your spending limit of $${categorySpendingData.limit.toFixed(2)}. This transaction would bring your total to $${(categorySpendingData.totalSpent + parseFloat(formData.amount || 0)).toFixed(2)}.`
+                    }
                   </Alert>
                 ) : null}
               </Box>
@@ -784,17 +954,25 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
                 name="amount"
                 value={formData.amount}
                 onChange={handleChange}
+                onBlur={handleAmountBlur}
                 placeholder="0.00"
                 error={!!errors.amount}
                 helperText={errors.amount}
                 disabled={loading}
                 size="small"
+                type="text"
+                autoFocus={!!initialData}
                 className={`${styles.inputField} ${styles.amountField}`}
                 sx={{ '& .MuiInputBase-root': { height: '36px' } }}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">$</InputAdornment>
                   ),
+                  inputProps: {
+                    inputMode: 'decimal',
+                    pattern: '[0-9]*\.?[0-9]*',
+                    style: { textAlign: 'left' }
+                  }
                 }}
               />
             </FormControl>
@@ -883,7 +1061,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
         <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
           {!embedded && (
             <Button 
-              onClick={handleClose} 
+              onClick={handleDialogClose} 
               disabled={submitting} 
               className={styles.cancelButton}
             >
@@ -1089,7 +1267,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
   return (
     <Dialog 
       open={open} 
-      onClose={handleClose} 
+      onClose={handleDialogClose} 
       maxWidth="sm" 
       fullWidth={!embedded}
       PaperProps={{
