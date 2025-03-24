@@ -206,16 +206,56 @@
 }
 
 .deleteButton {
-  border-radius: 8px;
+  border-radius: 12px;
   text-transform: none;
   font-weight: 500;
   box-shadow: none;
+  background-color: #ff3b30;
+  color: white;
 }
 
+.deleteButton:hover {
+  background-color: #e0352b;
+  box-shadow: 0 2px 4px rgba(224, 53, 43, 0.2);
+}
+
+/* Updated cancel button with blue styling */
 .cancelButton {
-  border-radius: 8px;
+  border-radius: 12px;
   text-transform: none;
   font-weight: 500;
+  color: #007aff;
+  border: 1px solid rgba(0, 122, 255, 0.5);
+  background-color: transparent;
+  padding: 6px 16px;
+  min-width: 80px;
+  transition: all 0.2s ease;
+}
+
+.cancelButton:hover {
+  background-color: rgba(0, 122, 255, 0.08);
+  border-color: #007aff;
+}
+
+/* Standardized button styles for consistent look across the app */
+.standardButton {
+  border-radius: 12px;
+  text-transform: none;
+  font-weight: 500;
+  min-width: 80px;
+  padding: 6px 16px;
+  transition: all 0.2s ease;
+}
+
+.primaryButton {
+  background-color: #007aff;
+  color: white;
+  box-shadow: none;
+}
+
+.primaryButton:hover {
+  background-color: #0062cc;
+  box-shadow: 0 2px 4px rgba(0, 98, 204, 0.2);
 }
 
 /* New wallet form dialog */
@@ -254,10 +294,17 @@
 }
 
 .transferButton {
-  border-radius: 8px;
+  border-radius: 12px;
   text-transform: none;
   font-weight: 500;
   box-shadow: none;
+  background-color: #007aff;
+  color: white;
+}
+
+.transferButton:hover {
+  background-color: #0062cc;
+  box-shadow: 0 2px 4px rgba(0, 98, 204, 0.2);
 }
 
 /* Send Money button */
@@ -311,10 +358,6 @@
   font-size: 0.85rem;
 }
 
-.primaryButton {
-  box-shadow: none;
-}
-
 .backButton {
   margin-bottom: 12px;
   border-radius: 8px;
@@ -340,5 +383,104 @@
 }
 
 .menuIcon {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+/* Category management styles */
+.categoryCard {
+  padding: 16px;
+  border-left: 4px solid #007aff;
+  transition: background-color 0.2s;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.8);
+}
+
+.categoryCard:hover {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+.categoryHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.categoryName {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.limitInfo {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.progressBarContainer {
+  width: 100%;
+  height: 8px;
+  background-color: rgba(0, 0, 0, 0.08);
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+  margin-top: 8px;
+  margin-bottom: 4px;
+}
+
+.warningMarker {
+  position: absolute;
+  width: 2px;
+  background-color: #ff9800;
+  top: 0;
+  bottom: 0;
+  z-index: 2;
+}
+
+.progressBar {
+  height: 100%;
+  background-color: #007aff;
+  border-radius: 4px;
+}
+
+.incomeCategory {
+  border-left-color: #34c759;
+}
+
+.incomeCategory .progressBar {
+  background-color: #34c759;
+}
+
+/* Custom tab styles */
+.categoryTabs {
+  margin-bottom: 16px;
+}
+
+.categoryTab {
+  text-transform: none;
+  font-weight: 500;
+  font-size: 0.95rem;
+  min-width: 120px;
+}
+
+.newCategoryButton {
+  background-color: #007aff;
+  color: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 5px rgba(0, 122, 255, 0.2);
+  text-transform: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.newCategoryButton:hover {
+  background-color: #0062cc;
+  box-shadow: 0 4px 8px rgba(0, 122, 255, 0.3);
+}
+
+.infoIconSmall {
+  font-size: 1rem;
+  margin-right: 8px;
   color: rgba(0, 0, 0, 0.6);
 } 
