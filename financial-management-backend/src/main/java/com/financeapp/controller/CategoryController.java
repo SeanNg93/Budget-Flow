@@ -183,36 +183,49 @@ public class CategoryController {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
             
-            // Only process for expense categories with spending limits
-            if (category.getType() != TransactionCategory.CategoryType.EXPENSE || category.getSpendingLimit() == null) {
+            // Only process categories with spending limits or goals set
+            if (category.getSpendingLimit() == null) {
                 return ResponseEntity.badRequest().build();
             }
             
             // Get all transactions for this category
             List<Transaction> transactions = transactionService.getTransactionsByCategoryId(id);
             
-            // Calculate total spent
-            BigDecimal totalSpent = transactions.stream()
-                .filter(t -> t.getTransactionType() == Transaction.TransactionType.EXPENSE)
-                .map(Transaction::getAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+            // Calculate total based on category type
+            BigDecimal totalSpent;
+            if (category.getType() == TransactionCategory.CategoryType.EXPENSE) {
+                totalSpent = transactions.stream()
+                    .filter(t -> t.getTransactionType() == Transaction.TransactionType.EXPENSE)
+                    .map(Transaction::getAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            } else {
+                totalSpent = transactions.stream()
+                    .filter(t -> t.getTransactionType() == Transaction.TransactionType.INCOME)
+                    .map(Transaction::getAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            }
             
-            // Calculate percentage of limit spent
+            // Calculate percentage of limit spent or goal reached
             BigDecimal limit = category.getSpendingLimit();
             BigDecimal percentage = limit.compareTo(BigDecimal.ZERO) > 0 
                 ? totalSpent.multiply(new BigDecimal("100")).divide(limit, 2, RoundingMode.HALF_UP) 
                 : BigDecimal.ZERO;
             
-            // Calculate warning threshold
-            int warningPercentage = category.getWarningPercentage() != null ? category.getWarningPercentage() : 80;
-            BigDecimal warningThreshold = limit.multiply(new BigDecimal(warningPercentage)).divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
-            
             Map<String, Object> result = new HashMap<>();
             result.put("totalSpent", totalSpent);
             result.put("limit", limit);
             result.put("percentage", percentage);
-            result.put("warningThreshold", warningThreshold);
-            result.put("warningPercentage", warningPercentage);
+            
+            // Add warning threshold for expense categories only
+            if (category.getType() == TransactionCategory.CategoryType.EXPENSE) {
+                int warningPercentage = category.getWarningPercentage() != null ? category.getWarningPercentage() : 80;
+                BigDecimal warningThreshold = limit.multiply(new BigDecimal(warningPercentage)).divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+                result.put("warningThreshold", warningThreshold);
+                result.put("warningPercentage", warningPercentage);
+            } else {
+                result.put("warningThreshold", BigDecimal.ZERO);
+                result.put("warningPercentage", 0);
+            }
             
             return ResponseEntity.ok(result);
         } catch (EntityNotFoundException e) {

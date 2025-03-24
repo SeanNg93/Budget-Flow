@@ -88,8 +88,8 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
   }, [open, tabValue]);
 
   useEffect(() => {
-    if (open && categories.length > 0 && tabValue === 'EXPENSE') {
-      // Fetch spending progress for each expense category with a spending limit
+    if (open && categories.length > 0) {
+      // Fetch spending progress for categories with a spending limit
       fetchCategorySpendingProgress();
     }
   }, [open, categories, tabValue]);
@@ -111,9 +111,9 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
   };
 
   const fetchCategorySpendingProgress = async () => {
-    // Only fetch for expense categories with spending limits
+    // Now fetch for both categories with spending limits
     const categoriesToFetch = categories.filter(
-      cat => cat.type === 'EXPENSE' && cat.spendingLimit
+      cat => cat.spendingLimit
     );
     
     if (categoriesToFetch.length === 0) return;
@@ -128,13 +128,14 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
             const response = await FinanceService.getCategorySpendingProgress(category.id);
             spendingData[category.id] = response.data;
           } catch (err) {
-            console.error(`Error fetching spending for category ${category.id}:`, err);
+            console.error(`Error fetching data for category ${category.id}:`, err);
             // Set default values if fetch fails
             spendingData[category.id] = { 
               totalSpent: 0, 
               percentage: 0,
               limit: category.spendingLimit,
-              warningThreshold: category.spendingLimit * (category.warningPercentage || 80) / 100
+              warningThreshold: category.type === 'EXPENSE' ? 
+                category.spendingLimit * (category.warningPercentage || 80) / 100 : 0
             };
           }
         })
@@ -438,7 +439,7 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
                               sx={{ mb: 2 }}
                             />
                             
-                            {tabValue === 'EXPENSE' && (
+                            {tabValue === 'EXPENSE' ? (
                               <>
                                 <TextField
                                   fullWidth
@@ -489,6 +490,27 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
                                     </Typography>
                                   )}
                                 </Box>
+                              </>
+                            ) : (
+                              <>
+                                <TextField
+                                  fullWidth
+                                  size="small"
+                                  type="number"
+                                  label="Income Goal"
+                                  value={editSpendingLimit}
+                                  onChange={(e) => setEditSpendingLimit(e.target.value)}
+                                  InputProps={{
+                                    startAdornment: (
+                                      <InputAdornment position="start">
+                                        <AttachMoneyIcon fontSize="small" />
+                                      </InputAdornment>
+                                    ),
+                                  }}
+                                  placeholder="Set an income goal"
+                                  className={styles.textField}
+                                  sx={{ mb: 2 }}
+                                />
                               </>
                             )}
                           </Box>
@@ -562,44 +584,52 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
                                 <Box className={styles.limitInfo}>
                                   <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center' }}>
                                     <AttachMoneyIcon fontSize="small" sx={{ mr: 0.5, color: 'primary.main', opacity: 0.8 }} />
-                                    Limit: ${parseFloat(category.spendingLimit).toFixed(2)}
+                                    {tabValue === 'EXPENSE' ? 'Limit: ' : 'Goal: '}${parseFloat(category.spendingLimit).toFixed(2)}
                                   </Typography>
-                                  <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center' }}>
-                                    <WarningIcon fontSize="small" sx={{ mr: 0.5, color: 'warning.main' }} />
-                                    Warn at: ${calculateWarningAmount(category.spendingLimit, category.warningPercentage || 80).toFixed(2)}
-                                  </Typography>
+                                  {tabValue === 'EXPENSE' && (
+                                    <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center' }}>
+                                      <WarningIcon fontSize="small" sx={{ mr: 0.5, color: 'warning.main' }} />
+                                      Warn at: ${calculateWarningAmount(category.spendingLimit, category.warningPercentage || 80).toFixed(2)}
+                                    </Typography>
+                                  )}
                                 </Box>
                                 
                                 {/* Progress bar visualization */}
                                 <Box className={styles.progressBarContainer}>
-                                  {/* Warning threshold marker */}
-                                  <Box 
-                                    className={styles.warningMarker}
-                                    style={{ left: `${category.warningPercentage || 80}%` }} 
-                                  />
+                                  {tabValue === 'EXPENSE' && (
+                                    <>
+                                      {/* Warning threshold marker */}
+                                      <Box 
+                                        className={styles.warningMarker}
+                                        style={{ left: `${category.warningPercentage || 80}%` }} 
+                                      />
+                                      
+                                      {/* Warning threshold popup */}
+                                      <Box
+                                        className={styles.warningPopup}
+                                        style={{ left: `${category.warningPercentage || 80}%` }}
+                                      >
+                                        {category.warningPercentage || 80}% Warning
+                                      </Box>
+                                    </>
+                                  )}
                                   
-                                  {/* Warning threshold popup */}
-                                  <Box
-                                    className={styles.warningPopup}
-                                    style={{ left: `${category.warningPercentage || 80}%` }}
-                                  >
-                                    {category.warningPercentage || 80}% Warning
-                                  </Box>
-                                  
-                                  {/* Actual spending progress */}
+                                  {/* Actual spending or goal progress */}
                                   <Box 
                                     className={styles.progressBar}
                                     style={{ 
                                       width: `${categorySpending[category.id]?.percentage || 0}%`,
                                       backgroundColor: 
-                                        (categorySpending[category.id]?.percentage || 0) >= (category.warningPercentage || 80) 
-                                          ? '#ff9800' 
-                                          : tabValue === 'EXPENSE' ? '#ff3b30' : '#34c759'
+                                        tabValue === 'EXPENSE'
+                                          ? (categorySpending[category.id]?.percentage || 0) >= (category.warningPercentage || 80) 
+                                            ? '#ff9800' 
+                                            : '#ff3b30'
+                                          : '#34c759'
                                     }} 
                                   />
                                 </Box>
                                 
-                                {/* Current spending vs. limit info */}
+                                {/* Current spending vs. limit info or income vs. goal info */}
                                 <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontSize: '0.85rem' }}>
                                   ${categorySpending[category.id]?.totalSpent?.toFixed(2) || '0.00'} / ${parseFloat(category.spendingLimit).toFixed(2)}
                                   {categorySpending[category.id]?.percentage ? 
@@ -616,7 +646,16 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
                                 <InfoIcon fontSize="small" className={styles.infoIconSmall} />
                                 No spending limit set
                               </Typography>
-                            ) : null}
+                            ) : (
+                              <Typography variant="body2" color="text.secondary" sx={{ 
+                                mt: 0.5, 
+                                display: 'flex',
+                                alignItems: 'center'
+                              }}>
+                                <InfoIcon fontSize="small" className={styles.infoIconSmall} />
+                                No income goal set
+                              </Typography>
+                            )}
                           </Box>
                         </>
                       )}
