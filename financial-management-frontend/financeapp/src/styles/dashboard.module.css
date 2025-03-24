@@ -971,7 +971,7 @@ body, button, input, select, textarea {
 }
 
 .filterControls {
-  padding: 16px;
+  padding: 12px;
   background-color: rgba(0, 0, 0, 0.02);
   border-radius: 8px;
   margin: 8px 16px 16px;
@@ -980,26 +980,32 @@ body, button, input, select, textarea {
 .filterSelect {
   background-color: white;
   border-radius: 8px;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
 }
 
 .filterSelect .MuiInputBase-input {
-  font-size: 0.85rem !important;
+  font-size: 0.8rem !important;
+  padding: 8px !important;
+}
+
+.filterSelect .MuiInputBase-root {
+  height: 32px;
 }
 
 /* New styles for date pickers */
 .filterDateField {
   background-color: white;
   border-radius: 8px;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
 }
 
 .filterDateField .MuiInputBase-input {
-  font-size: 0.85rem !important;
+  font-size: 0.8rem !important;
+  padding: 8px !important;
 }
 
 .filterDateField .MuiInputBase-root {
-  height: 36px;
+  height: 32px;
 }
 
 .filterDateField .MuiOutlinedInput-notchedOutline {
@@ -1015,8 +1021,9 @@ body, button, input, select, textarea {
 }
 
 .resetFilterButton {
-  background-color: #f0f0f0;
-  color: #666;
+  color: #007aff;
+  border: none;
+  background-color: transparent;
   border-radius: 4px;
   padding: 4px 12px;
   font-size: 0.75rem;
@@ -1026,14 +1033,20 @@ body, button, input, select, textarea {
   text-transform: none;
   margin-right: 8px;
   transition: all 0.2s ease;
+  box-shadow: none;
 }
 
 .resetFilterButton:hover {
-  background-color: #e0e0e0;
+  background-color: rgba(0, 122, 255, 0.08);
+}
+
+/* Use a more specific selector to override MUI styles */
+button.resetFilterButton {
+  border: none !important;
 }
 
 .applyFilterButton {
-  background-color: var(--primary-color);
+  background-color: #007aff;
   color: white;
   border-radius: 4px;
   padding: 4px 12px;
@@ -1043,10 +1056,13 @@ body, button, input, select, textarea {
   font-weight: 500;
   text-transform: none;
   transition: all 0.2s ease;
+  box-shadow: 0 2px 7px rgba(0, 122, 255, 0.2), 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: none;
 }
 
 .applyFilterButton:hover {
   background-color: #0062cc;
+  box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3), 0 2px 5px rgba(0, 0, 0, 0.07);
 }
 
 /* More styles for showing active filters */

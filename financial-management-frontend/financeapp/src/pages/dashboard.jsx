@@ -151,6 +151,8 @@ export default function Dashboard() {
   const [transactionFormOpen, setTransactionFormOpen] = useState(false);
   const [accountFormOpen, setAccountFormOpen] = useState(false);
   const [categoryFormOpen, setCategoryFormOpen] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [allCategories, setAllCategories] = useState([]);
   const [addBalanceFormOpen, setAddBalanceFormOpen] = useState(false);
   const [editBalanceFormOpen, setEditBalanceFormOpen] = useState(false);
   const [walletManageFormOpen, setWalletManageFormOpen] = useState(false);
@@ -171,6 +173,7 @@ export default function Dashboard() {
   const [transactionFilterOpen, setTransactionFilterOpen] = useState(false);
   const [filterTimeframe, setFilterTimeframe] = useState('week');
   const [filterWalletId, setFilterWalletId] = useState('all');
+  const [filterCategoryId, setFilterCategoryId] = useState('all');
   const [filteredTransactions, setFilteredTransactions] = useState([]);
   const [isFiltering, setIsFiltering] = useState(false);
   // Add state for custom date range
@@ -186,6 +189,12 @@ export default function Dashboard() {
     if (user) {
       fetchFinancialData();
       fetchUserProfile();
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      fetchCategories();
     }
   }, [user]);
 
@@ -587,6 +596,20 @@ export default function Dashboard() {
           });
         }
         
+        // Filter by category if specified
+        if (filterCategoryId !== 'all') {
+          filteredData = filteredData.filter(transaction => {
+            // Check different possible formats of category ID
+            if (transaction.category && transaction.category.id) {
+              return transaction.category.id.toString() === filterCategoryId;
+            }
+            if (transaction.categoryId) {
+              return transaction.categoryId.toString() === filterCategoryId;
+            }
+            return false;
+          });
+        }
+        
         // Set the filtered transactions
         setFilteredTransactions(filteredData);
         
@@ -609,6 +632,7 @@ export default function Dashboard() {
   const resetTransactionFilters = () => {
     setFilterTimeframe('week');
     setFilterWalletId('all');
+    setFilterCategoryId('all');
     setShowCustomDateRange(false);
     setCustomStartDate(subDays(new Date(), 7));
     setCustomEndDate(new Date());
@@ -619,8 +643,43 @@ export default function Dashboard() {
   // Function to fetch categories
   const fetchCategories = async () => {
     try {
-      await FinanceService.getCategories();
-      // No need to set state as we're just ensuring the data is refreshed
+      // Get both INCOME and EXPENSE categories from API
+      const expenseCategoriesResponse = await FinanceService.getCategoriesByType('EXPENSE');
+      const incomeCategoriesResponse = await FinanceService.getCategoriesByType('INCOME');
+      
+      // Combine both types of categories
+      const allCategoriesData = [
+        ...(expenseCategoriesResponse.data || []),
+        ...(incomeCategoriesResponse.data || [])
+      ];
+      
+      // Store all categories for reference
+      setAllCategories(allCategoriesData);
+      
+      // Get transaction data to find used categories
+      const transactionsResponse = await FinanceService.getTransactions();
+      
+      if (transactionsResponse.data && transactionsResponse.data.length > 0) {
+        // Extract unique category IDs from transactions
+        const usedCategoryIds = new Set();
+        transactionsResponse.data.forEach(transaction => {
+          if (transaction.category && transaction.category.id) {
+            usedCategoryIds.add(transaction.category.id.toString());
+          } else if (transaction.categoryId) {
+            usedCategoryIds.add(transaction.categoryId.toString());
+          }
+        });
+        
+        // Filter to only categories that are used in transactions
+        const usedCategories = allCategoriesData.filter(category => 
+          usedCategoryIds.has(category.id.toString())
+        );
+        
+        setCategories(usedCategories);
+      } else {
+        // If no transactions, just show an empty list
+        setCategories([]);
+      }
     } catch (error) {
       console.error('Error fetching categories:', error);
     }
@@ -997,7 +1056,7 @@ export default function Dashboard() {
                       <Collapse in={transactionFilterOpen}>
                         <Box className={styles.filterControls}>
                           <Grid container spacing={2} alignItems="flex-end">
-                            <Grid item xs={12} sm={4}>
+                            <Grid item xs={12} sm={6} md={3}>
                               <FormControl fullWidth size="small">
                                 <InputLabel id="time-period-label">Time Period</InputLabel>
                                 <Select
@@ -1017,7 +1076,7 @@ export default function Dashboard() {
                                 </Select>
                               </FormControl>
                             </Grid>
-                            <Grid item xs={12} sm={4}>
+                            <Grid item xs={12} sm={6} md={3}>
                               <FormControl fullWidth size="small">
                                 <InputLabel id="wallet-filter-label">Wallet</InputLabel>
                                 <Select
@@ -1036,73 +1095,101 @@ export default function Dashboard() {
                                 </Select>
                               </FormControl>
                             </Grid>
-                            <Grid item xs={12} sm={4}>
-                              <Box sx={{ display: 'flex', gap: 1, justifyContent: { xs: 'flex-start', sm: 'flex-end' } }}>
-                                <Button 
-                                  variant="outlined" 
-                                  size="small"
+                            <Grid item xs={12} sm={6} md={3}>
+                              <FormControl fullWidth size="small">
+                                <InputLabel id="category-filter-label">Category</InputLabel>
+                                <Select
+                                  labelId="category-filter-label"
+                                  value={filterCategoryId}
+                                  label="Category"
+                                  onChange={(e) => setFilterCategoryId(e.target.value)}
+                                  className={styles.filterSelect}
+                                >
+                                  <MenuItem value="all">All Categories</MenuItem>
+                                  {categories.map((category) => (
+                                    <MenuItem key={category.id} value={category.id.toString()}>
+                                      {category.categoryName} {category.type === 'INCOME' ? '(Income)' : '(Expense)'}
+                                    </MenuItem>
+                                  ))}
+                                </Select>
+                              </FormControl>
+                            </Grid>
+                            {/* Custom Date Range Fields */}
+                            <Grid item xs={12} sm={showCustomDateRange ? 12 : 6} md={showCustomDateRange ? 6 : 3} sx={{ display: 'flex', gap: 1 }}>
+                              {showCustomDateRange ? (
+                                <>
+                                  <Box sx={{ flex: 1 }}>
+                                    <DatePicker 
+                                      label="Start Date" 
+                                      value={customStartDate}
+                                      onChange={handleStartDateChange}
+                                      className={styles.filterDateField}
+                                      format='dd/MM/yyyy'
+                                      slotProps={{
+                                        textField: {
+                                          fullWidth: true,
+                                          size: "small"
+                                        }
+                                      }}
+                                    />
+                                  </Box>
+                                  <Box sx={{ flex: 1 }}>
+                                    <DatePicker 
+                                      label="End Date" 
+                                      value={customEndDate}
+                                      onChange={handleEndDateChange}
+                                      className={styles.filterDateField}
+                                      format='dd/MM/yyyy'
+                                      slotProps={{
+                                        textField: {
+                                          fullWidth: true,
+                                          size: "small"
+                                        }
+                                      }}
+                                    />
+                                  </Box>
+                                </>
+                              ) : (
+                                <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
+                                  <Button
+                                    color="primary"
+                                    onClick={resetTransactionFilters}
+                                    className={styles.resetFilterButton}
+                                    disabled={isFiltering}
+                                  >
+                                    Reset
+                                  </Button>
+                                  <Button
+                                    variant="contained"
+                                    color="primary"
+                                    onClick={applyTransactionFilters}
+                                    className={styles.applyFilterButton}
+                                    disabled={isFiltering}
+                                  >
+                                    {isFiltering ? 'Loading...' : 'Apply Filters'}
+                                  </Button>
+                                </Box>
+                              )}
+                            </Grid>
+                            {showCustomDateRange && (
+                              <Grid item xs={12} sm={12} md={6} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                <Button
+                                  color="primary"
                                   onClick={resetTransactionFilters}
                                   className={styles.resetFilterButton}
+                                  disabled={isFiltering}
                                 >
                                   Reset
                                 </Button>
-                                <Button 
-                                  variant="contained" 
-                                  size="small"
+                                <Button
+                                  variant="contained"
+                                  color="primary"
                                   onClick={applyTransactionFilters}
                                   className={styles.applyFilterButton}
                                   disabled={isFiltering}
                                 >
                                   {isFiltering ? 'Loading...' : 'Apply Filters'}
                                 </Button>
-                              </Box>
-                            </Grid>
-                            
-                            {/* Custom Date Range Pickers */}
-                            {showCustomDateRange && (
-                              <Grid item xs={12}>
-                                <Box sx={{ 
-                                  display: 'flex', 
-                                  gap: 2, 
-                                  mt: 2,
-                                  flexDirection: { xs: 'column', sm: 'row' } 
-                                }}>
-                                  <DatePicker
-                                    label="Start Date"
-                                    value={customStartDate}
-                                    onChange={handleStartDateChange}
-                                    format="dd/MM/yyyy"
-                                    slotProps={{
-                                      textField: {
-                                        fullWidth: true,
-                                        size: "small",
-                                        className: styles.filterDateField
-                                      }
-                                    }}
-                                    maxDate={customEndDate}
-                                  />
-                                  <DatePicker
-                                    label="End Date"
-                                    value={customEndDate}
-                                    onChange={handleEndDateChange}
-                                    format="dd/MM/yyyy"
-                                    slotProps={{
-                                      textField: {
-                                        fullWidth: true,
-                                        size: "small",
-                                        className: styles.filterDateField
-                                      }
-                                    }}
-                                    minDate={customStartDate}
-                                  />
-                                </Box>
-                                {customStartDate && customEndDate && (
-                                  <Box sx={{ mt: 1 }}>
-                                    <Typography variant="caption" color="text.secondary">
-                                      Showing transactions from {formatDateForDisplay(customStartDate)} to {formatDateForDisplay(customEndDate)}
-                                    </Typography>
-                                  </Box>
-                                )}
                               </Grid>
                             )}
                           </Grid>
