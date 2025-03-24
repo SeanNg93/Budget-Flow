@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
@@ -66,6 +66,7 @@ import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import ToggleButton from '@mui/material/ToggleButton';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import ShowChartIcon from '@mui/icons-material/ShowChart';
+import DecryptedText from '../components/dashboard/DecryptedText';
 
 // Import theme
 import AppTheme from '../shared-theme/AppTheme';
@@ -489,7 +490,6 @@ export default function Dashboard() {
   const fetchTransactions = async () => {
     try {
       const transactionsResponse = await FinanceService.getTransactions();
-      console.log('Fetched transactions:', transactionsResponse.data); // Log to check response data
       
       // Ensure we're getting complete transaction data with categories
       if (transactionsResponse.data && transactionsResponse.data.length > 0) {
@@ -574,22 +574,38 @@ export default function Dashboard() {
                   <Grid item xs={12}>
                     <Paper className={styles.welcomeCard}>
                       <Box className={styles.welcomeHeader}>
-                        <Typography 
-                          component="h1" 
-                          variant="h4" 
-                          color="text.primary" 
+                        <DecryptedText
+                          text={`Welcome, ${userProfile?.fullName || user?.username || 'User'}!`}
+                          animateOn="view"
+                          revealDirection="start"
+                          speed={50}  // Higher speed value = slower animation
+                          sequential={true}  // Change to true for more visible character-by-character effect
+                          maxIterations={8}  // More iterations = longer animation
                           className={styles.welcomeTitle}
-                        >
-                          Welcome, {userProfile?.fullName || user?.username || 'User'}!
-                        </Typography>
+                          parentClassName={styles.welcomeTitleContainer}
+                        />
                       </Box>
                       <Typography 
                         variant="body1" 
                         color="text.secondary"
                         className={styles.welcomeSubtitle}
                       >
-                        This is your financial dashboard. Here you can manage your finances, track expenses, and plan your budget.{' '} <br></br>
-                        <span 
+                        <DecryptedText
+                          text="This is your financial dashboard. Here you can manage your finances, track expenses, and plan your budget."
+                          animateOn="view"
+                          revealDirection="start"
+                          speed={20} // Lower value = faster animation (reduced from 50 to 20)
+                          sequential={true}
+                          maxIterations={5} // Reduced iterations for faster completion
+                        />
+                        {' '} <br></br>
+                        <DecryptedText
+                          text="Click here"
+                          animateOn="view"
+                          revealDirection="start"
+                          speed={50}
+                          sequential={true}
+                          maxIterations={8}
                           onClick={openFinanceActionPanel}
                           style={{ 
                             color: '#007aff', 
@@ -597,10 +613,16 @@ export default function Dashboard() {
                             textDecoration: 'underline',
                             fontWeight: 500
                           }}
-                        >
-                          Click here
-                        </span>{' '}
-                        for quick navigation.
+                        />
+                        {' '}
+                        <DecryptedText
+                          text="for quick navigation."
+                          animateOn="view"
+                          revealDirection="start"
+                          speed={50}
+                          sequential={true}
+                          maxIterations={8}
+                        />
                       </Typography>
                     </Paper>
                   </Grid>
@@ -930,8 +952,6 @@ export default function Dashboard() {
         open={transactionFormOpen} 
         handleClose={() => setTransactionFormOpen(false)} 
         onTransactionAdded={handleTransactionAdded}
-        editTransaction={selectedTransaction}
-        isEditMode={editTransactionOpen}
       />
       
       <WalletForm 
@@ -978,7 +998,7 @@ export default function Dashboard() {
             setEditTransactionOpen(false);
             setSelectedTransaction(null);
           }} 
-          transaction={selectedTransaction}
+          initialData={selectedTransaction}
           onTransactionAdded={handleTransactionAdded}
         />
       )}

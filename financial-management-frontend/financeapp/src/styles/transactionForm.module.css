@@ -313,3 +313,37 @@
     justify-content: center;
   }
 }
+
+/* Category Information Display */
+.categoryInfoText {
+  margin-left: 6px;
+  font-weight: normal;
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.7rem;
+}
+
+.categoryExceedingText {
+  color: #ff3b30;
+  font-weight: bold;
+}
+
+.categoryWarningText {
+  color: #ff9500;
+}
+
+.categoryInfoBox {
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
+.categoryAlert {
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  border-radius: 8px;
+}
+
+.categoryAlert .MuiAlert-icon {
+  font-size: 0.9rem;
+  align-items: center;
+}

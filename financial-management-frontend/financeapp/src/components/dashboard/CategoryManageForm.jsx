@@ -298,10 +298,12 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
               textTransform: 'none',
               fontWeight: 500,
               fontSize: '0.9rem',
-              minWidth: 100
+              minWidth: 100,
+              color: 'rgba(0, 0, 0, 0.6)' // Default text color for non-selected tabs
             },
             '& .Mui-selected': {
               color: tabValue === 'EXPENSE' ? '#ff3b30' : '#34c759',
+              fontWeight: 600
             },
             '& .MuiTabs-indicator': {
               backgroundColor: tabValue === 'EXPENSE' ? '#ff3b30' : '#34c759',
@@ -312,24 +314,17 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
             label={
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <span>Expenses</span>
-                <IconButton 
-                  size="small" 
+                <Box 
+                  component="span"
                   onClick={(e) => {
                     e.stopPropagation();
                     setTabValue('EXPENSE');
                     handleOpenNewCategoryForm();
                   }}
-                  sx={{ 
-                    ml: 0.5, 
-                    p: 0.3,
-                    color: 'inherit', 
-                    '&:hover': { 
-                      backgroundColor: 'rgba(255, 59, 48, 0.1)',
-                    }
-                  }}
+                  className={`${styles.tabAddButton} ${styles.expenseTabAddButton}`}
                 >
                   <AddIcon fontSize="small" />
-                </IconButton>
+                </Box>
               </Box>
             } 
             value="EXPENSE" 
@@ -339,24 +334,17 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
             label={
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <span>Income</span>
-                <IconButton 
-                  size="small" 
+                <Box 
+                  component="span"
                   onClick={(e) => {
                     e.stopPropagation();
                     setTabValue('INCOME');
                     handleOpenNewCategoryForm();
                   }}
-                  sx={{ 
-                    ml: 0.5, 
-                    p: 0.3,
-                    color: 'inherit', 
-                    '&:hover': { 
-                      backgroundColor: 'rgba(52, 199, 89, 0.1)',
-                    }
-                  }}
+                  className={`${styles.tabAddButton} ${styles.incomeTabAddButton}`}
                 >
                   <AddIcon fontSize="small" />
-                </IconButton>
+                </Box>
               </Box>
             } 
             value="INCOME" 

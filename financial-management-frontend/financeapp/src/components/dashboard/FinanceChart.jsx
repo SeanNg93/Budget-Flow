@@ -274,7 +274,7 @@ const FinanceChart = () => {
   return (
     <Card className={styles.chartCard}>
       <CardHeader
-        title="Financial performance over time"
+        title="Financial performance chart"
         action={
           <Box className={styles.headerControls}>
             <Box className={styles.timeRangeControls}>
