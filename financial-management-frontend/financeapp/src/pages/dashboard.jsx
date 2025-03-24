@@ -588,7 +588,19 @@ export default function Dashboard() {
                         color="text.secondary"
                         className={styles.welcomeSubtitle}
                       >
-                        This is your financial dashboard. Here you can manage your finances, track expenses, and plan your budget.
+                        This is your financial dashboard. Here you can manage your finances, track expenses, and plan your budget.{' '} <br></br>
+                        <span 
+                          onClick={openFinanceActionPanel}
+                          style={{ 
+                            color: '#007aff', 
+                            cursor: 'pointer',
+                            textDecoration: 'underline',
+                            fontWeight: 500
+                          }}
+                        >
+                          Click here
+                        </span>{' '}
+                        for quick navigation.
                       </Typography>
                     </Paper>
                   </Grid>
@@ -800,7 +812,7 @@ export default function Dashboard() {
                           variant="contained" 
                           color="primary" 
                           startIcon={<AddIcon />}
-                          onClick={openFinanceActionPanel}
+                          onClick={() => setTransactionFormOpen(true)}
                           className={styles.addNewButton}
                           elevation={3}
                           size="small"
