@@ -38,6 +38,7 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import InfoIcon from '@mui/icons-material/Info';
 import WarningIcon from '@mui/icons-material/Warning';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import SearchIcon from '@mui/icons-material/Search';
 import FinanceService from '../../services/FinanceService';
 import CategoryForm from './CategoryForm';
 import styles from '../../styles/walletManage.module.css';
@@ -76,6 +77,9 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
 
   // Add a new state for storing spending progress data
   const [categorySpending, setCategorySpending] = useState({});
+
+  // Add a new state for search query
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     if (open) {
@@ -296,34 +300,89 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
               minWidth: 100
             },
             '& .Mui-selected': {
-              color: tabValue === 'EXPENSE' ? '#007aff' : '#34c759',
+              color: tabValue === 'EXPENSE' ? '#ff3b30' : '#34c759',
             },
             '& .MuiTabs-indicator': {
-              backgroundColor: tabValue === 'EXPENSE' ? '#007aff' : '#34c759',
+              backgroundColor: tabValue === 'EXPENSE' ? '#ff3b30' : '#34c759',
             }
           }}
         >
-          <Tab label="Expenses" value="EXPENSE" className={styles.categoryTab} />
-          <Tab label="Income" value="INCOME" className={styles.categoryTab} />
+          <Tab 
+            label={
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <span>Expenses</span>
+                <IconButton 
+                  size="small" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setTabValue('EXPENSE');
+                    handleOpenNewCategoryForm();
+                  }}
+                  sx={{ 
+                    ml: 0.5, 
+                    p: 0.3,
+                    color: 'inherit', 
+                    '&:hover': { 
+                      backgroundColor: 'rgba(255, 59, 48, 0.1)',
+                    }
+                  }}
+                >
+                  <AddIcon fontSize="small" />
+                </IconButton>
+              </Box>
+            } 
+            value="EXPENSE" 
+            className={styles.categoryTab} 
+          />
+          <Tab 
+            label={
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <span>Income</span>
+                <IconButton 
+                  size="small" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setTabValue('INCOME');
+                    handleOpenNewCategoryForm();
+                  }}
+                  sx={{ 
+                    ml: 0.5, 
+                    p: 0.3,
+                    color: 'inherit', 
+                    '&:hover': { 
+                      backgroundColor: 'rgba(52, 199, 89, 0.1)',
+                    }
+                  }}
+                >
+                  <AddIcon fontSize="small" />
+                </IconButton>
+              </Box>
+            } 
+            value="INCOME" 
+            className={styles.categoryTab} 
+          />
         </Tabs>
       </Box>
       
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<AddIcon />}
-          onClick={handleOpenNewCategoryForm}
-          disabled={editMode || loading}
-          className={styles.newCategoryButton}
-          sx={{
-            borderRadius: '12px',
-            textTransform: 'none',
-            fontWeight: 500,
+      <Box sx={{ display: 'flex', mb: 2 }}>
+        <TextField
+          placeholder="Search categories..."
+          size="small"
+          fullWidth
+          value={searchQuery || ''}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+            sx: {
+              borderRadius: '12px',
+              backgroundColor: 'rgba(0, 0, 0, 0.02)',
+            }
           }}
-        >
-          New Category
-        </Button>
+        />
       </Box>
       
       {loading ? (
@@ -335,212 +394,240 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
           No categories found. Create a category to get started.
         </Typography>
       ) : (
-        <List className={styles.walletList}>
-          {categories.map((category, index) => (
-            <React.Fragment key={category.id}>
-              <ListItem 
-                className={`${styles.walletItem} ${editCategoryId === category.id ? styles.walletItemEditing : ''} 
-                  ${tabValue === 'INCOME' ? styles.incomeCategory : ''}`}
-                sx={{ 
-                  p: 2, 
-                  borderLeft: category.spendingLimit ? `4px solid ${tabValue === 'EXPENSE' ? '#007aff' : '#34c759'}` : 'none',
-                  '&:hover': {
-                    backgroundColor: 'rgba(0, 0, 0, 0.03)'
-                  }
-                }}
-              >
-                {editMode && editCategoryId === category.id ? (
-                  <Box sx={{ width: '100%' }}>
-                    <Box className={styles.editContainer} sx={{ mb: 2 }}>
-                      <TextField
-                        fullWidth
-                        size="small"
-                        value={editCategoryName}
-                        onChange={(e) => setEditCategoryName(e.target.value)}
-                        placeholder="Category name"
-                        className={styles.textField}
-                        sx={{ mb: 2 }}
-                      />
-                      
-                      {tabValue === 'EXPENSE' && (
-                        <>
-                          <TextField
-                            fullWidth
-                            size="small"
-                            type="number"
-                            label="Spending Limit"
-                            value={editSpendingLimit}
-                            onChange={(e) => setEditSpendingLimit(e.target.value)}
-                            InputProps={{
-                              startAdornment: (
-                                <InputAdornment position="start">
-                                  <AttachMoneyIcon fontSize="small" />
-                                </InputAdornment>
-                              ),
-                            }}
-                            placeholder="Set a spending limit"
-                            className={styles.textField}
-                            sx={{ mb: 2 }}
-                          />
-                          
-                          <Box sx={{ px: 1, mb: 1 }}>
-                            <Typography id="warning-percentage-slider" gutterBottom variant="body2" sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                              <span>Warning at percentage:</span>
-                              <span>{editWarningPercentage}%</span>
-                            </Typography>
-                            <Slider
-                              value={editWarningPercentage}
-                              onChange={(e, newValue) => setEditWarningPercentage(newValue)}
-                              aria-labelledby="warning-percentage-slider"
-                              valueLabelDisplay="auto"
-                              step={5}
-                              marks
-                              min={50}
-                              max={95}
-                              sx={{
-                                color: '#007aff',
-                                '& .MuiSlider-thumb': {
-                                  width: 20,
-                                  height: 20
-                                }
-                              }}
+        <>
+          {(() => {
+            const filteredCategories = categories
+              .filter(category => {
+                if (!searchQuery) return true;
+                return category.categoryName.toLowerCase().includes(searchQuery.toLowerCase());
+              });
+            
+            if (filteredCategories.length === 0) {
+              return (
+                <Typography variant="body1" className={styles.emptyMessage}>
+                  No categories match your search.
+                </Typography>
+              );
+            }
+            
+            return (
+              <List className={styles.walletList}>
+                {filteredCategories.map((category, index) => (
+                  <React.Fragment key={category.id}>
+                    <ListItem 
+                      className={`${styles.walletItem} ${editCategoryId === category.id ? styles.walletItemEditing : ''} 
+                        ${tabValue === 'INCOME' ? styles.incomeCategory : ''}`}
+                      sx={{ 
+                        p: 2, 
+                        borderLeft: category.spendingLimit ? `4px solid ${tabValue === 'EXPENSE' ? '#ff3b30' : '#34c759'}` : 'none',
+                        '&:hover': {
+                          backgroundColor: 'rgba(0, 0, 0, 0.03)'
+                        }
+                      }}
+                    >
+                      {editMode && editCategoryId === category.id ? (
+                        <Box sx={{ width: '100%' }}>
+                          <Box className={styles.editContainer} sx={{ mb: 2 }}>
+                            <TextField
+                              fullWidth
+                              size="small"
+                              value={editCategoryName}
+                              onChange={(e) => setEditCategoryName(e.target.value)}
+                              placeholder="Category name"
+                              className={styles.textField}
+                              sx={{ mb: 2 }}
                             />
                             
-                            {editSpendingLimit && (
-                              <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-                                <WarningIcon fontSize="small" sx={{ mr: 1, color: 'warning.main' }} />
-                                Warning at: ${calculateWarningAmount(editSpendingLimit, editWarningPercentage).toFixed(2)}
-                              </Typography>
+                            {tabValue === 'EXPENSE' && (
+                              <>
+                                <TextField
+                                  fullWidth
+                                  size="small"
+                                  type="number"
+                                  label="Spending Limit"
+                                  value={editSpendingLimit}
+                                  onChange={(e) => setEditSpendingLimit(e.target.value)}
+                                  InputProps={{
+                                    startAdornment: (
+                                      <InputAdornment position="start">
+                                        <AttachMoneyIcon fontSize="small" />
+                                      </InputAdornment>
+                                    ),
+                                  }}
+                                  placeholder="Set a spending limit"
+                                  className={styles.textField}
+                                  sx={{ mb: 2 }}
+                                />
+                                
+                                <Box sx={{ px: 1, mb: 1 }}>
+                                  <Typography id="warning-percentage-slider" gutterBottom variant="body2" sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                    <span>Warning at percentage:</span>
+                                    <span>{editWarningPercentage}%</span>
+                                  </Typography>
+                                  <Slider
+                                    value={editWarningPercentage}
+                                    onChange={(e, newValue) => setEditWarningPercentage(newValue)}
+                                    aria-labelledby="warning-percentage-slider"
+                                    valueLabelDisplay="auto"
+                                    step={5}
+                                    marks
+                                    min={50}
+                                    max={95}
+                                    sx={{
+                                      color: '#ff3b30',
+                                      '& .MuiSlider-thumb': {
+                                        width: 20,
+                                        height: 20
+                                      }
+                                    }}
+                                  />
+                                  
+                                  {editSpendingLimit && (
+                                    <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+                                      <WarningIcon fontSize="small" sx={{ mr: 1, color: 'warning.main' }} />
+                                      Warning at: ${calculateWarningAmount(editSpendingLimit, editWarningPercentage).toFixed(2)}
+                                    </Typography>
+                                  )}
+                                </Box>
+                              </>
                             )}
+                          </Box>
+                          
+                          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+                            <Button 
+                              variant="outlined" 
+                              color="primary" 
+                              size="small"
+                              onClick={handleEditCancel}
+                              startIcon={<CancelIcon />}
+                              sx={{
+                                borderRadius: '12px',
+                                textTransform: 'none'
+                              }}
+                              className={styles.cancelButton}
+                            >
+                              Cancel
+                            </Button>
+                            <Button 
+                              variant="contained" 
+                              color="primary" 
+                              size="small"
+                              onClick={handleEditSave}
+                              disabled={loading}
+                              startIcon={<SaveIcon />}
+                              sx={{
+                                borderRadius: '12px',
+                                textTransform: 'none',
+                                boxShadow: 'none'
+                              }}
+                              className={`${styles.standardButton} ${styles.primaryButton}`}
+                            >
+                              Save
+                            </Button>
+                          </Box>
+                        </Box>
+                      ) : (
+                        <>
+                          <Box sx={{ width: '100%' }}>
+                            <Box className={styles.categoryHeader}>
+                              <Typography variant="h6" className={styles.categoryName}>
+                                {category.categoryName}
+                              </Typography>
+                              <Box>
+                                <IconButton 
+                                  edge="end" 
+                                  aria-label="edit"
+                                  onClick={() => handleEditClick(category)}
+                                  disabled={editMode}
+                                  size="small"
+                                  sx={{ mr: 0.5 }}
+                                >
+                                  <EditIcon fontSize="small" />
+                                </IconButton>
+                                <IconButton 
+                                  edge="end" 
+                                  aria-label="delete"
+                                  onClick={() => handleDeleteClick(category)}
+                                  disabled={editMode}
+                                  size="small"
+                                  color="error"
+                                >
+                                  <DeleteIcon fontSize="small" />
+                                </IconButton>
+                              </Box>
+                            </Box>
+                            
+                            {category.spendingLimit ? (
+                              <Box sx={{ width: '100%' }}>
+                                <Box className={styles.limitInfo}>
+                                  <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center' }}>
+                                    <AttachMoneyIcon fontSize="small" sx={{ mr: 0.5, color: 'primary.main', opacity: 0.8 }} />
+                                    Limit: ${parseFloat(category.spendingLimit).toFixed(2)}
+                                  </Typography>
+                                  <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center' }}>
+                                    <WarningIcon fontSize="small" sx={{ mr: 0.5, color: 'warning.main' }} />
+                                    Warn at: ${calculateWarningAmount(category.spendingLimit, category.warningPercentage || 80).toFixed(2)}
+                                  </Typography>
+                                </Box>
+                                
+                                {/* Progress bar visualization */}
+                                <Box className={styles.progressBarContainer}>
+                                  {/* Warning threshold marker */}
+                                  <Box 
+                                    className={styles.warningMarker}
+                                    style={{ left: `${category.warningPercentage || 80}%` }} 
+                                  />
+                                  
+                                  {/* Warning threshold popup */}
+                                  <Box
+                                    className={styles.warningPopup}
+                                    style={{ left: `${category.warningPercentage || 80}%` }}
+                                  >
+                                    {category.warningPercentage || 80}% Warning
+                                  </Box>
+                                  
+                                  {/* Actual spending progress */}
+                                  <Box 
+                                    className={styles.progressBar}
+                                    style={{ 
+                                      width: `${categorySpending[category.id]?.percentage || 0}%`,
+                                      backgroundColor: 
+                                        (categorySpending[category.id]?.percentage || 0) >= (category.warningPercentage || 80) 
+                                          ? '#ff9800' 
+                                          : tabValue === 'EXPENSE' ? '#ff3b30' : '#34c759'
+                                    }} 
+                                  />
+                                </Box>
+                                
+                                {/* Current spending vs. limit info */}
+                                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontSize: '0.85rem' }}>
+                                  ${categorySpending[category.id]?.totalSpent?.toFixed(2) || '0.00'} / ${parseFloat(category.spendingLimit).toFixed(2)}
+                                  {categorySpending[category.id]?.percentage ? 
+                                    ` (${Math.round(categorySpending[category.id]?.percentage)}%)` : 
+                                    ' (0%)'}
+                                </Typography>
+                              </Box>
+                            ) : tabValue === 'EXPENSE' ? (
+                              <Typography variant="body2" color="text.secondary" sx={{ 
+                                mt: 0.5, 
+                                display: 'flex',
+                                alignItems: 'center'
+                              }}>
+                                <InfoIcon fontSize="small" className={styles.infoIconSmall} />
+                                No spending limit set
+                              </Typography>
+                            ) : null}
                           </Box>
                         </>
                       )}
-                    </Box>
-                    
-                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-                      <Button 
-                        variant="outlined" 
-                        color="primary" 
-                        size="small"
-                        onClick={handleEditCancel}
-                        startIcon={<CancelIcon />}
-                        sx={{
-                          borderRadius: '12px',
-                          textTransform: 'none'
-                        }}
-                        className={styles.cancelButton}
-                      >
-                        Cancel
-                      </Button>
-                      <Button 
-                        variant="contained" 
-                        color="primary" 
-                        size="small"
-                        onClick={handleEditSave}
-                        disabled={loading}
-                        startIcon={<SaveIcon />}
-                        sx={{
-                          borderRadius: '12px',
-                          textTransform: 'none',
-                          boxShadow: 'none'
-                        }}
-                        className={`${styles.standardButton} ${styles.primaryButton}`}
-                      >
-                        Save
-                      </Button>
-                    </Box>
-                  </Box>
-                ) : (
-                  <>
-                    <Box sx={{ width: '100%' }}>
-                      <Box className={styles.categoryHeader}>
-                        <Typography variant="h6" className={styles.categoryName}>
-                          {category.categoryName}
-                        </Typography>
-                        <Box>
-                          <IconButton 
-                            edge="end" 
-                            aria-label="edit"
-                            onClick={() => handleEditClick(category)}
-                            disabled={editMode}
-                            size="small"
-                            sx={{ mr: 0.5 }}
-                          >
-                            <EditIcon fontSize="small" />
-                          </IconButton>
-                          <IconButton 
-                            edge="end" 
-                            aria-label="delete"
-                            onClick={() => handleDeleteClick(category)}
-                            disabled={editMode}
-                            size="small"
-                            color="error"
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                        </Box>
-                      </Box>
-                      
-                      {category.spendingLimit ? (
-                        <Box sx={{ width: '100%' }}>
-                          <Box className={styles.limitInfo}>
-                            <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center' }}>
-                              <AttachMoneyIcon fontSize="small" sx={{ mr: 0.5, color: 'primary.main', opacity: 0.8 }} />
-                              Limit: ${parseFloat(category.spendingLimit).toFixed(2)}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center' }}>
-                              <WarningIcon fontSize="small" sx={{ mr: 0.5, color: 'warning.main' }} />
-                              Warn at: ${calculateWarningAmount(category.spendingLimit, category.warningPercentage || 80).toFixed(2)}
-                            </Typography>
-                          </Box>
-                          
-                          {/* Progress bar visualization */}
-                          <Box className={styles.progressBarContainer}>
-                            {/* Warning threshold marker */}
-                            <Box 
-                              className={styles.warningMarker}
-                              style={{ left: `${category.warningPercentage || 80}%` }} 
-                            />
-                            
-                            {/* Actual spending progress */}
-                            <Box 
-                              className={styles.progressBar}
-                              style={{ 
-                                width: `${categorySpending[category.id]?.percentage || 0}%`,
-                                backgroundColor: 
-                                  (categorySpending[category.id]?.percentage || 0) >= (category.warningPercentage || 80) 
-                                    ? '#ff9800' 
-                                    : tabValue === 'EXPENSE' ? '#007aff' : '#34c759'
-                              }} 
-                            />
-                          </Box>
-                          
-                          {/* Current spending vs. limit info */}
-                          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontSize: '0.85rem' }}>
-                            ${categorySpending[category.id]?.totalSpent?.toFixed(2) || '0.00'} / ${parseFloat(category.spendingLimit).toFixed(2)}
-                            {categorySpending[category.id]?.percentage ? 
-                              ` (${Math.round(categorySpending[category.id]?.percentage)}%)` : 
-                              ' (0%)'}
-                          </Typography>
-                        </Box>
-                      ) : tabValue === 'EXPENSE' ? (
-                        <Typography variant="body2" color="text.secondary" sx={{ 
-                          mt: 0.5, 
-                          display: 'flex',
-                          alignItems: 'center'
-                        }}>
-                          <InfoIcon fontSize="small" className={styles.infoIconSmall} />
-                          No spending limit set
-                        </Typography>
-                      ) : null}
-                    </Box>
-                  </>
-                )}
-              </ListItem>
-              {index < categories.length - 1 && <Divider component="li" />}
-            </React.Fragment>
-          ))}
-        </List>
+                    </ListItem>
+                    {index < filteredCategories.length - 1 && <Divider component="li" />}
+                  </React.Fragment>
+                ))}
+              </List>
+            );
+          })()}
+        </>
       )}
       
       {/* Delete Confirmation Dialog */}

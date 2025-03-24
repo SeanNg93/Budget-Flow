@@ -389,7 +389,7 @@
 /* Category management styles */
 .categoryCard {
   padding: 16px;
-  border-left: 4px solid #007aff;
+  border-left: 4px solid #ff3b30;
   transition: background-color 0.2s;
   margin-bottom: 8px;
   border-radius: 8px;
@@ -424,7 +424,7 @@
   background-color: rgba(0, 0, 0, 0.08);
   border-radius: 4px;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   margin-top: 8px;
   margin-bottom: 4px;
 }
@@ -438,9 +438,30 @@
   z-index: 2;
 }
 
+/* New popup styles for warning threshold */
+.warningPopup {
+  position: absolute;
+  bottom: -22px;
+  transform: translateX(-50%);
+  background-color: #fff8e1;
+  border: 1px solid #ffecb3;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.2;
+  text-align: center;
+  color: #ff8f00;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  z-index: 10;
+  pointer-events: none;
+  opacity: 1;
+}
+
 .progressBar {
   height: 100%;
-  background-color: #007aff;
+  background-color: #ff3b30;
   border-radius: 4px;
 }
 
@@ -465,18 +486,18 @@
 }
 
 .newCategoryButton {
-  background-color: #007aff;
+  background-color: #ff3b30;
   color: white;
   border-radius: 12px;
-  box-shadow: 0 2px 5px rgba(0, 122, 255, 0.2);
+  box-shadow: 0 2px 5px rgba(255, 59, 48, 0.2);
   text-transform: none;
   font-weight: 500;
   transition: all 0.2s ease;
 }
 
 .newCategoryButton:hover {
-  background-color: #0062cc;
-  box-shadow: 0 4px 8px rgba(0, 122, 255, 0.3);
+  background-color: #e0352b;
+  box-shadow: 0 4px 8px rgba(255, 59, 48, 0.3);
 }
 
 .infoIconSmall {
