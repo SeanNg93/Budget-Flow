@@ -521,8 +521,29 @@ export default function Dashboard() {
     try {
       await FinanceService.deleteTransaction(selectedTransaction.id);
       setDeleteConfirmOpen(false);
+                  setAllTransactions(prevTransactions => 
+        prevTransactions.filter(t => t.id !== deletedId)
+      );
+      
+      setFilteredTransactions(prevTransactions => {
+        const updated = prevTransactions.filter(t => t.id !== deletedId);
+        return updated;
+      });
+      
+      setTransactions(prevTransactions => {
+        const updated = prevTransactions.filter(t => t.id !== deletedId);
+        if (updated.length < 5) {
+          const allFiltered = allTransactions.filter(t => t.id !== deletedId);
+          return allFiltered.slice(0, 5);
+        }
+        return updated;
+      });
+      
+      updateFinancialSummary();
+      
+      updateWallets();
+      
       setSelectedTransaction(null);
-      fetchFinancialData(); // Refresh data after delete
       toast.success('Transaction deleted successfully');
     } catch (error) {
       console.error('Error deleting transaction:', error);
@@ -1191,17 +1212,17 @@ export default function Dashboard() {
                           >
                             Filter
                           </Button>
-                          <Button 
-                            variant="contained" 
-                            color="primary" 
-                            startIcon={<AddIcon />}
-                            onClick={() => setTransactionFormOpen(true)}
-                            className={styles.addNewButton}
-                            elevation={3}
-                            size="small"
-                          >
-                            Add New
-                          </Button>
+                        <Button 
+                          variant="contained" 
+                          color="primary" 
+                          startIcon={<AddIcon />}
+                          onClick={() => setTransactionFormOpen(true)}
+                          className={styles.addNewButton}
+                          elevation={3}
+                          size="small"
+                        >
+                          Add New
+                        </Button>
                         </Box>
                       </Box>
                       
