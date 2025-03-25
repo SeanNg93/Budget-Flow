@@ -252,49 +252,56 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
     }
   }, [open, initialData]);
   
+  // Reset initialization flag and form data when dialog opens/closes
   useEffect(() => {
-    if (open && initialData && !formInitialized.current && categories.length > 0) {
+    if (!open) {
+      formInitialized.current = false;
+    } else if (initialData && !formInitialized.current) {
+      // Only run this once when the form opens with initialData
       formInitialized.current = true;
       
-      // Handle different possible formats of wallet property
-      let accountId = '';
-      if (initialData.wallet?.id) {
-        accountId = initialData.wallet.id.toString();
-      } else if (initialData.accountId) {
-        accountId = initialData.accountId.toString();
-      } else if (initialData.account?.id) {
-        accountId = initialData.account.id.toString();
-      }
-
-      // Handle different possible formats of category property
-      let categoryId = '';
-      if (initialData.category?.id) {
-        categoryId = initialData.category.id.toString();
-      } else if (initialData.categoryId) {
-        categoryId = initialData.categoryId.toString();
-      }
-      
-      // Ensure amount is properly converted to string
-      const amountStr = initialData.amount ? String(initialData.amount) : '';
-      
-      // Update form data
-      setFormData({
-        accountId: accountId,
-        transactionType: initialData.transactionType || 'EXPENSE',
-        amount: amountStr,
-        description: initialData.description || '',
-        categoryId: categoryId,
-        transactionDate: initialData.transactionDate ? new Date(initialData.transactionDate) : new Date()
-      });
-      
-      // Load the category spending data if needed
-      if (categoryId && initialData.transactionType === 'EXPENSE') {
-        setTimeout(() => {
-          fetchCategorySpendingData(categoryId);
-        }, 100);
-      }
+      // When opening with initialData, reset form and then set timeout to load data
+      // This helps overcome potential timing issues
+      setTimeout(() => {
+        // Handle different possible formats of wallet property
+        let accountId = '';
+        if (initialData.wallet?.id) {
+          accountId = initialData.wallet.id.toString();
+        } else if (initialData.accountId) {
+          accountId = initialData.accountId.toString();
+        } else if (initialData.account?.id) {
+          accountId = initialData.account.id.toString();
+        }
+        
+        // Handle different possible formats of category property
+        let categoryId = '';
+        if (initialData.category?.id) {
+          categoryId = initialData.category.id.toString();
+        } else if (initialData.categoryId) {
+          categoryId = initialData.categoryId.toString();
+        }
+        
+        // Ensure amount is properly converted to string
+        const amountStr = initialData.amount ? String(initialData.amount) : '';
+        
+        setFormData({
+          accountId: accountId,
+          transactionType: initialData.transactionType || 'EXPENSE',
+          amount: amountStr,
+          description: initialData.description || '',
+          categoryId: categoryId,
+          transactionDate: initialData.transactionDate ? new Date(initialData.transactionDate) : new Date()
+        });
+        
+        // Load the category spending data if needed
+        if (categoryId && initialData.transactionType === 'EXPENSE' && categories.length > 0) {
+          setTimeout(() => {
+            fetchCategorySpendingData(categoryId);
+          }, 100);
+        }
+      }, 300); // Short delay to ensure component is fully mounted
     }
-  }, [initialData, open, categories.length, fetchCategorySpendingData]);
+  }, [open, initialData, fetchCategorySpendingData]);
   
   // Update the useEffect for the checkCategoryLimit function
   useEffect(() => {
@@ -371,7 +378,8 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
     const { name, value } = e.target;
     
     if (name === 'amount') {
-      if (value === '' || /^(\d*\.?\d{0,2}|\.\d{0,2})$/.test(value)) {
+      // Less restrictive regex to allow more natural typing
+      if (value === '' || /^-?\d*\.?\d{0,2}$/.test(value)) {
         setFormData(prev => ({
           ...prev,
           [name]: value
@@ -383,7 +391,8 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
         [name]: value
       }));
     }
-        if (errors[name]) {
+    
+    if (errors[name]) {
       setErrors({
         ...errors,
         [name]: ''
@@ -442,6 +451,29 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
       if (isNaN(numAmount) || numAmount <= 0) {
         newErrors.amount = 'Amount must be a positive number';
       }
+      
+      // Check for sufficient funds when transaction is an EXPENSE
+      if (formData.transactionType === 'EXPENSE' && formData.accountId) {
+        const selectedAccount = accounts.find(a => a.id.toString() === formData.accountId.toString());
+        if (selectedAccount) {
+          const walletBalance = selectedAccount.balance || 0;
+          
+          // If editing a transaction, we need to consider the original amount
+          let originalAmount = 0;
+          if (initialData && initialData.transactionType === 'EXPENSE' && 
+              initialData.wallet && initialData.wallet.id.toString() === formData.accountId.toString()) {
+            originalAmount = parseFloat(initialData.amount) || 0;
+          }
+          
+          // For editing: check if (new amount - original amount) > wallet balance
+          // For new transactions: check if amount > wallet balance
+          const effectiveAmount = numAmount - (initialData ? originalAmount : 0);
+          
+          if (effectiveAmount > walletBalance) {
+            newErrors.amount = `Insufficient funds in wallet. Available: $${walletBalance.toFixed(2)}, Required: $${numAmount.toFixed(2)}`;
+          }
+        }
+      }
     }
     
     if (!formData.description) {
@@ -494,7 +526,23 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
       
       if (initialData) {
         // Update existing transaction
-        const transactionId = parseInt(initialData.id.toString().split(':')[0], 10);
+        
+        // Get the transaction ID, handling different possible formats
+        let transactionId;
+        if (typeof initialData.id === 'number') {
+          transactionId = initialData.id;
+        } else if (typeof initialData.id === 'string' && initialData.id.includes(':')) {
+          // Handle case where ID might be in format like "123:string"
+          transactionId = parseInt(initialData.id.toString().split(':')[0], 10);
+        } else {
+          transactionId = parseInt(initialData.id.toString(), 10);
+        }
+        
+        // Ensure transactionId is valid
+        if (isNaN(transactionId)) {
+          throw new Error('Invalid transaction ID');
+        }
+        
         response = await FinanceService.updateTransaction(transactionId, transactionData);
         isUpdate = true;
       } else {
@@ -750,6 +798,32 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
     }
   };
 
+  // Add a helper function to check if there are insufficient funds
+  const hasInsufficientFunds = () => {
+    if (formData.transactionType !== 'EXPENSE' || !formData.accountId || !formData.amount) {
+      return false;
+    }
+    
+    const selectedAccount = accounts.find(a => a.id.toString() === formData.accountId.toString());
+    if (!selectedAccount) {
+      return false;
+    }
+    
+    const walletBalance = selectedAccount.balance || 0;
+    const amount = parseFloat(formData.amount) || 0;
+    
+    // If editing, account for the original amount
+    let originalAmount = 0;
+    if (initialData && initialData.transactionType === 'EXPENSE' && 
+        initialData.wallet && initialData.wallet.id.toString() === formData.accountId.toString()) {
+      originalAmount = parseFloat(initialData.amount) || 0;
+    }
+    
+    const effectiveAmount = amount - (initialData ? originalAmount : 0);
+    
+    return effectiveAmount > walletBalance;
+  };
+
   // Add a helper function to calculate if the transaction would exceed warning threshold
   const isExceedingWarningThreshold = () => {
     if (!categorySpendingData || !categorySpendingData.warningThreshold) {
@@ -986,31 +1060,52 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
                   Amount
                 </Typography>
               </Box>
-              <TextField
-                name="amount"
-                value={formData.amount}
-                onChange={handleChange}
-                onBlur={handleAmountBlur}
-                placeholder="0.00"
-                error={!!errors.amount}
-                helperText={errors.amount}
-                disabled={loading}
-                size="small"
-                type="text"
-                autoFocus={!!initialData}
-                className={`${styles.inputField} ${styles.amountField}`}
-                sx={{ '& .MuiInputBase-root': { height: '36px' } }}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">$</InputAdornment>
-                  ),
-                  inputProps: {
-                    inputMode: 'decimal',
-                    pattern: '[0-9]*\.?[0-9]*',
-                    style: { textAlign: 'left' }
-                  }
-                }}
-              />
+              
+              {/* Add a position relative wrapper for the tooltip positioning */}
+              <Box sx={{ position: 'relative' }}>
+                <TextField
+                  name="amount"
+                  value={formData.amount}
+                  onChange={handleChange}
+                  onBlur={handleAmountBlur}
+                  placeholder="0.00"
+                  error={!!errors.amount}
+                  helperText={errors.amount}
+                  disabled={loading}
+                  size="small"
+                  type="text"
+                  autoComplete="off"
+                  className={`${styles.inputField} ${styles.amountField} ${errors.amount && errors.amount.includes('Insufficient funds') ? styles.insufficientFundsError : ''}`}
+                  sx={{ '& .MuiInputBase-root': { height: '36px' } }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">$</InputAdornment>
+                    ),
+                    inputProps: {
+                      inputMode: 'decimal',
+                      style: { textAlign: 'left' }
+                    }
+                  }}
+                />
+                
+                {/* Add tooltip for insufficient funds - only show when there are insufficient funds */}
+                {hasInsufficientFunds() && (
+                  <Box className={styles.fundsErrorPopup}>
+                    <ErrorIcon fontSize="small" />
+                    <span>
+                      {(() => {
+                        const selectedAccount = accounts.find(a => a.id.toString() === formData.accountId.toString());
+                        if (selectedAccount) {
+                          const walletBalance = selectedAccount.balance || 0;
+                          const amount = parseFloat(formData.amount) || 0;
+                          return `Insufficient funds! Available: $${walletBalance.toFixed(2)}, Required: $${amount.toFixed(2)}`;
+                        }
+                        return 'Insufficient funds in wallet';
+                      })()}
+                    </span>
+                  </Box>
+                )}
+              </Box>
             </FormControl>
           </Grid>
           
@@ -1108,7 +1203,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
             variant="contained" 
             color={formData.transactionType === 'EXPENSE' ? 'error' : 'success'}
             onClick={handleSubmit}
-            disabled={submitting || loading}
+            disabled={submitting || loading || hasInsufficientFunds()}
             startIcon={submitting ? <CircularProgress size={18} /> : null}
             className={styles.saveTransactionButton}
           >

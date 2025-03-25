@@ -51,6 +51,16 @@ public class TransactionController {
             // This now includes transactions from shared wallets the user has access to
             List<Transaction> transactions = transactionService.getAllTransactionsByUserId(currentUser.getId());
             
+            // Enrich transaction data with creator information
+            for (Transaction transaction : transactions) {
+                // The transaction.user field already contains the creator data
+                // We just need to ensure the JSON serialization works well
+                if (transaction.getUser() != null) {
+                    // Make sure user.password isn't serialized
+                    transaction.getUser().setPassword(null);
+                }
+            }
+            
             log.info("Found {} transactions for user: {}", transactions.size(), username);
             return ResponseEntity.ok(transactions);
         } catch (Exception e) {
@@ -80,6 +90,12 @@ public class TransactionController {
             }
             
             Transaction transaction = transactionService.getTransactionById(id);
+            
+            // Make sure user.password isn't serialized
+            if (transaction.getUser() != null) {
+                transaction.getUser().setPassword(null);
+            }
+            
             return ResponseEntity.ok(transaction);
         } catch (Exception e) {
             log.error("Error getting transaction with ID {}: {}", id, e.getMessage());

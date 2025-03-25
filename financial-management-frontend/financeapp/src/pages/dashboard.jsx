@@ -55,6 +55,8 @@ import InputLabel from '@mui/material/InputLabel';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { DatePicker } from '@mui/x-date-pickers';
 import { subDays, format } from 'date-fns';
+import Avatar from '@mui/material/Avatar';
+import Tooltip from '@mui/material/Tooltip';
 
 // Import dashboard components
 import SideMenu from '../components/dashboard/SideMenu';
@@ -311,6 +313,30 @@ export default function Dashboard() {
     }
   };
 
+  const processTransactions = (transactions) => {
+    return transactions.map(transaction => {
+      // Process user profile picture URL if it exists
+      if (transaction.user && transaction.user.profilePicture) {
+        // Make sure URL is absolute
+        if (transaction.user.profilePicture && !transaction.user.profilePicture.startsWith('http')) {
+          transaction.user.profilePicture = `${API_BASE_URL}${transaction.user.profilePicture}`;
+        }
+      }
+      
+      // Also handle user profile picture from UserProfile if available
+      if (transaction.user && transaction.user.userProfile && transaction.user.userProfile.profilePicturePath) {
+        const path = transaction.user.userProfile.profilePicturePath;
+        if (!path.startsWith('http')) {
+          transaction.user.profilePicture = `${API_BASE_URL}${path}`;
+        } else {
+          transaction.user.profilePicture = path;
+        }
+      }
+      
+      return transaction;
+    });
+  };
+
   const fetchFinancialData = async () => {
     setLoading(true);
     try {
@@ -357,12 +383,15 @@ export default function Dashboard() {
       // Update wallets
       setWallets(accountsResponse.data || []);
       
+      // Process transaction data to ensure profile picture URLs are correct
+      const processedTransactions = processTransactions(transactionsResponse.data || []);
+      
       // Update transactions
-      setTransactions(transactionsResponse.data.slice(0, 5)); // Get only the 5 most recent
-      setFilteredTransactions(transactionsResponse.data.slice(0, 5));
+      setTransactions(processedTransactions.slice(0, 5)); // Get only the 5 most recent
+      setFilteredTransactions(processedTransactions.slice(0, 5));
       
       // Store all transactions for search functionality
-      setAllTransactions(transactionsResponse.data || []);
+      setAllTransactions(processedTransactions || []);
     } catch (error) {
       setError('Failed to load financial data. Please try again later.');
       // Use placeholder data if API fails
@@ -512,7 +541,25 @@ export default function Dashboard() {
 
   // Function to handle editing a transaction
   const handleEditTransaction = (transaction) => {
-    setSelectedTransaction(transaction);
+    // Create a clean copy of the transaction to avoid reference issues
+    const transactionToEdit = {
+      id: transaction.id,
+      transactionType: transaction.transactionType,
+      amount: transaction.amount,
+      description: transaction.description,
+      transactionDate: transaction.transactionDate,
+      wallet: transaction.wallet ? {
+        id: transaction.wallet.id,
+        accountName: transaction.wallet.accountName
+      } : null,
+      category: transaction.category ? {
+        id: transaction.category.id,
+        categoryName: transaction.category.categoryName,
+        type: transaction.category.type
+      } : null
+    };
+    
+    setSelectedTransaction(transactionToEdit);
     setEditTransactionOpen(true);
   };
 
@@ -585,105 +632,79 @@ export default function Dashboard() {
 
   // Function to fetch transactions with filtering support
   const fetchTransactions = async (applyFilters = false) => {
+    setIsFiltering(true);
+    
     try {
-      setIsFiltering(true);
-      const transactionsResponse = await FinanceService.getTransactions();
+      let response;
       
-      if (transactionsResponse.data && transactionsResponse.data.length > 0) {
-        // Store all transactions for searching
-        setAllTransactions(transactionsResponse.data);
+      if (applyFilters) {
+        // Get filtered transactions
+        let startDate, endDate;
         
-        // If we're not filtering, just get recent transactions
-        if (!applyFilters) {
-          setTransactions(transactionsResponse.data.slice(0, 5));
-          setFilteredTransactions(transactionsResponse.data.slice(0, 5));
-          setIsFiltering(false);
-          return;
-        }
-        
-        // Apply time filter
-        let filteredData = [...transactionsResponse.data];
-        const currentDate = new Date();
-        let startDate;
-        
-        if (filterTimeframe === 'custom') {
-          // Use custom date range if selected
-          startDate = new Date(customStartDate);
-          currentDate.setTime(new Date(customEndDate).getTime());
+        if (showCustomDateRange) {
+          startDate = customStartDate;
+          endDate = customEndDate;
         } else {
-          // Use predefined date ranges
+          // Calculate date range based on timeframe
+          const now = new Date();
           switch (filterTimeframe) {
             case 'day':
-              startDate = new Date(currentDate);
-              startDate.setDate(currentDate.getDate() - 1);
+              startDate = subDays(now, 1);
               break;
             case 'week':
-              startDate = new Date(currentDate);
-              startDate.setDate(currentDate.getDate() - 7);
+              startDate = subDays(now, 7);
               break;
             case 'month':
-              startDate = new Date(currentDate);
-              startDate.setMonth(currentDate.getMonth() - 1);
-              break;
-            case 'quarter':
-              startDate = new Date(currentDate);
-              startDate.setMonth(currentDate.getMonth() - 3);
+              startDate = subDays(now, 30);
               break;
             case 'year':
-              startDate = new Date(currentDate);
-              startDate.setFullYear(currentDate.getFullYear() - 1);
+              startDate = subDays(now, 365);
               break;
             default:
-              startDate = new Date(0); // Beginning of time
+              startDate = subDays(now, 7); // Default to a week
           }
+          endDate = now;
         }
         
-        // Filter by date
-        filteredData = filteredData.filter(transaction => {
-          const transactionDate = new Date(transaction.transactionDate);
-          return transactionDate >= startDate && transactionDate <= currentDate;
-        });
+        // Format dates for API
+        const formattedStartDate = startDate.toISOString();
+        const formattedEndDate = endDate.toISOString();
         
-        // Filter by wallet if specified
+        // Build query parts for API call
+        let url = `${API_BASE_URL}/api/transactions?startDate=${formattedStartDate}&endDate=${formattedEndDate}`;
+        
         if (filterWalletId !== 'all') {
-          filteredData = filteredData.filter(transaction => {
-            // Check different possible formats of wallet/account ID
-            if (transaction.wallet && transaction.wallet.id) {
-              return transaction.wallet.id.toString() === filterWalletId;
-            }
-            if (transaction.account && transaction.account.id) {
-              return transaction.account.id.toString() === filterWalletId;
-            }
-            if (transaction.accountId) {
-              return transaction.accountId.toString() === filterWalletId;
-            }
-            return false;
-          });
+          url += `&walletId=${filterWalletId}`;
         }
         
-        // Filter by category if specified
         if (filterCategoryId !== 'all') {
-          filteredData = filteredData.filter(transaction => {
-            // Check different possible formats of category ID
-            if (transaction.category && transaction.category.id) {
-              return transaction.category.id.toString() === filterCategoryId;
-            }
-            if (transaction.categoryId) {
-              return transaction.categoryId.toString() === filterCategoryId;
-            }
-            return false;
-          });
+          url += `&categoryId=${filterCategoryId}`;
         }
         
-        // Set the filtered transactions
-        setFilteredTransactions(filteredData);
-        
-        // Also update the transactions to display
-        setTransactions(filteredData.slice(0, 10)); // Show up to 10 when filtering
+        // Get transactions with filters
+        response = await axios.get(url, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('userToken')}`
+          }
+        });
+      } else {
+        // Get all transactions without filters
+        response = await FinanceService.getTransactions();
       }
-    } catch (error) {
-      console.error('Error fetching transactions:', error);
-    } finally {
+      
+      // Process the transactions to ensure profile picture URLs are correct
+      const processedTransactions = processTransactions(response.data || []);
+      
+      // Update filtered transactions
+      setFilteredTransactions(processedTransactions);
+      setAllTransactions(processedTransactions);
+      
+      // Set dashboard transactions to top 5 of filtered transactions
+      setTransactions(processedTransactions.slice(0, 5));
+      
+      setIsFiltering(false);
+    } catch (err) {
+      console.error('Error fetching transactions:', err);
       setIsFiltering(false);
     }
   };
@@ -1400,7 +1421,16 @@ export default function Dashboard() {
                           <CircularProgress />
                         </Box>
                       ) : displayTransactions.length > 0 ? (
-                        <TableContainer className={styles.tableContainer}>
+                        <TableContainer 
+                          className={styles.tableContainer}
+                          component={Paper}
+                          elevation={0}
+                          sx={{ 
+                            borderRadius: '0.75rem',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                            border: '1px solid rgba(224, 224, 224, 0.7)'
+                          }}
+                        >
                           <Table>
                             <TableHead>
                               <TableRow>
@@ -1409,8 +1439,8 @@ export default function Dashboard() {
                                 <TableCell className={styles.tableHeaderCell}>Category</TableCell>
                                 <TableCell className={styles.tableHeaderCell}>Wallet</TableCell>
                                 <TableCell className={styles.tableHeaderCell}>Type</TableCell>
-                                <TableCell align="right" className={styles.tableHeaderCell}>Amount</TableCell>
-                                <TableCell className={styles.tableHeaderCell}>Actions</TableCell>
+                                <TableCell className={styles.tableHeaderCell}>Amount</TableCell>
+                                <TableCell className={styles.tableHeaderCell} align="center">Actions</TableCell>
                               </TableRow>
                             </TableHead>
                             <TableBody>
@@ -1441,25 +1471,46 @@ export default function Dashboard() {
                                       className={transaction.transactionType === 'INCOME' 
                                         ? styles.incomeTag 
                                         : styles.expenseTag}
+                                      sx={{ display: 'flex', alignItems: 'center' }}
                                     >
                                       {transaction.transactionType}
+                                      {transaction.user && transaction.wallet && sharedWallets[transaction.wallet.id] && (
+                                        <Tooltip 
+                                          title={`Created by: ${transaction.user.username}`}
+                                          arrow
+                                          placement="top"
+                                          classes={{ tooltip: styles.creatorTooltip }}
+                                        >
+                                          <Avatar
+                                            src={transaction.user.profilePicture || undefined}
+                                            alt={transaction.user.username}
+                                            className={styles.creatorAvatar}
+                                          >
+                                            {transaction.user.username ? transaction.user.username.charAt(0).toUpperCase() : '?'}
+                                          </Avatar>
+                                        </Tooltip>
+                                      )}
                                     </Box>
                                   </TableCell>
-                                  <TableCell 
-                                    align="right" 
-                                    className={transaction.transactionType === 'INCOME' 
-                                      ? styles.incomeAmount 
-                                      : styles.expenseAmount}
-                                  >
-                                    {formatCurrency(transaction.amount)}
+                                  <TableCell className={styles.tableCell}>
+                                    {transaction.transactionType === 'INCOME' ? (
+                                      <Typography variant="body2" color="success.main" sx={{ fontWeight: 600 }}>
+                                        +{formatCurrency(transaction.amount, transaction.currency)}
+                                      </Typography>
+                                    ) : (
+                                      <Typography variant="body2" color="error.main" sx={{ fontWeight: 600 }}>
+                                        -{formatCurrency(transaction.amount, transaction.currency)}
+                                      </Typography>
+                                    )}
                                   </TableCell>
                                   <TableCell className={styles.tableCell}>
-                                    <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                    <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                                       <IconButton 
                                         size="small" 
                                         color="primary" 
                                         onClick={() => handleEditTransaction(transaction)}
                                         className={styles.editButton}
+                                        sx={{ mx: 0.5 }}
                                       >
                                         <EditIcon fontSize="small" />
                                       </IconButton>
@@ -1468,6 +1519,7 @@ export default function Dashboard() {
                                         color="error" 
                                         onClick={() => handleDeleteTransaction(transaction)}
                                         className={styles.deleteButton}
+                                        sx={{ mx: 0.5 }}
                                       >
                                         <DeleteIcon fontSize="small" />
                                       </IconButton>
@@ -1568,6 +1620,7 @@ export default function Dashboard() {
       {/* Additional dialogs for search features */}
       {selectedTransaction && (
         <TransactionForm 
+          key={`edit-transaction-${selectedTransaction.id}`}
           open={editTransactionOpen} 
           handleClose={() => {
             setEditTransactionOpen(false);
