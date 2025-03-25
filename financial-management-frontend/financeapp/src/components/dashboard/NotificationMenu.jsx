@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   IconButton,
   Badge,
@@ -35,211 +35,52 @@ import FinanceService from '../../services/FinanceService';
 import { format, formatDistanceToNow } from 'date-fns';
 import styles from '../../styles/notificationMenu.module.css';
 import clsx from 'clsx';
+// Import our new notification service
+import { useNotifications } from '../../services/NotificationService';
 
 const NotificationMenu = () => {
+  // Local state for UI elements
   const [anchorEl, setAnchorEl] = useState(null);
-  const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
   const [acceptingWallet, setAcceptingWallet] = useState(null);
   
-  // Mock notifications data
-  const [mockNotifications, setMockNotifications] = useState([
-    {
-      id: 1,
-      message: "You sent $25.00 to testuser2 from your Main Wallet.",
-      type: "MONEY_SENT",
-      read: false,
-      createdAt: new Date(Date.now() - 1000 * 60 * 15).toISOString() // 15 minutes ago
-    },
-    {
-      id: 2,
-      message: "You received $50.00 from testuser3.",
-      type: "MONEY_RECEIVED",
-      read: false,
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString() // 2 hours ago
-    },
-    {
-      id: 3,
-      message: "You sent $15.00 to testuser4 from your Savings Wallet.",
-      type: "MONEY_SENT",
-      read: true,
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 8).toISOString() // 8 hours ago
-    },
-    {
-      id: 4,
-      message: "testuser1 shared their wallet \"Travel Fund\" with you.",
-      type: "WALLET_RECEIVED",
-      read: false,
-      createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 minutes ago
-      data: JSON.stringify({ sharedWalletId: 1 })
-    }
-  ]);
+  // Use our centralized notification hook
+  const {
+    unreadCount,
+    notifications,
+    fetchNotifications,
+    markAsRead,
+    markAllAsRead,
+    clearNotifications
+  } = useNotifications();
   
-  useEffect(() => {
-    fetchUnreadCount();
-    
-    // Poll for new notifications every minute
-    const interval = setInterval(() => {
-      if (!anchorEl) { // Only poll when menu is closed
-        fetchUnreadCount();
-      }
-    }, 30000);
-    
-    return () => clearInterval(interval);
-  }, [anchorEl]);
-  
-  const fetchUnreadCount = async () => {
-    try {
-      // First try the real API
-      const response = await FinanceService.getUnreadNotificationCount();
-      setUnreadCount(response.data.unreadCount);
-    } catch (error) {
-      // Use mock data
-      const unreadCount = mockNotifications.filter(n => !n.read).length;
-      setUnreadCount(unreadCount);
-    }
-  };
-  
-  const fetchNotifications = async () => {
-    setLoading(true);
-    try {
-      // First try the real API
-      const response = await FinanceService.getNotifications();
-      setNotifications(response.data);
-    } catch (error) {
-      // Use mock data
-      setNotifications(mockNotifications);
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  const handleMenuOpen = (event) => {
+  // Memoize handlers to prevent unnecessary re-renders
+  const handleMenuOpen = useCallback(async (event) => {
     setAnchorEl(event.currentTarget);
-    fetchNotifications();
-  };
+    setLoading(true);
+    await fetchNotifications();
+    setLoading(false);
+  }, [fetchNotifications]);
   
-  const handleMenuClose = () => {
+  const handleMenuClose = useCallback(() => {
     setAnchorEl(null);
-  };
+  }, []);
   
-  const handleMarkAsRead = async (id) => {
-    try {
-      await FinanceService.markNotificationAsRead(id);
-      
-      // Update local state
-      setNotifications(prevNotifications => 
-        prevNotifications.map(notification => 
-          notification.id === id 
-            ? { ...notification, read: true } 
-            : notification
-        )
-      );
-      
-      // Also update mock data
-      setMockNotifications(prevMockNotifications => 
-        prevMockNotifications.map(notification => 
-          notification.id === id 
-            ? { ...notification, read: true } 
-            : notification
-        )
-      );
-      
-      // Update unread count
-      setUnreadCount(prev => Math.max(0, prev - 1));
-    } catch (error) {
-      // Update mock data anyway
-      setMockNotifications(prevMockNotifications => 
-        prevMockNotifications.map(notification => 
-          notification.id === id 
-            ? { ...notification, read: true } 
-            : notification
-        )
-      );
-      
-      // Update notifications
-      setNotifications(prevNotifications => 
-        prevNotifications.map(notification => 
-          notification.id === id 
-            ? { ...notification, read: true } 
-            : notification
-        )
-      );
-      
-      // Update unread count
-      setUnreadCount(prev => Math.max(0, prev - 1));
-    }
-  };
+  const handleMarkAsRead = useCallback(async (id) => {
+    await markAsRead(id);
+  }, [markAsRead]);
   
-  const handleMarkAllAsRead = async () => {
-    try {
-      await FinanceService.markAllNotificationsAsRead();
-      
-      // Update local state
-      setNotifications(notifications.map(notification => ({ 
-        ...notification, 
-        read: true 
-      })));
-      
-      // Also update mock data
-      setMockNotifications(mockNotifications.map(notification => ({ 
-        ...notification, 
-        read: true 
-      })));
-      
-      // Update unread count
-      setUnreadCount(0);
-    } catch (error) {
-      // Update mock data anyway
-      setMockNotifications(mockNotifications.map(notification => ({ 
-        ...notification, 
-        read: true 
-      })));
-      
-      // Update notifications
-      setNotifications(notifications.map(notification => ({ 
-        ...notification, 
-        read: true 
-      })));
-      
-      // Update unread count
-      setUnreadCount(0);
-    }
-  };
+  const handleMarkAllAsRead = useCallback(async () => {
+    await markAllAsRead();
+  }, [markAllAsRead]);
   
-  const handleClearNotifications = async () => {
-    try {
-      await FinanceService.deleteAllNotifications();
-      
-      // Update local state
-      setNotifications([]);
-      
-      // Also update mock data
-      setMockNotifications([]);
-      
-      // Update unread count
-      setUnreadCount(0);
-      
-      // Close the menu
-      handleMenuClose();
-    } catch (error) {
-      // Update mock data anyway
-      setMockNotifications([]);
-      
-      // Update notifications
-      setNotifications([]);
-      
-      // Update unread count
-      setUnreadCount(0);
-      
-      // Close the menu
-      handleMenuClose();
-    }
-  };
+  const handleClearNotifications = useCallback(async () => {
+    await clearNotifications();
+    handleMenuClose();
+  }, [clearNotifications, handleMenuClose]);
   
   // Handle accepting a shared wallet
-  const handleAcceptSharedWallet = async (notification) => {
+  const handleAcceptSharedWallet = useCallback(async (notification) => {
     try {
       setAcceptingWallet(notification.id);
       
@@ -297,13 +138,14 @@ const NotificationMenu = () => {
       // Refresh the page to show the new wallet
       window.location.reload();
     } catch (error) {
-      // Silently handle errors
+      console.error('Error accepting shared wallet:', error);
     } finally {
       setAcceptingWallet(null);
     }
-  };
+  }, [handleMarkAsRead]);
   
-  const getNotificationIcon = (type) => {
+  // Helper function to determine icon based on notification type
+  const getNotificationIcon = useCallback((type) => {
     switch (type) {
       case 'MONEY_SENT':
         return <SentIcon color="error" />;
@@ -318,9 +160,10 @@ const NotificationMenu = () => {
       default:
         return <MoneyIcon color="primary" />;
     }
-  };
+  }, []);
   
-  const formatDate = (dateString) => {
+  // Format date for notification display
+  const formatDate = useCallback((dateString) => {
     const date = new Date(dateString);
     const now = new Date();
     
@@ -331,18 +174,18 @@ const NotificationMenu = () => {
     
     // Otherwise show actual date
     return format(date, 'MMM d, yyyy h:mm a');
-  };
+  }, []);
   
   // Check if notification is a shared wallet notification that can be accepted
-  const isAcceptableWalletNotification = (notification) => {
+  const isAcceptableWalletNotification = useCallback((notification) => {
     return notification.type === 'WALLET_RECEIVED' && !notification.read;
-  };
+  }, []);
   
   return (
     <>
-      <IconButton
-        aria-label="show notifications"
-        color="inherit"
+      <IconButton 
+        aria-label={`${unreadCount} unread notifications`}
+        color="inherit" 
         onClick={handleMenuOpen}
         size="large"
         className={styles.badgeContainer}
@@ -512,4 +355,4 @@ const NotificationMenu = () => {
   );
 };
 
-export default NotificationMenu; 
+export default React.memo(NotificationMenu); 
