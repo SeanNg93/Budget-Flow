@@ -52,12 +52,26 @@ public class TransactionService {
     }
 
     public List<Transaction> getAllTransactionsByUserId(Long userId) {
-        return transactionRepository.findByUserId(userId);
+        return transactionRepository.findTransactionsByVisibility(userId);
     }
 
     public Transaction getTransactionById(Long transactionId) {
-        return transactionRepository.findById(transactionId)
+        Transaction transaction = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new EntityNotFoundException("Transaction not found with id: " + transactionId));
+        
+        return transaction;
+    }
+
+    public boolean hasAccessToTransaction(Long transactionId, Long userId) {
+        Query query = entityManager.createNativeQuery(
+            "SELECT COUNT(*) FROM transaction_visibility " +
+            "WHERE transaction_id = :transactionId AND user_id = :userId"
+        );
+        query.setParameter("transactionId", transactionId);
+        query.setParameter("userId", userId);
+        
+        Number count = (Number) query.getSingleResult();
+        return count.intValue() > 0;
     }
 
     @Transactional
@@ -67,7 +81,6 @@ public class TransactionService {
         Wallet wallet = walletRepository.findById(walletId)
                 .orElseThrow(() -> new EntityNotFoundException("Wallet not found with id: " + walletId));
 
-        // Validate wallet balance for expense transactions
         if (transaction.getTransactionType() == Transaction.TransactionType.EXPENSE) {
             BigDecimal walletBalance = wallet.getBalance();
             if (transaction.getAmount().compareTo(walletBalance) > 0) {
@@ -79,19 +92,16 @@ public class TransactionService {
         transaction.setWallet(wallet);
         transaction.setStatus(Transaction.TransactionStatus.COMPLETED);
 
-        // Update wallet balance and total balance based on transaction type
+        Long walletOwnerId = wallet.getUser().getId();
+        
         if (transaction.getTransactionType() == Transaction.TransactionType.INCOME) {
-            // Add to wallet balance
             walletService.addToBalance(walletId, transaction.getAmount());
             
-            // Add to total balance in user profile
-            userProfileService.addToTotalBalance(userId, transaction.getAmount());
+            userProfileService.addToTotalBalance(walletOwnerId, transaction.getAmount());
         } else if (transaction.getTransactionType() == Transaction.TransactionType.EXPENSE) {
-            // Subtract from wallet balance
             walletService.subtractFromBalance(walletId, transaction.getAmount());
             
-            // Subtract from total balance in user profile
-            userProfileService.subtractFromTotalBalance(userId, transaction.getAmount());
+            userProfileService.subtractFromTotalBalance(walletOwnerId, transaction.getAmount());
         }
 
         return transactionRepository.save(transaction);
@@ -100,21 +110,21 @@ public class TransactionService {
     @Transactional
     public Transaction updateTransaction(Long transactionId, Transaction transactionDetails) {
         Transaction transaction = getTransactionById(transactionId);
-        Long userId = transaction.getUser().getId();
+        
+        // Get the wallet owner ID instead of the transaction creator ID
+        Long walletOwnerId = transaction.getWallet().getUser().getId();
         
         // Revert the old transaction's effect on the wallet balance and total balance
         if (transaction.getTransactionType() == Transaction.TransactionType.INCOME) {
-            // Subtract from wallet balance
             walletService.subtractFromBalance(transaction.getWallet().getId(), transaction.getAmount());
             
-            // Subtract from total balance in user profile
-            userProfileService.subtractFromTotalBalance(userId, transaction.getAmount());
+            // Subtract from the wallet OWNER's total balance
+            userProfileService.subtractFromTotalBalance(walletOwnerId, transaction.getAmount());
         } else if (transaction.getTransactionType() == Transaction.TransactionType.EXPENSE) {
-            // Add back to wallet balance
             walletService.addToBalance(transaction.getWallet().getId(), transaction.getAmount());
             
-            // Add back to total balance in user profile
-            userProfileService.addToTotalBalance(userId, transaction.getAmount());
+            // Add back to the wallet OWNER's total balance
+            userProfileService.addToTotalBalance(walletOwnerId, transaction.getAmount());
         }
         
         // Update transaction details
@@ -126,17 +136,15 @@ public class TransactionService {
         
         // Apply the new transaction's effect on the wallet balance and total balance
         if (transaction.getTransactionType() == Transaction.TransactionType.INCOME) {
-            // Add to wallet balance
             walletService.addToBalance(transaction.getWallet().getId(), transaction.getAmount());
             
-            // Add to total balance in user profile
-            userProfileService.addToTotalBalance(userId, transaction.getAmount());
+            // Add to the wallet OWNER's total balance
+            userProfileService.addToTotalBalance(walletOwnerId, transaction.getAmount());
         } else if (transaction.getTransactionType() == Transaction.TransactionType.EXPENSE) {
-            // Subtract from wallet balance
             walletService.subtractFromBalance(transaction.getWallet().getId(), transaction.getAmount());
             
-            // Subtract from total balance in user profile
-            userProfileService.subtractFromTotalBalance(userId, transaction.getAmount());
+            // Subtract from the wallet OWNER's total balance
+            userProfileService.subtractFromTotalBalance(walletOwnerId, transaction.getAmount());
         }
         
         return transactionRepository.save(transaction);
@@ -145,24 +153,72 @@ public class TransactionService {
     @Transactional
     public void deleteTransaction(Long transactionId) {
         Transaction transaction = getTransactionById(transactionId);
-        Long userId = transaction.getUser().getId();
         
-        // Revert the transaction's effect on the wallet balance and total balance
+        // Get the wallet owner ID
+        Long walletOwnerId = transaction.getWallet().getUser().getId();
+        
+        // Revert the transaction's effect on the wallet balance
         if (transaction.getTransactionType() == Transaction.TransactionType.INCOME) {
-            // Subtract from wallet balance
             walletService.subtractFromBalance(transaction.getWallet().getId(), transaction.getAmount());
             
-            // Subtract from total balance in user profile
-            userProfileService.subtractFromTotalBalance(userId, transaction.getAmount());
+            // Subtract from the wallet OWNER's total balance
+            userProfileService.subtractFromTotalBalance(walletOwnerId, transaction.getAmount());
         } else if (transaction.getTransactionType() == Transaction.TransactionType.EXPENSE) {
-            // Add back to wallet balance
             walletService.addToBalance(transaction.getWallet().getId(), transaction.getAmount());
             
-            // Add back to total balance in user profile
-            userProfileService.addToTotalBalance(userId, transaction.getAmount());
+            // Add back to the wallet OWNER's total balance
+            userProfileService.addToTotalBalance(walletOwnerId, transaction.getAmount());
         }
         
+        // The before_transaction_delete trigger in MySQL will handle deleting
+        // associated transaction_visibility records
         transactionRepository.delete(transaction);
+    }
+
+    public Map<String, BigDecimal> getFinancialSummary(Long userId) {
+        Map<String, BigDecimal> summary = new HashMap<>();
+        
+        BigDecimal totalIncome = transactionRepository.getTotalIncomeByVisibility(userId);
+        BigDecimal totalExpense = transactionRepository.getTotalExpenseByVisibility(userId);
+        
+        BigDecimal netSavings = totalIncome.subtract(totalExpense);
+        
+        LocalDateTime startOfMonth = LocalDateTime.now().withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
+        LocalDateTime endOfMonth = startOfMonth.with(TemporalAdjusters.lastDayOfMonth()).withHour(23).withMinute(59).withSecond(59);
+        
+        Query monthQuery = entityManager.createNativeQuery(
+            "SELECT " +
+            "   COALESCE(SUM(CASE WHEN t.transaction_type = 'INCOME' THEN t.amount ELSE 0 END), 0) as monthlyIncome, " +
+            "   COALESCE(SUM(CASE WHEN t.transaction_type = 'EXPENSE' THEN t.amount ELSE 0 END), 0) as monthlyExpense " +
+            "FROM transactions t " +
+            "JOIN transaction_visibility tv ON t.id = tv.transaction_id " +
+            "WHERE tv.user_id = :userId " +
+            "AND t.transaction_date BETWEEN :startDate AND :endDate"
+        );
+        monthQuery.setParameter("userId", userId);
+        monthQuery.setParameter("startDate", startOfMonth);
+        monthQuery.setParameter("endDate", endOfMonth);
+        
+        Object[] monthResult = (Object[]) monthQuery.getSingleResult();
+        BigDecimal currentMonthIncome = (BigDecimal) monthResult[0];
+        BigDecimal currentMonthExpense = (BigDecimal) monthResult[1];
+        BigDecimal currentMonthNetSavings = currentMonthIncome.subtract(currentMonthExpense);
+        
+        BigDecimal totalBalance = userProfileService.getTotalBalance(userId);
+        BigDecimal allocatedBalance = walletService.getAllocatedBalance(userId);
+        BigDecimal availableBalance = walletService.getAvailableBalance(userId);
+        
+        summary.put("totalIncome", totalIncome);
+        summary.put("totalExpense", totalExpense);
+        summary.put("netSavings", netSavings);
+        summary.put("currentMonthIncome", currentMonthIncome);
+        summary.put("currentMonthExpense", currentMonthExpense);
+        summary.put("currentMonthNetSavings", currentMonthNetSavings);
+        summary.put("totalBalance", totalBalance);
+        summary.put("allocatedBalance", allocatedBalance);
+        summary.put("availableBalance", availableBalance);
+        
+        return summary;
     }
 
     public BigDecimal getTotalIncome(Long userId) {
@@ -203,23 +259,16 @@ public class TransactionService {
         return monthlyIncome.subtract(monthlyExpense);
     }
 
-    /**
-     * Get all transactions for a specific category
-     */
     public List<Transaction> getTransactionsByCategoryId(Long categoryId) {
         return transactionRepository.findByCategoryId(categoryId);
     }
 
-    /**
-     * Get financial data grouped by date range for chart visualization
-     */
     public List<Map<String, Object>> getFinancialDataByDateRange(
             Long userId, LocalDateTime startDate, LocalDateTime endDate, Integer categoryId, String interval) {
         
         List<Map<String, Object>> result = new ArrayList<>();
         
         try {
-            // Determine date format pattern based on interval
             String dateFormatPattern;
             switch (interval) {
                 case "week":
@@ -232,12 +281,11 @@ public class TransactionService {
                     dateFormatPattern = "yyyy";
                     break;
                 default:
-                    dateFormatPattern = "yyyy-MM-dd"; // Default to daily
+                    dateFormatPattern = "yyyy-MM-dd";
             }
             
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern(dateFormatPattern);
             
-            // Create a custom query based on interval
             String periodFormat = getPeriodFormatString(interval);
             String groupBy = "DATE_FORMAT(t.transactionDate, '" + periodFormat + "')";
             
@@ -269,11 +317,9 @@ public class TransactionService {
             for (Object[] row : rows) {
                 Map<String, Object> dataPoint = new HashMap<>();
                 
-                // Format period names for better readability
                 String periodValue = (String) row[0];
                 
                 if (interval.equals("day")) {
-                    // For daily data, convert to nicer format (e.g. "Mon, Jan 1")
                     try {
                         LocalDate date = LocalDate.parse(periodValue);
                         dataPoint.put("name", date.format(DateTimeFormatter.ofPattern("EEE, MMM d")));
@@ -284,17 +330,15 @@ public class TransactionService {
                     dataPoint.put("name", periodValue);
                 }
                 
-                dataPoint.put("period", periodValue); // Keep original period for reference
+                dataPoint.put("period", periodValue);
                 dataPoint.put("income", row[1]);
                 dataPoint.put("expenses", row[2]);
                 
                 result.add(dataPoint);
             }
             
-            // If no data but valid date range, create empty points
             if (result.isEmpty() && startDate.isBefore(endDate)) {
                 if ("day".equals(interval) && ChronoUnit.DAYS.between(startDate, endDate) <= 60) {
-                    // For daily interval with reasonable range, create empty data points
                     LocalDate current = startDate.toLocalDate();
                     LocalDate end = endDate.toLocalDate();
                     
@@ -314,15 +358,11 @@ public class TransactionService {
             
         } catch (Exception e) {
             e.printStackTrace();
-            // Return empty list on error
         }
         
         return result;
     }
 
-    /**
-     * Get summary data for a date range
-     */
     public Map<String, Object> getFinancialSummaryByDateRange(
             Long userId, LocalDateTime startDate, LocalDateTime endDate, Integer categoryId) {
         
@@ -361,7 +401,6 @@ public class TransactionService {
             
         } catch (Exception e) {
             e.printStackTrace();
-            // Return zeros on error
             summary.put("totalIncome", BigDecimal.ZERO);
             summary.put("totalExpenses", BigDecimal.ZERO);
             summary.put("netSavings", BigDecimal.ZERO);
@@ -370,19 +409,16 @@ public class TransactionService {
         return summary;
     }
 
-    /**
-     * Helper method to get SQL date format pattern for different intervals
-     */
     private String getPeriodFormatString(String interval) {
         switch (interval) {
             case "week":
-                return "%Y-%u"; // ISO week number (1-53)
+                return "%Y-%u";
             case "month":
-                return "%Y-%m"; // Year-month
+                return "%Y-%m";
             case "year":
-                return "%Y"; // Year only
+                return "%Y";
             default:
-                return "%Y-%m-%d"; // Default to daily
+                return "%Y-%m-%d";
         }
     }
 } 

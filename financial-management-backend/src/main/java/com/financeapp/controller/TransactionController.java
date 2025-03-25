@@ -35,7 +35,7 @@ public class TransactionController {
     private final SecurityUtils securityUtils;
 
     /**
-     * Get all transactions for the authenticated user
+     * Get all transactions for the authenticated user (including from shared wallets)
      */
     @GetMapping
     public ResponseEntity<List<Transaction>> getAllTransactions() {
@@ -48,6 +48,7 @@ public class TransactionController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
             
+            // This now includes transactions from shared wallets the user has access to
             List<Transaction> transactions = transactionService.getAllTransactionsByUserId(currentUser.getId());
             
             log.info("Found {} transactions for user: {}", transactions.size(), username);
@@ -71,15 +72,14 @@ public class TransactionController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
             
-            Transaction transaction = transactionService.getTransactionById(id);
-            
-            // Check if transaction belongs to the authenticated user
-            if (!transaction.getUser().getId().equals(currentUser.getId())) {
-                log.warn("User {} attempted to access transaction {} which belongs to another user", 
+            // Check if transaction is accessible to the user via the visibility table
+            if (!transactionService.hasAccessToTransaction(id, currentUser.getId())) {
+                log.warn("User {} attempted to access transaction {} which they don't have access to", 
                         currentUser.getUsername(), id);
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
             
+            Transaction transaction = transactionService.getTransactionById(id);
             return ResponseEntity.ok(transaction);
         } catch (Exception e) {
             log.error("Error getting transaction with ID {}: {}", id, e.getMessage());
@@ -100,6 +100,13 @@ public class TransactionController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
             
+            // Check if user has access to the wallet (as owner or shared with)
+            if (!walletService.hasAccessToWallet(walletId, currentUser.getId())) {
+                log.warn("User {} attempted to create a transaction for wallet {} without access", 
+                        currentUser.getUsername(), walletId);
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+            
             Transaction createdTransaction = transactionService.createTransaction(
                     transaction, currentUser.getId(), walletId);
             
@@ -117,7 +124,7 @@ public class TransactionController {
      */
     @PutMapping("/{id}")
     public ResponseEntity<?> updateTransaction(
-            @PathVariable Long id,
+            @PathVariable Long id, 
             @RequestBody Transaction transactionDetails) {
         try {
             log.info("Updating transaction with ID: {}", id);
@@ -127,24 +134,23 @@ public class TransactionController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
             
-            // Check if transaction belongs to the authenticated user
+            // Get existing transaction to check ownership
             Transaction existingTransaction = transactionService.getTransactionById(id);
+            
+            // Only the creator of a transaction can update it
             if (!existingTransaction.getUser().getId().equals(currentUser.getId())) {
-                log.warn("User {} attempted to update transaction {} which belongs to another user", 
+                log.warn("User {} attempted to update transaction {} which they didn't create", 
                         currentUser.getUsername(), id);
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+                Map<String, String> errorResponse = new HashMap<>();
+                errorResponse.put("error", "Forbidden");
+                errorResponse.put("message", "You can only edit transactions that you created");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
             }
             
+            // Update the transaction
             Transaction updatedTransaction = transactionService.updateTransaction(id, transactionDetails);
-            log.info("Transaction updated successfully with ID: {}", id);
+            
             return ResponseEntity.ok(updatedTransaction);
-        } catch (IllegalArgumentException e) {
-            // Handle validation errors like insufficient funds
-            log.error("Validation error updating transaction: {}", e.getMessage());
-            Map<String, String> errorResponse = new HashMap<>();
-            errorResponse.put("error", "Validation Error");
-            errorResponse.put("message", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         } catch (Exception e) {
             log.error("Error updating transaction with ID {}: {}", id, e.getMessage());
             Map<String, String> errorResponse = new HashMap<>();
@@ -167,10 +173,12 @@ public class TransactionController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
             
-            // Check if transaction belongs to the authenticated user
+            // Get existing transaction to check ownership
             Transaction existingTransaction = transactionService.getTransactionById(id);
+            
+            // Only the creator of a transaction can delete it
             if (!existingTransaction.getUser().getId().equals(currentUser.getId())) {
-                log.warn("User {} attempted to delete transaction {} which belongs to another user", 
+                log.warn("User {} attempted to delete transaction {} which they didn't create", 
                         currentUser.getUsername(), id);
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
@@ -195,18 +203,8 @@ public class TransactionController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
             
-            log.info("Getting financial summary for user: {}", currentUser.getUsername());
-            
-            Map<String, BigDecimal> summary = new HashMap<>();
-            summary.put("totalBalance", walletService.getTotalBalance(currentUser.getId()));
-            summary.put("allocatedBalance", walletService.getAllocatedBalance(currentUser.getId()));
-            summary.put("availableBalance", walletService.getAvailableBalance(currentUser.getId()));
-            summary.put("totalIncome", transactionService.getTotalIncome(currentUser.getId()));
-            summary.put("totalExpense", transactionService.getTotalExpense(currentUser.getId()));
-            summary.put("netSavings", transactionService.getNetSavings(currentUser.getId()));
-            summary.put("currentMonthIncome", transactionService.getCurrentMonthIncome(currentUser.getId()));
-            summary.put("currentMonthExpense", transactionService.getCurrentMonthExpense(currentUser.getId()));
-            summary.put("currentMonthNetSavings", transactionService.getCurrentMonthNetSavings(currentUser.getId()));
+            // Get summary data inclusive of shared wallet transactions
+            Map<String, BigDecimal> summary = transactionService.getFinancialSummary(currentUser.getId());
             
             return ResponseEntity.ok(summary);
         } catch (Exception e) {

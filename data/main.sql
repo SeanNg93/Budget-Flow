@@ -136,6 +136,18 @@ CREATE TABLE transactions (
     FOREIGN KEY (category_id) REFERENCES transaction_categories(id) ON DELETE SET NULL
 );
 
+-- Create transaction_visibility table to track which users can see which transactions
+CREATE TABLE transaction_visibility (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    transaction_id INT NOT NULL,
+    user_id INT NOT NULL,
+    is_creator BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE KEY (transaction_id, user_id)
+);
+
 -- Create additional tables needed by the application
 CREATE TABLE audit_logs (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -173,6 +185,51 @@ CREATE TABLE notifications (
     data TEXT,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
+-- =============================================
+-- PART 3: CREATE TRIGGERS
+-- =============================================
+-- Trigger to automatically add visibility records when transactions are created
+DELIMITER //
+CREATE TRIGGER after_transaction_insert
+AFTER INSERT ON transactions
+FOR EACH ROW
+BEGIN
+    DECLARE wallet_owner_id INT;
+    
+    -- First, add visibility for the transaction creator
+    INSERT INTO transaction_visibility (transaction_id, user_id, is_creator)
+    VALUES (NEW.id, NEW.user_id, TRUE);
+    
+    -- Find the wallet owner
+    SELECT user_id INTO wallet_owner_id FROM wallets WHERE id = NEW.account_id;
+    
+    -- If the transaction creator is not the wallet owner, add visibility for wallet owner too
+    IF NEW.user_id != wallet_owner_id THEN
+        INSERT INTO transaction_visibility (transaction_id, user_id, is_creator)
+        VALUES (NEW.id, wallet_owner_id, FALSE);
+    END IF;
+    
+    -- Add visibility for all users who have access to the wallet via sharing
+    INSERT INTO transaction_visibility (transaction_id, user_id, is_creator)
+    SELECT NEW.id, shared_with_id, FALSE
+    FROM shared_wallets
+    WHERE wallet_id = NEW.account_id
+      AND accepted = TRUE
+      AND shared_with_id != NEW.user_id
+      AND shared_with_id != wallet_owner_id;
+END //
+DELIMITER ;
+
+-- Trigger to automatically delete transaction_visibility records when transactions are deleted
+DELIMITER //
+CREATE TRIGGER before_transaction_delete
+BEFORE DELETE ON transactions
+FOR EACH ROW
+BEGIN
+    DELETE FROM transaction_visibility WHERE transaction_id = OLD.id;
+END //
+DELIMITER ;
 
 -- =============================================
 -- PART 3: INSERT INITIAL DATA
@@ -382,39 +439,42 @@ BEGIN
     
     -- Get chart data grouped by date period
     IF p_category_id IS NULL OR p_category_id = 0 THEN
-        -- Query without category filter
+        -- Query without category filter using transaction_visibility for user access
         SELECT 
-            DATE_FORMAT(transaction_date, date_format_pattern) AS period,
-            SUM(CASE WHEN transaction_type = 'INCOME' THEN amount ELSE 0 END) AS income,
-            SUM(CASE WHEN transaction_type = 'EXPENSE' THEN amount ELSE 0 END) AS expenses
-        FROM transactions
-        WHERE user_id = p_user_id
-          AND transaction_date BETWEEN p_start_date AND p_end_date
+            DATE_FORMAT(t.transaction_date, date_format_pattern) AS period,
+            SUM(CASE WHEN t.transaction_type = 'INCOME' THEN t.amount ELSE 0 END) AS income,
+            SUM(CASE WHEN t.transaction_type = 'EXPENSE' THEN t.amount ELSE 0 END) AS expenses
+        FROM transactions t
+        JOIN transaction_visibility tv ON t.id = tv.transaction_id
+        WHERE tv.user_id = p_user_id
+          AND t.transaction_date BETWEEN p_start_date AND p_end_date
         GROUP BY period
-        ORDER BY MIN(transaction_date);
+        ORDER BY MIN(t.transaction_date);
     ELSE
-        -- Query with category filter
+        -- Query with category filter using transaction_visibility for user access
         SELECT 
-            DATE_FORMAT(transaction_date, date_format_pattern) AS period,
-            SUM(CASE WHEN transaction_type = 'INCOME' THEN amount ELSE 0 END) AS income,
-            SUM(CASE WHEN transaction_type = 'EXPENSE' THEN amount ELSE 0 END) AS expenses
-        FROM transactions
-        WHERE user_id = p_user_id
-          AND transaction_date BETWEEN p_start_date AND p_end_date
-          AND category_id = p_category_id
+            DATE_FORMAT(t.transaction_date, date_format_pattern) AS period,
+            SUM(CASE WHEN t.transaction_type = 'INCOME' THEN t.amount ELSE 0 END) AS income,
+            SUM(CASE WHEN t.transaction_type = 'EXPENSE' THEN t.amount ELSE 0 END) AS expenses
+        FROM transactions t
+        JOIN transaction_visibility tv ON t.id = tv.transaction_id
+        WHERE tv.user_id = p_user_id
+          AND t.transaction_date BETWEEN p_start_date AND p_end_date
+          AND t.category_id = p_category_id
         GROUP BY period
-        ORDER BY MIN(transaction_date);
+        ORDER BY MIN(t.transaction_date);
     END IF;
     
-    -- Get summary data
+    -- Get summary data using transaction_visibility
     SELECT
-        SUM(CASE WHEN transaction_type = 'INCOME' THEN amount ELSE 0 END) AS total_income,
-        SUM(CASE WHEN transaction_type = 'EXPENSE' THEN amount ELSE 0 END) AS total_expenses,
-        SUM(CASE WHEN transaction_type = 'INCOME' THEN amount ELSE -amount END) AS net_savings
-    FROM transactions
-    WHERE user_id = p_user_id
-      AND transaction_date BETWEEN p_start_date AND p_end_date
-      AND (p_category_id IS NULL OR p_category_id = 0 OR category_id = p_category_id);
+        SUM(CASE WHEN t.transaction_type = 'INCOME' THEN t.amount ELSE 0 END) AS total_income,
+        SUM(CASE WHEN t.transaction_type = 'EXPENSE' THEN t.amount ELSE 0 END) AS total_expenses,
+        SUM(CASE WHEN t.transaction_type = 'INCOME' THEN t.amount ELSE -t.amount END) AS net_savings
+    FROM transactions t
+    JOIN transaction_visibility tv ON t.id = tv.transaction_id
+    WHERE tv.user_id = p_user_id
+      AND t.transaction_date BETWEEN p_start_date AND p_end_date
+      AND (p_category_id IS NULL OR p_category_id = 0 OR t.category_id = p_category_id);
 END //
 
 -- Procedure to determine appropriate interval based on date range
@@ -446,17 +506,53 @@ DELIMITER ;
 -- Add view to simplify chart data access
 CREATE OR REPLACE VIEW v_financial_summary AS
 SELECT 
-    user_id,
-    DATE_FORMAT(transaction_date, '%Y-%m') AS month,
-    SUM(CASE WHEN transaction_type = 'INCOME' THEN amount ELSE 0 END) AS monthly_income,
-    SUM(CASE WHEN transaction_type = 'EXPENSE' THEN amount ELSE 0 END) AS monthly_expenses,
-    SUM(CASE WHEN transaction_type = 'INCOME' THEN amount ELSE -amount END) AS monthly_net
-FROM transactions
-GROUP BY user_id, month
-ORDER BY user_id, month;
+    tv.user_id,
+    DATE_FORMAT(t.transaction_date, '%Y-%m') AS month,
+    SUM(CASE WHEN t.transaction_type = 'INCOME' THEN t.amount ELSE 0 END) AS monthly_income,
+    SUM(CASE WHEN t.transaction_type = 'EXPENSE' THEN t.amount ELSE 0 END) AS monthly_expenses,
+    SUM(CASE WHEN t.transaction_type = 'INCOME' THEN t.amount ELSE -t.amount END) AS monthly_net
+FROM transactions t
+JOIN transaction_visibility tv ON t.id = tv.transaction_id
+GROUP BY tv.user_id, month
+ORDER BY tv.user_id, month;
 
 -- =============================================
--- PART 6: VERIFY SETUP
+-- PART 6: CREATE PROCEDURES FOR TRANSACTION ACCESS
+-- =============================================
+
+-- Procedure to get all transactions for a user including shared wallet transactions
+DELIMITER //
+CREATE PROCEDURE get_user_transactions(
+    IN p_user_id INT,
+    IN p_start_date TIMESTAMP,
+    IN p_end_date TIMESTAMP,
+    IN p_wallet_id INT,
+    IN p_category_id INT
+)
+BEGIN
+    -- Select transactions with proper filtering
+    SELECT 
+        t.*,
+        w.account_name AS wallet_name,
+        w.user_id AS wallet_owner_id,
+        c.category_name,
+        c.type AS category_type,
+        tv.is_creator
+    FROM transactions t
+    JOIN transaction_visibility tv ON t.id = tv.transaction_id
+    JOIN wallets w ON t.account_id = w.id
+    LEFT JOIN transaction_categories c ON t.category_id = c.id
+    WHERE tv.user_id = p_user_id
+      AND (p_start_date IS NULL OR t.transaction_date >= p_start_date)
+      AND (p_end_date IS NULL OR t.transaction_date <= p_end_date)
+      AND (p_wallet_id IS NULL OR p_wallet_id = 0 OR t.account_id = p_wallet_id)
+      AND (p_category_id IS NULL OR p_category_id = 0 OR t.category_id = p_category_id)
+    ORDER BY t.transaction_date DESC;
+END //
+DELIMITER ;
+
+-- =============================================
+-- PART 7: VERIFY SETUP
 -- =============================================
 -- Ensure all users have at least the ROLE_USER role (safety check)
 INSERT INTO user_roles (user_id, role_id)
@@ -504,3 +600,4 @@ ORDER BY u.id;
 -- The Wallet table replaces the earlier Account table, with no account_type field
 -- Transaction table's account_id column refers to wallet IDs
 -- User profiles now include total_balance and currency fields to track overall balance 
+-- Transaction visibility: Transactions in shared wallets now appear for all users with access to the wallet 
