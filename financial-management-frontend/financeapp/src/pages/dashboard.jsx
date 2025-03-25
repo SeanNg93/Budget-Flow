@@ -541,7 +541,25 @@ export default function Dashboard() {
 
   // Function to handle editing a transaction
   const handleEditTransaction = (transaction) => {
-    setSelectedTransaction(transaction);
+    // Create a clean copy of the transaction to avoid reference issues
+    const transactionToEdit = {
+      id: transaction.id,
+      transactionType: transaction.transactionType,
+      amount: transaction.amount,
+      description: transaction.description,
+      transactionDate: transaction.transactionDate,
+      wallet: transaction.wallet ? {
+        id: transaction.wallet.id,
+        accountName: transaction.wallet.accountName
+      } : null,
+      category: transaction.category ? {
+        id: transaction.category.id,
+        categoryName: transaction.category.categoryName,
+        type: transaction.category.type
+      } : null
+    };
+    
+    setSelectedTransaction(transactionToEdit);
     setEditTransactionOpen(true);
   };
 
@@ -1403,7 +1421,16 @@ export default function Dashboard() {
                           <CircularProgress />
                         </Box>
                       ) : displayTransactions.length > 0 ? (
-                        <TableContainer className={styles.tableContainer}>
+                        <TableContainer 
+                          className={styles.tableContainer}
+                          component={Paper}
+                          elevation={0}
+                          sx={{ 
+                            borderRadius: '0.75rem',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                            border: '1px solid rgba(224, 224, 224, 0.7)'
+                          }}
+                        >
                           <Table>
                             <TableHead>
                               <TableRow>
@@ -1412,8 +1439,8 @@ export default function Dashboard() {
                                 <TableCell className={styles.tableHeaderCell}>Category</TableCell>
                                 <TableCell className={styles.tableHeaderCell}>Wallet</TableCell>
                                 <TableCell className={styles.tableHeaderCell}>Type</TableCell>
-                                <TableCell align="right" className={styles.tableHeaderCell}>Amount</TableCell>
-                                <TableCell className={styles.tableHeaderCell}>Actions</TableCell>
+                                <TableCell className={styles.tableHeaderCell}>Amount</TableCell>
+                                <TableCell className={styles.tableHeaderCell} align="center">Actions</TableCell>
                               </TableRow>
                             </TableHead>
                             <TableBody>
@@ -1458,14 +1485,6 @@ export default function Dashboard() {
                                             src={transaction.user.profilePicture || undefined}
                                             alt={transaction.user.username}
                                             className={styles.creatorAvatar}
-                                            sx={{
-                                              width: 24,
-                                              height: 24,
-                                              fontSize: '0.8rem',
-                                              marginLeft: '8px',
-                                              backgroundColor: 'primary.main',
-                                              border: '2px solid white'
-                                            }}
                                           >
                                             {transaction.user.username ? transaction.user.username.charAt(0).toUpperCase() : '?'}
                                           </Avatar>
@@ -1473,21 +1492,25 @@ export default function Dashboard() {
                                       )}
                                     </Box>
                                   </TableCell>
-                                  <TableCell 
-                                    align="right" 
-                                    className={transaction.transactionType === 'INCOME' 
-                                      ? styles.incomeAmount 
-                                      : styles.expenseAmount}
-                                  >
-                                    {formatCurrency(transaction.amount)}
+                                  <TableCell className={styles.tableCell}>
+                                    {transaction.transactionType === 'INCOME' ? (
+                                      <Typography variant="body2" color="success.main" sx={{ fontWeight: 600 }}>
+                                        +{formatCurrency(transaction.amount, transaction.currency)}
+                                      </Typography>
+                                    ) : (
+                                      <Typography variant="body2" color="error.main" sx={{ fontWeight: 600 }}>
+                                        -{formatCurrency(transaction.amount, transaction.currency)}
+                                      </Typography>
+                                    )}
                                   </TableCell>
                                   <TableCell className={styles.tableCell}>
-                                    <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                    <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                                       <IconButton 
                                         size="small" 
                                         color="primary" 
                                         onClick={() => handleEditTransaction(transaction)}
                                         className={styles.editButton}
+                                        sx={{ mx: 0.5 }}
                                       >
                                         <EditIcon fontSize="small" />
                                       </IconButton>
@@ -1496,6 +1519,7 @@ export default function Dashboard() {
                                         color="error" 
                                         onClick={() => handleDeleteTransaction(transaction)}
                                         className={styles.deleteButton}
+                                        sx={{ mx: 0.5 }}
                                       >
                                         <DeleteIcon fontSize="small" />
                                       </IconButton>
@@ -1596,6 +1620,7 @@ export default function Dashboard() {
       {/* Additional dialogs for search features */}
       {selectedTransaction && (
         <TransactionForm 
+          key={`edit-transaction-${selectedTransaction.id}`}
           open={editTransactionOpen} 
           handleClose={() => {
             setEditTransactionOpen(false);
