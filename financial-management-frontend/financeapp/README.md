@@ -38,3 +38,32 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
+
+## Shared Wallet Enhancements
+
+The Budget Flow application includes several UI enhancements to make shared wallet functionality more intuitive:
+
+### Shared Wallet Labels
+
+1. **Wallet Dropdown in Transaction Form**
+   - Wallets that are shared (either by you or with you) are labeled with "(shared wallet)" in the wallet dropdown
+   - This makes it easy to identify which wallets are shared when creating or editing transactions
+
+2. **Transaction List on Dashboard**
+   - Transactions that use shared wallets include a "(shared)" label in the wallet column
+   - This allows users to quickly identify which transactions involve shared wallets
+
+### Implementation Details
+
+- The application fetches shared wallet information from two endpoints:
+  - `getSharedWalletsWithMe()` - Wallets shared with the current user
+  - `getSharedWalletsByMe()` - Wallets the current user has shared with others
+  
+- This information is used to create a lookup map that tracks which wallet IDs are shared
+- The UI components then use this map to display appropriate labels
+
+### Benefits
+
+- Improved visibility of shared wallet status throughout the application
+- Better user experience when managing transactions with shared wallets
+- Clear distinction between personal and shared financial activities

@@ -20,6 +20,7 @@ import com.financeapp.service.NotificationService;
 import java.util.ArrayList;
 import com.financeapp.model.SharedWallet;
 import com.financeapp.repository.SharedWalletRepository;
+import com.financeapp.service.WalletAccessService;
 
 @Service
 public class WalletService {
@@ -30,15 +31,24 @@ public class WalletService {
     private final UserProfileRepository userProfileRepository;
     private final NotificationService notificationService;
     private final SharedWalletRepository sharedWalletRepository;
+    private final WalletAccessService walletAccessService;
 
     @Autowired
-    public WalletService(WalletRepository walletRepository, UserRepository userRepository, UserProfileService userProfileService, UserProfileRepository userProfileRepository, NotificationService notificationService, SharedWalletRepository sharedWalletRepository) {
+    public WalletService(
+            WalletRepository walletRepository, 
+            UserRepository userRepository, 
+            UserProfileService userProfileService, 
+            UserProfileRepository userProfileRepository, 
+            NotificationService notificationService, 
+            SharedWalletRepository sharedWalletRepository,
+            WalletAccessService walletAccessService) {
         this.walletRepository = walletRepository;
         this.userRepository = userRepository;
         this.userProfileService = userProfileService;
         this.userProfileRepository = userProfileRepository;
         this.notificationService = notificationService;
         this.sharedWalletRepository = sharedWalletRepository;
+        this.walletAccessService = walletAccessService;
     }
 
     public List<Wallet> getAllWalletsByUserId(Long userId) {
@@ -413,5 +423,17 @@ public class WalletService {
                     return userInfo;
                 })
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Check if a user has access to a wallet (either as owner or shared)
+     * 
+     * @param walletId ID of the wallet
+     * @param userId ID of the user
+     * @return true if the user has access, false otherwise
+     */
+    public boolean hasAccessToWallet(Long walletId, Long userId) {
+        // Delegate to WalletAccessService
+        return walletAccessService.hasAccessToWallet(walletId, userId);
     }
 } 

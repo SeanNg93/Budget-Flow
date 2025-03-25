@@ -43,6 +43,7 @@ import ErrorIcon from '@mui/icons-material/Error';
 import FinanceService from '../../services/FinanceService';
 import WalletForm from './WalletForm';
 import CategoryForm from './CategoryForm';
+import CategoryManageForm from './CategoryManageForm';
 import styles from '../../styles/transactionForm.module.css';
 
 // Create a SlideTransition component with forwardRef
@@ -86,6 +87,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
   const [isErrorVisible, setIsErrorVisible] = useState(false);
   const [categorySpendingData, setCategorySpendingData] = useState(null);
   const [categoryExcessAmount, setCategoryExcessAmount] = useState(0);
+  const [sharedWallets, setSharedWallets] = useState({});
 
   // Track if form has been initialized with initial data
   const formInitialized = useRef(false);
@@ -99,6 +101,17 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
   const deleteCategoryDialogRef = useRef(null);
   const editWalletDialogRef = useRef(null);
   const deleteWalletDialogRef = useRef(null);
+
+  // Add new state and function for opening the CategoryManageForm
+  const [categoryManageFormOpen, setCategoryManageFormOpen] = useState(false);
+  
+  const handleOpenCategoryManage = () => {
+    setCategoryManageFormOpen(true);
+  };
+
+  const handleCloseCategoryManage = () => {
+    setCategoryManageFormOpen(false);
+  };
 
   // Helper function to fetch category spending data - memoize with useCallback
   const fetchCategorySpendingData = useCallback(async (catId) => {
@@ -124,7 +137,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
       
       // Handle case when editing an existing transaction
       if (initialData && initialData.category && initialData.category.id.toString() === catId.toString() && initialData.transactionType === 'EXPENSE') {
-        // Subtract the original transaction amount from the total spent
+        // Subtract the original transaction amount from the total spent for limit calculation purposes
         const originalAmount = parseFloat(initialData.amount) || 0;
         const adjustedTotalSpent = Math.max(0, response.data.totalSpent - originalAmount);
         
@@ -132,6 +145,8 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
         const adjustedData = {
           ...response.data,
           totalSpent: adjustedTotalSpent,
+          // Store the original total spent for display purposes
+          originalTotalSpent: response.data.totalSpent,
           percentage: (adjustedTotalSpent / response.data.limit) * 100
         };
         
@@ -182,6 +197,31 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
         // Fetch categories
         const categoriesResponse = await FinanceService.getCategories();
         setCategories(categoriesResponse.data || []);
+        
+        // Fetch shared wallets info
+        const [sharedWithMeResponse, sharedByMeResponse] = await Promise.all([
+          FinanceService.getSharedWalletsWithMe(),
+          FinanceService.getSharedWalletsByMe()
+        ]);
+        
+        // Process shared wallets info
+        const sharedWalletsMap = {};
+        
+        // Add wallets shared with me
+        (sharedWithMeResponse.data || []).forEach(shared => {
+          if (shared.accepted) {
+            sharedWalletsMap[shared.walletId] = true;
+          }
+        });
+        
+        // Add wallets shared by me
+        (sharedByMeResponse.data || []).forEach(shared => {
+          if (shared.accepted) {
+            sharedWalletsMap[shared.walletId] = true;
+          }
+        });
+        
+        setSharedWallets(sharedWalletsMap);
         
         // Set default account if available and not editing
         if (!initialData && accountsResponse.data && accountsResponse.data.length > 0) {
@@ -454,7 +494,8 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
       
       if (initialData) {
         // Update existing transaction
-        response = await FinanceService.updateTransaction(initialData.id, transactionData);
+        const transactionId = parseInt(initialData.id.toString().split(':')[0], 10);
+        response = await FinanceService.updateTransaction(transactionId, transactionData);
         isUpdate = true;
       } else {
         // Create new transaction
@@ -815,13 +856,15 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
                 // Use toString() for consistent string comparison
                 const selectedStr = selected.toString();
                 const account = accounts.find(a => a.id.toString() === selectedStr);
-                return <Typography sx={{ fontSize: '0.8rem' }}>{account ? account.accountName : ''}</Typography>;
+                return <Typography sx={{ fontSize: '0.8rem' }}>
+                  {account ? (account.accountName + (sharedWallets[account.id] ? " (shared wallet)" : "")) : ''}
+                </Typography>;
               }}
             >
               <MenuItem value="" disabled>Select a wallet</MenuItem>
               {accounts.map((account) => (
                 <MenuItem key={account.id} value={account.id.toString()} sx={{ fontSize: '0.8rem' }}>
-                  {account.accountName}
+                  {account.accountName}{sharedWallets[account.id] ? " (shared wallet)" : ""}
                 </MenuItem>
               ))}
             </Select>
@@ -843,29 +886,22 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
                     {categoryExcessAmount > 0 ? 
                       `(Exceeding limit by $${categoryExcessAmount.toFixed(2)})` : 
                       initialData ?
-                        `(Limit: $${categorySpendingData.limit.toFixed(2)}, Current: $${categorySpendingData.totalSpent.toFixed(2)})` :
+                        `(Limit: $${categorySpendingData.limit.toFixed(2)}, Current: $${categorySpendingData.originalTotalSpent ? categorySpendingData.originalTotalSpent.toFixed(2) : categorySpendingData.totalSpent.toFixed(2)})` :
                         `(Limit: $${categorySpendingData.limit.toFixed(2)}, Left: $${Math.max(0, categorySpendingData.limit - categorySpendingData.totalSpent).toFixed(2)})`
                     }
                   </Typography>
                 )}
               </Typography>
               <Box className={styles.actionButtonsContainer}>
-                <IconButton 
-                  size="small" 
-                  className={styles.editButton}
-                  onClick={handleEditCategoryClick}
-                  disabled={loading || !formData.categoryId}
+                <IconButton
+                  size="small"
+                  color="primary"
+                  className={styles.manageButton}
+                  onClick={handleOpenCategoryManage}
+                  disabled={loading}
+                  title="Manage Categories"
                 >
-                  <EditIcon fontSize="small" />
-                </IconButton>
-                <IconButton 
-                  size="small" 
-                  className={styles.deleteButton}
-                  onClick={handleDeleteCategoryClick}
-                  disabled={loading || !formData.categoryId}
-                  color="error"
-                >
-                  <DeleteIcon fontSize="small" />
+                  <CategoryIcon fontSize="small" />
                 </IconButton>
                 <IconButton 
                   size="small" 
@@ -1252,6 +1288,39 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
             onCategoryAdded={handleCategoryAdded}
             embedded={true}
             defaultType={formData.transactionType}
+          />
+        </DialogContent>
+      </Dialog>
+      
+      {/* Category Manage Form Dialog */}
+      <Dialog 
+        open={categoryManageFormOpen} 
+        onClose={handleCloseCategoryManage}
+        maxWidth="sm"
+        fullWidth={true}
+        PaperProps={{
+          className: styles.dialogPaper,
+          style: { width: '500px', maxWidth: '90vw' }
+        }}
+      >
+        <DialogContent sx={{ p: 2 }}>
+          <CategoryManageForm 
+            open={true} 
+            handleClose={handleCloseCategoryManage}
+            onCategoryUpdated={() => {
+              // Refresh categories when form is closed
+              handleCloseCategoryManage();
+              const fetchNewCategories = async () => {
+                try {
+                  const categoriesResponse = await FinanceService.getCategories();
+                  setCategories(categoriesResponse.data || []);
+                } catch (err) {
+                  console.error('Error refreshing categories:', err);
+                }
+              };
+              fetchNewCategories();
+            }}
+            embedded={true}
           />
         </DialogContent>
       </Dialog>

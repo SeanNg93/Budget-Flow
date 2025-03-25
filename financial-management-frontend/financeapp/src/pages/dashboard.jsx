@@ -167,6 +167,8 @@ export default function Dashboard() {
   const [shareWalletDialogOpen, setShareWalletDialogOpen] = useState(false);
   const [transferDialogOpen, setTransferDialogOpen] = useState(false);
   const [selectedWallet, setSelectedWallet] = useState(null);
+  // Add state for shared wallets
+  const [sharedWallets, setSharedWallets] = useState({});
 
   // Finance action panel state
   const [financeActionPanelOpen, setFinanceActionPanelOpen] = useState(false);
@@ -320,6 +322,29 @@ export default function Dashboard() {
       
       // Fetch recent transactions
       const transactionsResponse = await FinanceService.getTransactions();
+      
+      // Fetch shared wallets information
+      const sharedWithMeResponse = await FinanceService.getSharedWalletsWithMe();
+      const sharedByMeResponse = await FinanceService.getSharedWalletsByMe();
+      
+      // Process shared wallets info to create a lookup map
+      const sharedWalletsMap = {};
+      
+      // Add wallets shared with me
+      (sharedWithMeResponse.data || []).forEach(shared => {
+        if (shared.accepted) {
+          sharedWalletsMap[shared.walletId] = true;
+        }
+      });
+      
+      // Add wallets shared by me
+      (sharedByMeResponse.data || []).forEach(shared => {
+        if (shared.accepted) {
+          sharedWalletsMap[shared.walletId] = true;
+        }
+      });
+      
+      setSharedWallets(sharedWalletsMap);
       
       // Update financial data
       setFinancialData({
@@ -521,8 +546,29 @@ export default function Dashboard() {
     try {
       await FinanceService.deleteTransaction(selectedTransaction.id);
       setDeleteConfirmOpen(false);
+      setAllTransactions(prevTransactions => 
+        prevTransactions.filter(t => t.id !== selectedTransaction.id)
+      );
+      
+      setFilteredTransactions(prevTransactions => {
+        const updated = prevTransactions.filter(t => t.id !== selectedTransaction.id);
+        return updated;
+      });
+      
+      setTransactions(prevTransactions => {
+        const updated = prevTransactions.filter(t => t.id !== selectedTransaction.id);
+        if (updated.length < 5) {
+          const allFiltered = allTransactions.filter(t => t.id !== selectedTransaction.id);
+          return allFiltered.slice(0, 5);
+        }
+        return updated;
+      });
+      
+      updateFinancialSummary();
+      
+      updateWallets();
+      
       setSelectedTransaction(null);
-      fetchFinancialData(); // Refresh data after delete
       toast.success('Transaction deleted successfully');
     } catch (error) {
       console.error('Error deleting transaction:', error);
@@ -1191,17 +1237,17 @@ export default function Dashboard() {
                           >
                             Filter
                           </Button>
-                          <Button 
-                            variant="contained" 
-                            color="primary" 
-                            startIcon={<AddIcon />}
-                            onClick={() => setTransactionFormOpen(true)}
-                            className={styles.addNewButton}
-                            elevation={3}
-                            size="small"
-                          >
-                            Add New
-                          </Button>
+                        <Button 
+                          variant="contained" 
+                          color="primary" 
+                          startIcon={<AddIcon />}
+                          onClick={() => setTransactionFormOpen(true)}
+                          className={styles.addNewButton}
+                          elevation={3}
+                          size="small"
+                        >
+                          Add New
+                        </Button>
                         </Box>
                       </Box>
                       
@@ -1380,9 +1426,15 @@ export default function Dashboard() {
                                      (transaction.categoryId ? `Category #${transaction.categoryId}` : 'Uncategorized')}
                                   </TableCell>
                                   <TableCell className={styles.tableCell}>
-                                    {transaction.wallet ? transaction.wallet.accountName : 
-                                     (transaction.account ? transaction.account.accountName : 
-                                      (transaction.accountId ? accounts.find(a => a.id === transaction.accountId)?.accountName || `Wallet #${transaction.accountId}` : 'Unknown'))}
+                                    {transaction.wallet ? (
+                                      <>
+                                        {transaction.wallet.accountName}
+                                        {sharedWallets[transaction.wallet.id] && " (shared)"}
+                                      </>
+                                    ) : (
+                                      transaction.account ? transaction.account.accountName : 
+                                      (transaction.accountId ? accounts.find(a => a.id === transaction.accountId)?.accountName || `Wallet #${transaction.accountId}` : 'Unknown')
+                                    )}
                                   </TableCell>
                                   <TableCell className={styles.tableCell}>
                                     <Box

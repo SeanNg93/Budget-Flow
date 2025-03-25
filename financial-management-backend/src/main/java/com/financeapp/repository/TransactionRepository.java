@@ -46,4 +46,32 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             @Param("userId") Long userId,
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate);
+    
+    // Get transactions via transaction_visibility
+    @Query("SELECT DISTINCT t FROM Transaction t " +
+           "JOIN TransactionVisibility tv ON t.id = tv.transaction.id " +
+           "WHERE tv.user.id = :userId")
+    List<Transaction> findTransactionsByVisibility(@Param("userId") Long userId);
+    
+    // Get transactions via transaction_visibility with date range
+    @Query("SELECT DISTINCT t FROM Transaction t " +
+           "JOIN TransactionVisibility tv ON t.id = tv.transaction.id " +
+           "WHERE tv.user.id = :userId " +
+           "AND t.transactionDate BETWEEN :startDate AND :endDate")
+    List<Transaction> findTransactionsByVisibilityAndDateRange(
+            @Param("userId") Long userId,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate);
+    
+    // Get total income via transaction_visibility
+    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t " +
+           "JOIN TransactionVisibility tv ON t.id = tv.transaction.id " +
+           "WHERE tv.user.id = :userId AND t.transactionType = 'INCOME'")
+    BigDecimal getTotalIncomeByVisibility(@Param("userId") Long userId);
+    
+    // Get total expense via transaction_visibility
+    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t " +
+           "JOIN TransactionVisibility tv ON t.id = tv.transaction.id " +
+           "WHERE tv.user.id = :userId AND t.transactionType = 'EXPENSE'")
+    BigDecimal getTotalExpenseByVisibility(@Param("userId") Long userId);
 } 
