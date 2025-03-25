@@ -429,7 +429,8 @@
 
 .incomeTag,
 .expenseTag {
-  display: inline-block;
+  display: flex;
+  align-items: center;
   padding-left: 0.75rem;
   padding-right: 0.75rem;
   padding-top: 0.25rem;
@@ -447,6 +448,22 @@
 .expenseTag {
   background-color: rgba(255, 59, 48, 0.1);
   color: #ff3b30;
+}
+
+/* Creator avatar in transaction tag */
+.creatorAvatar {
+  width: 24px;
+  height: 24px;
+  font-size: 0.8rem;
+  margin-left: 8px;
+  border: 2px solid white;
+}
+
+/* Tooltip for transaction creator */
+.creatorTooltip {
+  font-size: 0.75rem;
+  padding: 4px 8px;
+  background-color: rgba(0, 0, 0, 0.75);
 }
 
 .emptyTransactionsBox {
