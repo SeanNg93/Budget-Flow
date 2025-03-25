@@ -84,7 +84,7 @@ const NotificationMenu = () => {
       if (!anchorEl) { // Only poll when menu is closed
         fetchUnreadCount();
       }
-    }, 60000);
+    }, 30000);
     
     return () => clearInterval(interval);
   }, [anchorEl]);
