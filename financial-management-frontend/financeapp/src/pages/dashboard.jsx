@@ -521,19 +521,19 @@ export default function Dashboard() {
     try {
       await FinanceService.deleteTransaction(selectedTransaction.id);
       setDeleteConfirmOpen(false);
-                  setAllTransactions(prevTransactions => 
-        prevTransactions.filter(t => t.id !== deletedId)
+      setAllTransactions(prevTransactions => 
+        prevTransactions.filter(t => t.id !== selectedTransaction.id)
       );
       
       setFilteredTransactions(prevTransactions => {
-        const updated = prevTransactions.filter(t => t.id !== deletedId);
+        const updated = prevTransactions.filter(t => t.id !== selectedTransaction.id);
         return updated;
       });
       
       setTransactions(prevTransactions => {
-        const updated = prevTransactions.filter(t => t.id !== deletedId);
+        const updated = prevTransactions.filter(t => t.id !== selectedTransaction.id);
         if (updated.length < 5) {
-          const allFiltered = allTransactions.filter(t => t.id !== deletedId);
+          const allFiltered = allTransactions.filter(t => t.id !== selectedTransaction.id);
           return allFiltered.slice(0, 5);
         }
         return updated;
