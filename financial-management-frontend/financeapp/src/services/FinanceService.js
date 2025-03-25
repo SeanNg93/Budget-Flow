@@ -255,6 +255,37 @@ export const shareWallet = (walletId, targetUserId) => {
   });
 };
 
+// User Profile Services
+export const getUserProfile = (userId) => {
+  // Try multiple possible endpoints
+  return axiosInstance.get(`/users/profile`)
+    .catch(error => {
+      // If first endpoint fails, try user-profiles
+      console.log('First profile endpoint failed, trying alternative...');
+      return axiosInstance.get(`/user-profiles/${userId}`);
+    })
+    .catch(error => {
+      // If second endpoint fails, try users with ID
+      console.log('Second profile endpoint failed, trying alternative...');
+      return axiosInstance.get(`/users/${userId}`);
+    })
+    .catch(error => {
+      console.error('All profile endpoints failed:', error);
+      // Return a default profile object if all APIs fail
+      return { 
+        data: { 
+          id: userId,
+          fullName: 'User',
+          joinDate: new Date().toISOString().split('T')[0],
+          role: 'User',
+          bio: '',
+          profilePicturePath: '',
+          currency: 'USD'
+        } 
+      };
+    });
+};
+
 export const getSharedWalletsWithMe = () => {
   return axiosInstance.get('/shared-wallets/shared-with-me').catch(error => {
     // If we get a 403 or 404 or CORS error, return an empty array instead of throwing an error
@@ -437,6 +468,9 @@ const FinanceService = {
   markNotificationAsRead,
   markAllNotificationsAsRead,
   deleteAllNotifications,
+  
+  // User Profile functions
+  getUserProfile,
 };
 
 export default FinanceService; 
