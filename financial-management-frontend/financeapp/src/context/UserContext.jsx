@@ -1,5 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import axios from 'axios';
+// Import NotificationService to initialize it with the UserContext
+import { initializeNotificationService } from '../services/NotificationService';
 
 const API_BASE_URL = "http://localhost:8080";
 const DEFAULT_AVATAR = "/default-avatar.svg";
@@ -24,6 +26,11 @@ export const UserProvider = ({ children }) => {
     const userData = JSON.parse(localStorage.getItem('userData') || '{}');
     if (userData && userData.id) {
       fetchUserProfile(userData.id);
+      
+      // Initialize notification service with user ID when available
+      if (userData.id) {
+        initializeNotificationService(userData.id);
+      }
     }
   }, []);
   
@@ -56,6 +63,9 @@ export const UserProvider = ({ children }) => {
           userId: data.userId || userId,
           email: data.email || null
         });
+        
+        // Initialize notification service with user ID when profile is loaded
+        initializeNotificationService(userId);
       }
     } catch (err) {
       console.error("Error fetching user profile:", err);
