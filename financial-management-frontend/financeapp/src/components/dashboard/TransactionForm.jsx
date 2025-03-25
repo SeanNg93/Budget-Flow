@@ -87,6 +87,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
   const [isErrorVisible, setIsErrorVisible] = useState(false);
   const [categorySpendingData, setCategorySpendingData] = useState(null);
   const [categoryExcessAmount, setCategoryExcessAmount] = useState(0);
+  const [sharedWallets, setSharedWallets] = useState({});
 
   // Track if form has been initialized with initial data
   const formInitialized = useRef(false);
@@ -196,6 +197,31 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
         // Fetch categories
         const categoriesResponse = await FinanceService.getCategories();
         setCategories(categoriesResponse.data || []);
+        
+        // Fetch shared wallets info
+        const [sharedWithMeResponse, sharedByMeResponse] = await Promise.all([
+          FinanceService.getSharedWalletsWithMe(),
+          FinanceService.getSharedWalletsByMe()
+        ]);
+        
+        // Process shared wallets info
+        const sharedWalletsMap = {};
+        
+        // Add wallets shared with me
+        (sharedWithMeResponse.data || []).forEach(shared => {
+          if (shared.accepted) {
+            sharedWalletsMap[shared.walletId] = true;
+          }
+        });
+        
+        // Add wallets shared by me
+        (sharedByMeResponse.data || []).forEach(shared => {
+          if (shared.accepted) {
+            sharedWalletsMap[shared.walletId] = true;
+          }
+        });
+        
+        setSharedWallets(sharedWalletsMap);
         
         // Set default account if available and not editing
         if (!initialData && accountsResponse.data && accountsResponse.data.length > 0) {
@@ -830,13 +856,15 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
                 // Use toString() for consistent string comparison
                 const selectedStr = selected.toString();
                 const account = accounts.find(a => a.id.toString() === selectedStr);
-                return <Typography sx={{ fontSize: '0.8rem' }}>{account ? account.accountName : ''}</Typography>;
+                return <Typography sx={{ fontSize: '0.8rem' }}>
+                  {account ? (account.accountName + (sharedWallets[account.id] ? " (shared wallet)" : "")) : ''}
+                </Typography>;
               }}
             >
               <MenuItem value="" disabled>Select a wallet</MenuItem>
               {accounts.map((account) => (
                 <MenuItem key={account.id} value={account.id.toString()} sx={{ fontSize: '0.8rem' }}>
-                  {account.accountName}
+                  {account.accountName}{sharedWallets[account.id] ? " (shared wallet)" : ""}
                 </MenuItem>
               ))}
             </Select>

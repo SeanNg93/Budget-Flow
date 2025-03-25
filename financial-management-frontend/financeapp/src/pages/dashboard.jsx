@@ -167,6 +167,8 @@ export default function Dashboard() {
   const [shareWalletDialogOpen, setShareWalletDialogOpen] = useState(false);
   const [transferDialogOpen, setTransferDialogOpen] = useState(false);
   const [selectedWallet, setSelectedWallet] = useState(null);
+  // Add state for shared wallets
+  const [sharedWallets, setSharedWallets] = useState({});
 
   // Finance action panel state
   const [financeActionPanelOpen, setFinanceActionPanelOpen] = useState(false);
@@ -320,6 +322,29 @@ export default function Dashboard() {
       
       // Fetch recent transactions
       const transactionsResponse = await FinanceService.getTransactions();
+      
+      // Fetch shared wallets information
+      const sharedWithMeResponse = await FinanceService.getSharedWalletsWithMe();
+      const sharedByMeResponse = await FinanceService.getSharedWalletsByMe();
+      
+      // Process shared wallets info to create a lookup map
+      const sharedWalletsMap = {};
+      
+      // Add wallets shared with me
+      (sharedWithMeResponse.data || []).forEach(shared => {
+        if (shared.accepted) {
+          sharedWalletsMap[shared.walletId] = true;
+        }
+      });
+      
+      // Add wallets shared by me
+      (sharedByMeResponse.data || []).forEach(shared => {
+        if (shared.accepted) {
+          sharedWalletsMap[shared.walletId] = true;
+        }
+      });
+      
+      setSharedWallets(sharedWalletsMap);
       
       // Update financial data
       setFinancialData({
@@ -1401,9 +1426,15 @@ export default function Dashboard() {
                                      (transaction.categoryId ? `Category #${transaction.categoryId}` : 'Uncategorized')}
                                   </TableCell>
                                   <TableCell className={styles.tableCell}>
-                                    {transaction.wallet ? transaction.wallet.accountName : 
-                                     (transaction.account ? transaction.account.accountName : 
-                                      (transaction.accountId ? accounts.find(a => a.id === transaction.accountId)?.accountName || `Wallet #${transaction.accountId}` : 'Unknown'))}
+                                    {transaction.wallet ? (
+                                      <>
+                                        {transaction.wallet.accountName}
+                                        {sharedWallets[transaction.wallet.id] && " (shared)"}
+                                      </>
+                                    ) : (
+                                      transaction.account ? transaction.account.accountName : 
+                                      (transaction.accountId ? accounts.find(a => a.id === transaction.accountId)?.accountName || `Wallet #${transaction.accountId}` : 'Unknown')
+                                    )}
                                   </TableCell>
                                   <TableCell className={styles.tableCell}>
                                     <Box
