@@ -43,7 +43,7 @@ const WelcomeSection = ({ userProfile, user, openFinanceActionPanel }) => {
     <Paper className={styles.welcomeCard}>
       <Box className={styles.welcomeHeader}>
         <AnimatedText
-          text={`Welcome, ${userName}!`}
+          text={`Welcome, ${userName}! 👋`}
           className={styles.welcomeTitle}
           parentClassName={styles.welcomeTitleContainer}
         />
@@ -65,7 +65,7 @@ const WelcomeSection = ({ userProfile, user, openFinanceActionPanel }) => {
         
         <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center' }}>
           <AnimatedText
-            text="Click here"
+            text="👉 Click here 👈"
             onClick={openFinanceActionPanel}
             style={linkTextStyle}
             aria-label="Open quick navigation menu"
