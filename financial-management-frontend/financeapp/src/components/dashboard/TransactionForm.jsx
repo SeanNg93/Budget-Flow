@@ -43,6 +43,7 @@ import ErrorIcon from '@mui/icons-material/Error';
 import FinanceService from '../../services/FinanceService';
 import WalletForm from './WalletForm';
 import CategoryForm from './CategoryForm';
+import CategoryManageForm from './CategoryManageForm';
 import styles from '../../styles/transactionForm.module.css';
 
 // Create a SlideTransition component with forwardRef
@@ -99,6 +100,17 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
   const deleteCategoryDialogRef = useRef(null);
   const editWalletDialogRef = useRef(null);
   const deleteWalletDialogRef = useRef(null);
+
+  // Add new state and function for opening the CategoryManageForm
+  const [categoryManageFormOpen, setCategoryManageFormOpen] = useState(false);
+  
+  const handleOpenCategoryManage = () => {
+    setCategoryManageFormOpen(true);
+  };
+
+  const handleCloseCategoryManage = () => {
+    setCategoryManageFormOpen(false);
+  };
 
   // Helper function to fetch category spending data - memoize with useCallback
   const fetchCategorySpendingData = useCallback(async (catId) => {
@@ -853,22 +865,15 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
                 )}
               </Typography>
               <Box className={styles.actionButtonsContainer}>
-                <IconButton 
-                  size="small" 
-                  className={styles.editButton}
-                  onClick={handleEditCategoryClick}
-                  disabled={loading || !formData.categoryId}
+                <IconButton
+                  size="small"
+                  color="primary"
+                  className={styles.manageButton}
+                  onClick={handleOpenCategoryManage}
+                  disabled={loading}
+                  title="Manage Categories"
                 >
-                  <EditIcon fontSize="small" />
-                </IconButton>
-                <IconButton 
-                  size="small" 
-                  className={styles.deleteButton}
-                  onClick={handleDeleteCategoryClick}
-                  disabled={loading || !formData.categoryId}
-                  color="error"
-                >
-                  <DeleteIcon fontSize="small" />
+                  <CategoryIcon fontSize="small" />
                 </IconButton>
                 <IconButton 
                   size="small" 
@@ -1255,6 +1260,39 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
             onCategoryAdded={handleCategoryAdded}
             embedded={true}
             defaultType={formData.transactionType}
+          />
+        </DialogContent>
+      </Dialog>
+      
+      {/* Category Manage Form Dialog */}
+      <Dialog 
+        open={categoryManageFormOpen} 
+        onClose={handleCloseCategoryManage}
+        maxWidth="sm"
+        fullWidth={true}
+        PaperProps={{
+          className: styles.dialogPaper,
+          style: { width: '500px', maxWidth: '90vw' }
+        }}
+      >
+        <DialogContent sx={{ p: 2 }}>
+          <CategoryManageForm 
+            open={true} 
+            handleClose={handleCloseCategoryManage}
+            onCategoryUpdated={() => {
+              // Refresh categories when form is closed
+              handleCloseCategoryManage();
+              const fetchNewCategories = async () => {
+                try {
+                  const categoriesResponse = await FinanceService.getCategories();
+                  setCategories(categoriesResponse.data || []);
+                } catch (err) {
+                  console.error('Error refreshing categories:', err);
+                }
+              };
+              fetchNewCategories();
+            }}
+            embedded={true}
           />
         </DialogContent>
       </Dialog>

@@ -70,7 +70,7 @@ const SideMenu = ({ open, handleDrawerClose, setProfileDialogOpen, setCategoryMa
     if (item.text === 'Profile') {
       // Open profile dialog instead of navigating
       setProfileDialogOpen(true);
-    } else if (item.text === 'Categories') {
+    } else if (item.text === 'Category Manage') {
       // Open category manage dialog instead of navigating
       setCategoryManageFormOpen(true);
     } else {
@@ -82,7 +82,7 @@ const SideMenu = ({ open, handleDrawerClose, setProfileDialogOpen, setCategoryMa
   const menuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
     { text: 'Transactions', icon: <AccountBalanceWalletIcon />, path: '/transactions' },
-    { text: 'Categories', icon: <CategoryIcon />, path: '/categories' },
+    { text: 'Category Manage', icon: <CategoryIcon />, path: '/categories' },
     { text: 'Reports', icon: <BarChartIcon />, path: '/reports' },
     { text: 'Profile', icon: <PersonIcon />, path: '/profile' },
     { text: 'Settings', icon: <SettingsIcon />, path: '/settings' },
