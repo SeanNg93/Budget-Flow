@@ -1,87 +1,21 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import CssBaseline from '@mui/material/CssBaseline';
-import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import Grid from '@mui/material/Grid';
-import Paper from '@mui/material/Paper';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import CardHeader from '@mui/material/CardHeader';
-import { alpha } from '@mui/material/styles';
 import CircularProgress from '@mui/material/CircularProgress';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Button from '@mui/material/Button';
-import AddIcon from '@mui/icons-material/Add';
-import IconButton from '@mui/material/IconButton';
-import Stack from '@mui/material/Stack';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
-import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
-import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import TrendingDownIcon from '@mui/icons-material/TrendingDown';
-import SavingsIcon from '@mui/icons-material/Savings';
-import SettingsIcon from '@mui/icons-material/Settings';
-import SearchIcon from '@mui/icons-material/Search';
-import CloseIcon from '@mui/icons-material/Close';
-import InputBase from '@mui/material/InputBase';
-import Fade from '@mui/material/Fade';
-import axios from 'axios';
-import styles from '../styles/dashboard.module.css';
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  DialogContentText,
-} from '@mui/material';
 import { toast } from 'react-toastify';
-import Collapse from '@mui/material/Collapse';
-import Select from '@mui/material/Select';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import FilterListIcon from '@mui/icons-material/FilterList';
-import { DatePicker } from '@mui/x-date-pickers';
-import { subDays, format } from 'date-fns';
-import Avatar from '@mui/material/Avatar';
-import Tooltip from '@mui/material/Tooltip';
 
 // Import dashboard components
 import SideMenu from '../components/dashboard/SideMenu';
 import AppNavbar from '../components/dashboard/AppNavbar';
-import TransactionForm from '../components/dashboard/TransactionForm';
-import WalletForm from '../components/dashboard/WalletForm';
-import WalletManageForm from '../components/dashboard/WalletManageForm';
-import CategoryForm from '../components/dashboard/CategoryForm';
-import CategoryManageForm from '../components/dashboard/CategoryManageForm';
-import FinanceActionPanel from '../components/dashboard/FinanceActionPanel';
-import AddBalanceForm from '../components/dashboard/AddBalanceForm';
-import EditBalanceForm from '../components/dashboard/EditBalanceForm';
 import PendingDeletionAlert from '../components/dashboard/PendingDeletionAlert';
 import WalletOverview from '../components/dashboard/WalletOverview';
-import ProfileDialog from '../components/user/ProfileDialog';
-import UserTransferForm from '../components/dashboard/UserTransferForm';
-import ShareWalletForm from '../components/dashboard/ShareWalletForm';
 import FinanceChart from '../components/dashboard/FinanceChart';
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
-import ToggleButton from '@mui/material/ToggleButton';
-import BarChartIcon from '@mui/icons-material/BarChart';
-import ShowChartIcon from '@mui/icons-material/ShowChart';
-import DecryptedText from '../components/dashboard/DecryptedText';
 
-// Import new dashboard components
+// Import new dashboard components - modular architecture
 import WelcomeSection from '../components/dashboard/WelcomeSection';
 import SummaryCards from '../components/dashboard/SummaryCards';
 import TransactionsSection from '../components/dashboard/TransactionsSection';
@@ -135,6 +69,7 @@ const DrawerHeader = styled('div')(({ theme }) => ({
   minHeight: '48px !important',
 }));
 
+// Combined theme customizations
 const themeComponents = {
   ...chartsCustomizations,
   ...dataGridCustomizations,
@@ -165,7 +100,7 @@ export default function Dashboard() {
   const [sharedWallets, setSharedWallets] = useState({});
   const [error, setError] = useState(null);
 
-  // Dialog states - moved to a central place for better management
+  // Dialog states centralized
   const [dialogStates, setDialogStates] = useState({
     transactionForm: false,
     accountForm: false,
@@ -193,83 +128,80 @@ export default function Dashboard() {
     }));
   };
 
+  // Initial setup
   useEffect(() => {
     checkAuth();
   }, []);
 
+  // Load user data
   useEffect(() => {
     if (user) {
       fetchFinancialData();
-      fetchUserProfile();
-    }
-  }, [user]);
-
-  useEffect(() => {
-    if (user) {
+      
+      // Set a default userProfile from existing user data to avoid API call
+      setUserProfile({
+        id: user.id,
+        fullName: user.username || 'User',
+        joinDate: new Date().toISOString().split('T')[0],
+        role: user.roles?.includes('ROLE_ADMIN') ? 'Administrator' : 'User',
+        bio: '',
+        profilePicturePath: user.profilePicture || '',
+        currency: 'USD'
+      });
+      
+      // Only try to fetch user profile if we already have the data
+      if (user.hasProfile) {
+        fetchUserProfile();
+      }
+      
       fetchCategories();
     }
   }, [user]);
 
-  // Handle state passed from navigation/search
+  // Handle location state for navigation/search
   useEffect(() => {
-    if (location.state) {
-      // Handle form openings from search
-      if (location.state.openWalletForm) {
-        updateDialogState('accountForm', true);
+    if (!location.state) return;
+    
+    // Extract dialog actions from location state
+    const dialogMappings = {
+      openWalletForm: 'accountForm',
+      openTransactionForm: 'transactionForm',
+      openTransferDialog: 'transferDialog',
+      openUserTransferDialog: 'userTransferDialog',
+      openShareWalletDialog: 'shareWalletDialog',
+      openCategoryForm: 'categoryForm'
+    };
+    
+    // Open dialogs based on location state
+    Object.entries(dialogMappings).forEach(([stateKey, dialogKey]) => {
+      if (location.state[stateKey]) {
+        updateDialogState(dialogKey, true);
       }
-      if (location.state.openTransactionForm) {
-        updateDialogState('transactionForm', true);
-      }
-      if (location.state.openTransferDialog) {
-        updateDialogState('transferDialog', true);
-      }
-      if (location.state.openUserTransferDialog) {
-        updateDialogState('userTransferDialog', true);
-      }
-      if (location.state.openShareWalletDialog) {
-        updateDialogState('shareWalletDialog', true);
-      }
-      if (location.state.openCategoryForm) {
-        updateDialogState('categoryForm', true);
-      }
-      
-      // Handle selected items from search
-      if (location.state.selectedWallet) {
-        setSelectedWallet(location.state.selectedWallet);
-        updateDialogState('walletManageForm', true);
-      }
-      if (location.state.selectedTransaction) {
-        const transactionId = location.state.selectedTransaction;
-        // Find and select the transaction from existing transactions
-        const transaction = transactions.find(t => t.id === transactionId);
-        if (transaction) {
-          setSelectedTransaction(transaction);
-          updateDialogState('editTransactionOpen', true);
-        } else {
-          // If not found, try to fetch it
-          fetchTransactionDetails(transactionId);
-        }
-      }
-      
-      // Clear the location state after processing
-      navigate(location.pathname, { replace: true });
+    });
+    
+    // Handle item selection from search
+    if (location.state.selectedWallet) {
+      setSelectedWallet(location.state.selectedWallet);
+      updateDialogState('walletManageForm', true);
     }
+    
+    if (location.state.selectedTransaction) {
+      const transactionId = location.state.selectedTransaction;
+      const transaction = transactions.find(t => t.id === transactionId);
+      
+      if (transaction) {
+        setSelectedTransaction(transaction);
+        updateDialogState('editTransactionOpen', true);
+      } else {
+        fetchTransactionDetails(transactionId);
+      }
+    }
+    
+    // Clear location state
+    navigate(location.pathname, { replace: true });
   }, [location, transactions]);
 
-  // Function to fetch a specific transaction
-  const fetchTransactionDetails = async (transactionId) => {
-    try {
-      const response = await FinanceService.getTransaction(transactionId);
-      if (response.data) {
-        setSelectedTransaction(response.data);
-        updateDialogState('editTransactionOpen', true);
-      }
-    } catch (error) {
-      console.error('Error fetching transaction details:', error);
-      setError('Failed to fetch transaction details');
-    }
-  };
-
+  // Authentication check
   const checkAuth = async () => {
     const token = localStorage.getItem('userToken');
 
@@ -290,103 +222,98 @@ export default function Dashboard() {
     }
   };
 
-  const fetchUserProfile = async () => {
-    try {
-      const token = localStorage.getItem('userToken');
-      if (!token || !user || !user.id) return;
-
-      const response = await FinanceService.getUserProfile(user.id);
-
-      if (response.data) {
-        setUserProfile(response.data);
-      }
-    } catch (err) {
-      console.error("Error fetching user profile:", err);
-    }
-  };
-
+  // Process transaction data for profile pictures
   const processTransactions = (transactions) => {
     return transactions.map(transaction => {
-      // Process user profile picture URL if it exists
-      if (transaction.user && transaction.user.profilePicture) {
-        // Make sure URL is absolute
-        if (transaction.user.profilePicture && !transaction.user.profilePicture.startsWith('http')) {
-          transaction.user.profilePicture = `${API_BASE_URL}${transaction.user.profilePicture}`;
-        }
+      if (!transaction.user) return transaction;
+
+      // Handle profile picture from user object
+      if (transaction.user.profilePicture && !transaction.user.profilePicture.startsWith('http')) {
+        transaction.user.profilePicture = `${API_BASE_URL}${transaction.user.profilePicture}`;
       }
       
-      // Also handle user profile picture from UserProfile if available
-      if (transaction.user && transaction.user.userProfile && transaction.user.userProfile.profilePicturePath) {
+      // Handle profile picture from userProfile object
+      if (transaction.user.userProfile?.profilePicturePath) {
         const path = transaction.user.userProfile.profilePicturePath;
-        if (!path.startsWith('http')) {
-          transaction.user.profilePicture = `${API_BASE_URL}${path}`;
-        } else {
-          transaction.user.profilePicture = path;
-        }
+        transaction.user.profilePicture = path.startsWith('http') ? path : `${API_BASE_URL}${path}`;
       }
       
       return transaction;
     });
   };
 
+  // API Calls grouped by functionality
+  const fetchUserProfile = async () => {
+    try {
+      if (!user?.id) return;
+      
+      console.log('Attempting to fetch user profile data...');
+      const response = await FinanceService.getUserProfile(user.id);
+      
+      if (response.data) {
+        console.log('Profile data received successfully');
+        setUserProfile(prevProfile => ({
+          ...prevProfile,
+          ...response.data
+        }));
+      }
+    } catch (err) {
+      // Just log the error - we already have default values set
+      console.error("Error fetching user profile:", err);
+    }
+  };
+
+  const fetchTransactionDetails = async (transactionId) => {
+    try {
+      const response = await FinanceService.getTransaction(transactionId);
+      if (response.data) {
+        setSelectedTransaction(response.data);
+        updateDialogState('editTransactionOpen', true);
+      }
+    } catch (error) {
+      console.error('Error fetching transaction details:', error);
+      setError('Failed to fetch transaction details');
+    }
+  };
+
   const fetchFinancialData = async () => {
     setLoading(true);
     try {
-      // Fetch financial summary
-      const summaryResponse = await FinanceService.getFinancialSummary();
+      // Parallel API calls for better performance
+      const [summaryResponse, accountsResponse, transactionsResponse, 
+             sharedWithMeResponse, sharedByMeResponse] = await Promise.all([
+        FinanceService.getFinancialSummary(),
+        FinanceService.getAccounts(),
+        FinanceService.getTransactions(),
+        FinanceService.getSharedWalletsWithMe(),
+        FinanceService.getSharedWalletsByMe()
+      ]);
       
-      // Fetch accounts
-      const accountsResponse = await FinanceService.getAccounts();
-      
-      // Fetch recent transactions
-      const transactionsResponse = await FinanceService.getTransactions();
-      
-      // Fetch shared wallets information
-      const sharedWithMeResponse = await FinanceService.getSharedWalletsWithMe();
-      const sharedByMeResponse = await FinanceService.getSharedWalletsByMe();
-      
-      // Process shared wallets info to create a lookup map
+      // Process shared wallets
       const sharedWalletsMap = {};
-      
-      // Add wallets shared with me
-      (sharedWithMeResponse.data || []).forEach(shared => {
-        if (shared.accepted) {
+      [...(sharedWithMeResponse.data || []), ...(sharedByMeResponse.data || [])]
+        .filter(shared => shared.accepted)
+        .forEach(shared => {
           sharedWalletsMap[shared.walletId] = true;
-        }
-      });
+        });
       
-      // Add wallets shared by me
-      (sharedByMeResponse.data || []).forEach(shared => {
-        if (shared.accepted) {
-          sharedWalletsMap[shared.walletId] = true;
-        }
-      });
-      
+      // Update state with fetched data
       setSharedWallets(sharedWalletsMap);
-      
-      // Update financial data
       setFinancialData({
         totalBalance: summaryResponse.data.totalBalance || 0,
         totalIncome: summaryResponse.data.totalIncome || 0,
         totalExpense: summaryResponse.data.totalExpense || 0,
         netSavings: summaryResponse.data.netSavings || 0
       });
-      
-      // Update wallets
       setWallets(accountsResponse.data || []);
       
-      // Process transaction data to ensure profile picture URLs are correct
+      // Process and set transactions
       const processedTransactions = processTransactions(transactionsResponse.data || []);
-      
-      // Update transactions
-      setTransactions(processedTransactions.slice(0, 5)); // Get only the 5 most recent
+      setTransactions(processedTransactions.slice(0, 5));
       setFilteredTransactions(processedTransactions.slice(0, 5));
-      
-      // Store all transactions for search functionality
       setAllTransactions(processedTransactions || []);
     } catch (error) {
       setError('Failed to load financial data. Please try again later.');
-      // Use placeholder data if API fails
       setFinancialData({
         totalBalance: 0,
         totalIncome: 0,
@@ -398,22 +325,69 @@ export default function Dashboard() {
     }
   };
 
-  const handleDrawerOpen = () => {
-    setOpen(true);
+  const fetchTransactions = async (applyFilters = false, filterParams = {}) => {
+    try {
+      const response = applyFilters
+        ? await FinanceService.getFilteredTransactions(filterParams)
+        : await FinanceService.getTransactions();
+      
+      const processedTransactions = processTransactions(response.data || []);
+      setFilteredTransactions(processedTransactions);
+      setAllTransactions(processedTransactions);
+      setTransactions(processedTransactions.slice(0, 5));
+    } catch (err) {
+      console.error('Error fetching transactions:', err);
+    }
   };
 
-  const handleDrawerClose = () => {
-    setOpen(false);
+  const fetchCategories = async () => {
+    try {
+      const [expenseCategoriesResponse, incomeCategoriesResponse, transactionsResponse] = 
+        await Promise.all([
+          FinanceService.getCategoriesByType('EXPENSE'),
+          FinanceService.getCategoriesByType('INCOME'),
+          FinanceService.getTransactions()
+        ]);
+      
+      // Combine categories
+      const allCategoriesData = [
+        ...(expenseCategoriesResponse.data || []),
+        ...(incomeCategoriesResponse.data || [])
+      ];
+      
+      setAllCategories(allCategoriesData);
+      
+      // Find used categories
+      if (transactionsResponse.data?.length > 0) {
+        const usedCategoryIds = new Set();
+        transactionsResponse.data.forEach(transaction => {
+          const categoryId = transaction.category?.id || transaction.categoryId;
+          if (categoryId) usedCategoryIds.add(categoryId.toString());
+        });
+        
+        setCategories(allCategoriesData.filter(category => 
+          usedCategoryIds.has(category.id.toString())
+        ));
+      } else {
+        setCategories([]);
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
   };
+
+  // Event handlers with optimized implementation
+
+  const handleDrawerOpen = () => setOpen(true);
+  const handleDrawerClose = () => setOpen(false);
 
   const handleTransactionAdded = (isUpdate = false) => {
-    // Instead of fetching all data, selectively update what's needed
+    // Update only what's needed
     updateFinancialSummary();
     fetchTransactions();
-    // If a transaction might affect wallet balances, update them too
     updateWallets();
     
-    // Add toast notification for successful transaction
+    // Show success toast
     toast.success(isUpdate ? 'Transaction updated successfully' : 'Transaction added successfully', {
       position: "top-right",
       autoClose: 2000,
@@ -425,76 +399,57 @@ export default function Dashboard() {
   };
 
   const handleAccountAdded = (forceFullRefresh = false) => {
-    // If forceFullRefresh is true, refresh everything including transactions
     if (forceFullRefresh) {
       fetchFinancialData();
       fetchTransactions();
       fetchCategories();
       updateFinancialSummary();
     } else {
-      // Otherwise just update the necessary parts
-      // First update financial data locally
       updateLocalFinancialSummary();
-      
-      // Then update wallets list
       updateWallets();
     }
   };
 
-  // Function to update financial summary without API call
   const updateLocalFinancialSummary = () => {
-    // We need to maintain the same total balance
-    // The real change is in the allocation between wallets and available funds
-    
     setFinancialData(prevData => {
-      // Keep the same total but recalculate components
       const walletBalance = wallets.reduce((total, wallet) => total + wallet.balance, 0);
       return {
         ...prevData,
-        // Total balance remains the same
         allocatedBalance: walletBalance,
         availableBalance: prevData.totalBalance - walletBalance
       };
     });
   };
 
-  // Function to update only wallets
-  const updateWallets = () => {
-    FinanceService.getAccounts().then(response => {
-      if (response && response.data) {
+  const updateWallets = async () => {
+    try {
+      const response = await FinanceService.getAccounts();
+      if (response?.data) {
         setWallets(response.data);
       }
-    }).catch(error => {
+    } catch (error) {
       console.error("Error updating wallets:", error);
-    });
+    }
   };
 
-  const handleCategoryAdded = () => {
-    fetchFinancialData();
-  };
+  const handleCategoryAdded = () => fetchFinancialData();
 
   const handleBalanceAdded = async () => {
-    // Instead of calling fetchFinancialData which fetches all data,
-    // we'll selectively update only what changed
     try {
-      // Fetch only the updated balance
       const summaryResponse = await FinanceService.getFinancialSummary();
       
-      // Update financial data without refreshing everything
       setFinancialData(prevData => ({
         ...prevData,
         totalBalance: summaryResponse.data.totalBalance || 0,
         netSavings: summaryResponse.data.netSavings || 0
       }));
-      
     } catch (error) {
       console.error("Error updating balance:", error);
     }
   };
 
-  // Function to handle editing a transaction
   const handleEditTransaction = (transaction) => {
-    // Create a clean copy of the transaction to avoid reference issues
+    // Create a clean copy with only needed properties
     const transactionToEdit = {
       id: transaction.id,
       transactionType: transaction.transactionType,
@@ -516,53 +471,32 @@ export default function Dashboard() {
     updateDialogState('editTransactionOpen', true);
   };
 
-  // Function to handle closing the edit transaction dialog
-  const handleEditTransactionClose = () => {
-    setSelectedTransaction(null);
-    updateDialogState('editTransactionOpen', false);
-  };
-
-  // Function to handle confirming the edit
-  const handleEditTransactionConfirm = () => {
-    // Close the dialog, TransactionForm component will handle the API call
-    updateDialogState('editTransactionOpen', false);
-    fetchFinancialData(); // Refresh data after edit
-  };
-
-  // Function to handle delete transaction
   const handleDeleteTransaction = (transaction) => {
     setSelectedTransaction(transaction);
     updateDialogState('deleteConfirmOpen', true);
   };
 
-  // Function to confirm delete transaction
   const handleDeleteConfirm = async () => {
     try {
       await FinanceService.deleteTransaction(selectedTransaction.id);
-      updateDialogState('deleteConfirmOpen', false);
-      setAllTransactions(prevTransactions => 
-        prevTransactions.filter(t => t.id !== selectedTransaction.id)
-      );
       
-      setFilteredTransactions(prevTransactions => {
-        const updated = prevTransactions.filter(t => t.id !== selectedTransaction.id);
-        return updated;
+      // Update all affected transaction lists
+      const filterPredicate = t => t.id !== selectedTransaction.id;
+      setAllTransactions(prev => prev.filter(filterPredicate));
+      setFilteredTransactions(prev => prev.filter(filterPredicate));
+      
+      setTransactions(prev => {
+        const updated = prev.filter(filterPredicate);
+        return updated.length < 5 ? allTransactions.filter(filterPredicate).slice(0, 5) : updated;
       });
       
-      setTransactions(prevTransactions => {
-        const updated = prevTransactions.filter(t => t.id !== selectedTransaction.id);
-        if (updated.length < 5) {
-          const allFiltered = allTransactions.filter(t => t.id !== selectedTransaction.id);
-          return allFiltered.slice(0, 5);
-        }
-        return updated;
-      });
-      
+      // Update financial data
       updateFinancialSummary();
-      
       updateWallets();
       
+      // Reset state and show confirmation
       setSelectedTransaction(null);
+      updateDialogState('deleteConfirmOpen', false);
       toast.success('Transaction deleted successfully');
     } catch (error) {
       console.error('Error deleting transaction:', error);
@@ -570,85 +504,10 @@ export default function Dashboard() {
     }
   };
 
-  // Function to fetch transactions with filtering support
-  const fetchTransactions = async (applyFilters = false, filterParams = {}) => {
-    try {
-      let response;
-      
-      if (applyFilters) {
-        // Get filtered transactions using the parameters passed from TransactionsSection
-        response = await FinanceService.getFilteredTransactions(filterParams);
-      } else {
-        // Get all transactions without filters
-        response = await FinanceService.getTransactions();
-      }
-      
-      // Process the transactions to ensure profile picture URLs are correct
-      const processedTransactions = processTransactions(response.data || []);
-      
-      // Update filtered transactions
-      setFilteredTransactions(processedTransactions);
-      setAllTransactions(processedTransactions);
-      
-      // Set dashboard transactions to top 5 of filtered transactions
-      setTransactions(processedTransactions.slice(0, 5));
-      
-    } catch (err) {
-      console.error('Error fetching transactions:', err);
-    }
-  };
-
-  // Function to fetch categories
-  const fetchCategories = async () => {
-    try {
-      // Get both INCOME and EXPENSE categories from API
-      const expenseCategoriesResponse = await FinanceService.getCategoriesByType('EXPENSE');
-      const incomeCategoriesResponse = await FinanceService.getCategoriesByType('INCOME');
-      
-      // Combine both types of categories
-      const allCategoriesData = [
-        ...(expenseCategoriesResponse.data || []),
-        ...(incomeCategoriesResponse.data || [])
-      ];
-      
-      // Store all categories for reference
-      setAllCategories(allCategoriesData);
-      
-      // Get transaction data to find used categories
-      const transactionsResponse = await FinanceService.getTransactions();
-      
-      if (transactionsResponse.data && transactionsResponse.data.length > 0) {
-        // Extract unique category IDs from transactions
-        const usedCategoryIds = new Set();
-        transactionsResponse.data.forEach(transaction => {
-          if (transaction.category && transaction.category.id) {
-            usedCategoryIds.add(transaction.category.id.toString());
-          } else if (transaction.categoryId) {
-            usedCategoryIds.add(transaction.categoryId.toString());
-          }
-        });
-        
-        // Filter to only categories that are used in transactions
-        const usedCategories = allCategoriesData.filter(category => 
-          usedCategoryIds.has(category.id.toString())
-        );
-        
-        setCategories(usedCategories);
-      } else {
-        // If no transactions, just show an empty list
-        setCategories([]);
-      }
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-    }
-  };
-
-  // Function to update financial summary
   const updateFinancialSummary = async () => {
     try {
       const summaryResponse = await FinanceService.getFinancialSummary();
       
-      // Update financial data
       setFinancialData({
         totalBalance: summaryResponse.data.totalBalance || 0,
         totalIncome: summaryResponse.data.totalIncome || 0,
@@ -659,22 +518,24 @@ export default function Dashboard() {
       console.error('Error updating financial summary:', error);
     }
   };
+  
+  const handleProfileUpdated = () => fetchUserProfile();
 
-  // Simplified one-liner function
-  const handleProfileUpdated = () => { fetchUserProfile(); };
-
-  // Add a handler for category updates
   const handleCategoryUpdated = async () => {
     toast.success('Categories updated successfully!');
-    // Refresh data as needed
     await fetchCategories();
-    // If you have transactions that need updating due to category changes
     await fetchTransactions();
   };
 
+  // Loading state
   if (loading) {
     return (
-      <Box className={styles.loadingContainer}>
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh' 
+      }}>
         <CircularProgress />
       </Box>
     );
@@ -694,66 +555,64 @@ export default function Dashboard() {
         <PendingDeletionAlert />
         <Main open={open}>
           <DrawerHeader />
-          <Container maxWidth="lg" className={styles.dashboardContainer}>
-            <Box className={styles.dashboardBackdrop}>
-              <Box className={styles.contentContainer}>
-                <Grid container spacing={2.4}>
-                  {/* Welcome Section */}
-                  <Grid item xs={12}>
-                    <WelcomeSection 
-                      userProfile={userProfile} 
-                      user={user} 
-                      openFinanceActionPanel={() => updateDialogState('financeActionPanel', true)} 
-                    />
-                  </Grid>
-                  
-                  {/* Summary Cards Row */}
-                  <SummaryCards 
-                    financialData={financialData}
-                    loading={loading}
-                    handleEditBalance={() => updateDialogState('editBalanceForm', true)}
-                    handleManageWallets={() => updateDialogState('walletManageForm', true)}
-                    handleAddBalance={() => updateDialogState('addBalanceForm', true)}
-                  />
-                  
-                  {/* Wallet Overview and Chart Side by Side */}
-                  <Grid item xs={12}>
-                    <Grid container spacing={2.4}>
-                      {/* Wallet Overview */}
-                      <Grid item xs={12} md={6}>
-                        <WalletOverview 
-                          onManageWallets={() => updateDialogState('walletManageForm', true)} 
-                          externalWallets={wallets}
-                        />
-                      </Grid>
-                      
-                      {/* Financial Chart */}
-                      <Grid item xs={12} md={6}>
-                        <FinanceChart />
-                      </Grid>
-                    </Grid>
-                  </Grid>
-                  
-                  {/* Transactions Section */}
-                  <TransactionsSection 
-                    transactions={transactions}
-                    allTransactions={allTransactions}
-                    filteredTransactions={filteredTransactions}
-                    categories={categories}
-                    wallets={wallets}
-                    sharedWallets={sharedWallets}
-                    onAddTransaction={() => updateDialogState('transactionForm', true)}
-                    onEditTransaction={handleEditTransaction}
-                    onDeleteTransaction={handleDeleteTransaction}
-                    onApplyFilters={(filterParams) => fetchTransactions(true, filterParams)}
-                    onResetFilters={() => fetchTransactions(false)}
-                    formatCurrency={(amount) => new Intl.NumberFormat('en-US', {
-                      style: 'currency',
-                      currency: 'USD'
-                    }).format(amount)}
+          <Container maxWidth="lg" sx={{ p: 2 }}>
+            <Box sx={{ p: 2, borderRadius: '12px', backgroundColor: 'rgba(255,255,255,0.8)' }}>
+              <Grid container spacing={2.4}>
+                {/* Welcome Section */}
+                <Grid item xs={12}>
+                  <WelcomeSection 
+                    userProfile={userProfile} 
+                    user={user} 
+                    openFinanceActionPanel={() => updateDialogState('financeActionPanel', true)} 
                   />
                 </Grid>
-              </Box>
+                
+                {/* Summary Cards Row */}
+                <SummaryCards 
+                  financialData={financialData}
+                  loading={loading}
+                  handleEditBalance={() => updateDialogState('editBalanceForm', true)}
+                  handleManageWallets={() => updateDialogState('walletManageForm', true)}
+                  handleAddBalance={() => updateDialogState('addBalanceForm', true)}
+                />
+                
+                {/* Wallet Overview and Chart Side by Side */}
+                <Grid item xs={12}>
+                  <Grid container spacing={2.4}>
+                    {/* Wallet Overview */}
+                    <Grid item xs={12} md={6}>
+                      <WalletOverview 
+                        onManageWallets={() => updateDialogState('walletManageForm', true)} 
+                        externalWallets={wallets}
+                      />
+                    </Grid>
+                    
+                    {/* Financial Chart */}
+                    <Grid item xs={12} md={6}>
+                      <FinanceChart />
+                    </Grid>
+                  </Grid>
+                </Grid>
+                
+                {/* Transactions Section */}
+                <TransactionsSection 
+                  transactions={transactions}
+                  allTransactions={allTransactions}
+                  filteredTransactions={filteredTransactions}
+                  categories={categories}
+                  wallets={wallets}
+                  sharedWallets={sharedWallets}
+                  onAddTransaction={() => updateDialogState('transactionForm', true)}
+                  onEditTransaction={handleEditTransaction}
+                  onDeleteTransaction={handleDeleteTransaction}
+                  onApplyFilters={(filterParams) => fetchTransactions(true, filterParams)}
+                  onResetFilters={() => fetchTransactions(false)}
+                  formatCurrency={(amount) => new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: 'USD'
+                  }).format(amount)}
+                />
+              </Grid>
             </Box>
           </Container>
         </Main>

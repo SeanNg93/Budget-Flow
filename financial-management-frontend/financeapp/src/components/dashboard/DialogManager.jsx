@@ -54,75 +54,104 @@ const DialogManager = ({
     updateDialogState('deleteConfirmOpen', false);
   };
 
+  // Standard dialog configurations
+  const standardDialogs = [
+    {
+      name: 'financeActionPanel',
+      component: FinanceActionPanel,
+      props: {
+        setTransactionFormOpen: () => updateDialogState('transactionForm', true),
+        setWalletManageFormOpen: () => updateDialogState('walletManageForm', true),
+        setCategoryManageFormOpen: () => updateDialogState('categoryManageForm', true),
+        setUserTransferDialogOpen: () => updateDialogState('userTransferDialog', true)
+      }
+    },
+    {
+      name: 'walletManageForm',
+      component: WalletManageForm,
+      props: {
+        onWalletUpdated: handleAccountAdded
+      }
+    },
+    {
+      name: 'transactionForm',
+      component: TransactionForm,
+      props: {
+        onTransactionAdded: handleTransactionAdded
+      }
+    },
+    {
+      name: 'accountForm',
+      component: WalletForm,
+      props: {
+        onWalletAdded: handleAccountAdded
+      }
+    },
+    {
+      name: 'categoryForm',
+      component: CategoryForm,
+      props: {
+        onCategoryAdded: handleCategoryAdded
+      }
+    },
+    {
+      name: 'categoryManageForm',
+      component: CategoryManageForm,
+      props: {
+        onCategoryUpdated: handleCategoryUpdated
+      }
+    },
+    {
+      name: 'addBalanceForm',
+      component: AddBalanceForm,
+      props: {
+        onBalanceAdded: handleBalanceAdded
+      }
+    },
+    {
+      name: 'editBalanceForm',
+      component: EditBalanceForm,
+      props: {
+        onBalanceEdited: handleBalanceAdded
+      }
+    },
+    {
+      name: 'profileDialog',
+      component: ProfileDialog,
+      props: {
+        onProfileUpdated: handleProfileUpdated
+      }
+    },
+    {
+      name: 'userTransferDialog',
+      component: UserTransferForm,
+      props: {
+        onTransferCompleted: () => {
+          closeDialog('userTransferDialog');
+          fetchFinancialData();
+        }
+      }
+    }
+  ];
+
   return (
     <>
-      {/* Finance Action Panel */}
-      <FinanceActionPanel 
-        open={dialogStates.financeActionPanel} 
-        handleClose={() => closeDialog('financeActionPanel')} 
-        setTransactionFormOpen={() => updateDialogState('transactionForm', true)}
-        setWalletManageFormOpen={() => updateDialogState('walletManageForm', true)}
-        setCategoryManageFormOpen={() => updateDialogState('categoryManageForm', true)}
-        setUserTransferDialogOpen={() => updateDialogState('userTransferDialog', true)}
-      />
+      {/* Render standard dialogs using the configuration array */}
+      {standardDialogs.map(dialog => {
+        const DialogComponent = dialog.component;
+        return (
+          <DialogComponent
+            key={dialog.name}
+            open={dialogStates[dialog.name]}
+            handleClose={() => closeDialog(dialog.name)}
+            {...dialog.props}
+          />
+        );
+      })}
       
-      {/* Wallet Management Form */}
-      <WalletManageForm 
-        open={dialogStates.walletManageForm} 
-        handleClose={() => closeDialog('walletManageForm')} 
-        onWalletUpdated={handleAccountAdded}
-      />
+      {/* Special case dialogs that need custom handling */}
       
-      {/* Transaction Form */}
-      <TransactionForm 
-        open={dialogStates.transactionForm} 
-        handleClose={() => closeDialog('transactionForm')} 
-        onTransactionAdded={handleTransactionAdded}
-      />
-      
-      {/* Wallet Form */}
-      <WalletForm 
-        open={dialogStates.accountForm} 
-        handleClose={() => closeDialog('accountForm')} 
-        onWalletAdded={handleAccountAdded}
-      />
-      
-      {/* Category Form */}
-      <CategoryForm 
-        open={dialogStates.categoryForm} 
-        handleClose={() => closeDialog('categoryForm')} 
-        onCategoryAdded={handleCategoryAdded}
-      />
-      
-      {/* Category Management Form */}
-      <CategoryManageForm 
-        open={dialogStates.categoryManageForm} 
-        handleClose={() => closeDialog('categoryManageForm')}
-        onCategoryUpdated={handleCategoryUpdated}
-      />
-      
-      {/* Add Balance Form */}
-      <AddBalanceForm 
-        open={dialogStates.addBalanceForm} 
-        handleClose={() => closeDialog('addBalanceForm')} 
-        onBalanceAdded={handleBalanceAdded}
-      />
-      
-      {/* Edit Balance Form */}
-      <EditBalanceForm 
-        open={dialogStates.editBalanceForm} 
-        handleClose={() => closeDialog('editBalanceForm')} 
-        onBalanceEdited={handleBalanceAdded}
-      />
-      
-      {/* Profile Dialog */}
-      <ProfileDialog
-        open={dialogStates.profileDialog}
-        handleClose={() => closeDialog('profileDialog')}
-        onProfileUpdated={handleProfileUpdated}
-      />
-      
-      {/* Edit Transaction Form */}
+      {/* Edit Transaction Form - special case with selected transaction */}
       {selectedTransaction && (
         <TransactionForm 
           key={`edit-transaction-${selectedTransaction.id}`}
@@ -136,17 +165,7 @@ const DialogManager = ({
         />
       )}
       
-      {/* User Transfer Form */}
-      <UserTransferForm
-        open={dialogStates.userTransferDialog}
-        handleClose={() => closeDialog('userTransferDialog')}
-        onTransferCompleted={() => {
-          closeDialog('userTransferDialog');
-          fetchFinancialData();
-        }}
-      />
-      
-      {/* Share Wallet Form */}
+      {/* Share Wallet Form - special case with wallet selection */}
       <ShareWalletForm
         open={dialogStates.shareWalletDialog && selectedWallet}
         wallet={selectedWallet ? wallets.find(w => w.id === selectedWallet) : null}
@@ -161,7 +180,7 @@ const DialogManager = ({
         }}
       />
       
-      {/* Transfer Dialog */}
+      {/* Transfer Dialog - special embedded dialog */}
       <Dialog
         open={dialogStates.transferDialog}
         onClose={() => closeDialog('transferDialog')}

@@ -75,17 +75,15 @@ const TransactionsSection = ({
     setShowCustomDateRange(value === 'custom');
   };
 
-  // Function to apply filters
-  const applyTransactionFilters = () => {
-    setIsFiltering(true);
-    
+  // Helper to calculate filter parameters
+  const calculateFilterParams = () => {
     let filterParams = {};
     
     // Calculate date range
     if (showCustomDateRange) {
       filterParams.startDate = customStartDate.toISOString();
       filterParams.endDate = customEndDate.toISOString();
-    } else {
+    } else if (filterTimeframe !== 'all') {
       // Calculate date range based on timeframe
       const now = new Date();
       let startDate;
@@ -106,11 +104,8 @@ const TransactionsSection = ({
         case 'year':
           startDate = subDays(now, 365);
           break;
-        case 'all':
-          // Don't set dates for "all" timeframe
-          break;
         default:
-          startDate = subDays(now, 7); // Default to a week
+          startDate = null;
       }
       
       if (startDate) {
@@ -128,7 +123,13 @@ const TransactionsSection = ({
       filterParams.categoryId = filterCategoryId;
     }
     
-    // Call the parent component's filter handler
+    return filterParams;
+  };
+
+  // Function to apply filters
+  const applyTransactionFilters = () => {
+    setIsFiltering(true);
+    const filterParams = calculateFilterParams();
     onApplyFilters(filterParams);
     setIsFiltering(false);
   };
@@ -184,14 +185,13 @@ const TransactionsSection = ({
     }
     
     // Filter transactions based on search term
+    const searchTermLower = value.toLowerCase();
     const filtered = allTransactions.filter(transaction => {
-      const searchTermLower = value.toLowerCase();
-      
       // Search in description
       const descriptionMatch = transaction.description && 
         transaction.description.toLowerCase().includes(searchTermLower);
       
-      // Search in category - handle different category data structures
+      // Search in category
       let categoryMatch = false;
       if (transaction.category && transaction.category.categoryName) {
         categoryMatch = transaction.category.categoryName.toLowerCase().includes(searchTermLower);
@@ -199,34 +199,29 @@ const TransactionsSection = ({
         categoryMatch = transaction.categoryName.toLowerCase().includes(searchTermLower);
       }
       
-      // Search in amount - convert amount to string
+      // Search in amount
       const amountStr = transaction.amount ? transaction.amount.toString() : '';
       const amountMatch = amountStr.includes(value);
       
-      // Return true if any field matches
       return descriptionMatch || categoryMatch || amountMatch;
     });
     
     setSearchResults(filtered);
   };
 
-  // Function to toggle search input visibility
+  // Toggle search input visibility
   const toggleSearch = () => {
     if (searchOpen) {
-      // If search is open, close it properly
       closeSearch();
     } else {
-      // If search is closed, open it
       setSearchOpen(true);
-      // Clear previous search when opening
       setSearchTerm('');
       setSearchResults([]);
-      // Focus the input field when it appears
       setTimeout(() => {
         if (searchInputRef.current) {
           searchInputRef.current.focus();
         }
-      }, 300); // Delay to wait for animation
+      }, 300);
     }
   };
 
@@ -251,6 +246,301 @@ const TransactionsSection = ({
       searchInputRef.current.focus();
     }
   }, [searchOpen]);
+
+  // Render transactions table
+  const renderTransactionsTable = () => {
+    if (isFiltering) {
+      return (
+        <Box className={styles.loadingBox}>
+          <CircularProgress />
+        </Box>
+      );
+    }
+    
+    if (displayTransactions.length === 0) {
+      return (
+        <Box className={styles.emptyTransactionsBox}>
+          <Typography variant="body1" color="text.secondary">
+            {searchTerm ? `No transactions found matching "${searchTerm}"` : 
+             (transactionFilterOpen ? 'No transactions match your filter criteria.' : 
+             'No transactions to display. Start adding your financial data to see it here.')}
+          </Typography>
+        </Box>
+      );
+    }
+    
+    return (
+      <TableContainer 
+        className={styles.tableContainer}
+        component={Paper}
+        elevation={0}
+        sx={{ 
+          borderRadius: '0.75rem',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+          border: '1px solid rgba(224, 224, 224, 0.7)'
+        }}
+      >
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell className={styles.tableHeaderCell}>Date</TableCell>
+              <TableCell className={styles.tableHeaderCell}>Description</TableCell>
+              <TableCell className={styles.tableHeaderCell}>Category</TableCell>
+              <TableCell className={styles.tableHeaderCell}>Wallet</TableCell>
+              <TableCell className={styles.tableHeaderCell}>Type</TableCell>
+              <TableCell className={styles.tableHeaderCell}>Amount</TableCell>
+              <TableCell className={styles.tableHeaderCell} align="center">Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {displayTransactions.map((transaction) => (
+              <TableRow 
+                key={transaction.id}
+                className={styles.tableRow}
+              >
+                <TableCell className={styles.tableCell}>{formatDate(transaction.transactionDate)}</TableCell>
+                <TableCell className={styles.tableCellBold}>{transaction.description}</TableCell>
+                <TableCell className={styles.tableCell}>
+                  {transaction.category ? transaction.category.categoryName : 
+                   (transaction.categoryId ? `Category #${transaction.categoryId}` : 'Uncategorized')}
+                </TableCell>
+                <TableCell className={styles.tableCell}>
+                  {transaction.wallet ? (
+                    <>
+                      {transaction.wallet.accountName}
+                      {sharedWallets[transaction.wallet.id] && " (shared)"}
+                    </>
+                  ) : (
+                    transaction.account ? transaction.account.accountName : 
+                    'Unknown'
+                  )}
+                </TableCell>
+                <TableCell className={styles.tableCell}>
+                  <Box
+                    className={transaction.transactionType === 'INCOME' 
+                      ? styles.incomeTag 
+                      : styles.expenseTag}
+                    sx={{ display: 'flex', alignItems: 'center' }}
+                  >
+                    {transaction.transactionType}
+                    {transaction.user && transaction.wallet && sharedWallets[transaction.wallet.id] && (
+                      <Tooltip 
+                        title={`Created by: ${transaction.user.username}`}
+                        arrow
+                        placement="top"
+                        classes={{ tooltip: styles.creatorTooltip }}
+                      >
+                        <Avatar
+                          src={transaction.user.profilePicture || undefined}
+                          alt={transaction.user.username}
+                          className={styles.creatorAvatar}
+                        >
+                          {transaction.user.username ? transaction.user.username.charAt(0).toUpperCase() : '?'}
+                        </Avatar>
+                      </Tooltip>
+                    )}
+                  </Box>
+                </TableCell>
+                <TableCell className={styles.tableCell}>
+                  {transaction.transactionType === 'INCOME' ? (
+                    <Typography variant="body2" color="success.main" sx={{ fontWeight: 600 }}>
+                      +{formatCurrency(transaction.amount, transaction.currency)}
+                    </Typography>
+                  ) : (
+                    <Typography variant="body2" color="error.main" sx={{ fontWeight: 600 }}>
+                      -{formatCurrency(transaction.amount, transaction.currency)}
+                    </Typography>
+                  )}
+                </TableCell>
+                <TableCell className={styles.tableCell}>
+                  <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                    <IconButton 
+                      size="small" 
+                      color="primary" 
+                      onClick={() => onEditTransaction(transaction)}
+                      className={styles.editButton}
+                      sx={{ mx: 0.5 }}
+                    >
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton 
+                      size="small" 
+                      color="error" 
+                      onClick={() => onDeleteTransaction(transaction)}
+                      className={styles.deleteButton}
+                      sx={{ mx: 0.5 }}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Box>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        
+        {/* Show search results message if searching */}
+        {searchTerm && (
+          <Box className={styles.searchResultsInfo}>
+            <Typography variant="body2" color="textSecondary">
+              Found {searchResults.length} {searchResults.length === 1 ? 'transaction' : 'transactions'} 
+              matching "{searchTerm}"
+            </Typography>
+          </Box>
+        )}
+      </TableContainer>
+    );
+  };
+
+  // Render filter controls
+  const renderFilterControls = () => (
+    <Collapse in={transactionFilterOpen}>
+      <Box className={styles.filterControls}>
+        <Grid container spacing={2} alignItems="flex-end">
+          <Grid item xs={12} sm={6} md={3}>
+            <FormControl fullWidth size="small">
+              <InputLabel id="time-period-label">Time Period</InputLabel>
+              <Select
+                labelId="time-period-label"
+                value={filterTimeframe}
+                label="Time Period"
+                onChange={handleTimeframeChange}
+                className={styles.filterSelect}
+              >
+                <MenuItem value="day">Last 24 Hours</MenuItem>
+                <MenuItem value="week">Last 7 Days</MenuItem>
+                <MenuItem value="month">Last 30 Days</MenuItem>
+                <MenuItem value="quarter">Last 3 Months</MenuItem>
+                <MenuItem value="year">Last Year</MenuItem>
+                <MenuItem value="all">All Time</MenuItem>
+                <MenuItem value="custom">Custom Range</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+          
+          <Grid item xs={12} sm={6} md={3}>
+            <FormControl fullWidth size="small">
+              <InputLabel id="wallet-filter-label">Wallet</InputLabel>
+              <Select
+                labelId="wallet-filter-label"
+                value={filterWalletId}
+                label="Wallet"
+                onChange={(e) => setFilterWalletId(e.target.value)}
+                className={styles.filterSelect}
+              >
+                <MenuItem value="all">All Wallets</MenuItem>
+                {wallets.map((wallet) => (
+                  <MenuItem key={wallet.id} value={wallet.id.toString()}>
+                    {wallet.accountName}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+          
+          <Grid item xs={12} sm={6} md={3}>
+            <FormControl fullWidth size="small">
+              <InputLabel id="category-filter-label">Category</InputLabel>
+              <Select
+                labelId="category-filter-label"
+                value={filterCategoryId}
+                label="Category"
+                onChange={(e) => setFilterCategoryId(e.target.value)}
+                className={styles.filterSelect}
+              >
+                <MenuItem value="all">All Categories</MenuItem>
+                {categories.map((category) => (
+                  <MenuItem key={category.id} value={category.id.toString()}>
+                    {category.categoryName} {category.type === 'INCOME' ? '(Income)' : '(Expense)'}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+          
+          {/* Custom Date Range Fields */}
+          <Grid item xs={12} sm={showCustomDateRange ? 12 : 6} md={showCustomDateRange ? 6 : 3} sx={{ display: 'flex', gap: 1 }}>
+            {showCustomDateRange ? (
+              <>
+                <Box sx={{ flex: 1 }}>
+                  <DatePicker 
+                    label="Start Date" 
+                    value={customStartDate}
+                    onChange={handleStartDateChange}
+                    className={styles.filterDateField}
+                    format='dd/MM/yyyy'
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        size: "small"
+                      }
+                    }}
+                  />
+                </Box>
+                <Box sx={{ flex: 1 }}>
+                  <DatePicker 
+                    label="End Date" 
+                    value={customEndDate}
+                    onChange={handleEndDateChange}
+                    className={styles.filterDateField}
+                    format='dd/MM/yyyy'
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        size: "small"
+                      }
+                    }}
+                  />
+                </Box>
+              </>
+            ) : (
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
+                <Button
+                  color="primary"
+                  onClick={resetTransactionFilters}
+                  className={styles.resetFilterButton}
+                  disabled={isFiltering}
+                >
+                  Reset
+                </Button>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={applyTransactionFilters}
+                  className={styles.applyFilterButton}
+                  disabled={isFiltering}
+                >
+                  {isFiltering ? 'Loading...' : 'Apply Filters'}
+                </Button>
+              </Box>
+            )}
+          </Grid>
+          
+          {showCustomDateRange && (
+            <Grid item xs={12} sm={12} md={6} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <Button
+                color="primary"
+                onClick={resetTransactionFilters}
+                className={styles.resetFilterButton}
+                disabled={isFiltering}
+              >
+                Reset
+              </Button>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={applyTransactionFilters}
+                className={styles.applyFilterButton}
+                disabled={isFiltering}
+              >
+                {isFiltering ? 'Loading...' : 'Apply Filters'}
+              </Button>
+            </Grid>
+          )}
+        </Grid>
+      </Box>
+    </Collapse>
+  );
 
   return (
     <Grid item xs={12}>
@@ -325,287 +615,11 @@ const TransactionsSection = ({
           </Box>
         </Box>
         
-        {/* Filter Controls - Shown when filter button is clicked */}
-        <Collapse in={transactionFilterOpen}>
-          <Box className={styles.filterControls}>
-            <Grid container spacing={2} alignItems="flex-end">
-              <Grid item xs={12} sm={6} md={3}>
-                <FormControl fullWidth size="small">
-                  <InputLabel id="time-period-label">Time Period</InputLabel>
-                  <Select
-                    labelId="time-period-label"
-                    value={filterTimeframe}
-                    label="Time Period"
-                    onChange={handleTimeframeChange}
-                    className={styles.filterSelect}
-                  >
-                    <MenuItem value="day">Last 24 Hours</MenuItem>
-                    <MenuItem value="week">Last 7 Days</MenuItem>
-                    <MenuItem value="month">Last 30 Days</MenuItem>
-                    <MenuItem value="quarter">Last 3 Months</MenuItem>
-                    <MenuItem value="year">Last Year</MenuItem>
-                    <MenuItem value="all">All Time</MenuItem>
-                    <MenuItem value="custom">Custom Range</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              
-              <Grid item xs={12} sm={6} md={3}>
-                <FormControl fullWidth size="small">
-                  <InputLabel id="wallet-filter-label">Wallet</InputLabel>
-                  <Select
-                    labelId="wallet-filter-label"
-                    value={filterWalletId}
-                    label="Wallet"
-                    onChange={(e) => setFilterWalletId(e.target.value)}
-                    className={styles.filterSelect}
-                  >
-                    <MenuItem value="all">All Wallets</MenuItem>
-                    {wallets.map((wallet) => (
-                      <MenuItem key={wallet.id} value={wallet.id.toString()}>
-                        {wallet.accountName}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              
-              <Grid item xs={12} sm={6} md={3}>
-                <FormControl fullWidth size="small">
-                  <InputLabel id="category-filter-label">Category</InputLabel>
-                  <Select
-                    labelId="category-filter-label"
-                    value={filterCategoryId}
-                    label="Category"
-                    onChange={(e) => setFilterCategoryId(e.target.value)}
-                    className={styles.filterSelect}
-                  >
-                    <MenuItem value="all">All Categories</MenuItem>
-                    {categories.map((category) => (
-                      <MenuItem key={category.id} value={category.id.toString()}>
-                        {category.categoryName} {category.type === 'INCOME' ? '(Income)' : '(Expense)'}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              
-              {/* Custom Date Range Fields */}
-              <Grid item xs={12} sm={showCustomDateRange ? 12 : 6} md={showCustomDateRange ? 6 : 3} sx={{ display: 'flex', gap: 1 }}>
-                {showCustomDateRange ? (
-                  <>
-                    <Box sx={{ flex: 1 }}>
-                      <DatePicker 
-                        label="Start Date" 
-                        value={customStartDate}
-                        onChange={handleStartDateChange}
-                        className={styles.filterDateField}
-                        format='dd/MM/yyyy'
-                        slotProps={{
-                          textField: {
-                            fullWidth: true,
-                            size: "small"
-                          }
-                        }}
-                      />
-                    </Box>
-                    <Box sx={{ flex: 1 }}>
-                      <DatePicker 
-                        label="End Date" 
-                        value={customEndDate}
-                        onChange={handleEndDateChange}
-                        className={styles.filterDateField}
-                        format='dd/MM/yyyy'
-                        slotProps={{
-                          textField: {
-                            fullWidth: true,
-                            size: "small"
-                          }
-                        }}
-                      />
-                    </Box>
-                  </>
-                ) : (
-                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
-                    <Button
-                      color="primary"
-                      onClick={resetTransactionFilters}
-                      className={styles.resetFilterButton}
-                      disabled={isFiltering}
-                    >
-                      Reset
-                    </Button>
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      onClick={applyTransactionFilters}
-                      className={styles.applyFilterButton}
-                      disabled={isFiltering}
-                    >
-                      {isFiltering ? 'Loading...' : 'Apply Filters'}
-                    </Button>
-                  </Box>
-                )}
-              </Grid>
-              
-              {showCustomDateRange && (
-                <Grid item xs={12} sm={12} md={6} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                  <Button
-                    color="primary"
-                    onClick={resetTransactionFilters}
-                    className={styles.resetFilterButton}
-                    disabled={isFiltering}
-                  >
-                    Reset
-                  </Button>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={applyTransactionFilters}
-                    className={styles.applyFilterButton}
-                    disabled={isFiltering}
-                  >
-                    {isFiltering ? 'Loading...' : 'Apply Filters'}
-                  </Button>
-                </Grid>
-              )}
-            </Grid>
-          </Box>
-        </Collapse>
+        {/* Filter Controls */}
+        {renderFilterControls()}
         
-        {isFiltering ? (
-          <Box className={styles.loadingBox}>
-            <CircularProgress />
-          </Box>
-        ) : displayTransactions.length > 0 ? (
-          <TableContainer 
-            className={styles.tableContainer}
-            component={Paper}
-            elevation={0}
-            sx={{ 
-              borderRadius: '0.75rem',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-              border: '1px solid rgba(224, 224, 224, 0.7)'
-            }}
-          >
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell className={styles.tableHeaderCell}>Date</TableCell>
-                  <TableCell className={styles.tableHeaderCell}>Description</TableCell>
-                  <TableCell className={styles.tableHeaderCell}>Category</TableCell>
-                  <TableCell className={styles.tableHeaderCell}>Wallet</TableCell>
-                  <TableCell className={styles.tableHeaderCell}>Type</TableCell>
-                  <TableCell className={styles.tableHeaderCell}>Amount</TableCell>
-                  <TableCell className={styles.tableHeaderCell} align="center">Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {displayTransactions.map((transaction) => (
-                  <TableRow 
-                    key={transaction.id}
-                    className={styles.tableRow}
-                  >
-                    <TableCell className={styles.tableCell}>{formatDate(transaction.transactionDate)}</TableCell>
-                    <TableCell className={styles.tableCellBold}>{transaction.description}</TableCell>
-                    <TableCell className={styles.tableCell}>
-                      {transaction.category ? transaction.category.categoryName : 
-                       (transaction.categoryId ? `Category #${transaction.categoryId}` : 'Uncategorized')}
-                    </TableCell>
-                    <TableCell className={styles.tableCell}>
-                      {transaction.wallet ? (
-                        <>
-                          {transaction.wallet.accountName}
-                          {sharedWallets[transaction.wallet.id] && " (shared)"}
-                        </>
-                      ) : (
-                        transaction.account ? transaction.account.accountName : 
-                        'Unknown'
-                      )}
-                    </TableCell>
-                    <TableCell className={styles.tableCell}>
-                      <Box
-                        className={transaction.transactionType === 'INCOME' 
-                          ? styles.incomeTag 
-                          : styles.expenseTag}
-                        sx={{ display: 'flex', alignItems: 'center' }}
-                      >
-                        {transaction.transactionType}
-                        {transaction.user && transaction.wallet && sharedWallets[transaction.wallet.id] && (
-                          <Tooltip 
-                            title={`Created by: ${transaction.user.username}`}
-                            arrow
-                            placement="top"
-                            classes={{ tooltip: styles.creatorTooltip }}
-                          >
-                            <Avatar
-                              src={transaction.user.profilePicture || undefined}
-                              alt={transaction.user.username}
-                              className={styles.creatorAvatar}
-                            >
-                              {transaction.user.username ? transaction.user.username.charAt(0).toUpperCase() : '?'}
-                            </Avatar>
-                          </Tooltip>
-                        )}
-                      </Box>
-                    </TableCell>
-                    <TableCell className={styles.tableCell}>
-                      {transaction.transactionType === 'INCOME' ? (
-                        <Typography variant="body2" color="success.main" sx={{ fontWeight: 600 }}>
-                          +{formatCurrency(transaction.amount, transaction.currency)}
-                        </Typography>
-                      ) : (
-                        <Typography variant="body2" color="error.main" sx={{ fontWeight: 600 }}>
-                          -{formatCurrency(transaction.amount, transaction.currency)}
-                        </Typography>
-                      )}
-                    </TableCell>
-                    <TableCell className={styles.tableCell}>
-                      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                        <IconButton 
-                          size="small" 
-                          color="primary" 
-                          onClick={() => onEditTransaction(transaction)}
-                          className={styles.editButton}
-                          sx={{ mx: 0.5 }}
-                        >
-                          <EditIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton 
-                          size="small" 
-                          color="error" 
-                          onClick={() => onDeleteTransaction(transaction)}
-                          className={styles.deleteButton}
-                          sx={{ mx: 0.5 }}
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </Box>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            
-            {/* Show search results message if searching */}
-            {searchTerm && (
-              <Box className={styles.searchResultsInfo}>
-                <Typography variant="body2" color="textSecondary">
-                  Found {searchResults.length} {searchResults.length === 1 ? 'transaction' : 'transactions'} 
-                  matching "{searchTerm}"
-                </Typography>
-              </Box>
-            )}
-          </TableContainer>
-        ) : (
-          <Box className={styles.emptyTransactionsBox}>
-            <Typography variant="body1" color="text.secondary">
-              {searchTerm ? `No transactions found matching "${searchTerm}"` : 
-               (transactionFilterOpen ? 'No transactions match your filter criteria.' : 
-               'No transactions to display. Start adding your financial data to see it here.')}
-            </Typography>
-          </Box>
-        )}
+        {/* Transactions Table */}
+        {renderTransactionsTable()}
       </Paper>
     </Grid>
   );

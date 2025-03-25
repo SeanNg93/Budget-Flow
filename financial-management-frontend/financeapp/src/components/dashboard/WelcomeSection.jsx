@@ -8,16 +8,21 @@ import styles from '../../styles/dashboard.module.css';
  * and provides introduction text to the dashboard
  */
 const WelcomeSection = ({ userProfile, user, openFinanceActionPanel }) => {
+  // Common configuration for DecryptedText components
+  const commonTextProps = {
+    animateOn: "view",
+    revealDirection: "start",
+    sequential: true,
+    maxIterations: 8,
+    speed: 50
+  };
+
   return (
     <Paper className={styles.welcomeCard}>
       <Box className={styles.welcomeHeader}>
         <DecryptedText
+          {...commonTextProps}
           text={`Welcome, ${userProfile?.fullName || user?.username || 'User'}!`}
-          animateOn="view"
-          revealDirection="start"
-          speed={50}  // Higher speed value = slower animation
-          sequential={true}  // Change to true for more visible character-by-character effect
-          maxIterations={8}  // More iterations = longer animation
           className={styles.welcomeTitle}
           parentClassName={styles.welcomeTitleContainer}
         />
@@ -28,21 +33,15 @@ const WelcomeSection = ({ userProfile, user, openFinanceActionPanel }) => {
         className={styles.welcomeSubtitle}
       >
         <DecryptedText
+          {...commonTextProps}
           text="This is your financial dashboard. Here you can manage your finances, track expenses, and plan your budget."
-          animateOn="view"
-          revealDirection="start"
-          speed={20} // Lower value = faster animation (reduced from 50 to 20)
-          sequential={true}
-          maxIterations={5} // Reduced iterations for faster completion
+          speed={20} // Override speed for faster animation
+          maxIterations={5} // Override iterations for faster completion
         />
         {' '} <br></br>
         <DecryptedText
+          {...commonTextProps}
           text="Click here"
-          animateOn="view"
-          revealDirection="start"
-          speed={50}
-          sequential={true}
-          maxIterations={8}
           onClick={openFinanceActionPanel}
           style={{ 
             color: '#007aff', 
@@ -53,12 +52,8 @@ const WelcomeSection = ({ userProfile, user, openFinanceActionPanel }) => {
         />
         {' '}
         <DecryptedText
+          {...commonTextProps}
           text="for quick navigation."
-          animateOn="view"
-          revealDirection="start"
-          speed={50}
-          sequential={true}
-          maxIterations={8}
         />
       </Typography>
     </Paper>
