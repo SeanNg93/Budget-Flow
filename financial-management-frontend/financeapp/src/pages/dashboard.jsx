@@ -151,9 +151,9 @@ export default function Dashboard() {
       
       // Only try to fetch user profile if we already have the data
       if (user.hasProfile) {
-        fetchUserProfile();
-      }
-      
+      fetchUserProfile();
+    }
+
       fetchCategories();
     }
   }, [user]);
@@ -180,25 +180,25 @@ export default function Dashboard() {
     });
     
     // Handle item selection from search
-    if (location.state.selectedWallet) {
-      setSelectedWallet(location.state.selectedWallet);
+      if (location.state.selectedWallet) {
+        setSelectedWallet(location.state.selectedWallet);
       updateDialogState('walletManageForm', true);
-    }
-    
-    if (location.state.selectedTransaction) {
-      const transactionId = location.state.selectedTransaction;
-      const transaction = transactions.find(t => t.id === transactionId);
-      
-      if (transaction) {
-        setSelectedTransaction(transaction);
-        updateDialogState('editTransactionOpen', true);
-      } else {
-        fetchTransactionDetails(transactionId);
       }
-    }
     
+      if (location.state.selectedTransaction) {
+        const transactionId = location.state.selectedTransaction;
+        const transaction = transactions.find(t => t.id === transactionId);
+      
+        if (transaction) {
+          setSelectedTransaction(transaction);
+        updateDialogState('editTransactionOpen', true);
+        } else {
+          fetchTransactionDetails(transactionId);
+        }
+      }
+      
     // Clear location state
-    navigate(location.pathname, { replace: true });
+      navigate(location.pathname, { replace: true });
   }, [location, transactions]);
 
   // Authentication check
@@ -249,7 +249,7 @@ export default function Dashboard() {
       
       console.log('Attempting to fetch user profile data...');
       const response = await FinanceService.getUserProfile(user.id);
-      
+
       if (response.data) {
         console.log('Profile data received successfully');
         setUserProfile(prevProfile => ({
@@ -518,9 +518,9 @@ export default function Dashboard() {
       console.error('Error updating financial summary:', error);
     }
   };
-  
-  const handleProfileUpdated = () => fetchUserProfile();
 
+  const handleProfileUpdated = () => fetchUserProfile();
+  
   const handleCategoryUpdated = async () => {
     toast.success('Categories updated successfully!');
     await fetchCategories();
@@ -557,17 +557,17 @@ export default function Dashboard() {
           <DrawerHeader />
           <Container maxWidth="lg" sx={{ p: 2 }}>
             <Box sx={{ p: 2, borderRadius: '12px', backgroundColor: 'rgba(255,255,255,0.8)' }}>
-              <Grid container spacing={2.4}>
+                <Grid container spacing={2.4}>
                 {/* Welcome Section */}
-                <Grid item xs={12}>
+                  <Grid item xs={12}>
                   <WelcomeSection 
                     userProfile={userProfile} 
                     user={user} 
                     openFinanceActionPanel={() => updateDialogState('financeActionPanel', true)} 
                   />
-                </Grid>
-                
-                {/* Summary Cards Row */}
+                  </Grid>
+                  
+                  {/* Summary Cards Row */}
                 <SummaryCards 
                   financialData={financialData}
                   loading={loading}
@@ -575,25 +575,25 @@ export default function Dashboard() {
                   handleManageWallets={() => updateDialogState('walletManageForm', true)}
                   handleAddBalance={() => updateDialogState('addBalanceForm', true)}
                 />
-                
-                {/* Wallet Overview and Chart Side by Side */}
-                <Grid item xs={12}>
-                  <Grid container spacing={2.4}>
-                    {/* Wallet Overview */}
-                    <Grid item xs={12} md={6}>
-                      <WalletOverview 
+                  
+                  {/* Wallet Overview and Chart Side by Side */}
+                  <Grid item xs={12}>
+                    <Grid container spacing={2.4}>
+                      {/* Wallet Overview */}
+                      <Grid item xs={12} md={6}>
+                        <WalletOverview 
                         onManageWallets={() => updateDialogState('walletManageForm', true)} 
-                        externalWallets={wallets}
-                      />
-                    </Grid>
-                    
-                    {/* Financial Chart */}
-                    <Grid item xs={12} md={6}>
-                      <FinanceChart />
+                          externalWallets={wallets}
+                        />
+                      </Grid>
+                      
+                      {/* Financial Chart */}
+                      <Grid item xs={12} md={6}>
+                        <FinanceChart />
+                      </Grid>
                     </Grid>
                   </Grid>
-                </Grid>
-                
+                  
                 {/* Transactions Section */}
                 <TransactionsSection 
                   transactions={transactions}
@@ -612,7 +612,7 @@ export default function Dashboard() {
                     currency: 'USD'
                   }).format(amount)}
                 />
-              </Grid>
+                            </Grid>
             </Box>
           </Container>
         </Main>

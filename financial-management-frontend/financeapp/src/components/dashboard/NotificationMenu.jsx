@@ -340,9 +340,9 @@ const NotificationMenu = () => {
   
   return (
     <>
-      <IconButton
+      <IconButton 
         aria-label="show notifications"
-        color="inherit"
+        color="inherit" 
         onClick={handleMenuOpen}
         size="large"
         className={styles.badgeContainer}

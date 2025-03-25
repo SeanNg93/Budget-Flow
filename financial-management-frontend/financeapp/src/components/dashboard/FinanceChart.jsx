@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   BarChart,
   Bar,
@@ -17,10 +17,8 @@ import {
   Button,
   IconButton,
   Typography,
-  Grid,
   Divider,
-  CircularProgress,
-  ButtonGroup
+  CircularProgress
 } from '@mui/material';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
@@ -29,10 +27,153 @@ import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfQuarte
 import styles from '../../styles/financeChart.module.css';
 import FinanceService from '../../services/FinanceService';
 
+// Time range configuration
+const TIME_RANGES = [
+  { value: 'year', label: 'Year' },
+  { value: 'quarter', label: 'Quarter' },
+  { value: 'month', label: 'Month' },
+  { value: 'week', label: 'Week' }
+];
+
+// Chart summary item component
+const SummaryItem = React.memo(({ label, value, color, onClick, isMockMode }) => (
+  <Box 
+    className={styles.summaryItem} 
+    onClick={onClick}
+    sx={{ 
+      cursor: onClick ? 'pointer' : 'default',
+      position: 'relative',
+      ...(isMockMode && {
+        '&::after': {
+          content: '"DEMO"',
+          position: 'absolute',
+          top: '-5px',
+          right: '-5px',
+          fontSize: '9px',
+          backgroundColor: 'primary.main',
+          color: 'white',
+          padding: '2px 4px',
+          borderRadius: '4px',
+          opacity: 0.8
+        }
+      })
+    }}
+    aria-label={label}
+    role={onClick ? "button" : undefined}
+  >
+    <Typography className={styles.summaryLabel}>{label}</Typography>
+    <Typography className={styles.summaryValue} color={color}>{value}</Typography>
+  </Box>
+));
+
+// Chart content state component
+const ChartContent = React.memo(({ loading, renderError, chartData, onRetry, formatCurrency }) => {
+  if (loading) {
+    return (
+      <Box className={styles.loadingContainer}>
+        <CircularProgress aria-label="Loading chart data" />
+      </Box>
+    );
+  }
+  
+  if (renderError) {
+    return (
+      <Box className={styles.errorContainer}>
+        <Typography color="error" align="center">
+          Unable to render chart. Please try again later.
+        </Typography>
+        <Box mt={2}>
+          <Button 
+            variant="outlined"
+            color="primary"
+            onClick={onRetry}
+            aria-label="Retry loading chart"
+          >
+            Retry
+          </Button>
+        </Box>
+      </Box>
+    );
+  }
+  
+  if (chartData.length === 0) {
+    return (
+      <Box className={styles.loadingContainer} sx={{ bgcolor: 'rgba(0, 0, 0, 0.01)' }}>
+        <Typography color="textSecondary" align="center">
+          No financial data available for this time period.
+        </Typography>
+        <Typography color="textSecondary" align="center" variant="body2" sx={{ mt: 1 }}>
+          Add transactions to see your financial performance chart.
+        </Typography>
+      </Box>
+    );
+  }
+  
+  return (
+    <ResponsiveContainer width="100%" height={240}>
+      <BarChart
+        data={chartData}
+        margin={{
+          top: 5,
+          right: 30,
+          left: -10,
+          bottom: 5,
+        }}
+        barSize={40}
+        barGap={5}
+      >
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+        <YAxis tick={{ fontSize: 11 }} />
+        <Tooltip formatter={(value) => formatCurrency(value)} />
+        <Legend wrapperStyle={{ fontSize: '11px' }} />
+        <Bar dataKey="income" name="Income" fill="#4caf50" />
+        <Bar dataKey="expenses" name="Expenses" fill="#f44336" />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+});
+
+// Time range navigation component
+const TimeRangeNavigation = React.memo(({ 
+  timeRangeIndex, 
+  handleTimeRangeChange 
+}) => (
+  <Box className={styles.timeRangeControls}>
+    <IconButton 
+      onClick={() => handleTimeRangeChange('prev')}
+      disabled={timeRangeIndex >= TIME_RANGES.length - 1}
+      size="small"
+      className={styles.navButton}
+      aria-label="Previous time range"
+    >
+      <NavigateBeforeIcon fontSize="small" />
+    </IconButton>
+
+    <Typography 
+      variant="subtitle2" 
+      className={styles.timeRangeLabel}
+    >
+      {TIME_RANGES[timeRangeIndex].label}
+    </Typography>
+    
+    <IconButton 
+      onClick={() => handleTimeRangeChange('next')}
+      disabled={timeRangeIndex <= 0}
+      size="small"
+      className={styles.navButton}
+      aria-label="Next time range"
+    >
+      <NavigateNextIcon fontSize="small" />
+    </IconButton>
+  </Box>
+));
+
 const FinanceChart = () => {
+  // State management
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [timeRange, setTimeRange] = useState('week');
+  const [timeRangeIndex, setTimeRangeIndex] = useState(3); // Default to week (3)
   const [startDate, setStartDate] = useState(startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [endDate, setEndDate] = useState(endOfWeek(new Date(), { weekStartsOn: 1 }));
   const [summaryData, setSummaryData] = useState({
@@ -41,63 +182,58 @@ const FinanceChart = () => {
     netSavings: 0
   });
   const [renderError, setRenderError] = useState(false);
-  const [timeRangeIndex, setTimeRangeIndex] = useState(3); // Default to week (3)
   const [incomeLabelClicks, setIncomeLabelClicks] = useState(0);
   const [mockDataMode, setMockDataMode] = useState(false);
 
-  // Time range options
-  const timeRangeOptions = [
-    { value: 'year', label: 'Year' },
-    { value: 'quarter', label: 'Quarter' },
-    { value: 'month', label: 'Month' },
-    { value: 'week', label: 'Week' }
-  ];
+  // Derived state with useMemo
+  const timeRange = useMemo(() => TIME_RANGES[timeRangeIndex].value, [timeRangeIndex]);
 
-  // Set time range based on index
-  useEffect(() => {
-    setTimeRange(timeRangeOptions[timeRangeIndex].value);
-  }, [timeRangeIndex]);
+  // Format currency function memoized
+  const formatCurrency = useCallback((amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount);
+  }, []);
 
-  // Fetch chart data based on time range
-  useEffect(() => {
-    fetchChartData();
-  }, [timeRange, startDate, endDate]);
-
-  const fetchChartData = async () => {
+  // Data fetching with useCallback
+  const fetchChartData = useCallback(async () => {
     setLoading(true);
+    
     try {
-      // Use the new service method to fetch chart data
-      const response = await FinanceService.getFinancialDataByDateRange(startDate, endDate);
-      
-      // If mock data mode is active, use mock data
       if (mockDataMode) {
+        // Use mock data if in mock mode
         const mockData = generateMockData();
         setChartData(mockData.chartData);
         setSummaryData(mockData.summaryData);
-      } 
-      // Otherwise use real data
-      else if (response.data && response.data.chartData && response.data.chartData.length > 0) {
-        setChartData(response.data.chartData);
-        setSummaryData(response.data.summaryData);
       } else {
-        // Show empty chart when no real data exists
-        setChartData([]);
-        setSummaryData({
-          totalIncome: 0,
-          totalExpenses: 0,
-          netSavings: 0
-        });
+        // Use the service method to fetch chart data
+        const response = await FinanceService.getFinancialDataByDateRange(startDate, endDate);
+        
+        if (response.data?.chartData?.length > 0) {
+          // Use real data if available
+          setChartData(response.data.chartData);
+          setSummaryData(response.data.summaryData);
+        } else {
+          // Show empty chart when no data exists
+          setChartData([]);
+          setSummaryData({
+            totalIncome: 0,
+            totalExpenses: 0,
+            netSavings: 0
+          });
+        }
       }
     } catch (error) {
       console.error('Error fetching chart data:', error);
       
-      // If mock data mode is active, use mock data even on error
       if (mockDataMode) {
+        // Use mock data on error if in mock mode
         const mockData = generateMockData();
         setChartData(mockData.chartData);
         setSummaryData(mockData.summaryData);
       } else {
-        // Show empty chart instead of mock data on error
+        // Reset to empty state on error
         setChartData([]);
         setSummaryData({
           totalIncome: 0,
@@ -108,83 +244,60 @@ const FinanceChart = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [startDate, endDate, mockDataMode]);
 
-  const generateMockData = () => {
-    // This function is kept for reference but is no longer used in production
-    // Generate realistic mock data based on selected time range
+  // Mock data generator (memoized for performance)
+  const generateMockData = useCallback(() => {
     const mockData = [];
     let totalIncome = 0;
     let totalExpenses = 0;
     
-    if (timeRange === 'week') {
-      // Generate daily data for a week
-      for (let i = 0; i < 7; i++) {
-        const date = new Date(startDate);
-        date.setDate(date.getDate() + i);
-        const dayLabel = format(date, 'EEE');
-        
-        const income = Math.floor(Math.random() * 500) + 100;
-        const expenses = Math.floor(Math.random() * 300) + 50;
-        
-        totalIncome += income;
-        totalExpenses += expenses;
-        
-        mockData.push({
-          name: dayLabel,
-          income: income,
-          expenses: expenses
-        });
+    const mockDataConfig = {
+      week: {
+        count: 7,
+        labelFormatter: (i) => {
+          const date = new Date(startDate);
+          date.setDate(date.getDate() + i);
+          return format(date, 'EEE');
+        },
+        valueRange: { income: [100, 500], expenses: [50, 300] }
+      },
+      month: {
+        count: 4,
+        labelFormatter: (i) => `Week ${i + 1}`,
+        valueRange: { income: [500, 2000], expenses: [300, 1500] }
+      },
+      quarter: {
+        count: 3,
+        labelFormatter: (i) => `Month ${i + 1}`,
+        valueRange: { income: [1000, 5000], expenses: [800, 4000] }
+      },
+      year: {
+        count: 12,
+        labelFormatter: (i) => {
+          const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          return monthNames[i];
+        },
+        valueRange: { income: [2000, 8000], expenses: [1500, 6000] }
       }
-    } else if (timeRange === 'month') {
-      // Generate weekly data for a month
-      for (let i = 0; i < 4; i++) {
-        const income = Math.floor(Math.random() * 2000) + 500;
-        const expenses = Math.floor(Math.random() * 1500) + 300;
-        
-        totalIncome += income;
-        totalExpenses += expenses;
-        
-        mockData.push({
-          name: `Week ${i + 1}`,
-          income: income,
-          expenses: expenses
-        });
-      }
-    } else if (timeRange === 'quarter') {
-      // Generate quarterly data (4 quarters)
-      const quarterNames = ['Q1', 'Q2', 'Q3', 'Q4'];
+    };
+    
+    const config = mockDataConfig[timeRange];
+    
+    for (let i = 0; i < config.count; i++) {
+      const income = Math.floor(Math.random() * 
+        (config.valueRange.income[1] - config.valueRange.income[0])) + config.valueRange.income[0];
+      const expenses = Math.floor(Math.random() * 
+        (config.valueRange.expenses[1] - config.valueRange.expenses[0])) + config.valueRange.expenses[0];
       
-      for (let i = 0; i < 4; i++) {
-        const income = Math.floor(Math.random() * 5000) + 1000;
-        const expenses = Math.floor(Math.random() * 4000) + 800;
-        
-        totalIncome += income;
-        totalExpenses += expenses;
-        
-        mockData.push({
-          name: quarterNames[i],
-          income: income,
-          expenses: expenses
-        });
-      }
-    } else if (timeRange === 'year') {
-      // Generate monthly data for a year
-      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      totalIncome += income;
+      totalExpenses += expenses;
       
-      for (let i = 0; i < 12; i++) {
-        const income = Math.floor(Math.random() * 8000) + 2000;
-        const expenses = Math.floor(Math.random() * 6000) + 1500;
-        
-        totalIncome += income;
-        totalExpenses += expenses;
-        
-        mockData.push({
-          name: monthNames[i],
-          income: income,
-          expenses: expenses
-        });
-      }
+      mockData.push({
+        name: config.labelFormatter(i),
+        income: income,
+        expenses: expenses
+      });
     }
     
     return {
@@ -195,81 +308,114 @@ const FinanceChart = () => {
         netSavings: totalIncome - totalExpenses
       }
     };
-  };
+  }, [timeRange, startDate]);
 
-  const handlePreviousTimeRange = () => {
-    if (timeRangeIndex < timeRangeOptions.length - 1) {
-      const newIndex = timeRangeIndex + 1;
-      setTimeRangeIndex(newIndex);
-      updateDateRangeForTimeRange(newIndex);
-    }
-  };
-
-  const handleNextTimeRange = () => {
-    if (timeRangeIndex > 0) {
-      const newIndex = timeRangeIndex - 1;
-      setTimeRangeIndex(newIndex);
-      updateDateRangeForTimeRange(newIndex);
-    }
-  };
-
-  const updateDateRangeForTimeRange = (index) => {
+  // Update date range based on time range with useCallback
+  const updateDateRangeForTimeRange = useCallback((index) => {
     const today = new Date();
     
-    switch (index) {
-      case 0: // year
+    const dateRangeUpdaters = [
+      // year
+      () => {
         setStartDate(startOfYear(today));
         setEndDate(endOfYear(today));
-        break;
-      case 1: // quarter
+      },
+      // quarter
+      () => {
         setStartDate(startOfQuarter(today));
         setEndDate(endOfQuarter(today));
-        break;
-      case 2: // month
+      },
+      // month
+      () => {
         setStartDate(startOfMonth(today));
         setEndDate(endOfMonth(today));
-        break;
-      case 3: // week
+      },
+      // week
+      () => {
         setStartDate(startOfWeek(today, { weekStartsOn: 1 }));
         setEndDate(endOfWeek(today, { weekStartsOn: 1 }));
-        break;
-      default:
-        // Keep current dates for custom
-        break;
+      }
+    ];
+    
+    if (index >= 0 && index < dateRangeUpdaters.length) {
+      dateRangeUpdaters[index]();
     }
-  };
+  }, []);
 
-  const exportToExcel = () => {
-    // In a real implementation, this would generate and download an Excel file
+  // Navigation handlers with useCallback
+  const handleTimeRangeChange = useCallback((direction) => {
+    let newIndex;
+    if (direction === 'next' && timeRangeIndex > 0) {
+      newIndex = timeRangeIndex - 1;
+    } else if (direction === 'prev' && timeRangeIndex < TIME_RANGES.length - 1) {
+      newIndex = timeRangeIndex + 1;
+    } else {
+      return;
+    }
+    
+    setTimeRangeIndex(newIndex);
+    updateDateRangeForTimeRange(newIndex);
+  }, [timeRangeIndex, updateDateRangeForTimeRange]);
+
+  // Utility functions with useCallback
+  const exportToExcel = useCallback(() => {
     alert('Export to Excel functionality would be implemented here');
-  };
+  }, []);
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount);
-  };
-
-  // Handle clicks on the income label (secret feature)
-  const handleIncomeLabelClick = () => {
+  // Secret feature handler with useCallback
+  const handleIncomeLabelClick = useCallback(() => {
     if (mockDataMode) {
-      // If already in mock mode, turn it off and reset clicks
+      // Turn off mock mode
       setMockDataMode(false);
       setIncomeLabelClicks(0);
-      fetchChartData(); // Refresh with real data
+      fetchChartData();
     } else {
-      // Count clicks
+      // Increment click counter
       const newClickCount = incomeLabelClicks + 1;
       setIncomeLabelClicks(newClickCount);
       
-      // If clicked 5 times, activate mock data mode
+      // Activate mock mode after 5 clicks
       if (newClickCount >= 5) {
         setMockDataMode(true);
-        fetchChartData(); // Refresh with mock data
+        fetchChartData();
       }
     }
-  };
+  }, [mockDataMode, incomeLabelClicks, fetchChartData]);
+
+  const handleRetry = useCallback(() => {
+    setRenderError(false);
+    fetchChartData();
+  }, [fetchChartData]);
+
+  // Set time range and fetch data with useEffect
+  useEffect(() => {
+    fetchChartData();
+  }, [timeRange, startDate, endDate, fetchChartData]);
+
+  // Memoized summary items rendering
+  const renderSummaryItems = useMemo(() => (
+    <Box className={styles.summaryContainer}>
+      <SummaryItem 
+        label="Total Income"
+        value={formatCurrency(summaryData.totalIncome)}
+        color="primary"
+        onClick={handleIncomeLabelClick}
+        isMockMode={mockDataMode}
+      />
+      
+      <SummaryItem 
+        label="Total Expenses"
+        value={formatCurrency(summaryData.totalExpenses)}
+        color="error"
+      />
+      
+      <SummaryItem 
+        label="Net Savings"
+        value={formatCurrency(summaryData.netSavings)}
+        color={summaryData.netSavings >= 0 ? "success" : "error"}
+      />
+    </Box>
+  ), [summaryData, formatCurrency, handleIncomeLabelClick, mockDataMode]);
 
   return (
     <Card className={styles.chartCard}>
@@ -277,146 +423,40 @@ const FinanceChart = () => {
         title="Financial performance chart"
         action={
           <Box className={styles.headerControls}>
-            <Box className={styles.timeRangeControls}>
-              <IconButton 
-                onClick={handlePreviousTimeRange} 
-                disabled={timeRangeIndex >= timeRangeOptions.length - 1}
-                size="small"
-                className={styles.navButton}
-              >
-                <NavigateBeforeIcon fontSize="small" />
-              </IconButton>
-
-              <Typography 
-                variant="subtitle2" 
-                className={styles.timeRangeLabel}
-              >
-                {timeRangeOptions[timeRangeIndex].label}
-              </Typography>
-              
-              <IconButton 
-                onClick={handleNextTimeRange} 
-                disabled={timeRangeIndex <= 0}
-                size="small"
-                className={styles.navButton}
-              >
-                <NavigateNextIcon fontSize="small" />
-              </IconButton>
-            </Box>
+            <TimeRangeNavigation 
+              timeRangeIndex={timeRangeIndex}
+              handleTimeRangeChange={handleTimeRangeChange}
+            />
             
             <IconButton 
               onClick={exportToExcel} 
               title="Export to Excel"
               size="small"
               className={styles.exportButton}
+              aria-label="Export to Excel"
             >
               <FileDownloadIcon fontSize="small" />
             </IconButton>
           </Box>
         }
       />
+      
       <Divider />
+      
       <CardContent>
         <Box className={styles.chartContentWrapper}>
           {/* Summary Section */}
-          <Box className={styles.summaryContainer}>
-            <Box 
-              className={styles.summaryItem} 
-              onClick={handleIncomeLabelClick}
-              sx={{ 
-                cursor: 'pointer',
-                position: 'relative',
-                ...(mockDataMode && {
-                  '&::after': {
-                    content: '"DEMO"',
-                    position: 'absolute',
-                    top: '-5px',
-                    right: '-5px',
-                    fontSize: '9px',
-                    backgroundColor: 'primary.main',
-                    color: 'white',
-                    padding: '2px 4px',
-                    borderRadius: '4px',
-                    opacity: 0.8
-                  }
-                })
-              }}
-            >
-              <Typography className={styles.summaryLabel}>Total Income</Typography>
-              <Typography className={styles.summaryValue} color="primary">{formatCurrency(summaryData.totalIncome)}</Typography>
-            </Box>
-            <Box className={styles.summaryItem}>
-              <Typography className={styles.summaryLabel}>Total Expenses</Typography>
-              <Typography className={styles.summaryValue} color="error">{formatCurrency(summaryData.totalExpenses)}</Typography>
-            </Box>
-            <Box className={styles.summaryItem}>
-              <Typography className={styles.summaryLabel}>Net Savings</Typography>
-              <Typography 
-                className={styles.summaryValue}
-                color={summaryData.netSavings >= 0 ? "success" : "error"}
-              >
-                {formatCurrency(summaryData.netSavings)}
-              </Typography>
-            </Box>
-          </Box>
+          {renderSummaryItems}
           
           {/* Chart */}
           <Box className={styles.chartContainer}>
-            {loading ? (
-              <Box className={styles.loadingContainer}>
-                <CircularProgress />
-              </Box>
-            ) : renderError ? (
-              <Box className={styles.errorContainer}>
-                <Typography color="error" align="center">
-                  Unable to render chart. Please try again later.
-                </Typography>
-                <Box mt={2}>
-                  <Button 
-                    variant="outlined"
-                    color="primary"
-                    onClick={() => {
-                      setRenderError(false);
-                      fetchChartData();
-                    }}
-                  >
-                    Retry
-                  </Button>
-                </Box>
-              </Box>
-            ) : chartData.length === 0 ? (
-              <Box className={styles.loadingContainer} sx={{ bgcolor: 'rgba(0, 0, 0, 0.01)' }}>
-                <Typography color="textSecondary" align="center">
-                  No financial data available for this time period.
-                </Typography>
-                <Typography color="textSecondary" align="center" variant="body2" sx={{ mt: 1 }}>
-                  Add transactions to see your financial performance chart.
-                </Typography>
-              </Box>
-            ) : (
-              <ResponsiveContainer width="100%" height={240}>
-                <BarChart
-                  data={chartData}
-                  margin={{
-                    top: 5,
-                    right: 30,
-                    left: -10,
-                    bottom: 5,
-                  }}
-                  onError={() => setRenderError(true)}
-                  barSize={timeRange === 'quarter' ? 30 : 40}
-                  barGap={5}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                  <YAxis tick={{ fontSize: 11 }} />
-                  <Tooltip formatter={(value) => formatCurrency(value)} />
-                  <Legend wrapperStyle={{ fontSize: '11px' }} />
-                  <Bar dataKey="income" name="Income" fill="#4caf50" />
-                  <Bar dataKey="expenses" name="Expenses" fill="#f44336" />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
+            <ChartContent 
+              loading={loading}
+              renderError={renderError}
+              chartData={chartData}
+              onRetry={handleRetry}
+              formatCurrency={formatCurrency}
+            />
           </Box>
         </Box>
       </CardContent>
