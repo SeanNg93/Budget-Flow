@@ -21,7 +21,9 @@ import {
   TableRow,
   CircularProgress,
   Tooltip,
-  Avatar
+  Avatar,
+  TextField,
+  InputAdornment
 } from '@mui/material';
 import {
   FilterList as FilterListIcon,
@@ -96,7 +98,14 @@ const DateRangePickers = ({ customStartDate, customEndDate, handleStartDateChang
 
 // Filter action buttons
 const FilterActionButtons = ({ resetTransactionFilters, applyTransactionFilters, isFiltering }) => (
-  <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
+  <Box sx={{ 
+    display: 'flex', 
+    justifyContent: 'flex-end', 
+    alignItems: 'center',
+    width: '100%', 
+    gap: 1,
+    mt: { xs: 2, md: 0 }
+  }}>
     <Button
       color="primary"
       onClick={resetTransactionFilters}
@@ -143,6 +152,31 @@ const TransactionRow = React.memo(({
   onEditTransaction, 
   onDeleteTransaction 
 }) => {
+  // Local state to track expanded description
+  const [descriptionExpanded, setDescriptionExpanded] = useState(false);
+  
+  // Character limit for description truncation
+  const DESCRIPTION_CHAR_LIMIT = 25;
+  
+  // Toggle description expansion
+  const toggleDescription = (e) => {
+    e.stopPropagation(); // Prevent event from bubbling up
+    setDescriptionExpanded(prev => !prev);
+  };
+  
+  // Format description with truncation if needed
+  const formattedDescription = useMemo(() => {
+    if (!transaction.description) return '';
+    
+    // If expanded or description is shorter than limit, show full description
+    if (descriptionExpanded || transaction.description.length <= DESCRIPTION_CHAR_LIMIT) {
+      return transaction.description;
+    }
+    
+    // Otherwise truncate with ellipsis
+    return `${transaction.description.substring(0, DESCRIPTION_CHAR_LIMIT)}...`;
+  }, [transaction.description, descriptionExpanded, DESCRIPTION_CHAR_LIMIT]);
+  
   // Get the appropriate profile picture URL for the transaction author in a shared wallet
   const getProfilePictureUrl = () => {
     if (!transaction.user || !transaction.wallet || !sharedWallets[transaction.wallet.id]) {
@@ -163,105 +197,226 @@ const TransactionRow = React.memo(({
   };
   
   return (
-    <TableRow 
-      key={transaction.id}
-      className={styles.tableRow}
-    >
-      <TableCell className={styles.tableCell}>{formatDate(transaction.transactionDate)}</TableCell>
-      <TableCell className={styles.tableCellBold}>{transaction.description}</TableCell>
-      <TableCell className={styles.tableCell}>
-        {transaction.category ? transaction.category.categoryName : 
-         (transaction.categoryId ? `Category #${transaction.categoryId}` : 'Uncategorized')}
-      </TableCell>
-      <TableCell className={styles.tableCell}>
-        {transaction.wallet ? (
-          <>
-            {transaction.wallet.accountName}
-            {sharedWallets[transaction.wallet.id] && " (shared)"}
-          </>
-        ) : (
-          transaction.account ? transaction.account.accountName : 
-          'Unknown'
-        )}
-      </TableCell>
-      <TableCell className={styles.tableCell}>
-        <Box
-          className={transaction.transactionType === 'INCOME' 
-            ? styles.incomeTag 
-            : styles.expenseTag}
-          sx={{ display: 'flex', alignItems: 'center' }}
+  <TableRow 
+    key={transaction.id}
+    className={styles.tableRow}
+      sx={{ 
+        backgroundColor: descriptionExpanded ? 'rgba(0, 0, 0, 0.01)' : 'inherit',
+        '& > td': {
+          borderBottom: descriptionExpanded ? 'none' : '1px solid rgba(224, 224, 224, 0.5)'
+        }
+      }}
+  >
+    <TableCell className={styles.tableCell}>{formatDate(transaction.transactionDate)}</TableCell>
+      
+      {/* Description cell with special handling */}
+      {descriptionExpanded ? (
+        <TableCell 
+          colSpan={6}
+          sx={{ 
+            padding: '8px 16px',
+            position: 'relative',
+            backgroundColor: 'rgba(0, 0, 0, 0.02)',
+            borderLeft: '1px solid rgba(224, 224, 224, 0.5)',
+            borderRight: '1px solid rgba(224, 224, 224, 0.5)',
+            borderBottom: '1px solid rgba(224, 224, 224, 0.5)',
+            borderTop: 'none'
+          }}
         >
-          <Typography 
-            component="span"
-            sx={{ 
-              fontWeight: 'bold',
-              fontSize: 'inherit'
-            }}
-          >
-            {transaction.transactionType}
-          </Typography>
-          {transaction.wallet && sharedWallets[transaction.wallet.id] && transaction.user && (
-            <Tooltip 
-              title={`Created by: ${transaction.user.username}`}
-              arrow
-              placement="top"
-              classes={{ tooltip: styles.creatorTooltip }}
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', flexDirection: 'column' }}>
+            <Typography 
+              variant="body2" 
+              sx={{ 
+                whiteSpace: 'pre-wrap',
+                lineHeight: 1.4,
+                fontSize: '14px',
+                width: '100%',
+                mb: 1
+              }}
             >
-              <Avatar
-                src={getProfilePictureUrl() || undefined}
-                alt={transaction.user.username || 'User'}
-                className={styles.creatorAvatar}
-                imgProps={{
-                  loading: "eager",
-                  onError: (e) => {
-                    console.log("Profile image failed to load for", transaction.user.username, "profilePicture:", getProfilePictureUrl());
-                    e.target.onerror = null;
-                    e.target.src = '';
-                  }
-                }}
+              {transaction.description}
+            </Typography>
+            
+            <Box 
+              sx={{ 
+                display: 'flex', 
+                justifyContent: 'flex-start', 
+                width: '100%', 
+                mt: 0.5 
+              }}
+            >
+              <Button
+                size="small"
+                variant="text"
+                color="primary"
+                onClick={toggleDescription}
                 sx={{
-                  bgcolor: getProfilePictureUrl() ? 'transparent' : '#1976d2',
-                  color: 'white',
-                  fontWeight: 'bold'
+                  minWidth: 'auto',
+                  padding: '2px 6px',
+                  fontSize: '0.7rem',
+                  fontWeight: 500,
+                  textTransform: 'none'
                 }}
               >
-                {transaction.user.username ? transaction.user.username.charAt(0).toUpperCase() : '?'}
-              </Avatar>
-            </Tooltip>
-          )}
-        </Box>
-      </TableCell>
-      <TableCell className={styles.tableCell}>
-        <TransactionAmount 
-          transaction={transaction} 
-          formatCurrency={formatCurrency} 
-        />
-      </TableCell>
-      <TableCell className={styles.tableCell}>
-        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-          <IconButton 
-            size="small" 
-            color="primary" 
-            onClick={() => onEditTransaction(transaction)}
-            className={styles.editButton}
-            sx={{ mx: 0.5 }}
-            aria-label={`Edit transaction: ${transaction.description}`}
+                Click to collapse
+              </Button>
+            </Box>
+          </Box>
+        </TableCell>
+      ) : (
+        <>
+          <TableCell 
+            className={styles.tableCellBold}
+            onClick={toggleDescription}
+            sx={{ 
+              cursor: 'pointer',
+              position: 'relative',
+              maxWidth: '250px',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              transition: 'all 0.2s ease',
+              '&:hover': {
+                backgroundColor: 'rgba(0, 0, 0, 0.04)',
+              }
+            }}
           >
-            <EditIcon fontSize="small" />
-          </IconButton>
-          <IconButton 
-            size="small" 
-            color="error" 
-            onClick={() => onDeleteTransaction(transaction)}
-            className={styles.deleteButton}
-            sx={{ mx: 0.5 }}
-            aria-label={`Delete transaction: ${transaction.description}`}
+            <Box 
+              sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between'
+              }}
+            >
+              <Typography
+                component="span"
+                sx={{
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                {formattedDescription}
+              </Typography>
+              {transaction.description && transaction.description.length > DESCRIPTION_CHAR_LIMIT && (
+                <Typography 
+                  variant="caption" 
+                  sx={{ 
+                    ml: 1,
+                    backgroundColor: 'rgba(0, 122, 255, 0.08)',
+                    borderRadius: '4px',
+                    padding: '1px 4px',
+                    fontSize: '10px',
+                    color: '#007aff',
+                    fontWeight: 500,
+                    flexShrink: 0
+                  }}
+                >
+                  more
+                </Typography>
+              )}
+            </Box>
+          </TableCell>
+          
+    <TableCell className={styles.tableCell}>
+      {transaction.category ? transaction.category.categoryName : 
+       (transaction.categoryId ? `Category #${transaction.categoryId}` : 'Uncategorized')}
+    </TableCell>
+          
+    <TableCell className={styles.tableCell}>
+      {transaction.wallet ? (
+        <>
+          {transaction.wallet.accountName}
+          {sharedWallets[transaction.wallet.id] && " (shared)"}
+        </>
+      ) : (
+        transaction.account ? transaction.account.accountName : 
+        'Unknown'
+      )}
+    </TableCell>
+          
+    <TableCell className={styles.tableCell}>
+      <Box
+        className={transaction.transactionType === 'INCOME' 
+          ? styles.incomeTag 
+          : styles.expenseTag}
+        sx={{ display: 'flex', alignItems: 'center' }}
+            >
+              <Typography 
+                component="span"
+                sx={{ 
+                  fontWeight: 'bold',
+                  fontSize: 'inherit'
+                }}
+      >
+        {transaction.transactionType}
+              </Typography>
+              {transaction.wallet && sharedWallets[transaction.wallet.id] && transaction.user && (
+          <Tooltip 
+            title={`Created by: ${transaction.user.username}`}
+            arrow
+            placement="top"
+            classes={{ tooltip: styles.creatorTooltip }}
           >
-            <DeleteIcon fontSize="small" />
-          </IconButton>
-        </Box>
-      </TableCell>
-    </TableRow>
+            <Avatar
+                    src={getProfilePictureUrl() || undefined}
+                    alt={transaction.user.username || 'User'}
+              className={styles.creatorAvatar}
+                    imgProps={{
+                      loading: "eager",
+                      onError: (e) => {
+                        console.log("Profile image failed to load for", transaction.user.username, "profilePicture:", getProfilePictureUrl());
+                        e.target.onerror = null;
+                        e.target.src = '';
+                      }
+                    }}
+                    sx={{
+                      bgcolor: getProfilePictureUrl() ? 'transparent' : '#1976d2',
+                      color: 'white',
+                      fontWeight: 'bold'
+                    }}
+            >
+              {transaction.user.username ? transaction.user.username.charAt(0).toUpperCase() : '?'}
+            </Avatar>
+          </Tooltip>
+        )}
+      </Box>
+    </TableCell>
+          
+    <TableCell className={styles.tableCell}>
+      <TransactionAmount 
+        transaction={transaction} 
+        formatCurrency={formatCurrency} 
+      />
+    </TableCell>
+          
+    <TableCell className={styles.tableCell}>
+      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+        <IconButton 
+          size="small" 
+          color="primary" 
+          onClick={() => onEditTransaction(transaction)}
+          className={styles.editButton}
+          sx={{ mx: 0.5 }}
+          aria-label={`Edit transaction: ${transaction.description}`}
+        >
+          <EditIcon fontSize="small" />
+        </IconButton>
+        <IconButton 
+          size="small" 
+          color="error" 
+          onClick={() => onDeleteTransaction(transaction)}
+          className={styles.deleteButton}
+          sx={{ mx: 0.5 }}
+          aria-label={`Delete transaction: ${transaction.description}`}
+        >
+          <DeleteIcon fontSize="small" />
+        </IconButton>
+      </Box>
+    </TableCell>
+        </>
+      )}
+  </TableRow>
   );
 });
 
@@ -345,6 +500,8 @@ const TransactionsSection = ({
     timeframe: 'week',
     walletId: 'all',
     categoryId: 'all',
+    minAmount: '',
+    maxAmount: '',
     isLoading: false,
     showCustomDateRange: false,
     customStartDate: subDays(new Date(), 7),
@@ -381,7 +538,7 @@ const TransactionsSection = ({
 
   // Helper to calculate filter parameters
   const calculateFilterParams = useCallback(() => {
-    const { timeframe, showCustomDateRange, customStartDate, customEndDate, walletId, categoryId } = filterState;
+    const { timeframe, showCustomDateRange, customStartDate, customEndDate, walletId, categoryId, minAmount, maxAmount } = filterState;
     const filterParams = {};
     
     // Calculate date range
@@ -402,6 +559,14 @@ const TransactionsSection = ({
     // Add wallet and category filters if not "all"
     if (walletId !== 'all') filterParams.walletId = walletId;
     if (categoryId !== 'all') filterParams.categoryId = categoryId;
+    
+    // Add amount range filters if provided
+    if (minAmount && !isNaN(parseFloat(minAmount))) {
+      filterParams.minAmount = parseFloat(minAmount);
+    }
+    if (maxAmount && !isNaN(parseFloat(maxAmount))) {
+      filterParams.maxAmount = parseFloat(maxAmount);
+    }
     
     return filterParams;
   }, [filterState]);
@@ -424,6 +589,8 @@ const TransactionsSection = ({
       timeframe: 'week',
       walletId: 'all',
       categoryId: 'all',
+      minAmount: '',
+      maxAmount: '',
       showCustomDateRange: false,
       customStartDate: subDays(new Date(), 7),
       customEndDate: new Date(),
@@ -537,13 +704,25 @@ const TransactionsSection = ({
     return 'No transactions to display. Start adding your financial data to see it here.';
   }, [searchState.term, filterState.open]);
 
+  // Handle amount input
+  const handleAmountChange = useCallback((field, event) => {
+    const value = event.target.value;
+    // Only allow valid number inputs (including decimal)
+    if (value === '' || /^[0-9]*\.?[0-9]*$/.test(value)) {
+      updateFilterState({ [field]: value });
+    }
+  }, [updateFilterState]);
+
   // Render filter controls
   const renderFilterControls = () => (
     <Collapse in={filterState.open}>
       <Box className={styles.filterControls}>
-        <Grid container spacing={2} alignItems="flex-end">
+        <Grid container spacing={2} alignItems="flex-start">
+          {/* First row - filters */}
+          <Grid item xs={12} md={9}>
+            <Grid container spacing={2}>
           {/* Time Period filter */}
-          <Grid item xs={12} sm={6} md={3}>
+              <Grid item xs={12} sm={6} md={4}>
             <FormControl fullWidth size="small">
               <InputLabel id="time-period-label">Time Period</InputLabel>
               <Select
@@ -563,7 +742,7 @@ const TransactionsSection = ({
           </Grid>
           
           {/* Wallet filter */}
-          <Grid item xs={12} sm={6} md={3}>
+              <Grid item xs={12} sm={6} md={4}>
             <FormControl fullWidth size="small">
               <InputLabel id="wallet-filter-label">Wallet</InputLabel>
               <Select
@@ -584,7 +763,7 @@ const TransactionsSection = ({
           </Grid>
           
           {/* Category filter */}
-          <Grid item xs={12} sm={6} md={3}>
+              <Grid item xs={12} sm={6} md={4}>
             <FormControl fullWidth size="small">
               <InputLabel id="category-filter-label">Category</InputLabel>
               <Select
@@ -604,40 +783,67 @@ const TransactionsSection = ({
             </FormControl>
           </Grid>
           
-          {/* Date range or action buttons */}
-          <Grid 
-            item 
-            xs={12} 
-            sm={filterState.showCustomDateRange ? 12 : 6} 
-            md={filterState.showCustomDateRange ? 6 : 3} 
-            sx={{ display: 'flex', gap: 1 }}
-          >
-            {filterState.showCustomDateRange ? (
+              {/* Amount Range filters */}
+              <Grid item xs={12} sm={6} md={4}>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <TextField
+                    label="Min Amount"
+                    value={filterState.minAmount}
+                    onChange={(e) => handleAmountChange('minAmount', e)}
+                    variant="outlined"
+                    size="small"
+                    className={styles.filterTextField}
+                    InputProps={{
+                      startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                    }}
+                    placeholder="0.00"
+                  />
+                  <TextField
+                    label="Max Amount"
+                    value={filterState.maxAmount}
+                    onChange={(e) => handleAmountChange('maxAmount', e)}
+                    variant="outlined"
+                    size="small"
+                    className={styles.filterTextField}
+                    InputProps={{
+                      startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                    }}
+                    placeholder="0.00"
+                  />
+                </Box>
+              </Grid>
+              
+              {/* Custom date range */}
+              {filterState.showCustomDateRange && (
+                <Grid item xs={12} sm={12} md={8}>
+                  <Box sx={{ display: 'flex', gap: 1 }}>
               <DateRangePickers 
                 customStartDate={filterState.customStartDate}
                 customEndDate={filterState.customEndDate}
                 handleStartDateChange={handleStartDateChange}
                 handleEndDateChange={handleEndDateChange}
               />
-            ) : (
-              <FilterActionButtons 
-                resetTransactionFilters={resetTransactionFilters}
-                applyTransactionFilters={applyTransactionFilters}
-                isFiltering={filterState.isLoading}
-              />
-            )}
+                  </Box>
+                </Grid>
+              )}
+            </Grid>
           </Grid>
           
-          {/* Action buttons for custom date range */}
-          {filterState.showCustomDateRange && (
-            <Grid item xs={12} sm={12} md={6} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+          {/* Action buttons - always positioned on the right */}
+          <Grid item xs={12} md={3} sx={{ 
+            display: 'flex', 
+            alignItems: 'flex-start', 
+            justifyContent: 'flex-end',
+            position: { md: 'sticky' },
+            top: { md: 0 },
+            alignSelf: { md: 'flex-start' }
+          }}>
               <FilterActionButtons 
                 resetTransactionFilters={resetTransactionFilters}
                 applyTransactionFilters={applyTransactionFilters}
                 isFiltering={filterState.isLoading}
               />
             </Grid>
-          )}
         </Grid>
       </Box>
     </Collapse>

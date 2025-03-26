@@ -476,9 +476,13 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
       }
     }
     
+    // Validate description
     if (!formData.description) {
       newErrors.description = 'Description is required';
+    } else if (formData.description.length > 500) {
+      newErrors.description = 'Description must be less than 500 characters';
     }
+    
     if (!formData.transactionDate) {
       newErrors.transactionDate = 'Date is required';
     }
@@ -1160,7 +1164,15 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
             rows={2}
             size="small"
             className={`${styles.inputField} ${styles.descriptionField}`}
+            inputProps={{
+              maxLength: 500,
+            }}
           />
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <Typography variant="caption" color="text.secondary">
+              {formData.description.length}/500 characters
+            </Typography>
+          </Box>
         </FormControl>
       </Paper>
       
