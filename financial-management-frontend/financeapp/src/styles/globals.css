@@ -71,3 +71,34 @@ body {
     text-wrap: balance;
   }
 }
+
+/* Ensure scrollbar is always present to prevent layout shifts */
+html {
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
+}
+
+/* Additional scrollbar styling for a cleaner look */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* For Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.15) rgba(0, 0, 0, 0.02);
+}

@@ -361,8 +361,8 @@ export default function Dashboard() {
       
       // Process and set transactions
       const processedTransactions = processTransactions(transactionsResponse.data || []);
-      setTransactions(processedTransactions.slice(0, 5));
-      setFilteredTransactions(processedTransactions.slice(0, 5));
+      setTransactions(processedTransactions.slice(0, 8));
+      setFilteredTransactions(processedTransactions.slice(0, 8));
       setAllTransactions(processedTransactions || []);
     } catch (error) {
       setError('Failed to load financial data. Please try again later.');
@@ -386,7 +386,7 @@ export default function Dashboard() {
       const processedTransactions = processTransactions(response.data || []);
       setFilteredTransactions(processedTransactions);
       setAllTransactions(processedTransactions);
-      setTransactions(processedTransactions.slice(0, 5));
+      setTransactions(processedTransactions.slice(0, 8));
     } catch (err) {
       console.error('Error fetching transactions:', err);
     }
@@ -539,7 +539,7 @@ export default function Dashboard() {
       
       setTransactions(prev => {
         const updated = prev.filter(filterPredicate);
-        return updated.length < 5 ? allTransactions.filter(filterPredicate).slice(0, 5) : updated;
+        return updated.length < 8 ? allTransactions.filter(filterPredicate).slice(0, 8) : updated;
       });
       
       // Update financial data
