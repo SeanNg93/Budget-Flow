@@ -188,6 +188,9 @@ const AppTheme = ({ children, themeComponents = {} }) => {
             borderRight: 'none',
           },
         },
+        defaultProps: {
+          disableScrollLock: true
+        }
       },
       MuiDivider: {
         styleOverrides: {
@@ -230,6 +233,60 @@ const AppTheme = ({ children, themeComponents = {} }) => {
         },
       },
       ...themeComponents,
+      MuiCssBaseline: {
+        styleOverrides: {
+          html: {
+            scrollbarWidth: "thin",
+            scrollbarColor: "rgba(0, 0, 0, 0.15) transparent",
+            // The overflow and padding help prevent layout shifts with modals
+            overflowY: "scroll !important",
+            paddingRight: "0 !important"
+          },
+          body: {
+            overflow: "auto !important",
+            // Prevent automatic padding adjustments from Material UI
+            paddingRight: "0 !important"
+          },
+          // Customize scrollbars for better appearance
+          "::-webkit-scrollbar": {
+            width: "10px",
+            height: "10px"
+          },
+          "::-webkit-scrollbar-track": {
+            background: "rgba(0, 0, 0, 0.02)"
+          },
+          "::-webkit-scrollbar-thumb": {
+            background: "rgba(0, 0, 0, 0.15)",
+            borderRadius: "6px"
+          },
+          "::-webkit-scrollbar-thumb:hover": {
+            background: "rgba(0, 0, 0, 0.3)"
+          }
+        }
+      },
+      MuiPopover: {
+        defaultProps: {
+          container: document.body,
+          disableScrollLock: true // Prevents scroll locking which causes shifts
+        }
+      },
+      MuiModal: {
+        defaultProps: {
+          disableScrollLock: true // Prevents automatic padding adjustments
+        }
+      },
+      MuiDialog: {
+        defaultProps: {
+          disableScrollLock: true
+        }
+      },
+      MuiSelect: {
+        defaultProps: {
+          MenuProps: {
+            disableScrollLock: true // Prevents shifts when dropdown opens
+          }
+        }
+      }
     },
   });
 

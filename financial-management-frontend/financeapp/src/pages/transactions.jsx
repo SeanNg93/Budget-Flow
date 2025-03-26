@@ -282,8 +282,38 @@ const TransactionsPage = () => {
   // Apply filters from transaction section
   const applyFilters = async (filterParams) => {
     try {
-      const response = await FinanceService.getFilteredTransactions(filterParams);
-      const processedTransactions = processTransactions(response.data || []);
+      // Store the amount filters for client-side filtering after server response
+      const minAmount = filterParams.minAmount;
+      const maxAmount = filterParams.maxAmount;
+      
+      // Create a copy of params without amount filters for server request
+      // (assuming the backend doesn't support amount filtering yet)
+      const serverFilterParams = { ...filterParams };
+      delete serverFilterParams.minAmount;
+      delete serverFilterParams.maxAmount;
+      
+      const response = await FinanceService.getFilteredTransactions(serverFilterParams);
+      let processedTransactions = processTransactions(response.data || []);
+      
+      // Apply amount filters on the client side if needed
+      if (minAmount !== undefined || maxAmount !== undefined) {
+        processedTransactions = processedTransactions.filter(transaction => {
+          const amount = parseFloat(transaction.amount);
+          
+          // If min amount is set and transaction amount is less than min, filter out
+          if (minAmount !== undefined && amount < minAmount) {
+            return false;
+          }
+          
+          // If max amount is set and transaction amount is more than max, filter out
+          if (maxAmount !== undefined && amount > maxAmount) {
+            return false;
+          }
+          
+          return true;
+        });
+      }
+      
       setFilteredTransactions(processedTransactions);
       setTotalPages(Math.ceil(processedTransactions.length / pageSize));
       setPage(1); // Reset to first page when applying filters
@@ -439,11 +469,32 @@ const TransactionsPage = () => {
                   <Typography variant="body1" sx={{ mr: 2 }}>
                     Rows per page:
                   </Typography>
-                  <FormControl size="small" sx={{ minWidth: 80 }}>
+                  <FormControl size="small" sx={{ minWidth: 65, maxWidth: 65 }}>
                     <Select
                       value={pageSize}
                       onChange={handleRowsPerPageChange}
                       displayEmpty
+                      MenuProps={{
+                        PaperProps: {
+                          sx: {
+                            maxHeight: 200,
+                            width: 65,
+                            '& .MuiMenuItem-root': {
+                              minHeight: 'auto',
+                              py: 0.75,
+                              px: 1.5,
+                              fontSize: '0.875rem'
+                            }
+                          }
+                        }
+                      }}
+                      sx={{ 
+                        '& .MuiSelect-select': { 
+                          py: 0.75, 
+                          px: 1.5, 
+                          fontSize: '0.875rem' 
+                        }
+                      }}
                     >
                       <MenuItem value={5}>5</MenuItem>
                       <MenuItem value={10}>10</MenuItem>
@@ -482,6 +533,45 @@ const TransactionsPage = () => {
               
               {/* Pagination controls at bottom */}
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
+                  <Typography variant="body2" sx={{ mr: 1.5 }}>
+                    Rows per page:
+                  </Typography>
+                  <FormControl size="small" sx={{ minWidth: 65, maxWidth: 65 }}>
+                    <Select
+                      value={pageSize}
+                      onChange={handleRowsPerPageChange}
+                      displayEmpty
+                      MenuProps={{
+                        PaperProps: {
+                          sx: {
+                            maxHeight: 200,
+                            width: 65,
+                            '& .MuiMenuItem-root': {
+                              minHeight: 'auto',
+                              py: 0.75,
+                              px: 1.5,
+                              fontSize: '0.875rem'
+                            }
+                          }
+                        }
+                      }}
+                      sx={{ 
+                        '& .MuiSelect-select': { 
+                          py: 0.75, 
+                          px: 1.5, 
+                          fontSize: '0.875rem' 
+                        }
+                      }}
+                    >
+                      <MenuItem value={5}>5</MenuItem>
+                      <MenuItem value={10}>10</MenuItem>
+                      <MenuItem value={25}>25</MenuItem>
+                      <MenuItem value={50}>50</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Box>
+                
                 <Pagination 
                   count={totalPages} 
                   page={page} 
