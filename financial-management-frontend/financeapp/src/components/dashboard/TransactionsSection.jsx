@@ -651,7 +651,6 @@ const TransactionsSection = ({
 
   // Toggle search input visibility
   const toggleSearch = useCallback(() => {
-    console.log('Toggle search clicked');
     if (searchState.open) {
       // If search is open, close it and reset everything
       updateSearchState({ 

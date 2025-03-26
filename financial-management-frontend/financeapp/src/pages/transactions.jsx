@@ -11,6 +11,7 @@ import AppNavbar from '../components/dashboard/AppNavbar';
 import TransactionsSection from '../components/dashboard/TransactionsSection';
 import DialogManager from '../components/dashboard/DialogManager';
 import TransactionForm from '../components/dashboard/TransactionForm';
+import CategoryManageForm from '../components/dashboard/CategoryManageForm';
 
 // Import services
 import FinanceService from '../services/FinanceService';
@@ -87,7 +88,9 @@ const TransactionsPage = () => {
   const [dialogStates, setDialogStates] = useState({
     transactionForm: false,
     editTransactionOpen: false,
-    deleteConfirmOpen: false
+    deleteConfirmOpen: false,
+    profileDialog: false,
+    categoryManageForm: false
   });
 
   // Pagination state
@@ -285,6 +288,8 @@ const TransactionsPage = () => {
       // Store the amount filters for client-side filtering after server response
       const minAmount = filterParams.minAmount;
       const maxAmount = filterParams.maxAmount;
+      const walletId = filterParams.walletId;
+      const categoryId = filterParams.categoryId;
       
       // Create a copy of params without amount filters for server request
       // (assuming the backend doesn't support amount filtering yet)
@@ -294,6 +299,41 @@ const TransactionsPage = () => {
       
       const response = await FinanceService.getFilteredTransactions(serverFilterParams);
       let processedTransactions = processTransactions(response.data || []);
+      
+      // Apply client-side filtering as a fallback for when the server doesn't filter correctly
+      // First check if we need to apply client-side wallet filtering
+      if (walletId && walletId !== 'all' && processedTransactions.length > 0) {
+        // Check if server filtered correctly by checking if all transactions match the wallet ID
+        const allMatchWallet = processedTransactions.every(transaction => 
+          transaction.wallet?.id.toString() === walletId.toString() || 
+          transaction.account?.id.toString() === walletId.toString()
+        );
+        
+        // If not all transactions match the wallet, apply client-side filtering
+        if (!allMatchWallet) {
+          processedTransactions = processedTransactions.filter(transaction => 
+            transaction.wallet?.id.toString() === walletId.toString() || 
+            transaction.account?.id.toString() === walletId.toString()
+          );
+        }
+      }
+      
+      // Apply category filtering on the client side if needed
+      if (categoryId && categoryId !== 'all' && processedTransactions.length > 0) {
+        // Check if server filtered correctly
+        const allMatchCategory = processedTransactions.every(transaction => 
+          transaction.category?.id.toString() === categoryId.toString() ||
+          transaction.categoryId?.toString() === categoryId.toString()
+        );
+        
+        // If not all transactions match the category, apply client-side filtering
+        if (!allMatchCategory) {
+          processedTransactions = processedTransactions.filter(transaction => 
+            transaction.category?.id.toString() === categoryId.toString() ||
+            transaction.categoryId?.toString() === categoryId.toString()
+          );
+        }
+      }
       
       // Apply amount filters on the client side if needed
       if (minAmount !== undefined || maxAmount !== undefined) {
@@ -439,6 +479,8 @@ const TransactionsPage = () => {
         <SideMenu 
           open={open} 
           handleDrawerClose={handleDrawerClose} 
+          setProfileDialogOpen={() => updateDialogState('profileDialog', true)}
+          setCategoryManageFormOpen={() => updateDialogState('categoryManageForm', true)}
         />
         <Main open={open}>
           <DrawerHeader />
@@ -649,6 +691,18 @@ const TransactionsPage = () => {
           onTransactionAdded={handleTransactionAdded}
         />
       )}
+
+      {/* Category Management Dialog */}
+      <CategoryManageForm 
+        open={dialogStates.categoryManageForm}
+        handleClose={() => updateDialogState('categoryManageForm', false)}
+        onCategoryUpdated={() => {
+          // Refresh categories data
+          FinanceService.getCategories().then(response => {
+            setCategories(response.data || []);
+          });
+        }}
+      />
     </AppTheme>
   );
 };

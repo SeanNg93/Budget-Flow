@@ -81,6 +81,40 @@ export const getTransactions = () => {
   return axiosInstance.get('/transactions?includeCategory=true');
 };
 
+export const getFilteredTransactions = (filterParams) => {
+  // Build query params
+  const params = new URLSearchParams();
+  
+  // Add start and end dates if provided
+  if (filterParams.startDate) {
+    params.append('startDate', filterParams.startDate);
+  }
+  if (filterParams.endDate) {
+    params.append('endDate', filterParams.endDate);
+  }
+  
+  // Add wallet and category filters if provided
+  if (filterParams.walletId && filterParams.walletId !== 'all') {
+    params.append('walletId', filterParams.walletId);
+  }
+  if (filterParams.categoryId && filterParams.categoryId !== 'all') {
+    params.append('categoryId', filterParams.categoryId);
+  }
+  
+  // Always include category info
+  params.append('includeCategory', 'true');
+  
+  const url = `/transactions?${params.toString()}`;
+  
+  // Make the API call with query params
+  return axiosInstance.get(url)
+    .catch(error => {
+      console.error('Error fetching filtered transactions:', error);
+      // Fall back to getting all transactions if there's an error
+      return getTransactions();
+    });
+};
+
 export const getTransactionById = (id) => {
   return axiosInstance.get(`/transactions/${id}?includeCategory=true`);
 };
@@ -439,6 +473,7 @@ const FinanceService = {
   deleteTransaction,
   getFinancialSummary,
   getFinancialDataByDateRange,
+  getFilteredTransactions,
   
   // Category functions
   getCategories,
