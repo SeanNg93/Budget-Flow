@@ -447,15 +447,12 @@ const SearchInput = React.memo(({
           value={searchTerm}
           onChange={handleSearchChange}
           inputRef={searchInputRef}
-          aria-label="Search transactions"
-          onKeyDown={(e) => e.key === 'Escape' && resetSearch()}
           endAdornment={
             searchTerm && (
               <IconButton 
                 size="small" 
                 onClick={resetSearch}
                 className={styles.clearSearchButton}
-                aria-label="Clear search"
               >
                 <CloseIcon fontSize="small" />
               </IconButton>
@@ -469,7 +466,6 @@ const SearchInput = React.memo(({
       onClick={toggleSearch}
       color={searchOpen ? "primary" : "default"}
       className={styles.searchButton}
-      aria-label={searchOpen ? "Close search" : "Open search"}
     >
       {searchOpen ? <CloseIcon fontSize="small" /> : <SearchIcon fontSize="small" />}
     </IconButton>
@@ -655,28 +651,39 @@ const TransactionsSection = ({
 
   // Toggle search input visibility
   const toggleSearch = useCallback(() => {
-    updateSearchState(prev => {
-      if (prev.open) {
-        // If search is open, close it and clear results
-        return { open: false, term: '', results: [] };
-      } else {
-        // If search is closed, open it
-        setTimeout(() => {
-          searchInputRef.current?.focus();
-        }, 300);
-        return { open: true };
-      }
-    });
-  }, [updateSearchState]);
+    console.log('Toggle search clicked');
+    if (searchState.open) {
+      // If search is open, close it and reset everything
+      updateSearchState({ 
+        open: false, 
+        term: '', 
+        results: [] 
+      });
+    } else {
+      // If search is closed, open it
+      updateSearchState({ 
+        ...searchState, 
+        open: true 
+      });
+      
+      // Focus the input after the animation completes
+      setTimeout(() => {
+        if (searchInputRef.current) {
+          searchInputRef.current.focus();
+        }
+      }, 300);
+    }
+  }, [searchState, updateSearchState]);
 
   // Reset search function
   const resetSearch = useCallback(() => {
-    updateSearchState({ term: '', results: [] });
-    // Focus the input after clearing
-    setTimeout(() => {
-      searchInputRef.current?.focus();
-    }, 10);
-  }, [updateSearchState]);
+    // Just clear the term and results, but keep search open
+    updateSearchState({ 
+      ...searchState, 
+      term: '', 
+      results: [] 
+    });
+  }, [searchState, updateSearchState]);
 
   // Determine which transactions to display based on search or filters
   const displayTransactions = useMemo(() => {
