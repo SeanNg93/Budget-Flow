@@ -472,11 +472,20 @@
   font-size: 0.75rem !important;
   margin-left: 6px;
   border: 1px solid #e0e0e0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background-color: #f8f9fa;
+  overflow: hidden;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
 }
 
 /* Tooltip for transaction creator */
 .creatorTooltip {
   font-size: 0.75rem;
+  font-weight: 500;
+  padding: 6px 10px;
+  background-color: rgba(0, 0, 0, 0.75);
 }
 
 .emptyTransactionsBox {

@@ -139,88 +139,123 @@ const TransactionRow = React.memo(({
   transaction, 
   formatCurrency, 
   sharedWallets, 
+  sharedWalletsInfo,
   onEditTransaction, 
   onDeleteTransaction 
-}) => (
-  <TableRow 
-    key={transaction.id}
-    className={styles.tableRow}
-  >
-    <TableCell className={styles.tableCell}>{formatDate(transaction.transactionDate)}</TableCell>
-    <TableCell className={styles.tableCellBold}>{transaction.description}</TableCell>
-    <TableCell className={styles.tableCell}>
-      {transaction.category ? transaction.category.categoryName : 
-       (transaction.categoryId ? `Category #${transaction.categoryId}` : 'Uncategorized')}
-    </TableCell>
-    <TableCell className={styles.tableCell}>
-      {transaction.wallet ? (
-        <>
-          {transaction.wallet.accountName}
-          {sharedWallets[transaction.wallet.id] && " (shared)"}
-        </>
-      ) : (
-        transaction.account ? transaction.account.accountName : 
-        'Unknown'
-      )}
-    </TableCell>
-    <TableCell className={styles.tableCell}>
-      <Box
-        className={transaction.transactionType === 'INCOME' 
-          ? styles.incomeTag 
-          : styles.expenseTag}
-        sx={{ display: 'flex', alignItems: 'center' }}
-      >
-        {transaction.transactionType}
-        {transaction.user && transaction.wallet && sharedWallets[transaction.wallet.id] && (
-          <Tooltip 
-            title={`Created by: ${transaction.user.username}`}
-            arrow
-            placement="top"
-            classes={{ tooltip: styles.creatorTooltip }}
-          >
-            <Avatar
-              src={transaction.user.profilePicture || undefined}
-              alt={transaction.user.username}
-              className={styles.creatorAvatar}
-            >
-              {transaction.user.username ? transaction.user.username.charAt(0).toUpperCase() : '?'}
-            </Avatar>
-          </Tooltip>
+}) => {
+  // Get the appropriate profile picture URL for the transaction author in a shared wallet
+  const getProfilePictureUrl = () => {
+    if (!transaction.user || !transaction.wallet || !sharedWallets[transaction.wallet.id]) {
+      return null;
+    }
+    
+    const walletInfo = sharedWalletsInfo[transaction.wallet.id];
+    if (!walletInfo) return transaction.user.profilePicture;
+    
+    // Check if this user is the owner or the shared user
+    if (transaction.user.id === walletInfo.ownerId) {
+      return walletInfo.ownerProfilePictureUrl || transaction.user.profilePicture;
+    } else if (transaction.user.id === walletInfo.sharedWithId) {
+      return walletInfo.sharedWithProfilePictureUrl || transaction.user.profilePicture;
+    }
+    
+    return transaction.user.profilePicture;
+  };
+  
+  return (
+    <TableRow 
+      key={transaction.id}
+      className={styles.tableRow}
+    >
+      <TableCell className={styles.tableCell}>{formatDate(transaction.transactionDate)}</TableCell>
+      <TableCell className={styles.tableCellBold}>{transaction.description}</TableCell>
+      <TableCell className={styles.tableCell}>
+        {transaction.category ? transaction.category.categoryName : 
+         (transaction.categoryId ? `Category #${transaction.categoryId}` : 'Uncategorized')}
+      </TableCell>
+      <TableCell className={styles.tableCell}>
+        {transaction.wallet ? (
+          <>
+            {transaction.wallet.accountName}
+            {sharedWallets[transaction.wallet.id] && " (shared)"}
+          </>
+        ) : (
+          transaction.account ? transaction.account.accountName : 
+          'Unknown'
         )}
-      </Box>
-    </TableCell>
-    <TableCell className={styles.tableCell}>
-      <TransactionAmount 
-        transaction={transaction} 
-        formatCurrency={formatCurrency} 
-      />
-    </TableCell>
-    <TableCell className={styles.tableCell}>
-      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-        <IconButton 
-          size="small" 
-          color="primary" 
-          onClick={() => onEditTransaction(transaction)}
-          className={styles.editButton}
-          sx={{ mx: 0.5 }}
-          aria-label={`Edit transaction: ${transaction.description}`}
+      </TableCell>
+      <TableCell className={styles.tableCell}>
+        <Box
+          className={transaction.transactionType === 'INCOME' 
+            ? styles.incomeTag 
+            : styles.expenseTag}
+          sx={{ display: 'flex', alignItems: 'center' }}
         >
-          <EditIcon fontSize="small" />
-        </IconButton>
-        <IconButton 
-          size="small" 
-          color="error" 
-          onClick={() => onDeleteTransaction(transaction)}
-          className={styles.deleteButton}
-          sx={{ mx: 0.5 }}
-          aria-label={`Delete transaction: ${transaction.description}`}
-        >
-          <DeleteIcon fontSize="small" />
-        </IconButton>
-      </Box>
-    </TableCell>
-  </TableRow>
-));
+          {transaction.transactionType}
+          {transaction.wallet && sharedWallets[transaction.wallet.id] && transaction.user && (
+            <Tooltip 
+              title={`Created by: ${transaction.user.username}`}
+              arrow
+              placement="top"
+              classes={{ tooltip: styles.creatorTooltip }}
+            >
+              <Avatar
+                src={getProfilePictureUrl() || undefined}
+                alt={transaction.user.username || 'User'}
+                className={styles.creatorAvatar}
+                imgProps={{
+                  loading: "eager",
+                  onError: (e) => {
+                    console.log("Profile image failed to load for", transaction.user.username, "profilePicture:", getProfilePictureUrl());
+                    e.target.onerror = null;
+                    e.target.src = '';
+                  }
+                }}
+                sx={{
+                  bgcolor: getProfilePictureUrl() ? 'transparent' : '#1976d2',
+                  color: 'white',
+                  fontWeight: 'bold'
+                }}
+              >
+                {transaction.user.username ? transaction.user.username.charAt(0).toUpperCase() : '?'}
+              </Avatar>
+            </Tooltip>
+          )}
+        </Box>
+      </TableCell>
+      <TableCell className={styles.tableCell}>
+        <TransactionAmount 
+          transaction={transaction} 
+          formatCurrency={formatCurrency} 
+        />
+      </TableCell>
+      <TableCell className={styles.tableCell}>
+        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+          <IconButton 
+            size="small" 
+            color="primary" 
+            onClick={() => onEditTransaction(transaction)}
+            className={styles.editButton}
+            sx={{ mx: 0.5 }}
+            aria-label={`Edit transaction: ${transaction.description}`}
+          >
+            <EditIcon fontSize="small" />
+          </IconButton>
+          <IconButton 
+            size="small" 
+            color="error" 
+            onClick={() => onDeleteTransaction(transaction)}
+            className={styles.deleteButton}
+            sx={{ mx: 0.5 }}
+            aria-label={`Delete transaction: ${transaction.description}`}
+          >
+            <DeleteIcon fontSize="small" />
+          </IconButton>
+        </Box>
+      </TableCell>
+    </TableRow>
+  );
+});
 
 // Empty or loading state component
 const TableStateMessage = ({ message }) => (
@@ -288,6 +323,7 @@ const TransactionsSection = ({
   categories,
   wallets,
   sharedWallets,
+  sharedWalletsInfo,
   onAddTransaction,
   onEditTransaction,
   onDeleteTransaction,
@@ -656,6 +692,7 @@ const TransactionsSection = ({
                 transaction={transaction}
                 formatCurrency={formatCurrency}
                 sharedWallets={sharedWallets}
+                sharedWalletsInfo={sharedWalletsInfo}
                 onEditTransaction={onEditTransaction}
                 onDeleteTransaction={onDeleteTransaction}
               />
