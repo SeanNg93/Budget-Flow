@@ -13,6 +13,7 @@ import ActivateAccount from './pages/auth/ActivateAccount';
 // Main Pages
 import Dashboard from './pages/dashboard.jsx';
 import Contact from './pages/Contact.jsx';
+import Transactions from './pages/transactions.jsx';
 
 // User Pages
 import Profile from './pages/user/Profile.jsx';
@@ -51,6 +52,13 @@ function App() {
           <Route path="/dashboard" element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          } />
+          
+          {/* Transactions Route */}
+          <Route path="/transactions" element={
+            <ProtectedRoute>
+              <Transactions />
             </ProtectedRoute>
           } />
           

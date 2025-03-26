@@ -195,8 +195,6 @@ export const initializeNotificationService = (userId) => {
     
     // Start polling with the new user ID
     startPolling();
-    
-    console.log('NotificationService initialized for user:', userId);
   }
 };
 

@@ -98,6 +98,7 @@ export default function Dashboard() {
   const [categories, setCategories] = useState([]);
   const [allCategories, setAllCategories] = useState([]);
   const [sharedWallets, setSharedWallets] = useState({});
+  const [sharedWalletsInfo, setSharedWalletsInfo] = useState({});
   const [error, setError] = useState(null);
 
   // Dialog states centralized
@@ -225,17 +226,50 @@ export default function Dashboard() {
   // Process transaction data for profile pictures
   const processTransactions = (transactions) => {
     return transactions.map(transaction => {
-      if (!transaction.user) return transaction;
-
-      // Handle profile picture from user object
-      if (transaction.user.profilePicture && !transaction.user.profilePicture.startsWith('http')) {
-        transaction.user.profilePicture = `${API_BASE_URL}${transaction.user.profilePicture}`;
+      // Skip processing if no transaction data
+      if (!transaction) return transaction;
+      
+      // For shared wallets, ensure proper user data and profile pictures
+      if (transaction.wallet && sharedWallets[transaction.wallet.id]) {
+        const walletInfo = sharedWalletsInfo[transaction.wallet.id];
+        
+        // If no wallet info available, skip additional processing
+        if (!walletInfo) return transaction;
+        
+        // If no user at all, create one with wallet owner info
+        if (!transaction.user) {
+          const isOwnerTransaction = transaction.userId === walletInfo.ownerId;
+          
+          if (isOwnerTransaction) {
+            transaction.user = {
+              id: walletInfo.ownerId,
+              username: walletInfo.ownerUsername,
+              profilePicture: walletInfo.ownerProfilePictureUrl
+            };
+          } else {
+            transaction.user = {
+              id: walletInfo.sharedWithId,
+              username: walletInfo.sharedWithUsername,
+              profilePicture: walletInfo.sharedWithProfilePictureUrl
+            };
+          }
+        } 
+        // If user exists but no profile picture, try to add from wallet info
+        else if (!transaction.user.profilePicture) {
+          if (transaction.user.id === walletInfo.ownerId) {
+            transaction.user.profilePicture = walletInfo.ownerProfilePictureUrl;
+          } else if (transaction.user.id === walletInfo.sharedWithId) {
+            transaction.user.profilePicture = walletInfo.sharedWithProfilePictureUrl;
+          }
+        }
       }
       
-      // Handle profile picture from userProfile object
-      if (transaction.user.userProfile?.profilePicturePath) {
-        const path = transaction.user.userProfile.profilePicturePath;
-        transaction.user.profilePicture = path.startsWith('http') ? path : `${API_BASE_URL}${path}`;
+      // Ensure all profile picture URLs have the API base URL if they're relative paths
+      if (transaction.user && transaction.user.profilePicture) {
+        if (!transaction.user.profilePicture.startsWith('http') && 
+            !transaction.user.profilePicture.startsWith('data:')) {
+          transaction.user.profilePicture = `${API_BASE_URL}${transaction.user.profilePicture}`;
+        }
       }
       
       return transaction;
@@ -247,11 +281,9 @@ export default function Dashboard() {
     try {
       if (!user?.id) return;
       
-      console.log('Attempting to fetch user profile data...');
       const response = await FinanceService.getUserProfile(user.id);
 
       if (response.data) {
-        console.log('Profile data received successfully');
         setUserProfile(prevProfile => ({
           ...prevProfile,
           ...response.data
@@ -291,14 +323,34 @@ export default function Dashboard() {
       
       // Process shared wallets
       const sharedWalletsMap = {};
-      [...(sharedWithMeResponse.data || []), ...(sharedByMeResponse.data || [])]
-        .filter(shared => shared.accepted)
-        .forEach(shared => {
-          sharedWalletsMap[shared.walletId] = true;
+      const sharedInfo = {};
+      
+      // Process shared wallets similar to WalletOverview component
+      const processSharedWallets = (wallets, isOwner) => {
+        wallets.forEach(sharedWallet => {
+          if (sharedWallet.accepted) {
+            sharedWalletsMap[sharedWallet.walletId] = true;
+            sharedInfo[sharedWallet.walletId] = {
+              isShared: true,
+              isOwner,
+              ownerUsername: sharedWallet.ownerUsername,
+              ownerId: sharedWallet.ownerId,
+              sharedWithId: sharedWallet.sharedWithId,
+              sharedWithUsername: sharedWallet.sharedWithUsername,
+              walletName: sharedWallet.walletName,
+              ownerProfilePictureUrl: sharedWallet.ownerProfilePictureUrl,
+              sharedWithProfilePictureUrl: sharedWallet.sharedWithProfilePictureUrl
+            };
+          }
         });
+      };
+      
+      processSharedWallets(sharedWithMeResponse.data || [], false);
+      processSharedWallets(sharedByMeResponse.data || [], true);
       
       // Update state with fetched data
       setSharedWallets(sharedWalletsMap);
+      setSharedWalletsInfo(sharedInfo);
       setFinancialData({
         totalBalance: summaryResponse.data.totalBalance || 0,
         totalIncome: summaryResponse.data.totalIncome || 0,
@@ -309,8 +361,8 @@ export default function Dashboard() {
       
       // Process and set transactions
       const processedTransactions = processTransactions(transactionsResponse.data || []);
-      setTransactions(processedTransactions.slice(0, 5));
-      setFilteredTransactions(processedTransactions.slice(0, 5));
+      setTransactions(processedTransactions.slice(0, 8));
+      setFilteredTransactions(processedTransactions.slice(0, 8));
       setAllTransactions(processedTransactions || []);
     } catch (error) {
       setError('Failed to load financial data. Please try again later.');
@@ -334,7 +386,7 @@ export default function Dashboard() {
       const processedTransactions = processTransactions(response.data || []);
       setFilteredTransactions(processedTransactions);
       setAllTransactions(processedTransactions);
-      setTransactions(processedTransactions.slice(0, 5));
+      setTransactions(processedTransactions.slice(0, 8));
     } catch (err) {
       console.error('Error fetching transactions:', err);
     }
@@ -487,7 +539,7 @@ export default function Dashboard() {
       
       setTransactions(prev => {
         const updated = prev.filter(filterPredicate);
-        return updated.length < 5 ? allTransactions.filter(filterPredicate).slice(0, 5) : updated;
+        return updated.length < 8 ? allTransactions.filter(filterPredicate).slice(0, 8) : updated;
       });
       
       // Update financial data
@@ -602,6 +654,7 @@ export default function Dashboard() {
                   categories={categories}
                   wallets={wallets}
                   sharedWallets={sharedWallets}
+                  sharedWalletsInfo={sharedWalletsInfo}
                   onAddTransaction={() => updateDialogState('transactionForm', true)}
                   onEditTransaction={handleEditTransaction}
                   onDeleteTransaction={handleDeleteTransaction}
