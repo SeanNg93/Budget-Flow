@@ -191,7 +191,15 @@ const TransactionRow = React.memo(({
             : styles.expenseTag}
           sx={{ display: 'flex', alignItems: 'center' }}
         >
-          {transaction.transactionType}
+          <Typography 
+            component="span"
+            sx={{ 
+              fontWeight: 'bold',
+              fontSize: 'inherit'
+            }}
+          >
+            {transaction.transactionType}
+          </Typography>
           {transaction.wallet && sharedWallets[transaction.wallet.id] && transaction.user && (
             <Tooltip 
               title={`Created by: ${transaction.user.username}`}
