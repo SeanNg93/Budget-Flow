@@ -82,7 +82,12 @@ export const getTransactions = () => {
 };
 
 export const getFilteredTransactions = (filterParams) => {
-  // Build query params
+  // If client-side filtered data was provided, use it directly
+  if (filterParams.clientFiltered) {
+    return Promise.resolve({ data: filterParams.clientFiltered });
+  }
+  
+  // Otherwise, perform regular API call with query params
   const params = new URLSearchParams();
   
   // Add start and end dates if provided
@@ -99,6 +104,11 @@ export const getFilteredTransactions = (filterParams) => {
   }
   if (filterParams.categoryId && filterParams.categoryId !== 'all') {
     params.append('categoryId', filterParams.categoryId);
+  }
+  
+  // Add transaction type filter if provided
+  if (filterParams.transactionType && filterParams.transactionType !== 'all') {
+    params.append('transactionType', filterParams.transactionType);
   }
   
   // Always include category info

@@ -357,11 +357,6 @@ const FinanceChart = () => {
     updateDateRangeForTimeRange(newIndex);
   }, [timeRangeIndex, updateDateRangeForTimeRange]);
 
-  // Utility functions with useCallback
-  const exportToExcel = useCallback(() => {
-    alert('Export to Excel functionality would be implemented here');
-  }, []);
-
   // Secret feature handler with useCallback
   const handleIncomeLabelClick = useCallback(() => {
     if (mockDataMode) {
@@ -427,16 +422,6 @@ const FinanceChart = () => {
               timeRangeIndex={timeRangeIndex}
               handleTimeRangeChange={handleTimeRangeChange}
             />
-            
-            <IconButton 
-              onClick={exportToExcel} 
-              title="Export to Excel"
-              size="small"
-              className={styles.exportButton}
-              aria-label="Export to Excel"
-            >
-              <FileDownloadIcon fontSize="small" />
-            </IconButton>
           </Box>
         }
       />

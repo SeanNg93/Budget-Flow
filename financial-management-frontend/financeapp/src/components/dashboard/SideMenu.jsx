@@ -83,7 +83,6 @@ const SideMenu = ({ open, handleDrawerClose, setProfileDialogOpen, setCategoryMa
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
     { text: 'Transactions', icon: <AccountBalanceWalletIcon />, path: '/transactions' },
     { text: 'Category Manage', icon: <CategoryIcon />, path: '/categories' },
-    { text: 'Reports', icon: <BarChartIcon />, path: '/reports' },
     { text: 'Profile', icon: <PersonIcon />, path: '/profile' },
     { text: 'Settings', icon: <SettingsIcon />, path: '/settings' },
   ];

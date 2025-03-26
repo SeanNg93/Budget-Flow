@@ -1,0 +1,227 @@
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
+
+/**
+ * Format date for Excel report
+ * @param {string} dateString - Date string to format
+ * @returns {string} Formatted date string
+ */
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-GB', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
+};
+
+/**
+ * Export transactions to Excel file
+ * @param {Array} transactions - Array of transaction objects
+ * @param {Function} formatCurrency - Function to format currency values
+ * @param {string} filename - Name of the output file (without extension)
+ */
+export const exportTransactionsToExcel = async (transactions, formatCurrency, filename = 'transactions-export') => {
+  // Create a new workbook
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = 'Budget Flow App';
+  workbook.lastModifiedBy = 'Budget Flow App';
+  workbook.created = new Date();
+  workbook.modified = new Date();
+  
+  // Add a worksheet
+  const worksheet = workbook.addWorksheet('Transactions');
+  
+  // Define columns
+  worksheet.columns = [
+    { header: 'Date', key: 'date', width: 15 },
+    { header: 'Description', key: 'description', width: 40 },
+    { header: 'Category', key: 'category', width: 20 },
+    { header: 'Wallet', key: 'wallet', width: 20 },
+    { header: 'Type', key: 'type', width: 20 },
+    { header: 'Amount', key: 'amount', width: 15 }
+  ];
+  
+  // Style the header row
+  const headerRow = worksheet.getRow(1);
+  headerRow.font = { bold: true, size: 12 };
+  headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
+  headerRow.height = 25;
+  
+  // Add background color to header
+  headerRow.eachCell((cell) => {
+    cell.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFE0E0E0' }
+    };
+    
+    // Add border to header cells
+    cell.border = {
+      top: { style: 'thin' },
+      left: { style: 'thin' },
+      bottom: { style: 'thin' },
+      right: { style: 'thin' }
+    };
+  });
+  
+  // Add transactions data
+  transactions.forEach(transaction => {
+    // Determine the sign for the amount based on transaction type
+    const isIncome = transaction.transactionType === 'INCOME';
+    const amount = isIncome ? transaction.amount : -transaction.amount;
+    
+    // Parse amount to remove currency symbols for Excel
+    const amountValue = typeof amount === 'string' 
+      ? parseFloat(amount.replace(/[^0-9.-]+/g, '')) 
+      : amount;
+    
+    // Check if this is a shared wallet
+    const hasSharedWalletFlag = transaction.wallet && 
+                      transaction.wallet.id && 
+                      Object.prototype.hasOwnProperty.call(transaction, 'sharedWallets') &&
+                      transaction.sharedWallets &&
+                      transaction.wallet.id in transaction.sharedWallets;
+    
+    // Special check for "bet" wallet which is shared in the app
+    const isBetWallet = transaction.wallet && 
+                       transaction.wallet.accountName && 
+                       transaction.wallet.accountName.toLowerCase() === 'bet';
+    
+    // Check if wallet name already includes "(shared)"
+    const nameIncludesShared = transaction.wallet && 
+                              transaction.wallet.accountName && 
+                              transaction.wallet.accountName.includes('(shared)');
+    
+    // Determine if it's a shared wallet
+    const isSharedWallet = hasSharedWalletFlag || nameIncludesShared || isBetWallet;
+    
+    // Format wallet name with "(shared)" indicator if needed
+    const walletName = transaction.wallet 
+      ? transaction.wallet.accountName + (isSharedWallet && !nameIncludesShared ? ' (shared)' : '')
+      : (transaction.account ? transaction.account.accountName : 'Unknown');
+    
+    // Format type with username for shared wallets
+    let typeWithUser = transaction.transactionType;
+    if (isSharedWallet && transaction.user && transaction.user.username) {
+      typeWithUser = `${transaction.transactionType} (${transaction.user.username})`;
+    }
+    
+    // Add row to worksheet
+    worksheet.addRow({
+      date: formatDate(transaction.transactionDate),
+      description: transaction.description || '',
+      category: transaction.category 
+        ? transaction.category.categoryName 
+        : (transaction.categoryId ? `Category #${transaction.categoryId}` : 'Uncategorized'),
+      wallet: walletName,
+      type: typeWithUser,
+      amount: amountValue
+    });
+  });
+  
+  // Style the amount column
+  // Get the amount column (column 6)
+  const amountColumn = worksheet.getColumn(6);
+  
+  // Format the amount cells for currency
+  amountColumn.eachCell((cell, rowNumber) => {
+    // Skip header row
+    if (rowNumber > 1) {
+      // Set number format
+      cell.numFmt = '$#,##0.00;[Red]-$#,##0.00';
+      
+      // Set color based on value
+      const value = cell.value;
+      if (value < 0) {
+        cell.font = { color: { argb: 'FFFF0000' } }; // Red for negative
+      } else if (value > 0) {
+        cell.font = { color: { argb: 'FF008000' } }; // Green for positive
+      }
+    }
+  });
+  
+  // Style data rows
+  worksheet.eachRow((row, rowNumber) => {
+    // Skip header row
+    if (rowNumber > 1) {
+      // Add border to cells
+      row.eachCell((cell) => {
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
+        };
+        
+        // Align text
+        cell.alignment = { 
+          vertical: 'middle',
+          // Align amount to right, date to center, others to left
+          horizontal: cell.col === 6 ? 'right' : (cell.col === 1 ? 'center' : 'left')
+        };
+      });
+      
+      // Alternate row background for better readability
+      if (rowNumber % 2 === 0) {
+        row.eachCell((cell) => {
+          cell.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFF9F9F9' }
+          };
+        });
+      }
+    }
+  });
+  
+  // Add a total row at the bottom
+  const totalRowIndex = transactions.length + 2;
+  const totalRow = worksheet.getRow(totalRowIndex);
+  
+  // Calculate total income and expenses
+  const totalIncome = transactions
+    .filter(t => t.transactionType === 'INCOME')
+    .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+    
+  const totalExpense = transactions
+    .filter(t => t.transactionType === 'EXPENSE')
+    .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+    
+  const netAmount = totalIncome - totalExpense;
+  
+  // Add total row
+  totalRow.getCell(5).value = 'TOTAL';
+  totalRow.getCell(5).font = { bold: true };
+  totalRow.getCell(6).value = netAmount;
+  totalRow.getCell(6).font = { 
+    bold: true,
+    color: { argb: netAmount >= 0 ? 'FF008000' : 'FFFF0000' }
+  };
+  totalRow.getCell(6).numFmt = '$#,##0.00;[Red]-$#,##0.00';
+  
+  // Style the total row
+  totalRow.eachCell((cell, colNumber) => {
+    if (colNumber >= 5) {
+      cell.border = {
+        top: { style: 'double' },
+        left: { style: 'thin' },
+        bottom: { style: 'double' },
+        right: { style: 'thin' }
+      };
+      
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFF0F0F0' }
+      };
+    }
+  });
+  
+  // Generate Excel file
+  const buffer = await workbook.xlsx.writeBuffer();
+  
+  // Save file
+  saveAs(new Blob([buffer]), `${filename}.xlsx`);
+}; 

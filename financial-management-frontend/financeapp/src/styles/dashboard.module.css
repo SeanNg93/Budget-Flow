@@ -1000,15 +1000,16 @@ body, button, input, select, textarea {
 }
 
 /* Transaction Filter Controls */
-.filterButton, .addNewButton {
-  border-radius: 4px;
-  padding: 4px 12px;
-  font-size: 0.75rem;
-  height: 32px;
-  min-width: 70px;
-  font-weight: 500;
+.filterButton, .addNewButton, .exportButton {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
   text-transform: none;
-  transition: all 0.2s ease;
+  font-weight: 500;
+  font-size: 0.875rem;
 }
 
 .filterButton {
@@ -1321,4 +1322,23 @@ button.resetFilterButton {
 
 .expandCollapseButton:hover {
   background-color: rgba(0, 0, 0, 0.15);
+}
+
+.exportButton {
+  color: #43a047;
+  padding: 0.35rem 0.8rem;
+  min-width: 90px;
+  margin-left: 8px;
+  font-size: 0.8rem;
+  height: 32px;
+  border-color: #43a047;
+}
+
+.exportButton:hover {
+  background-color: rgba(76, 175, 80, 0.08);
+}
+
+.exportButton:disabled {
+  color: rgba(0, 0, 0, 0.26);
+  border-color: rgba(0, 0, 0, 0.12);
 }
