@@ -225,7 +225,6 @@ const NotificationMenu = () => {
         MenuListProps={{
           className: styles.menuList
         }}
-        disableScrollLock
       >
         <Box className={styles.headerContainer}>
           <Box className={styles.titleContainer}>

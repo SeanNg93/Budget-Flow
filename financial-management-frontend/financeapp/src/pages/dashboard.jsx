@@ -161,7 +161,27 @@ export default function Dashboard() {
 
   // Handle location state for navigation/search
   useEffect(() => {
-    if (!location.state) return;
+    // Check if location state exists
+    if (!location.state) {
+      // Check if there's a persisted dialog state in localStorage
+      try {
+        const persistedState = sessionStorage.getItem('dashboardDialogState');
+        if (persistedState) {
+          // Clear it immediately to prevent reappearing on refresh
+          sessionStorage.removeItem('dashboardDialogState');
+        }
+      } catch (err) {
+        console.error('Error handling persisted dialog state:', err);
+      }
+      return;
+    }
+    
+    // Store current state in sessionStorage before processing
+    try {
+      sessionStorage.setItem('dashboardDialogState', JSON.stringify(location.state));
+    } catch (err) {
+      console.error('Error storing dialog state:', err);
+    }
     
     // Extract dialog actions from location state
     const dialogMappings = {
@@ -181,26 +201,33 @@ export default function Dashboard() {
     });
     
     // Handle item selection from search
-      if (location.state.selectedWallet) {
-        setSelectedWallet(location.state.selectedWallet);
+    if (location.state.selectedWallet) {
+      setSelectedWallet(location.state.selectedWallet);
       updateDialogState('walletManageForm', true);
-      }
+    }
     
-      if (location.state.selectedTransaction) {
-        const transactionId = location.state.selectedTransaction;
-        const transaction = transactions.find(t => t.id === transactionId);
+    if (location.state.selectedTransaction) {
+      const transactionId = location.state.selectedTransaction;
+      const transaction = transactions.find(t => t.id === transactionId);
       
-        if (transaction) {
-          setSelectedTransaction(transaction);
+      if (transaction) {
+        setSelectedTransaction(transaction);
         updateDialogState('editTransactionOpen', true);
-        } else {
-          fetchTransactionDetails(transactionId);
-        }
+      } else {
+        fetchTransactionDetails(transactionId);
       }
+    }
       
     // Clear location state
-      navigate(location.pathname, { replace: true });
-  }, [location, transactions]);
+    navigate(location.pathname, { replace: true, state: {} });
+    
+    // Also clear from sessionStorage when processed
+    try {
+      sessionStorage.removeItem('dashboardDialogState');
+    } catch (err) {
+      console.error('Error removing dialog state:', err);
+    }
+  }, [location, transactions, navigate]);
 
   // Authentication check
   const checkAuth = async () => {

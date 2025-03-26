@@ -187,9 +187,6 @@ const AppTheme = ({ children, themeComponents = {} }) => {
             backgroundColor: '#F2F2F7',
             borderRight: 'none',
           },
-        },
-        defaultProps: {
-          disableScrollLock: true
         }
       },
       MuiDivider: {
@@ -266,24 +263,20 @@ const AppTheme = ({ children, themeComponents = {} }) => {
       },
       MuiPopover: {
         defaultProps: {
-          container: document.body,
-          disableScrollLock: true // Prevents scroll locking which causes shifts
+          container: document.body
         }
       },
       MuiModal: {
         defaultProps: {
-          disableScrollLock: true // Prevents automatic padding adjustments
         }
       },
       MuiDialog: {
         defaultProps: {
-          disableScrollLock: true
         }
       },
       MuiSelect: {
         defaultProps: {
           MenuProps: {
-            disableScrollLock: true // Prevents shifts when dropdown opens
           }
         }
       }
