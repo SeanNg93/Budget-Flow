@@ -31,11 +31,14 @@ import {
   Search as SearchIcon,
   Close as CloseIcon,
   Edit as EditIcon,
-  Delete as DeleteIcon
+  Delete as DeleteIcon,
+  FileDownload as FileDownloadIcon
 } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
 import { subDays } from 'date-fns';
 import styles from '../../styles/dashboard.module.css';
+import { exportTransactionsToExcel } from '../../utils/excelExport';
+import FinanceService from '../../services/FinanceService';
 
 // Constants
 const TIME_PERIODS = [
@@ -103,7 +106,7 @@ const FilterActionButtons = ({ resetTransactionFilters, applyTransactionFilters,
     justifyContent: 'flex-end', 
     alignItems: 'center',
     width: '100%', 
-    gap: 1,
+    gap: 2,
     mt: { xs: 2, md: 0 }
   }}>
     <Button
@@ -112,6 +115,13 @@ const FilterActionButtons = ({ resetTransactionFilters, applyTransactionFilters,
       className={styles.resetFilterButton}
       disabled={isFiltering}
       aria-label="Reset all filters"
+      sx={{ 
+        minWidth: '80px',
+        height: '36px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}
     >
       Reset
     </Button>
@@ -122,6 +132,13 @@ const FilterActionButtons = ({ resetTransactionFilters, applyTransactionFilters,
       className={styles.applyFilterButton}
       disabled={isFiltering}
       aria-label="Apply selected filters"
+      sx={{ 
+        minWidth: '120px',
+        height: '36px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}
     >
       {isFiltering ? 'Loading...' : 'Apply Filters'}
     </Button>
@@ -498,6 +515,8 @@ const TransactionsSection = ({
     categoryId: 'all',
     minAmount: '',
     maxAmount: '',
+    transactionType: 'all',
+    userId: 'all',
     isLoading: false,
     showCustomDateRange: false,
     customStartDate: subDays(new Date(), 7),
@@ -534,7 +553,7 @@ const TransactionsSection = ({
 
   // Helper to calculate filter parameters
   const calculateFilterParams = useCallback(() => {
-    const { timeframe, showCustomDateRange, customStartDate, customEndDate, walletId, categoryId, minAmount, maxAmount } = filterState;
+    const { timeframe, showCustomDateRange, customStartDate, customEndDate, walletId, categoryId, minAmount, maxAmount, transactionType, userId } = filterState;
     const filterParams = {};
     
     // Calculate date range
@@ -556,6 +575,12 @@ const TransactionsSection = ({
     if (walletId !== 'all') filterParams.walletId = walletId;
     if (categoryId !== 'all') filterParams.categoryId = categoryId;
     
+    // Add transaction type filter if not "all"
+    if (transactionType !== 'all') filterParams.transactionType = transactionType;
+    
+    // Add user filter if not "all"
+    if (userId !== 'all') filterParams.userId = userId;
+    
     // Add amount range filters if provided
     if (minAmount && !isNaN(parseFloat(minAmount))) {
       filterParams.minAmount = parseFloat(minAmount);
@@ -571,13 +596,99 @@ const TransactionsSection = ({
   const applyTransactionFilters = useCallback(() => {
     updateFilterState({ isLoading: true });
     
-    // Get filter parameters and call parent component's filter handler
+    // Get filter parameters
     const filterParams = calculateFilterParams();
-    onApplyFilters(filterParams);
     
-    // Reset loading state after filters are applied
-    updateFilterState({ isLoading: false });
-  }, [calculateFilterParams, onApplyFilters, updateFilterState]);
+    // Check if we need to apply client-side filtering
+    const needsClientFilter = filterState.transactionType !== 'all' || 
+                             filterState.userId !== 'all' ||
+                             (filterState.minAmount && !isNaN(parseFloat(filterState.minAmount))) || 
+                             (filterState.maxAmount && !isNaN(parseFloat(filterState.maxAmount)));
+    
+    // If we need client-side filtering, handle it directly
+    if (needsClientFilter) {
+      // Get all transactions first to ensure we have a complete dataset
+      FinanceService.getTransactions()
+        .then(response => {
+          let transactions = response.data || [];
+          
+          // Apply all server-side filters first
+          if (filterParams.startDate && filterParams.endDate) {
+            transactions = transactions.filter(t => {
+              const tDate = new Date(t.transactionDate);
+              return tDate >= new Date(filterParams.startDate) && 
+                     tDate <= new Date(filterParams.endDate);
+            });
+          }
+          
+          if (filterParams.walletId) {
+            transactions = transactions.filter(t => 
+              (t.wallet && t.wallet.id.toString() === filterParams.walletId) ||
+              (t.account && t.account.id.toString() === filterParams.walletId)
+            );
+          }
+          
+          if (filterParams.categoryId) {
+            transactions = transactions.filter(t => 
+              (t.category && t.category.id.toString() === filterParams.categoryId) ||
+              (t.categoryId && t.categoryId.toString() === filterParams.categoryId)
+            );
+          }
+          
+          // Apply client-side filters
+          
+          // Transaction type filter
+          if (filterState.transactionType !== 'all') {
+            transactions = transactions.filter(t => t.transactionType === filterState.transactionType);
+          }
+          
+          // User filter
+          if (filterState.userId !== 'all') {
+            transactions = transactions.filter(t => t.user && t.user.id.toString() === filterState.userId);
+          }
+          
+          // Apply amount range filters - FIXED LOGIC HERE
+          const minAmount = filterState.minAmount ? parseFloat(filterState.minAmount) : null;
+          const maxAmount = filterState.maxAmount ? parseFloat(filterState.maxAmount) : null;
+          
+          if (minAmount !== null || maxAmount !== null) {
+            transactions = transactions.filter(transaction => {
+              // Get the actual amount value 
+              const transactionAmount = parseFloat(transaction.amount);
+              
+              // Use absolute value for comparison to handle both income and expenses
+              const absAmount = Math.abs(transactionAmount);
+              
+              // Check min boundary if specified
+              if (minAmount !== null && absAmount < minAmount) {
+                return false;
+              }
+              
+              // Check max boundary if specified
+              if (maxAmount !== null && absAmount > maxAmount) {
+                return false;
+              }
+              
+              return true;
+            });
+          }
+          
+          // Send the client-filtered results to the parent component
+          onApplyFilters({
+            clientFiltered: transactions
+          });
+        })
+        .finally(() => {
+          updateFilterState({ isLoading: false });
+        });
+    } else {
+      // Use the normal server-side approach for other types of filtering
+      onApplyFilters(filterParams)
+        .finally(() => {
+          updateFilterState({ isLoading: false });
+        });
+    }
+  }, [calculateFilterParams, onApplyFilters, updateFilterState, filterState]);
   
   // Function to reset filters
   const resetTransactionFilters = useCallback(() => {
@@ -587,10 +698,11 @@ const TransactionsSection = ({
       categoryId: 'all',
       minAmount: '',
       maxAmount: '',
+      transactionType: 'all',
+      userId: 'all',
       showCustomDateRange: false,
       customStartDate: subDays(new Date(), 7),
-      customEndDate: new Date(),
-      open: false
+      customEndDate: new Date()
     });
     onResetFilters();
   }, [updateFilterState, onResetFilters]);
@@ -651,7 +763,6 @@ const TransactionsSection = ({
 
   // Toggle search input visibility
   const toggleSearch = useCallback(() => {
-    console.log('Toggle search clicked');
     if (searchState.open) {
       // If search is open, close it and reset everything
       updateSearchState({ 
@@ -704,42 +815,53 @@ const TransactionsSection = ({
       return `No transactions found matching "${searchState.term}"`;
     }
     
+    // Check if filters have been applied
+    const filtersApplied = 
+      filterState.walletId !== 'all' || 
+      filterState.categoryId !== 'all' || 
+      filterState.transactionType !== 'all' ||
+      filterState.userId !== 'all' ||
+      filterState.minAmount || 
+      filterState.maxAmount ||
+      filterState.timeframe !== 'week';
+    
+    if (filtersApplied) {
+      return 'No transactions match your filter criteria. Try adjusting your filters.';
+    }
+    
     if (filterState.open) {
-      return 'No transactions match your filter criteria.';
+      return 'Select filter criteria and click "Apply Filters" to find specific transactions.';
     }
     
     return 'No transactions to display. Start adding your financial data to see it here.';
-  }, [searchState.term, filterState.open]);
+  }, [searchState.term, filterState, filteredTransactions]);
 
   // Handle amount input
   const handleAmountChange = useCallback((field, event) => {
     const value = event.target.value;
-    // Only allow valid number inputs (including decimal)
-    if (value === '' || /^[0-9]*\.?[0-9]*$/.test(value)) {
+    // Allow negative numbers and decimals
+    if (value === '' || /^-?\d*\.?\d*$/.test(value)) {
       updateFilterState({ [field]: value });
     }
   }, [updateFilterState]);
 
-  // Render filter controls
-  const renderFilterControls = () => (
-    <Collapse in={filterState.open}>
+  // Render Filter Controls
+  const renderFilterControls = useCallback(() => (
+    <Collapse in={filterState.open} timeout="auto" unmountOnExit>
       <Box className={styles.filterControls}>
-        <Grid container spacing={2} alignItems="flex-start">
-          {/* First row - filters */}
-          <Grid item xs={12} md={9}>
-            <Grid container spacing={2}>
-          {/* Time Period filter */}
-              <Grid item xs={12} sm={6} md={4}>
-            <FormControl fullWidth size="small">
+        <Grid container spacing={2} alignItems="center">
+          {/* Time Period */}
+          <Grid item xs={12} sm={6} md={3}>
+            <FormControl fullWidth variant="outlined" size="small" className={styles.filterTextField}>
               <InputLabel id="time-period-label">Time Period</InputLabel>
               <Select
                 labelId="time-period-label"
                 value={filterState.timeframe}
+                onChange={(e) => handleTimeframeChange(e)}
                 label="Time Period"
-                onChange={handleTimeframeChange}
-                className={styles.filterSelect}
+                disabled={filterState.isLoading}
               >
-                {TIME_PERIODS.map(period => (
+                {TIME_PERIODS.map((period) => (
                   <MenuItem key={period.value} value={period.value}>
                     {period.label}
                   </MenuItem>
@@ -747,17 +869,17 @@ const TransactionsSection = ({
               </Select>
             </FormControl>
           </Grid>
-          
-          {/* Wallet filter */}
-              <Grid item xs={12} sm={6} md={4}>
-            <FormControl fullWidth size="small">
-              <InputLabel id="wallet-filter-label">Wallet</InputLabel>
+
+          {/* Wallet */}
+          <Grid item xs={12} sm={6} md={3}>
+            <FormControl fullWidth variant="outlined" size="small" className={styles.filterTextField}>
+              <InputLabel id="wallet-label">Wallet</InputLabel>
               <Select
-                labelId="wallet-filter-label"
+                labelId="wallet-label"
                 value={filterState.walletId}
-                label="Wallet"
                 onChange={(e) => updateFilterState({ walletId: e.target.value })}
-                className={styles.filterSelect}
+                label="Wallet"
+                disabled={filterState.isLoading}
               >
                 <MenuItem value="all">All Wallets</MenuItem>
                 {wallets.map((wallet) => (
@@ -768,93 +890,172 @@ const TransactionsSection = ({
               </Select>
             </FormControl>
           </Grid>
-          
-          {/* Category filter */}
-              <Grid item xs={12} sm={6} md={4}>
-            <FormControl fullWidth size="small">
-              <InputLabel id="category-filter-label">Category</InputLabel>
+
+          {/* Category */}
+          <Grid item xs={12} sm={6} md={3}>
+            <FormControl fullWidth variant="outlined" size="small" className={styles.filterTextField}>
+              <InputLabel id="category-label">Category</InputLabel>
               <Select
-                labelId="category-filter-label"
+                labelId="category-label"
                 value={filterState.categoryId}
-                label="Category"
                 onChange={(e) => updateFilterState({ categoryId: e.target.value })}
-                className={styles.filterSelect}
+                label="Category"
+                disabled={filterState.isLoading}
               >
                 <MenuItem value="all">All Categories</MenuItem>
                 {categories.map((category) => (
                   <MenuItem key={category.id} value={category.id.toString()}>
-                    {category.categoryName} {category.type === 'INCOME' ? '(Income)' : '(Expense)'}
+                    {category.categoryName}
                   </MenuItem>
                 ))}
               </Select>
             </FormControl>
           </Grid>
-          
-              {/* Amount Range filters */}
-              <Grid item xs={12} sm={6} md={4}>
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  <TextField
-                    label="Min Amount"
-                    value={filterState.minAmount}
-                    onChange={(e) => handleAmountChange('minAmount', e)}
-                    variant="outlined"
-                    size="small"
-                    className={styles.filterTextField}
-                    InputProps={{
-                      startAdornment: <InputAdornment position="start">$</InputAdornment>,
-                    }}
-                    placeholder="0.00"
-                  />
-                  <TextField
-                    label="Max Amount"
-                    value={filterState.maxAmount}
-                    onChange={(e) => handleAmountChange('maxAmount', e)}
-                    variant="outlined"
-                    size="small"
-                    className={styles.filterTextField}
-                    InputProps={{
-                      startAdornment: <InputAdornment position="start">$</InputAdornment>,
-                    }}
-                    placeholder="0.00"
-                  />
-                </Box>
-              </Grid>
-              
-              {/* Custom date range */}
-              {filterState.showCustomDateRange && (
-                <Grid item xs={12} sm={12} md={8}>
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-              <DateRangePickers 
-                customStartDate={filterState.customStartDate}
-                customEndDate={filterState.customEndDate}
-                handleStartDateChange={handleStartDateChange}
-                handleEndDateChange={handleEndDateChange}
-              />
-                  </Box>
-                </Grid>
-              )}
-            </Grid>
+
+          {/* Transaction Type - New filter */}
+          <Grid item xs={12} sm={6} md={3}>
+            <FormControl fullWidth variant="outlined" size="small" className={styles.filterTextField}>
+              <InputLabel id="transaction-type-label">Transaction Type</InputLabel>
+              <Select
+                labelId="transaction-type-label"
+                value={filterState.transactionType}
+                onChange={(e) => updateFilterState({ transactionType: e.target.value })}
+                label="Transaction Type"
+                disabled={filterState.isLoading}
+              >
+                <MenuItem value="all">All Types</MenuItem>
+                <MenuItem value="INCOME">Income</MenuItem>
+                <MenuItem value="EXPENSE">Expense</MenuItem>
+              </Select>
+            </FormControl>
           </Grid>
-          
-          {/* Action buttons - always positioned on the right */}
-          <Grid item xs={12} md={3} sx={{ 
-            display: 'flex', 
-            alignItems: 'flex-start', 
-            justifyContent: 'flex-end',
-            position: { md: 'sticky' },
-            top: { md: 0 },
-            alignSelf: { md: 'flex-start' }
-          }}>
-              <FilterActionButtons 
-                resetTransactionFilters={resetTransactionFilters}
-                applyTransactionFilters={applyTransactionFilters}
-                isFiltering={filterState.isLoading}
-              />
+
+          {/* Amount Range */}
+          <Grid item xs={12} sm={6} md={3}>
+            <TextField
+              fullWidth
+              label="Min Amount"
+              variant="outlined"
+              size="small"
+              value={filterState.minAmount || ''}
+              onChange={(e) => handleAmountChange('minAmount', e)}
+              disabled={filterState.isLoading}
+              className={styles.filterTextField}
+              InputProps={{
+                startAdornment: <InputAdornment position="start">$</InputAdornment>,
+              }}
+            />
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={3}>
+            <TextField
+              fullWidth
+              label="Max Amount"
+              variant="outlined"
+              size="small"
+              value={filterState.maxAmount || ''}
+              onChange={(e) => handleAmountChange('maxAmount', e)}
+              disabled={filterState.isLoading}
+              className={styles.filterTextField}
+              InputProps={{
+                startAdornment: <InputAdornment position="start">$</InputAdornment>,
+              }}
+            />
+          </Grid>
+
+          {/* User Filter - Only show if shared wallets exist */}
+          {(sharedWallets && Object.keys(sharedWallets).length > 0) && (
+            <Grid item xs={12} sm={6} md={3}>
+              <FormControl fullWidth variant="outlined" size="small" className={styles.filterTextField}>
+                <InputLabel id="user-filter-label">User</InputLabel>
+                <Select
+                  labelId="user-filter-label"
+                  value={filterState.userId}
+                  onChange={(e) => updateFilterState({ userId: e.target.value })}
+                  label="User"
+                  disabled={filterState.isLoading}
+                >
+                  <MenuItem value="all">All Users</MenuItem>
+                  {/* Get unique users from shared wallet transactions */}
+                  {Array.from(new Set(
+                    filteredTransactions
+                      .filter(t => t.user && t.wallet && sharedWallets[t.wallet.id])
+                      .map(t => JSON.stringify({ id: t.user.id, username: t.user.username }))
+                  ))
+                    .map(userString => JSON.parse(userString))
+                    .map(user => (
+                      <MenuItem key={user.id} value={user.id.toString()}>
+                        {user.username}
+                      </MenuItem>
+                    ))
+                  }
+                </Select>
+              </FormControl>
             </Grid>
+          )}
+
+          {/* Custom Date Range (conditionally rendered) */}
+          {filterState.showCustomDateRange && (
+            <>
+              <Grid item xs={12} sm={6} md={3}>
+                <DatePicker
+                  label="Start Date"
+                  value={filterState.customStartDate}
+                  onChange={handleStartDateChange}
+                  format="dd/MM/yyyy"
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      size: "small",
+                      disabled: filterState.isLoading,
+                      className: styles.filterTextField
+                    }
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <DatePicker
+                  label="End Date"
+                  value={filterState.customEndDate}
+                  onChange={handleEndDateChange}
+                  format="dd/MM/yyyy"
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      size: "small",
+                      disabled: filterState.isLoading,
+                      className: styles.filterTextField
+                    }
+                  }}
+                />
+              </Grid>
+            </>
+          )}
+          
+          {/* Action buttons - now in their own full-width row, aligned right */}
+          <Grid item xs={12} sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+            <FilterActionButtons 
+              resetTransactionFilters={resetTransactionFilters}
+              applyTransactionFilters={applyTransactionFilters}
+              isFiltering={filterState.isLoading}
+            />
+          </Grid>
         </Grid>
       </Box>
     </Collapse>
-  );
+  ), [
+    filterState,
+    handleTimeframeChange,
+    handleAmountChange,
+    handleStartDateChange,
+    handleEndDateChange,
+    resetTransactionFilters,
+    applyTransactionFilters,
+    categories, 
+    wallets,
+    sharedWallets,
+    filteredTransactions
+  ]);
 
   // Table headers definition
   const tableHeaders = useMemo(() => [
@@ -878,7 +1079,21 @@ const TransactionsSection = ({
     }
     
     if (displayTransactions.length === 0) {
-      return <TableStateMessage message={getEmptyStateMessage} />;
+      return (
+        <Box sx={{ mt: 3, textAlign: 'center' }}>
+          <TableStateMessage message={getEmptyStateMessage} />
+          {/* Show count of filtered transactions */}
+          {filteredTransactions.length === 0 && (
+            <Typography 
+              variant="body2" 
+              color="text.secondary" 
+              sx={{ mt: 1, fontStyle: 'italic' }}
+            >
+              0 transactions match your current criteria
+            </Typography>
+          )}
+        </Box>
+      );
     }
     
     return (
@@ -986,13 +1201,73 @@ const TransactionsSection = ({
     <Grid item xs={12}>
       <Paper className={styles.transactionsCard}>
         <Box className={styles.transactionsHeader}>
-          <Typography 
-            component="h2" 
-            variant="h5" 
-            className={styles.sectionTitle}
-          >
-            Recent Transactions
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Typography 
+              component="h2" 
+              variant="h5" 
+              className={styles.sectionTitle}
+            >
+              Recent Transactions
+            </Typography>
+            
+            {/* Export to Excel button - now positioned next to the title */}
+            <Tooltip title="Export currently filtered transactions to Excel" arrow placement="top">
+              <span>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<FileDownloadIcon />}
+                  onClick={() => {
+                    // Use the current filtered transactions (respecting applied filters)
+                    const dataToExport = filteredTransactions.map(transaction => ({
+                      ...transaction,
+                      // Add a flag to explicitly mark shared wallets for the export function
+                      isShared: transaction.wallet && 
+                              sharedWallets && 
+                              transaction.wallet.id && 
+                              sharedWallets[transaction.wallet.id]
+                    }));
+                    
+                    // Create a more descriptive filename that indicates if filters are applied
+                    const isFiltered = filterState.open && (
+                      filterState.walletId !== 'all' || 
+                      filterState.categoryId !== 'all' || 
+                      filterState.minAmount || 
+                      filterState.maxAmount || 
+                      filterState.timeframe !== 'all'
+                    );
+                    
+                    const filename = isFiltered 
+                      ? `filtered-transactions-${new Date().toISOString().split('T')[0]}`
+                      : `all-transactions-${new Date().toISOString().split('T')[0]}`;
+                    
+                    exportTransactionsToExcel(
+                      dataToExport,
+                      formatCurrency,
+                      filename
+                    );
+                  }}
+                  className={styles.exportButton}
+                  color="success"
+                  disabled={filteredTransactions.length === 0}
+                  sx={{ 
+                    borderColor: 'success.main',
+                    marginLeft: '12px',
+                    '&:hover': { borderColor: 'success.dark', backgroundColor: 'rgba(76, 175, 80, 0.04)' },
+                    ...(filteredTransactions.length !== allTransactions.length && {
+                      backgroundColor: 'rgba(76, 175, 80, 0.08)',
+                      fontWeight: 500
+                    })
+                  }}
+                >
+                  {filteredTransactions.length !== allTransactions.length 
+                    ? `Export (${filteredTransactions.length})` 
+                    : 'Export'
+                  }
+                </Button>
+              </span>
+            </Tooltip>
+          </Box>
           {renderHeaderActions}
         </Box>
         

@@ -84,6 +84,7 @@ export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [filterLoading, setFilterLoading] = useState(false);
   const [wallets, setWallets] = useState([]);
   const [financialData, setFinancialData] = useState({
     totalBalance: 0,
@@ -606,6 +607,38 @@ export default function Dashboard() {
     await fetchTransactions();
   };
 
+  // Handle transaction filter application
+  const handleApplyFilters = async (filterParams) => {
+    try {
+      setFilterLoading(true);
+      
+      // Check if client-filtered data was provided directly
+      if (filterParams.clientFiltered) {
+        // If we have client-filtered data, use it directly
+        const processedTransactions = processTransactions(filterParams.clientFiltered);
+        setFilteredTransactions(processedTransactions);
+        setTransactions(processedTransactions.slice(0, 8));
+        setFilterLoading(false);
+        return;
+      }
+      
+      // Otherwise, make API call for server filtering
+      const response = await FinanceService.getFilteredTransactions(filterParams);
+      const processedTransactions = processTransactions(response.data || []);
+      
+      setFilteredTransactions(processedTransactions);
+      setTransactions(processedTransactions.slice(0, 8));
+      
+      // Return the processed transactions for potential client-side filtering
+      return processedTransactions;
+    } catch (error) {
+      console.error('Error applying filters:', error);
+      toast.error('Failed to apply filters');
+    } finally {
+      setFilterLoading(false);
+    }
+  };
+
   // Loading state
   if (loading) {
     return (
@@ -685,7 +718,7 @@ export default function Dashboard() {
                   onAddTransaction={() => updateDialogState('transactionForm', true)}
                   onEditTransaction={handleEditTransaction}
                   onDeleteTransaction={handleDeleteTransaction}
-                  onApplyFilters={(filterParams) => fetchTransactions(true, filterParams)}
+                  onApplyFilters={handleApplyFilters}
                   onResetFilters={() => fetchTransactions(false)}
                   formatCurrency={(amount) => new Intl.NumberFormat('en-US', {
                     style: 'currency',
