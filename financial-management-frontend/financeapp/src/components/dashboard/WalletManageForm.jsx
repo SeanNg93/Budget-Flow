@@ -27,7 +27,8 @@ import {
   Tooltip,
   Fade,
   Slide,
-  Zoom
+  Zoom,
+  Avatar
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -42,11 +43,32 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import ShareIcon from '@mui/icons-material/Share';
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import CreditCardIcon from '@mui/icons-material/CreditCard';
+import SavingsIcon from '@mui/icons-material/Savings';
+import PaymentsIcon from '@mui/icons-material/Payments';
+import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
+import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+import ShowChartIcon from '@mui/icons-material/ShowChart';
+import SavingsOutlinedIcon from '@mui/icons-material/SavingsOutlined';
 import FinanceService from '../../services/FinanceService';
 import WalletForm from './WalletForm';
 import UserTransferForm from './UserTransferForm';
 import ShareWalletForm from './ShareWalletForm';
 import styles from '../../styles/walletManage.module.css';
+import { WALLET_ICONS, WALLET_COLORS, getWalletIcon, saveWalletIcon, getWalletColorClass, saveWalletColor } from '../../utils/walletIcons';
+
+// Map of icon names to components
+const iconComponents = {
+  wallet: <AccountBalanceWalletIcon />,
+  creditCard: <CreditCardIcon />,
+  savings: <SavingsIcon />,
+  cash: <PaymentsIcon />,
+  investment: <ShowChartIcon />,
+  piggyBank: <SavingsOutlinedIcon />,
+  bank: <AccountBalanceIcon />,
+  shopping: <ShoppingBagIcon />
+};
 
 // Create transition components with forwardRef
 const SlideTransition = React.forwardRef(function Transition(props, ref) {
@@ -68,6 +90,8 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
   const [editWalletId, setEditWalletId] = useState(null);
   const [editWalletName, setEditWalletName] = useState('');
   const [editWalletBalance, setEditWalletBalance] = useState('');
+  const [editWalletIcon, setEditWalletIcon] = useState('wallet');
+  const [editWalletColor, setEditWalletColor] = useState(1);
   const [originalBalance, setOriginalBalance] = useState(0);
   const [totalBalance, setTotalBalance] = useState(0);
   const [availableBalance, setAvailableBalance] = useState(0);
@@ -100,6 +124,9 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
   // Add state for share wallet dialog
   const [shareWalletDialogOpen, setShareWalletDialogOpen] = useState(false);
   const [walletToShare, setWalletToShare] = useState(null);
+
+  // Add state for shared wallets information
+  const [sharedWalletsInfo, setSharedWalletsInfo] = useState({});
 
   // Add refs for transitions
   const newWalletDialogRef = useRef(null);
@@ -137,6 +164,9 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
       const wallets = walletsResponse.data || [];
       setWallets(wallets);
       
+      // Fetch shared wallets information
+      fetchSharedWalletsInfo();
+      
       // Calculate available balance
       calculateAvailableBalance(totalBalance, wallets, null);
     } catch (err) {
@@ -144,6 +174,67 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
       setError('Failed to load wallets. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Add function to fetch shared wallets information
+  const fetchSharedWalletsInfo = async () => {
+    try {
+      // Fetch shared wallets data in parallel
+      const [sharedWithMeResponse, sharedByMeResponse] = await Promise.all([
+        FinanceService.getSharedWalletsWithMe(),
+        FinanceService.getSharedWalletsByMe()
+      ]);
+      
+      // Process shared wallets data
+      const sharedInfo = {};
+      const processSharedWallets = (wallets, isOwner) => {
+        wallets.forEach(sharedWallet => {
+          if (sharedWallet.accepted) {
+            sharedInfo[sharedWallet.walletId] = {
+              isShared: true,
+              isOwner,
+              ownerUsername: sharedWallet.ownerUsername,
+              ownerId: sharedWallet.ownerId,
+              sharedWithId: sharedWallet.sharedWithId,
+              sharedWithUsername: sharedWallet.sharedWithUsername,
+              walletName: sharedWallet.walletName,
+              ownerProfilePictureUrl: sharedWallet.ownerProfilePictureUrl,
+              sharedWithProfilePictureUrl: sharedWallet.sharedWithProfilePictureUrl
+            };
+          }
+        });
+      };
+      
+      processSharedWallets(sharedWithMeResponse.data || [], false);
+      processSharedWallets(sharedByMeResponse.data || [], true);
+      
+      setSharedWalletsInfo(sharedInfo);
+    } catch (err) {
+      console.error('Error fetching shared wallet info:', err);
+    }
+  };
+
+  // Helper function to update dialog states
+  const updateDialogState = (dialogName, isOpen) => {
+    switch (dialogName) {
+      case 'shareWalletDialog':
+        setShareWalletDialogOpen(isOpen);
+        break;
+      case 'transferDialog':
+        setTransferDialogOpen(isOpen);
+        break;
+      case 'userTransferDialog':
+        setUserTransferDialogOpen(isOpen);
+        break;
+      case 'newWalletDialog':
+        setNewWalletFormOpen(isOpen);
+        break;
+      case 'deleteWalletDialog':
+        setDeleteConfirmOpen(isOpen);
+        break;
+      default:
+        break;
     }
   };
 
@@ -168,6 +259,15 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
     setEditWalletBalance(wallet.balance.toString());
     setOriginalBalance(wallet.balance);
     
+    // Get the current wallet icon and color, or set defaults
+    const savedIcon = getWalletIcon(wallet.id);
+    setEditWalletIcon(savedIcon || 'wallet');
+    
+    // Extract color index from the color class
+    const colorClass = getWalletColorClass(wallet.id);
+    const colorIndex = parseInt(colorClass.replace('walletColor', ''), 10);
+    setEditWalletColor(isNaN(colorIndex) ? 1 : colorIndex);
+    
     // Calculate available balance excluding this wallet
     calculateAvailableBalance(totalBalance, wallets, wallet.id);
     setBalanceError('');
@@ -178,6 +278,8 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
     setEditWalletId(null);
     setEditWalletName('');
     setEditWalletBalance('');
+    setEditWalletIcon('wallet');
+    setEditWalletColor(1);
     setOriginalBalance(0);
     setBalanceError('');
     
@@ -248,23 +350,30 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
       // Create updated wallet data
       const updatedWallet = {
         ...walletToUpdate,
-        accountName: editWalletName,
+        accountName: editWalletName.trim(),
         balance: parseFloat(editWalletBalance)
       };
       
-      // Call API to update wallet
-      await FinanceService.updateAccount(editWalletId, updatedWallet);
+      // Update the wallet
+      const response = await FinanceService.updateAccount(
+        editWalletId, 
+        updatedWallet
+      );
+      
+      // Update icon and color preferences
+      saveWalletIcon(editWalletId, editWalletIcon);
+      saveWalletColor(editWalletId, editWalletColor);
+      
+      // Refresh the wallets list
+      await fetchFinancialData();
       
       // Reset edit mode
       setEditMode(false);
       setEditWalletId(null);
       setEditWalletName('');
       setEditWalletBalance('');
-      setOriginalBalance(0);
-      setBalanceError('');
-      
-      // Refresh wallets list
-      fetchFinancialData();
+      setEditWalletIcon('wallet');
+      setEditWalletColor(1);
       
       // Notify parent component
       if (onWalletUpdated) {
@@ -558,6 +667,250 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
     fetchFinancialData();
   };
 
+  // Render wallet list items with edit mode
+  const renderWalletListItems = () => {
+    return wallets.map((wallet) => {
+      // Get wallet color class
+      const colorClass = getWalletColorClass(wallet.id);
+      
+      // Check if this is a shared wallet
+      const isShared = sharedWalletsInfo[wallet.id] !== undefined;
+      const isOwner = isShared ? sharedWalletsInfo[wallet.id].isOwner : false;
+      const sharedInfo = isShared ? sharedWalletsInfo[wallet.id] : null;
+      
+      // Get saved icon
+      const savedIcon = getWalletIcon(wallet.id);
+      const iconToUse = savedIcon || 'wallet';
+      
+      // Determine if icon is emoji or standard
+      const isEmoji = WALLET_ICONS.find(icon => icon.value === iconToUse)?.type === 'emoji';
+      
+      return (
+        <React.Fragment key={wallet.id}>
+          {/* Show wallet editing form if this wallet is being edited */}
+          {editMode && editWalletId === wallet.id ? (
+            <ListItem className={`${styles.walletItem} ${styles.walletItemEditing}`}>
+              <Box className={styles.editContainer}>
+                <Typography variant="subtitle1" className={styles.editLabel}>
+                  Edit Wallet
+                </Typography>
+                
+                <TextField
+                  fullWidth
+                  label="Wallet Name"
+                  value={editWalletName}
+                  onChange={(e) => setEditWalletName(e.target.value)}
+                  className={styles.textField}
+                  margin="normal"
+                  variant="outlined"
+                  size="small"
+                />
+                
+                <Typography variant="subtitle1" className={styles.fieldLabel} sx={{ mt: 2, mb: 1 }}>
+                  Wallet Icon
+                </Typography>
+                <Box className={styles.iconSelection}>
+                  {WALLET_ICONS.map(icon => (
+                    <Tooltip key={icon.id} title={icon.label}>
+                      <Box 
+                        className={`${styles.iconOption} ${editWalletIcon === icon.value ? styles.selectedIcon : ''}`}
+                        onClick={() => setEditWalletIcon(icon.value)}
+                      >
+                        {icon.type === 'emoji' ? (
+                          <span style={{ fontSize: '20px' }}>{icon.value}</span>
+                        ) : (
+                          iconComponents[icon.value]
+                        )}
+                      </Box>
+                    </Tooltip>
+                  ))}
+                </Box>
+                
+                {/* Only show color selection for standard icons, not for emoji */}
+                {(WALLET_ICONS.find(icon => icon.value === editWalletIcon)?.type !== 'emoji') && (
+                  <>
+                    <Typography variant="subtitle1" className={styles.fieldLabel} sx={{ mt: 2, mb: 1 }}>
+                      Wallet Color
+                    </Typography>
+                    <Box className={styles.colorSelection}>
+                      {WALLET_COLORS.map(color => (
+                        <Tooltip key={color.id} title={color.label}>
+                          <Box 
+                            className={`${styles.colorOption} ${editWalletColor === color.value ? styles.selectedColor : ''}`}
+                            sx={{ backgroundColor: color.hex }}
+                            onClick={() => setEditWalletColor(color.value)}
+                          />
+                        </Tooltip>
+                      ))}
+                    </Box>
+                  </>
+                )}
+                
+                <TextField
+                  fullWidth
+                  label="Balance"
+                  value={editWalletBalance}
+                  onChange={handleBalanceChange}
+                  className={styles.textField}
+                  margin="normal"
+                  variant="outlined"
+                  type="number"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">$</InputAdornment>
+                    ),
+                  }}
+                  error={Boolean(balanceError)}
+                  helperText={balanceError}
+                  size="small"
+                />
+                
+                <Box className={styles.actionButtonsContainer}>
+                  <Button
+                    variant="outlined"
+                    color="primary"
+                    className={`${styles.actionButton} ${styles.cancelButton}`}
+                    onClick={handleEditCancel}
+                    startIcon={<CancelIcon />}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    className={`${styles.actionButton} ${styles.saveButton}`}
+                    onClick={handleEditSave}
+                    startIcon={<SaveIcon />}
+                  >
+                    Save
+                  </Button>
+                </Box>
+              </Box>
+            </ListItem>
+          ) : (
+            // Standard wallet list item (not being edited)
+            <ListItem className={styles.walletItem} sx={{ py: 1, px: 1.5 }}>
+              <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+                  {isEmoji ? (
+                    <Typography 
+                      component="span" 
+                      sx={{ 
+                        fontSize: '24px', 
+                        marginRight: '12px',
+                        display: 'flex',
+                        alignItems: 'center'
+                      }}
+                    >
+                      {iconToUse}
+                    </Typography>
+                  ) : (
+                    <Box component="span" className={`${styles.iconContainer} ${styles[colorClass]}`} sx={{ width: '32px', height: '32px' }}>
+                      {iconComponents[iconToUse] || iconComponents.wallet}
+                    </Box>
+                  )}
+                  <Box>
+                    <Typography variant="subtitle1" className={styles.walletName} sx={{ fontSize: '0.95rem', fontWeight: 600 }}>
+                      {wallet.accountName}
+                    </Typography>
+                    
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Typography variant="body2" className={styles.walletDetails} sx={{ fontSize: '0.8rem' }}>
+                        {isShared 
+                          ? (isOwner ? 'Shared with User' : 'Shared by Owner') 
+                          : (wallet.accountType || "General Account")
+                        }
+                      </Typography>
+                      
+                      {isShared && (
+                        <Tooltip 
+                          title={isOwner 
+                            ? `Shared with: ${sharedInfo.sharedWithUsername}` 
+                            : `Owner: ${sharedInfo.ownerUsername}`
+                          }
+                        >
+                          <Avatar 
+                            src={isOwner 
+                              ? sharedInfo.sharedWithProfilePictureUrl 
+                              : sharedInfo.ownerProfilePictureUrl
+                            } 
+                            sx={{ 
+                              width: 20, 
+                              height: 20, 
+                              fontSize: '0.7rem',
+                              marginLeft: '8px',
+                              backgroundColor: '#1976d2',
+                              border: '1px solid white'
+                            }}
+                          >
+                            {isOwner 
+                              ? sharedInfo.sharedWithUsername?.charAt(0).toUpperCase() 
+                              : sharedInfo.ownerUsername?.charAt(0).toUpperCase()
+                            }
+                          </Avatar>
+                        </Tooltip>
+                      )}
+                    </Box>
+                  </Box>
+                </Box>
+                
+                <Typography variant="h6" className={styles.walletBalance} sx={{ fontSize: '1rem', mr: 1.5 }}>
+                  ${wallet.balance.toFixed(2)}
+                </Typography>
+                
+                <Box className={styles.walletActions} sx={{ display: 'flex', gap: 0.5, borderLeft: '1px solid rgba(0,0,0,0.08)', pl: 1 }}>
+                  <IconButton
+                    size="small"
+                    className={`${styles.iconButton} ${styles.sendIconButton}`}
+                    onClick={() => handleOpenUserTransferDialog(wallet)}
+                    aria-label="Send money"
+                    sx={{ width: '28px', height: '28px' }}
+                  >
+                    <SendIcon fontSize="small" />
+                  </IconButton>
+                  
+                  <IconButton
+                    size="small"
+                    className={`${styles.iconButton} ${styles.shareIconButton}`}
+                    onClick={() => {
+                      setWalletToShare(wallet);
+                      updateDialogState('shareWalletDialog', true);
+                    }}
+                    aria-label="Share wallet"
+                    sx={{ width: '28px', height: '28px' }}
+                  >
+                    <PersonAddIcon fontSize="small" />
+                  </IconButton>
+                  
+                  <IconButton
+                    size="small"
+                    className={styles.iconButton}
+                    onClick={() => handleEditClick(wallet)}
+                    aria-label="Edit wallet"
+                    sx={{ width: '28px', height: '28px' }}
+                  >
+                    <EditIcon fontSize="small" />
+                  </IconButton>
+                  
+                  <IconButton
+                    size="small"
+                    className={styles.deleteIconButton}
+                    onClick={() => handleDeleteClick(wallet)}
+                    aria-label="Delete wallet"
+                    sx={{ width: '28px', height: '28px' }}
+                  >
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </Box>
+              </Box>
+            </ListItem>
+          )}
+          <Divider component="li" sx={{ m: 0 }} />
+        </React.Fragment>
+      );
+    });
+  };
+
   // Form content that will be used in both embedded and non-embedded modes
   const formContent = (
     <>
@@ -566,34 +919,44 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
       <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 2 }}>
         <Box 
           className={styles.balanceInfoBox}
+          sx={{ flex: 1, p: 1, maxWidth: '70%' }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center' }} className={styles.infoText}>
-            <InfoIcon fontSize="small" className={styles.infoIcon} />
-            <Typography variant="body2" color="text.secondary">
-              Total Balance: ${totalBalance.toFixed(2)}
-            </Typography>
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center' }} className={styles.infoText}>
-            <InfoIcon fontSize="small" className={styles.infoIcon} />
-            <Typography variant="body2" color="text.secondary">
-              Allocated in Wallets: ${wallets.reduce((sum, wallet) => sum + wallet.balance, 0).toFixed(2)}
-            </Typography>
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <InfoIcon fontSize="small" className={styles.infoIcon} />
-            <Typography variant="body2" color="text.secondary">
-              Available for allocation: ${availableBalance.toFixed(2)}
-            </Typography>
-          </Box>
+          <Grid container spacing={0.5}>
+            <Grid item xs={12}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }} className={styles.infoText}>
+                <InfoIcon fontSize="small" sx={{ fontSize: '14px' }} className={styles.infoIcon} />
+                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
+                  Total: ${totalBalance.toFixed(2)}
+                </Typography>
+              </Box>
+            </Grid>
+            <Grid item xs={12}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }} className={styles.infoText}>
+                <InfoIcon fontSize="small" sx={{ fontSize: '14px' }} className={styles.infoIcon} />
+                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
+                  Allocated: ${wallets.reduce((sum, wallet) => sum + wallet.balance, 0).toFixed(2)}
+                </Typography>
+              </Box>
+            </Grid>
+            <Grid item xs={12}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <InfoIcon fontSize="small" sx={{ fontSize: '14px' }} className={styles.infoIcon} />
+                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
+                  Available: ${availableBalance.toFixed(2)}
+                </Typography>
+              </Box>
+            </Grid>
+          </Grid>
         </Box>
-        <Box className={styles.actionButtons}>
+        <Box className={styles.actionButtons} sx={{ display: 'flex', gap: 1, pt: 0.5 }}>
           <Button
             variant="outlined"
             color="primary"
             startIcon={<SwapHorizIcon />}
             onClick={handleOpenTransferDialog}
             disabled={editMode || loading || wallets.length < 1}
-            className={`${styles.transferButton} ${styles.compactButton}`}
+            className={styles.compactButton}
+            sx={{ borderRadius: '10px', height: '32px', fontSize: '0.8rem' }}
           >
             Transfer
           </Button>
@@ -603,7 +966,8 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
             startIcon={<AddIcon />}
             onClick={handleOpenNewWalletForm}
             disabled={editMode || loading}
-            className={`${styles.addWalletButton} ${styles.compactButton}`}
+            className={styles.compactButton}
+            sx={{ borderRadius: '10px', height: '32px', fontSize: '0.8rem' }}
           >
             New Wallet
           </Button>
@@ -619,146 +983,8 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
           No wallets found. Create a wallet to get started.
         </Typography>
       ) : (
-        <List className={styles.walletList}>
-          {wallets.map((wallet, index) => (
-            <React.Fragment key={wallet.id}>
-              <ListItem 
-                className={`${styles.walletItem} ${editWalletId === wallet.id ? styles.walletItemEditing : ''}`}
-              >
-                {editMode && editWalletId === wallet.id ? (
-                  <Box className={styles.editContainer}>
-                    <TextField
-                      fullWidth
-                      size="small"
-                      value={editWalletName}
-                      onChange={(e) => setEditWalletName(e.target.value)}
-                      placeholder="Wallet name"
-                      className={styles.textField}
-                      InputProps={{
-                        className: styles.textField
-                      }}
-                    />
-                    <TextField
-                      fullWidth
-                      size="small"
-                      value={editWalletBalance}
-                      onChange={handleBalanceChange}
-                      placeholder="Balance"
-                      className={styles.textField}
-                      type="number"
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            $
-                          </InputAdornment>
-                        ),
-                        className: styles.textField
-                      }}
-                      FormHelperTextProps={{
-                        sx: { fontSize: '0.75rem', mt: 0.5, ml: 1 }
-                      }}
-                      error={!!balanceError}
-                      helperText={balanceError || `Available: ${(editWalletBalance && !isNaN(editWalletBalance) && parseFloat(editWalletBalance) >= 0) ? 
-                        (availableBalance - (parseFloat(editWalletBalance) - originalBalance)).toFixed(2) : 
-                        availableBalance.toFixed(2)}`}
-                    />
-                    <Box className={styles.actionButtonsContainer}>
-                      <Button 
-                        variant="outlined" 
-                        color="inherit" 
-                        size="small"
-                        onClick={handleEditCancel}
-                        className={styles.actionButton}
-                      >
-                        Cancel
-                      </Button>
-                      <Button 
-                        variant="contained" 
-                        color="primary" 
-                        size="small"
-                        onClick={handleEditSave}
-                        disabled={loading || !!balanceError}
-                        className={`${styles.actionButton} ${styles.saveButton}`}
-                      >
-                        Save
-                      </Button>
-                    </Box>
-                  </Box>
-                ) : (
-                  <>
-                    <ListItemText
-                      primary={
-                        <Typography variant="body1" className={styles.walletName}>
-                          {wallet.accountName}
-                        </Typography>
-                      }
-                      secondary={
-                        <Typography variant="body2" className={styles.walletDetails}>
-                          {wallet.accountType} • ${wallet.balance.toFixed(2)}
-                        </Typography>
-                      }
-                    />
-                    <ListItemSecondaryAction className={styles.walletActions}>
-                      {!editMode && (
-                        <>
-                          <Tooltip title="Share Wallet" arrow>
-                            <IconButton
-                              edge="end"
-                              aria-label="share wallet"
-                              onClick={() => {
-                                setWalletToShare(wallet);
-                                setShareWalletDialogOpen(true);
-                              }}
-                              className={styles.iconButton}
-                              size="small"
-                            >
-                              <ShareIcon />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Send Money" arrow>
-                            <IconButton
-                              edge="end"
-                              aria-label="send money"
-                              onClick={() => {
-                                setSelectedWalletForMenu(wallet);
-                                handleOpenUserTransferDialog();
-                              }}
-                              className={styles.iconButton}
-                              size="small"
-                            >
-                              <SendIcon />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Edit Wallet" arrow>
-                            <IconButton
-                              edge="end"
-                              aria-label="edit"
-                              onClick={() => handleEditClick(wallet)}
-                              className={styles.iconButton}
-                              size="small"
-                            >
-                              <EditIcon />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Delete Wallet" arrow>
-                            <IconButton
-                              edge="end"
-                              aria-label="delete"
-                              onClick={() => handleDeleteClick(wallet)}
-                              className={styles.deleteIconButton}
-                              size="small"
-                            >
-                              <DeleteIcon />
-                            </IconButton>
-                          </Tooltip>
-                        </>
-                      )}
-                    </ListItemSecondaryAction>
-                  </>
-                )}
-              </ListItem>
-            </React.Fragment>
-          ))}
+        <List className={styles.walletList} sx={{ p: 0 }}>
+          {renderWalletListItems()}
         </List>
       )}
       

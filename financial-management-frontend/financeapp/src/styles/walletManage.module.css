@@ -10,8 +10,8 @@
 }
 
 .dialogContent {
-  padding-top: 8px;
-  padding-bottom: 12px;
+  padding-top: 12px;
+  padding-bottom: 16px;
 }
 
 .headerContainer {
@@ -47,15 +47,17 @@
 .walletList {
   width: 100%;
   padding: 0;
-  border-radius: 12px;
+  border-radius: 8px;
   background-color: rgba(255, 255, 255, 0.8);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   overflow: hidden;
+  margin-bottom: 16px;
 }
 
 .walletItem {
-  padding: 8px 16px;
   transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
 }
 
 .walletItem:hover {
@@ -66,49 +68,174 @@
   background-color: rgba(0, 122, 255, 0.05);
 }
 
+.walletNameContainer {
+  display: flex;
+  align-items: center;
+}
+
 .walletName {
-  font-weight: 500;
-  font-size: 0.95rem;
+  color: #333;
+  margin-bottom: 0;
+}
+
+.walletBalance {
+  font-weight: 600;
+  color: #007aff;
+  margin: 0;
 }
 
 .walletDetails {
   color: rgba(0, 0, 0, 0.6);
-  font-size: 0.85rem;
 }
 
 /* Balance info box */
 .balanceInfoBox {
   background-color: rgba(33, 150, 243, 0.06);
-  border-radius: 12px;
-  padding: 12px;
+  border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  flex-grow: 1;
+  margin-right: 8px;
 }
 
 .infoIcon {
-  font-size: 0.9rem;
-  margin-right: 8px;
   color: #0288d1;
+  margin-right: 4px;
+  font-size: 14px;
 }
 
 .infoText {
-  font-size: 0.9rem;
-  margin-bottom: 8px;
+  margin-bottom: 3px;
+  font-size: 0.85rem;
 }
 
-.actionButtons {
-  display: flex;
-  gap: 12px;
-  margin-left: auto;
+.walletActions {
+  align-items: center;
+}
+
+.iconButton {
+  color: rgba(0, 0, 0, 0.54);
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  background-color: rgba(0, 0, 0, 0.03);
+  margin: 0 2px;
+}
+
+.iconButton:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+  color: #007aff;
+  transform: translateY(-1px);
+}
+
+.deleteIconButton {
+  color: rgba(0, 0, 0, 0.54);
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  background-color: rgba(255, 59, 48, 0.05);
+  margin: 0 2px;
+}
+
+.deleteIconButton:hover {
+  background-color: rgba(255, 59, 48, 0.1);
+  color: #ff3b30;
+  transform: translateY(-1px);
+}
+
+/* Send button styles */
+.sendIconButton {
+  color: #007aff;
+  background-color: rgba(0, 122, 255, 0.08);
+}
+
+.sendIconButton:hover {
+  background-color: rgba(0, 122, 255, 0.15);
+  color: #0062cc;
+  box-shadow: 0 1px 3px rgba(0, 122, 255, 0.15);
+}
+
+/* Share button styles */
+.shareIconButton {
+  color: #5856d6;
+  background-color: rgba(88, 86, 214, 0.08);
+}
+
+.shareIconButton:hover {
+  background-color: rgba(88, 86, 214, 0.15);
+  color: #4745c5;
+  box-shadow: 0 1px 3px rgba(88, 86, 214, 0.15);
+}
+
+/* Delete confirmation dialog */
+.confirmDialog {
+  border-radius: 12px;
+  box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.15);
+  width: 400px !important;
+}
+
+.confirmTitle {
+  padding-bottom: 8px;
+  font-weight: 600;
+}
+
+.confirmActions {
+  padding: 0 16px 12px 16px;
+}
+
+.deleteButton {
+  border-radius: 8px;
+  text-transform: none;
+  font-weight: 500;
+  box-shadow: none;
+  background-color: #ff3b30;
+  color: white;
+}
+
+.deleteButton:hover {
+  background-color: #e0352b;
+  box-shadow: 0 2px 4px rgba(224, 53, 43, 0.2);
+}
+
+/* Updated cancel button with blue styling */
+.cancelButton {
+  border-radius: 8px;
+  text-transform: none;
+  font-weight: 500;
+  color: #007aff;
+  border: 1px solid rgba(0, 122, 255, 0.5);
+  background-color: transparent;
+  transition: all 0.2s ease;
+}
+
+.cancelButton:hover {
+  background-color: rgba(0, 122, 255, 0.08);
+  border-color: #007aff;
+}
+
+/* Standardized button styles for consistent look across the app */
+.standardButton {
+  border-radius: 8px;
+  text-transform: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.primaryButton {
+  background-color: #007aff;
+  color: white;
+  box-shadow: none;
+}
+
+.primaryButton:hover {
+  background-color: #0062cc;
+  box-shadow: 0 2px 4px rgba(0, 98, 204, 0.2);
 }
 
 .compactButton {
   font-size: 0.875rem;
-  padding: 6px 16px;
-  border-radius: 10px;
+  padding: 6px 12px;
+  border-radius: 8px;
   text-transform: none;
   font-weight: 500;
   letter-spacing: 0;
+  box-shadow: none;
 }
 
 .editContainer {
@@ -146,225 +273,153 @@
   box-shadow: none;
 }
 
-.walletActions {
+/* Wallet Edit Specific Styles */
+.editLabel {
+  color: rgba(0, 0, 0, 0.6);
+  font-weight: 500;
+  font-size: 0.75rem;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.fieldLabel {
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.6);
+  margin-bottom: 4px;
+  margin-top: 8px;
+  font-size: 0.875rem;
+}
+
+/* Icon Selection Styles */
+.iconSelection {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.iconOption {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
-  gap: 4px;
-  right: 12px !important;
-}
-
-.iconButton {
-  color: rgba(0, 0, 0, 0.54);
-  padding: 6px;
-  margin-left: 0;
-  width: 32px;
-  height: 32px;
+  justify-content: center;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  cursor: pointer;
   transition: all 0.2s ease;
+  background-color: #f5f5f5;
 }
 
-.iconButton:hover {
-  background-color: rgba(0, 0, 0, 0.05);
-  color: #007aff;
+.iconOption:hover {
+  background-color: #e0e0e0;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.iconButton svg {
-  font-size: 1.1rem;
+.selectedIcon {
+  background-color: #e3f2fd;
+  border: 2px solid #2196f3;
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.2);
 }
 
-.deleteIconButton {
-  color: rgba(0, 0, 0, 0.54);
-  padding: 6px;
-  margin-left: 0;
-  width: 32px;
-  height: 32px;
-  transition: all 0.2s ease;
+.iconOption svg {
+  font-size: 20px;
+  color: #555;
 }
 
-.deleteIconButton:hover {
-  background-color: rgba(255, 59, 48, 0.1);
-  color: #ff3b30;
+.selectedIcon svg {
+  color: #2196f3;
 }
 
-.deleteIconButton svg {
-  font-size: 1.1rem;
-}
-
-/* Delete confirmation dialog */
-.confirmDialog {
-  border-radius: 12px;
-  box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.15);
-  width: 400px !important;
-}
-
-.confirmTitle {
-  padding-bottom: 8px;
-  font-weight: 600;
-}
-
-.confirmActions {
-  padding: 0 16px 12px 16px;
-}
-
-.deleteButton {
-  border-radius: 12px;
-  text-transform: none;
-  font-weight: 500;
-  box-shadow: none;
-  background-color: #ff3b30;
-  color: white;
-}
-
-.deleteButton:hover {
-  background-color: #e0352b;
-  box-shadow: 0 2px 4px rgba(224, 53, 43, 0.2);
-}
-
-/* Updated cancel button with blue styling */
-.cancelButton {
-  border-radius: 12px;
-  text-transform: none;
-  font-weight: 500;
-  color: #007aff;
-  border: 1px solid rgba(0, 122, 255, 0.5);
-  background-color: transparent;
-  padding: 6px 16px;
-  min-width: 80px;
-  transition: all 0.2s ease;
-}
-
-.cancelButton:hover {
-  background-color: rgba(0, 122, 255, 0.08);
-  border-color: #007aff;
-}
-
-/* Standardized button styles for consistent look across the app */
-.standardButton {
-  border-radius: 12px;
-  text-transform: none;
-  font-weight: 500;
-  min-width: 80px;
-  padding: 6px 16px;
-  transition: all 0.2s ease;
-}
-
-.primaryButton {
-  background-color: #007aff;
-  color: white;
-  box-shadow: none;
-}
-
-.primaryButton:hover {
-  background-color: #0062cc;
-  box-shadow: 0 2px 4px rgba(0, 98, 204, 0.2);
-}
-
-/* New wallet form dialog */
-.walletFormDialog {
-  border-radius: 12px;
-  box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.15);
-}
-
-/* Add wallet button */
-.addWalletButton {
-  background-color: #007bff;
-  color: white;
-  border-radius: 8px;
-  box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.1);
-  text-transform: none;
-  font-weight: 500;
-}
-
-.addWalletButton:hover {
-  background-color: #0069d9;
-}
-
-/* Transfer money dialog and button */
-.transferDialog {
-  border-radius: 12px;
-  box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.15);
-}
-
-.transferTitle {
-  padding-bottom: 8px;
-  font-weight: 600;
-}
-
-.transferActions {
-  padding: 0 16px 16px 16px;
-}
-
-.transferButton {
-  border-radius: 12px;
-  text-transform: none;
-  font-weight: 500;
-  box-shadow: none;
-  background-color: #007aff;
-  color: white;
-}
-
-.transferButton:hover {
-  background-color: #0062cc;
-  box-shadow: 0 2px 4px rgba(0, 98, 204, 0.2);
-}
-
-/* Send Money button */
-.sendMoneyButton {
-  border-radius: 8px;
-  text-transform: none;
-  font-weight: 500;
-  color: #2e7d32;
-  border-color: #2e7d32;
-}
-
-.sendMoneyButton:hover {
-  background-color: rgba(46, 125, 50, 0.05);
-  border-color: #2e7d32;
-}
-
-.sendMoneyButton:disabled {
-  color: rgba(0, 0, 0, 0.26);
-  border-color: rgba(0, 0, 0, 0.12);
-}
-
-.selectField {
-  border-radius: 8px;
-}
-
-.tabsContainer {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
-  padding: 0 16px;
-}
-
-.tab {
-  text-transform: none;
-  font-weight: 500;
-  min-height: 40px;
-  font-size: 0.9rem;
-}
-
-.optionsContainer {
+/* Color Selection Styles */
+.colorSelection {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 8px 0;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
 }
 
-.optionButton {
-  padding: 8px 0;
-  border-radius: 8px;
-  text-transform: none;
-  font-weight: 500;
-  justify-content: flex-start;
-  font-size: 0.85rem;
+.colorOption {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.backButton {
-  margin-bottom: 12px;
+.colorOption:hover {
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.selectedColor {
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 2px #2196f3, 0 2px 8px rgba(0, 0, 0, 0.2);
+  transform: scale(1.1);
+}
+
+/* Icon Container */
+.iconContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 8px;
-  text-transform: none;
-  font-weight: 500;
-  font-size: 0.85rem;
-  padding: 4px 8px;
+  margin-right: 12px;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Wallet color classes for icon container */
+.walletColor1 {
+  color: #007aff !important;
+  background-color: rgba(0, 122, 255, 0.1);
+}
+
+.walletColor2 {
+  color: #34c759 !important;
+  background-color: rgba(52, 199, 89, 0.1);
+}
+
+.walletColor3 {
+  color: #ff9500 !important;
+  background-color: rgba(255, 149, 0, 0.1);
+}
+
+.walletColor4 {
+  color: #ff3b30 !important;
+  background-color: rgba(255, 59, 48, 0.1);
+}
+
+.walletColor5 {
+  color: #5856d6 !important;
+  background-color: rgba(88, 86, 214, 0.1);
+}
+
+.walletColor6 {
+  color: #af52de !important;
+  background-color: rgba(175, 82, 222, 0.1);
+}
+
+.walletColor7 {
+  color: #ff2d55 !important;
+  background-color: rgba(255, 45, 85, 0.1);
+}
+
+.walletColor8 {
+  color: #5ac8fa !important;
+  background-color: rgba(90, 200, 250, 0.1);
+}
+
+.walletColor9 {
+  color: #ffcc00 !important;
+  background-color: rgba(255, 204, 0, 0.1);
+}
+
+.walletColor10 {
+  color: #4cd964 !important;
+  background-color: rgba(76, 217, 100, 0.1);
 }
 
 /* Wallet menu */
@@ -481,8 +536,117 @@
 .categoryTab {
   text-transform: none;
   font-weight: 500;
-  font-size: 0.95rem;
-  min-width: 120px;
+  min-height: 40px;
+  font-size: 0.9rem;
+}
+
+.optionsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.optionButton {
+  padding: 8px 0;
+  border-radius: 8px;
+  text-transform: none;
+  font-weight: 500;
+  justify-content: flex-start;
+  font-size: 0.85rem;
+}
+
+.backButton {
+  margin-bottom: 12px;
+  border-radius: 8px;
+  text-transform: none;
+  font-weight: 500;
+  font-size: 0.85rem;
+  padding: 4px 8px;
+}
+
+/* New wallet form dialog */
+.walletFormDialog {
+  border-radius: 12px;
+  box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* Add wallet button */
+.addWalletButton {
+  background-color: #007bff;
+  color: white;
+  border-radius: 8px;
+  box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.1);
+  text-transform: none;
+  font-weight: 500;
+}
+
+.addWalletButton:hover {
+  background-color: #0069d9;
+}
+
+/* Transfer money dialog and button */
+.transferDialog {
+  border-radius: 12px;
+  box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.transferTitle {
+  padding-bottom: 8px;
+  font-weight: 600;
+}
+
+.transferActions {
+  padding: 0 16px 16px 16px;
+}
+
+.transferButton {
+  border-radius: 12px;
+  text-transform: none;
+  font-weight: 500;
+  box-shadow: none;
+  background-color: #007aff;
+  color: white;
+}
+
+.transferButton:hover {
+  background-color: #0062cc;
+  box-shadow: 0 2px 4px rgba(0, 98, 204, 0.2);
+}
+
+/* Send Money button */
+.sendMoneyButton {
+  border-radius: 8px;
+  text-transform: none;
+  font-weight: 500;
+  color: #2e7d32;
+  border-color: #2e7d32;
+}
+
+.sendMoneyButton:hover {
+  background-color: rgba(46, 125, 50, 0.05);
+  border-color: #2e7d32;
+}
+
+.sendMoneyButton:disabled {
+  color: rgba(0, 0, 0, 0.26);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+.selectField {
+  border-radius: 8px;
+}
+
+.tabsContainer {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  padding: 0 16px;
+}
+
+.tab {
+  text-transform: none;
+  font-weight: 500;
+  min-height: 40px;
+  font-size: 0.9rem;
 }
 
 .newCategoryButton {

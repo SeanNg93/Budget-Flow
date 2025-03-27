@@ -17,28 +17,75 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import CreditCardIcon from '@mui/icons-material/CreditCard';
 import SavingsIcon from '@mui/icons-material/Savings';
 import PaymentsIcon from '@mui/icons-material/Payments';
+import ShowChartIcon from '@mui/icons-material/ShowChart';
+import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
+import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+import SavingsOutlinedIcon from '@mui/icons-material/SavingsOutlined';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import SendIcon from '@mui/icons-material/Send';
+import EditIcon from '@mui/icons-material/Edit';
 import FinanceService from '../../services/FinanceService';
 import styles from '../../styles/dashboard.module.css';
-import { getWalletColorClass } from '../../utils/colorUtils';
+import { getWalletColorClass, getWalletIcon, WALLET_ICONS } from '../../utils/walletIcons';
 import ShareWalletForm from './ShareWalletForm';
 import UserTransferForm from './UserTransferForm';
+import WalletForm from './WalletForm';
+
+// Map of icon types to components
+const iconComponents = {
+  wallet: <AccountBalanceWalletIcon className={styles.walletIcon} />,
+  creditCard: <CreditCardIcon className={styles.walletIcon} />,
+  savings: <SavingsIcon className={styles.walletIcon} />,
+  cash: <PaymentsIcon className={styles.walletIcon} />,
+  investment: <ShowChartIcon className={styles.walletIcon} />,
+  piggyBank: <SavingsOutlinedIcon className={styles.walletIcon} />,
+  bank: <AccountBalanceIcon className={styles.walletIcon} />,
+  shopping: <ShoppingBagIcon className={styles.walletIcon} />,
+  default: <AccountBalanceWalletIcon className={styles.walletIcon} />
+};
 
 // Extracted Wallet Icon component
-const WalletIcon = React.memo(({ accountType }) => {
-  const iconMap = {
-    savings: <SavingsIcon className={styles.walletIcon} />,
-    'credit card': <CreditCardIcon className={styles.walletIcon} />,
-    cash: <PaymentsIcon className={styles.walletIcon} />,
-    default: <AccountBalanceWalletIcon className={styles.walletIcon} />
+const WalletIcon = React.memo(({ wallet }) => {
+  // Force re-render when wallet changes by adding a timestamp-based key
+  const [renderKey, setRenderKey] = useState(Date.now());
+  
+  // Check if there's a direct icon reference on the wallet object (for immediate updates)
+  const directIcon = wallet._icon;
+  
+  // If not, check the localStorage cache
+  const customIcon = directIcon || getWalletIcon(wallet.id);
+  
+  // Update the render key when the wallet id, customIcon or forceRefresh changes
+  useEffect(() => {
+    setRenderKey(Date.now());
+  }, [wallet.id, customIcon, wallet._forceIconRefresh]);
+  
+  // Check if the icon is an emoji
+  if (customIcon) {
+    const iconItem = WALLET_ICONS.find(icon => icon.value === customIcon);
+    if (iconItem?.type === 'emoji') {
+      return <span key={renderKey} className={styles.walletIcon} style={{ fontSize: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px' }}>{customIcon}</span>;
+    } else if (iconComponents[customIcon]) {
+      return React.cloneElement(iconComponents[customIcon], { key: renderKey, style: { display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px' } });
+    }
+  }
+  
+  // Otherwise, fall back to account type mapping
+  const typeToIcon = {
+    'savings': 'savings',
+    'credit card': 'creditCard',
+    'cash': 'cash',
+    'investment': 'investment',
+    'checking': 'bank'
   };
   
-  const key = accountType?.toLowerCase() || 'default';
-  return iconMap[key] || iconMap.default;
+  const key = wallet.accountType?.toLowerCase() || 'default';
+  const iconType = typeToIcon[key] || 'default';
+  
+  return React.cloneElement(iconComponents[iconType] || iconComponents.default, { key: renderKey, style: { display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px' } });
 });
 
 // Extracted Shared Wallet Avatar component
@@ -58,7 +105,7 @@ const SharedWalletAvatar = React.memo(({ info, isOwner }) => {
           width: 24, 
           height: 24, 
           fontSize: '0.8rem',
-          marginLeft: '8px',
+          marginLeft: '4px',
           backgroundColor: avatarUrl ? 'transparent' : '#1976d2',
           border: '2px solid white',
           cursor: 'pointer'
@@ -78,8 +125,19 @@ const WalletCard = React.memo(({ wallet, colorClass, isShared, isWalletOwner, ge
     onMenuOpen(e, wallet);
   }, [wallet, onMenuOpen]);
 
+  // Force component to update when wallet or colorClass changes
+  const [updated, setUpdated] = useState(false);
+  
+  // Use direct color class if available (for immediate updates after editing)
+  const effectiveColorClass = wallet._colorClass || colorClass;
+  
+  useEffect(() => {
+    // This effect will run whenever wallet or colorClass changes
+    setUpdated(prev => !prev);
+  }, [wallet, colorClass, wallet.accountName, wallet.balance, wallet._forceIconRefresh]);
+
   return (
-    <Box key={wallet.id} className={`${styles.walletItem} ${styles[colorClass]}`}>
+    <Box key={`${wallet.id}-${updated}`} className={`${styles.walletItem} ${styles[effectiveColorClass]}`}>
       <IconButton
         size="small"
         className={styles.walletMenuButtonCircle}
@@ -89,9 +147,23 @@ const WalletCard = React.memo(({ wallet, colorClass, isShared, isWalletOwner, ge
         <MoreVertIcon fontSize="small" />
       </IconButton>
       
-      <Box className={styles.walletHeader}>
-        <Typography variant="h6" className={styles.walletName}>
-          <WalletIcon accountType={wallet.accountType} />
+      <Box className={styles.walletHeader} sx={{ height: '32px', display: 'flex', alignItems: 'center' }}>
+        <Typography variant="h6" className={styles.walletName} sx={{ 
+          display: 'flex', 
+          alignItems: 'center',
+          minHeight: '32px',
+          lineHeight: '32px'
+        }}>
+          <Box component="span" sx={{ 
+            display: 'inline-flex', 
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '32px',
+            height: '32px',
+            mr: 1
+          }}>
+            <WalletIcon wallet={wallet} />
+          </Box>
           {wallet.accountName}
         </Typography>
       </Box>
@@ -108,7 +180,12 @@ const WalletCard = React.memo(({ wallet, colorClass, isShared, isWalletOwner, ge
         variant="body2" 
         className={styles.walletType}
         component="div" 
-        sx={{ display: 'flex', alignItems: 'center' }}
+        sx={{ 
+          display: 'flex', 
+          alignItems: 'center',
+          height: '28px',
+          lineHeight: '28px'
+        }}
       >
         {isShared ? (
           <>
@@ -123,6 +200,16 @@ const WalletCard = React.memo(({ wallet, colorClass, isShared, isWalletOwner, ge
         )}
       </Typography>
     </Box>
+  );
+}, (prevProps, nextProps) => {
+  // Custom comparison function to determine if we need to re-render
+  return (
+    prevProps.wallet.id === nextProps.wallet.id &&
+    prevProps.wallet.accountName === nextProps.wallet.accountName &&
+    prevProps.wallet.balance === nextProps.wallet.balance &&
+    prevProps.colorClass === nextProps.colorClass &&
+    prevProps.wallet._forceIconRefresh === nextProps.wallet._forceIconRefresh &&
+    prevProps.isShared === nextProps.isShared
   );
 });
 
@@ -143,10 +230,12 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
   // Dialog states
   const [dialogStates, setDialogStates] = useState({
     shareWalletDialog: false,
-    sendMoneyDialog: false
+    sendMoneyDialog: false,
+    editWalletDialog: false
   });
   
   const [walletToShare, setWalletToShare] = useState(null);
+  const [walletToEdit, setWalletToEdit] = useState(null);
 
   // Memoized values
   const totalPages = useMemo(() => 
@@ -290,6 +379,72 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
   const handleSendMoneyClose = useCallback(() => {
     updateDialogState('sendMoneyDialog', false);
   }, [updateDialogState]);
+
+  const handleEditWallet = useCallback(() => {
+    setWalletToEdit(selectedWalletForMenu);
+    updateDialogState('editWalletDialog', true);
+    handleWalletMenuClose();
+  }, [selectedWalletForMenu, updateDialogState, handleWalletMenuClose]);
+
+  const handleEditWalletClose = useCallback(() => {
+    updateDialogState('editWalletDialog', false);
+    setWalletToEdit(null);
+  }, [updateDialogState]);
+  
+  const handleWalletUpdated = useCallback((updatedWallet = null) => {
+    // If we received the updated wallet object directly from the form
+    if (updatedWallet) {
+      // Immediately update the local state with the direct updated wallet
+      const updatedWallets = wallets.map(w => {
+        if (w.id === updatedWallet.id) {
+          // Return the updated wallet with all changes
+          return updatedWallet;
+        }
+        return w;
+      });
+      
+      setWallets(updatedWallets);
+    }
+    // If no updated wallet was provided but we have walletToEdit
+    else if (walletToEdit) {
+      // Force a UI refresh by triggering a rerender
+      const forceRefresh = Date.now();
+      
+      // Clear any local caches to ensure fresh data
+      localStorage.removeItem('walletIconsCache');
+      
+      // Immediately make the edited wallet and its changes visible
+      const updatedWallets = wallets.map(w => {
+        if (w.id === walletToEdit.id) {
+          // Get the freshly saved icon and color from localStorage
+          const savedIcon = getWalletIcon(walletToEdit.id);
+          const colorClass = getWalletColorClass(walletToEdit.id);
+          
+          // Return a copy with potentially updated values
+          const updatedWallet = {
+            ...w,
+            accountName: walletToEdit.accountName, // Update name from the edited wallet
+            _forceIconRefresh: forceRefresh, // Add a timestamp to force icon refresh
+            _icon: savedIcon, // Add the icon directly to the wallet object
+            _colorClass: colorClass // Add the color class directly to the wallet object
+          };
+          
+          return updatedWallet;
+        }
+        return w;
+      });
+      
+      setWallets(updatedWallets);
+    }
+    
+    // Then fetch fresh data from the server with a slight delay
+    // to ensure localStorage updates are complete
+    setTimeout(() => {
+      fetchWallets();
+    }, 100);
+    
+    handleEditWalletClose();
+  }, [fetchWallets, handleEditWalletClose, walletToEdit, wallets]);
   
   const handleWalletShared = useCallback(() => {
     fetchWallets();
@@ -483,6 +638,10 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
         onClose={handleWalletMenuClose}
         classes={{ paper: styles.dashboardMenuPaper }}
       >
+        <MenuItem onClick={handleEditWallet} className={styles.dashboardMenuItem}>
+          <EditIcon fontSize="small" className={styles.dashboardMenuIcon} />
+          <span>Edit Wallet</span>
+        </MenuItem>
         <MenuItem onClick={handleSendMoney} className={styles.dashboardMenuItem}>
           <SendIcon fontSize="small" className={styles.dashboardMenuIcon} />
           <span>Send Money</span>
@@ -509,6 +668,15 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
           handleClose={handleSendMoneyClose}
           onTransferCompleted={handleSendMoneyCompleted}
           defaultSourceWallet={selectedWalletForMenu}
+        />
+      )}
+
+      {walletToEdit && (
+        <WalletForm
+          open={dialogStates.editWalletDialog}
+          handleClose={handleEditWalletClose}
+          onWalletAdded={handleWalletUpdated}
+          wallet={walletToEdit}
         />
       )}
     </Paper>
