@@ -235,11 +235,11 @@ export default function ProfileDialog({ open, onClose, handleClose, onProfileUpd
         // Kiểm tra năm sinh có đủ 4 số và không có số 0 ở đầu
         const year = selectedDate.getFullYear().toString();
         if (year.length !== 4 || year.startsWith('0')) {
-          newErrors.dateOfBirth = 'Năm sinh phải đủ 4 số và không được có số 0 ở đầu';
+          newErrors.dateOfBirth = 'Vui lòng nhập năm sinh đúng định dạng !';
         }
       }
     } else {
-      newErrors.dateOfBirth = 'Vui lòng nhập đúng định dạng';
+      newErrors.dateOfBirth = 'Vui lòng nhập đúng định dạng !';
     }
     
     setErrors(newErrors);
@@ -565,7 +565,8 @@ export default function ProfileDialog({ open, onClose, handleClose, onProfileUpd
                           Date of Birth
                         </Typography>
                         {isEditing ? (
-                            <TextField
+                            <Box>
+                              <TextField
                                 fullWidth
                                 name="dateOfBirth"
                                 type="date"
@@ -575,11 +576,25 @@ export default function ProfileDialog({ open, onClose, handleClose, onProfileUpd
                                 size="small"
                                 className="text-field"
                                 error={!!errors.dateOfBirth}
-                                helperText={errors.dateOfBirth}
                                 InputLabelProps={{
                                   shrink: true,
                                 }}
-                            />
+                              />
+                              {errors.dateOfBirth && (
+                                <Alert 
+                                  severity="error" 
+                                  sx={{ 
+                                    mt: 1, 
+                                    '& .MuiAlert-message': {
+                                      fontSize: '0.875rem',
+                                      padding: '4px 0'
+                                    }
+                                  }}
+                                >
+                                  {errors.dateOfBirth}
+                                </Alert>
+                              )}
+                            </Box>
                         ) : (
                             <Typography variant="body2" className="field-value">
                               {profile.dateOfBirth || "Not provided"}
