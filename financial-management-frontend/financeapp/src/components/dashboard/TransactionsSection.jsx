@@ -412,26 +412,30 @@ const TransactionRow = React.memo(({
           
     <TableCell className={styles.tableCell}>
       <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-        <IconButton 
-          size="small" 
-          color="primary" 
-          onClick={() => onEditTransaction(transaction)}
-          className={styles.editButton}
-          sx={{ mx: 0.5 }}
-          aria-label={`Edit transaction: ${transaction.description}`}
-        >
-          <EditIcon fontSize="small" />
-        </IconButton>
-        <IconButton 
-          size="small" 
-          color="error" 
-          onClick={() => onDeleteTransaction(transaction)}
-          className={styles.deleteButton}
-          sx={{ mx: 0.5 }}
-          aria-label={`Delete transaction: ${transaction.description}`}
-        >
-          <DeleteIcon fontSize="small" />
-        </IconButton>
+        <Tooltip title="Edit transaction" arrow placement="top">
+          <IconButton 
+            size="small" 
+            color="primary" 
+            onClick={() => onEditTransaction(transaction)}
+            className={styles.editButton}
+            sx={{ mx: 0.5 }}
+            aria-label={`Edit transaction: ${transaction.description}`}
+          >
+            <EditIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Delete transaction" arrow placement="top">
+          <IconButton 
+            size="small" 
+            color="error" 
+            onClick={() => onDeleteTransaction(transaction)}
+            className={styles.deleteButton}
+            sx={{ mx: 0.5 }}
+            aria-label={`Delete transaction: ${transaction.description}`}
+          >
+            <DeleteIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
       </Box>
     </TableCell>
         </>

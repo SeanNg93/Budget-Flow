@@ -13,6 +13,7 @@ import DialogManager from '../components/dashboard/DialogManager';
 import TransactionForm from '../components/dashboard/TransactionForm';
 import CategoryManageForm from '../components/dashboard/CategoryManageForm';
 import ProfileDialog from '../components/user/ProfileDialog';
+import TransactionSummaryCards from '../components/dashboard/TransactionSummaryCards';
 
 // Import services
 import FinanceService from '../services/FinanceService';
@@ -99,6 +100,13 @@ const TransactionsPage = () => {
   const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
+
+  // Financial summary state
+  const [financialSummary, setFinancialSummary] = useState({
+    totalExpense: 0,
+    totalIncome: 0,
+    netSavings: 0
+  });
 
   // Helper to update dialog states
   const updateDialogState = (dialogName, isOpen) => {
@@ -254,6 +262,9 @@ const TransactionsPage = () => {
       setFilteredTransactions(processedTransactions);
       updateDisplayedTransactions(processedTransactions);
       
+      // Calculate financial summary
+      calculateFinancialSummary(processedTransactions);
+      
       // Calculate total pages
       setTotalPages(Math.ceil(processedTransactions.length / pageSize));
     } catch (error) {
@@ -358,6 +369,9 @@ const TransactionsPage = () => {
       setFilteredTransactions(processedTransactions);
       setTotalPages(Math.ceil(processedTransactions.length / pageSize));
       setPage(1); // Reset to first page when applying filters
+
+      // Update financial summary based on filtered transactions
+      calculateFinancialSummary(processedTransactions);
     } catch (err) {
       console.error('Error applying filters:', err);
     }
@@ -372,6 +386,9 @@ const TransactionsPage = () => {
       setAllTransactions(processedTransactions);
       setTotalPages(Math.ceil(processedTransactions.length / pageSize));
       setPage(1); // Reset to first page when clearing filters
+      
+      // Update financial summary based on all transactions
+      calculateFinancialSummary(processedTransactions);
     } catch (err) {
       console.error('Error resetting filters:', err);
     }
@@ -459,6 +476,22 @@ const TransactionsPage = () => {
     }).format(amount);
   };
 
+  // Calculate financial summary from transactions
+  const calculateFinancialSummary = (transactions) => {
+    const summary = transactions.reduce((acc, transaction) => {
+      const amount = parseFloat(transaction.amount);
+      if (transaction.transactionType === 'EXPENSE') {
+        acc.totalExpense += amount;
+      } else if (transaction.transactionType === 'INCOME') {
+        acc.totalIncome += amount;
+      }
+      return acc;
+    }, { totalExpense: 0, totalIncome: 0 });
+    
+    summary.netSavings = summary.totalIncome - summary.totalExpense;
+    setFinancialSummary(summary);
+  };
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -505,6 +538,14 @@ const TransactionsPage = () => {
                 Transactions
               </Typography>
               <Divider sx={{ mb: 3 }} />
+              
+              {/* Financial Summary Cards */}
+              <TransactionSummaryCards
+                totalExpense={financialSummary.totalExpense}
+                totalIncome={financialSummary.totalIncome}
+                netSavings={financialSummary.netSavings}
+                formatCurrency={formatCurrency}
+              />
               
               {/* Pagination controls at top */}
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
