@@ -35,6 +35,7 @@ export const exportTransactionsToExcel = async (transactions, formatCurrency, fi
   
   // Define columns - removing User column, keeping just 6 columns
   worksheet.columns = [
+    { header: 'ID', key: 'id', width: 10 },
     { header: 'Date', key: 'date', width: 15 },
     { header: 'Description', key: 'description', width: 40 },
     { header: 'Category', key: 'category', width: 20 },
@@ -117,6 +118,7 @@ export const exportTransactionsToExcel = async (transactions, formatCurrency, fi
     
     // Add row to worksheet
     worksheet.addRow({
+      id: transaction.id,
       date: formatDate(transaction.transactionDate),
       description: transaction.description || '',
       category: transaction.category 
@@ -129,8 +131,8 @@ export const exportTransactionsToExcel = async (transactions, formatCurrency, fi
   });
   
   // Style the amount column
-  // Get the amount column (column 6)
-  const amountColumn = worksheet.getColumn(6);
+  // Get the amount column (column 7 now)
+  const amountColumn = worksheet.getColumn(7);
   
   // Format the amount cells for currency
   amountColumn.eachCell((cell, rowNumber) => {
@@ -150,7 +152,7 @@ export const exportTransactionsToExcel = async (transactions, formatCurrency, fi
   });
 
   // Style the Type column to highlight entries with usernames
-  const typeColumn = worksheet.getColumn(5);
+  const typeColumn = worksheet.getColumn(6);
   typeColumn.eachCell((cell, rowNumber) => {
     // Skip header row
     if (rowNumber > 1) {
@@ -180,8 +182,8 @@ export const exportTransactionsToExcel = async (transactions, formatCurrency, fi
         // Align text
         cell.alignment = { 
           vertical: 'middle',
-          // Align amount to right, date to center, others to left
-          horizontal: cell.col === 6 ? 'right' : (cell.col === 1 ? 'center' : 'left')
+          // Align amount to right, ID and date to center, others to left
+          horizontal: cell.col === 7 ? 'right' : (cell.col === 1 || cell.col === 2 ? 'center' : 'left')
         };
       });
       
@@ -214,18 +216,18 @@ export const exportTransactionsToExcel = async (transactions, formatCurrency, fi
   const netAmount = totalIncome - totalExpense;
   
   // Add total row
-  totalRow.getCell(5).value = 'TOTAL';
-  totalRow.getCell(5).font = { bold: true };
-  totalRow.getCell(6).value = netAmount;
-  totalRow.getCell(6).font = { 
+  totalRow.getCell(6).value = 'TOTAL';
+  totalRow.getCell(6).font = { bold: true };
+  totalRow.getCell(7).value = netAmount;
+  totalRow.getCell(7).font = { 
     bold: true,
     color: { argb: netAmount >= 0 ? 'FF008000' : 'FFFF0000' }
   };
-  totalRow.getCell(6).numFmt = '$#,##0.00;[Red]-$#,##0.00';
+  totalRow.getCell(7).numFmt = '$#,##0.00;[Red]-$#,##0.00';
   
   // Style the total row
   totalRow.eachCell((cell, colNumber) => {
-    if (colNumber >= 5) {
+    if (colNumber >= 6) {
       cell.border = {
         top: { style: 'double' },
         left: { style: 'thin' },

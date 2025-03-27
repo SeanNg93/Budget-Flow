@@ -39,6 +39,7 @@ import { subDays } from 'date-fns';
 import styles from '../../styles/dashboard.module.css';
 import { exportTransactionsToExcel } from '../../utils/excelExport';
 import FinanceService from '../../services/FinanceService';
+import { Link } from 'react-router-dom';
 
 // Constants
 const TIME_PERIODS = [
@@ -224,12 +225,14 @@ const TransactionRow = React.memo(({
         }
       }}
   >
+    {/* ID cell */}
+    <TableCell className={styles.tableCell}>{transaction.id}</TableCell>
     <TableCell className={styles.tableCell}>{formatDate(transaction.transactionDate)}</TableCell>
       
       {/* Description cell with special handling */}
       {descriptionExpanded ? (
         <TableCell 
-          colSpan={6}
+          colSpan={7}
           sx={{ 
             padding: '8px 16px',
             position: 'relative',
@@ -742,6 +745,10 @@ const TransactionsSection = ({
     // Filter transactions based on search term
     const searchTermLower = value.toLowerCase();
     const filtered = allTransactions.filter(transaction => {
+      // Search in transaction ID
+      const idMatch = transaction.id && 
+        transaction.id.toString().includes(value);
+        
       // Search in description
       const descriptionMatch = transaction.description && 
         transaction.description.toLowerCase().includes(searchTermLower);
@@ -755,7 +762,7 @@ const TransactionsSection = ({
       const amountStr = transaction.amount ? transaction.amount.toString() : '';
       const amountMatch = amountStr.includes(value);
       
-      return descriptionMatch || categoryMatch || amountMatch;
+      return idMatch || descriptionMatch || categoryMatch || amountMatch;
     });
     
     updateSearchState({ term: value, results: filtered });
@@ -1059,6 +1066,7 @@ const TransactionsSection = ({
 
   // Table headers definition
   const tableHeaders = useMemo(() => [
+    { id: 'transaction_id', label: 'ID' },
     { id: 'date', label: 'Date' },
     { id: 'description', label: 'Description' },
     { id: 'category', label: 'Category' },
@@ -1311,6 +1319,21 @@ const TransactionsSection = ({
         
         {/* Transactions Table */}
         {renderTransactionsTable()}
+        
+        {/* Note explaining limited transactions shown */}
+        {displayTransactions.length > 0 && allTransactions.length > displayTransactions.length && (
+          <Box sx={{ mt: 2, textAlign: 'center' }}>
+            <Typography variant="body2" className={styles.transactionsNote}>
+              Showing only 8 most recent transactions. View all on the{' '}
+              <Link 
+                to="/transactions" 
+                style={{ color: 'inherit', fontWeight: 'bold', textDecoration: 'underline' }}
+              >
+                transactions page
+              </Link>.
+            </Typography>
+          </Box>
+        )}
       </Paper>
     </Grid>
   );

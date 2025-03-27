@@ -907,6 +907,12 @@
   overflow-x: auto;
 }
 
+.transactionsNote {
+  font-size: 0.85rem;
+  color: rgba(0, 0, 0, 0.6);
+  margin-top: 0.5rem;
+}
+
 /* Dashboard Menu Styles */
 .dashboardMenuPaper {
   border-radius: 12px;
