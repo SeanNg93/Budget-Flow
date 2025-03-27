@@ -454,6 +454,23 @@ export const deleteAllNotifications = () => {
   });
 };
 
+// Data Reset Service
+export const resetAllData = () => {
+  return axiosInstance.post('/reset/all-data');
+};
+
+// Account Management Services
+export const changePassword = (currentPassword, newPassword) => {
+  return axiosInstance.put('/users/change-password', {
+    currentPassword,
+    newPassword
+  });
+};
+
+export const deleteUserAccount = () => {
+  return axiosInstance.delete('/users/account');
+};
+
 // Export the service as a default object
 const FinanceService = {
   // New wallet functions
@@ -516,6 +533,13 @@ const FinanceService = {
   
   // User Profile functions
   getUserProfile,
+  
+  // Data Reset function
+  resetAllData,
+  
+  // Account Management functions
+  changePassword,
+  deleteUserAccount,
 };
 
 export default FinanceService; 

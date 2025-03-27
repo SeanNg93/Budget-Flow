@@ -22,11 +22,16 @@ import Avatar from '@mui/material/Avatar';
 import CategoryIcon from '@mui/icons-material/Category';
 import axios from 'axios';
 import { useUser } from '../../context/UserContext';
+import SettingsPanel from '../settings/SettingsPanel';
 
 const API_BASE_URL = "http://localhost:8080";
 const DEFAULT_AVATAR = "/default-avatar.svg";
 
 const drawerWidth = 280;
+
+// Add a global reference to open settings panel
+// This allows other components to open the settings panel
+window.openSettingsPanel = null;
 
 const DrawerHeader = styled('div')(({ theme }) => ({
   display: 'flex',
@@ -59,6 +64,18 @@ const SideMenu = ({ open, handleDrawerClose, setProfileDialogOpen, setCategoryMa
   
   // Use context for user profile data
   const { profileData } = useUser();
+  
+  // Add state for settings panel
+  const [settingsPanelOpen, setSettingsPanelOpen] = useState(false);
+
+  // Set the global reference to the function to open settings panel
+  useEffect(() => {
+    window.openSettingsPanel = () => setSettingsPanelOpen(true);
+    
+    return () => {
+      window.openSettingsPanel = null;
+    };
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('userToken');
@@ -73,6 +90,9 @@ const SideMenu = ({ open, handleDrawerClose, setProfileDialogOpen, setCategoryMa
     } else if (item.text === 'Category Manage') {
       // Open category manage dialog instead of navigating
       setCategoryManageFormOpen(true);
+    } else if (item.text === 'Settings') {
+      // Open settings panel instead of navigating
+      setSettingsPanelOpen(true);
     } else {
       // Navigate to the specified path for other items
       navigate(item.path);
@@ -88,117 +108,125 @@ const SideMenu = ({ open, handleDrawerClose, setProfileDialogOpen, setCategoryMa
   ];
 
   return (
-    <Drawer
-      sx={{
-        width: drawerWidth,
-        flexShrink: 0,
-        '& .MuiDrawer-paper': {
+    <>
+      <Drawer
+        sx={{
           width: drawerWidth,
-          boxSizing: 'border-box',
-          border: 'none',
-          boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.05)',
-        },
-      }}
-      variant="persistent"
-      anchor="left"
-      open={open}
-    >
-      <DrawerHeader>
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Avatar 
-            src={profileData.profilePicture || DEFAULT_AVATAR}
-            alt={profileData.fullName || userData.username || 'User'}
-            sx={{ 
-              width: 40, 
-              height: 40, 
-              bgcolor: !profileData.profilePicture ? 'primary.main' : 'transparent',
-              mr: 2,
-              fontWeight: 'bold'
-            }}
-          >
-            {!profileData.profilePicture && (profileData.fullName || userData.username) ? (profileData.fullName || userData.username).charAt(0).toUpperCase() : null}
-          </Avatar>
-          <Box>
-            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-              {profileData.fullName || userData.username || 'User'}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {userData.email || 'user@example.com'}
-            </Typography>
+          flexShrink: 0,
+          '& .MuiDrawer-paper': {
+            width: drawerWidth,
+            boxSizing: 'border-box',
+            border: 'none',
+            boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.05)',
+          },
+        }}
+        variant="persistent"
+        anchor="left"
+        open={open}
+      >
+        <DrawerHeader>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Avatar 
+              src={profileData.profilePicture || DEFAULT_AVATAR}
+              alt={profileData.fullName || userData.username || 'User'}
+              sx={{ 
+                width: 40, 
+                height: 40, 
+                bgcolor: !profileData.profilePicture ? 'primary.main' : 'transparent',
+                mr: 2,
+                fontWeight: 'bold'
+              }}
+            >
+              {!profileData.profilePicture && (profileData.fullName || userData.username) ? (profileData.fullName || userData.username).charAt(0).toUpperCase() : null}
+            </Avatar>
+            <Box>
+              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                {profileData.fullName || userData.username || 'User'}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {userData.email || 'user@example.com'}
+              </Typography>
+            </Box>
           </Box>
-        </Box>
-        <IconButton onClick={handleDrawerClose} sx={{ color: 'text.secondary' }}>
-          <ChevronLeftIcon />
-        </IconButton>
-      </DrawerHeader>
-      
-      <Divider sx={{ mx: 2 }} />
-      
-      <Box sx={{ px: 1, py: 2 }}>
-        <Typography 
-          variant="overline" 
-          color="text.secondary" 
-          sx={{ 
-            px: 2, 
-            fontSize: '0.75rem', 
-            fontWeight: 600,
-            letterSpacing: '0.05em'
-          }}
-        >
-          MENU
-        </Typography>
+          <IconButton onClick={handleDrawerClose} sx={{ color: 'text.secondary' }}>
+            <ChevronLeftIcon />
+          </IconButton>
+        </DrawerHeader>
         
-        <List sx={{ mt: 1 }}>
-          {menuItems.map((item) => (
-            <ListItem key={item.text} disablePadding>
-              <StyledListItemButton 
-                onClick={() => handleMenuItemClick(item)}
-                selected={location.pathname === item.path}
-              >
-                <ListItemIcon sx={{ minWidth: 40 }}>
-                  {item.icon}
-                </ListItemIcon>
-                <ListItemText 
-                  primary={item.text} 
-                  primaryTypographyProps={{ 
-                    fontSize: '0.95rem',
-                    fontWeight: location.pathname === item.path ? 600 : 500
-                  }} 
-                />
-              </StyledListItemButton>
-            </ListItem>
-          ))}
-        </List>
-      </Box>
-      
-      <Box sx={{ flexGrow: 1 }} />
-      
-      <Box sx={{ p: 2 }}>
-        <Divider sx={{ mb: 2 }} />
-        <ListItem disablePadding>
-          <StyledListItemButton 
-            onClick={handleLogout}
+        <Divider sx={{ mx: 2 }} />
+        
+        <Box sx={{ px: 1, py: 2 }}>
+          <Typography 
+            variant="overline" 
+            color="text.secondary" 
             sx={{ 
-              color: 'error.main',
-              '&:hover': {
-                backgroundColor: 'rgba(255, 59, 48, 0.08)',
-              },
+              px: 2, 
+              fontSize: '0.75rem', 
+              fontWeight: 600,
+              letterSpacing: '0.05em'
             }}
           >
-            <ListItemIcon sx={{ minWidth: 40, color: 'error.main' }}>
-              <LogoutIcon />
-            </ListItemIcon>
-            <ListItemText 
-              primary="Logout" 
-              primaryTypographyProps={{ 
-                fontSize: '0.95rem',
-                fontWeight: 500
-              }} 
-            />
-          </StyledListItemButton>
-        </ListItem>
-      </Box>
-    </Drawer>
+            MENU
+          </Typography>
+          
+          <List sx={{ mt: 1 }}>
+            {menuItems.map((item) => (
+              <ListItem key={item.text} disablePadding>
+                <StyledListItemButton 
+                  onClick={() => handleMenuItemClick(item)}
+                  selected={location.pathname === item.path}
+                >
+                  <ListItemIcon sx={{ minWidth: 40 }}>
+                    {item.icon}
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary={item.text} 
+                    primaryTypographyProps={{ 
+                      fontSize: '0.95rem',
+                      fontWeight: location.pathname === item.path ? 600 : 500
+                    }} 
+                  />
+                </StyledListItemButton>
+              </ListItem>
+            ))}
+          </List>
+        </Box>
+        
+        <Box sx={{ flexGrow: 1 }} />
+        
+        <Box sx={{ p: 2 }}>
+          <Divider sx={{ mb: 2 }} />
+          <ListItem disablePadding>
+            <StyledListItemButton 
+              onClick={handleLogout}
+              sx={{ 
+                color: 'error.main',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 59, 48, 0.08)',
+                },
+              }}
+            >
+              <ListItemIcon sx={{ minWidth: 40, color: 'error.main' }}>
+                <LogoutIcon />
+              </ListItemIcon>
+              <ListItemText 
+                primary="Logout" 
+                primaryTypographyProps={{ 
+                  fontSize: '0.95rem',
+                  fontWeight: 500
+                }} 
+              />
+            </StyledListItemButton>
+          </ListItem>
+        </Box>
+      </Drawer>
+
+      {/* Settings Panel */}
+      <SettingsPanel 
+        open={settingsPanelOpen} 
+        handleClose={() => setSettingsPanelOpen(false)}
+      />
+    </>
   );
 };
 

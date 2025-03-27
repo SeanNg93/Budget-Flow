@@ -11,12 +11,10 @@ import MoreIcon from '@mui/icons-material/MoreVert';
 import SearchIcon from '@mui/icons-material/Search';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { useNavigate } from 'react-router-dom';
-import ChangePassword from '../user/ChangePassword';
 import Avatar from '@mui/material/Avatar';
 import InputBase from '@mui/material/InputBase';
 import Divider from '@mui/material/Divider';
 import axios from 'axios';
-import DeleteAccountDialog from './DeleteAccountDialog';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import NotificationMenu from './NotificationMenu';
@@ -46,9 +44,7 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = useState(null);
-  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-  const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -244,17 +240,12 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
     navigate('/login');
   };
 
-  const handleDeleteAccount = () => {
-    setDeleteAccountOpen(true);
-  };
-
-  const handleChangePassword = () => {
+  const handleOpenSettings = () => {
     handleMenuClose();
-    setChangePasswordOpen(true);
-  };
-
-  const handleChangePasswordClose = () => {
-    setChangePasswordOpen(false);
+    // Use the same mechanism as the SideMenu component to open settings
+    if (window.openSettingsPanel) {
+      window.openSettingsPanel();
+    }
   };
 
   const menuId = 'primary-search-account-menu';
@@ -288,19 +279,8 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
       </Box>
       <Divider className={styles.menuDivider} />
       <MenuItem onClick={handleProfile} className={styles.menuItem}>Profile</MenuItem>
-      <MenuItem onClick={handleChangePassword} className={styles.menuItem}>Change Password</MenuItem>
+      <MenuItem onClick={handleOpenSettings} className={styles.menuItem}>Settings</MenuItem>
       <Divider className={styles.menuDivider} />
-      <MenuItem 
-        onClick={handleDeleteAccount}
-        className={`${styles.menuItem} ${styles.deleteMenuItem}`}
-      >
-        <ListItemText 
-          primary="Delete Account" 
-          primaryTypographyProps={{ 
-            color: 'inherit' 
-          }} 
-        />
-      </MenuItem>
       <MenuItem onClick={handleLogout} className={styles.menuItem}>Logout</MenuItem>
     </Menu>
   );
@@ -503,11 +483,6 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
       </AppBar>
       {renderMobileMenu}
       {renderMenu}
-      <ChangePassword open={changePasswordOpen} onClose={handleChangePasswordClose} />
-      <DeleteAccountDialog 
-        open={deleteAccountOpen}
-        onClose={() => setDeleteAccountOpen(false)}
-      />
       <ProfileDialog open={profileDialogOpen} onClose={() => setProfileDialogOpen(false)} />
     </>
   );

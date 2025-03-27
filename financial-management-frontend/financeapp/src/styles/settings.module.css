@@ -1,0 +1,283 @@
+/* Settings Panel Styles */
+.dialogPaper {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.dialogTitle {
+  padding: 16px 24px;
+  background-color: #f8f9fa;
+}
+
+.dialogTitleText {
+  font-weight: 600;
+  font-size: 1.25rem;
+}
+
+.closeButton {
+  margin-right: -8px;
+}
+
+.closeButton:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.dialogContent {
+  padding: 24px;
+}
+
+.sectionTitle {
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 16px;
+  font-size: 1rem;
+}
+
+.settingsSection {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.resetOption {
+  padding: 16px;
+  transition: background-color 0.2s ease;
+}
+
+.resetOption:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.resetIcon {
+  min-width: 42px;
+}
+
+.resetOptionText {
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.resetOptionDescription {
+  font-size: 0.85rem;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.infoAlert {
+  background-color: rgba(33, 150, 243, 0.1);
+  border-radius: 8px;
+}
+
+/* Reset Confirmation Dialog */
+.resetConfirmPaper {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.resetConfirmTitle {
+  background-color: #ffeeee;
+  padding: 16px 24px;
+}
+
+.warningIcon {
+  margin-right: 12px;
+  color: #ff9800;
+}
+
+.resetConfirmTitleText {
+  font-weight: 600;
+  color: #d32f2f;
+}
+
+.resetConfirmContent {
+  padding: 24px;
+}
+
+.resetConfirmMessage {
+  margin-bottom: 16px;
+}
+
+.resetList {
+  padding: 0 0 16px 0;
+}
+
+.warningAlert {
+  margin-top: 8px;
+  margin-bottom: 8px;
+  background-color: rgba(244, 67, 54, 0.1);
+  border-radius: 8px;
+}
+
+.resetConfirmActions {
+  padding: 16px 24px;
+  background-color: #f8f9fa;
+}
+
+.cancelButton {
+  margin-right: 8px;
+}
+
+.resetButton {
+  background-color: #d32f2f;
+}
+
+.resetButton:hover {
+  background-color: #b71c1c;
+}
+
+.resetSuccessContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+.resetSuccessAlert {
+  width: 100%;
+  padding: 16px;
+  border-radius: 8px;
+}
+
+/* Media Queries */
+@media (max-width: 600px) {
+  .dialogContent {
+    padding: 16px;
+  }
+  
+  .resetConfirmContent {
+    padding: 16px;
+  }
+  
+  .resetOption {
+    padding: 12px;
+  }
+}
+
+/* Setting Option Styles */
+.settingOption {
+  padding: 16px;
+  transition: background-color 0.2s ease;
+}
+
+.settingOption:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.settingIcon {
+  min-width: 42px;
+}
+
+.settingOptionText {
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.settingOptionDescription {
+  font-size: 0.85rem;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+/* Delete Account Styles */
+.deleteAccountOption {
+  padding: 16px;
+  transition: background-color 0.2s ease;
+}
+
+.deleteAccountOption:hover {
+  background-color: rgba(255, 0, 0, 0.05);
+}
+
+.deleteAccountIcon {
+  min-width: 42px;
+}
+
+.deleteAccountText {
+  font-weight: 500;
+  font-size: 0.95rem;
+  color: #d32f2f;
+}
+
+.deleteAccountDescription {
+  font-size: 0.85rem;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+/* Password Change Dialog */
+.passwordChangePaper {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.passwordChangeTitle {
+  padding: 16px 24px;
+  background-color: #f8f9fa;
+}
+
+.passwordIcon {
+  margin-right: 12px;
+  color: #3f51b5;
+}
+
+.passwordChangeTitleText {
+  font-weight: 600;
+}
+
+.passwordChangeContent {
+  padding: 24px;
+}
+
+.passwordChangeActions {
+  padding: 16px 24px;
+  background-color: #f8f9fa;
+}
+
+.saveButton {
+  background-color: #3f51b5;
+}
+
+.saveButton:hover {
+  background-color: #303f9f;
+}
+
+/* Delete Account Dialog */
+.deleteAccountConfirmPaper {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.deleteAccountConfirmTitle {
+  background-color: #ffeeee;
+  padding: 16px 24px;
+}
+
+.deleteAccountConfirmTitleText {
+  font-weight: 600;
+  color: #d32f2f;
+}
+
+.deleteAccountConfirmContent {
+  padding: 24px;
+}
+
+.deleteAccountConfirmMessage {
+  margin-bottom: 16px;
+}
+
+.deleteAccountWarningAlert {
+  background-color: rgba(244, 67, 54, 0.1);
+  border-radius: 8px;
+}
+
+.deleteAccountConfirmActions {
+  padding: 16px 24px;
+  background-color: #f8f9fa;
+}
+
+.deleteButton {
+  background-color: #d32f2f;
+}
+
+.deleteButton:hover {
+  background-color: #b71c1c;
+} 
