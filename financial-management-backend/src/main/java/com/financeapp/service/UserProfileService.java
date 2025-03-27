@@ -96,7 +96,7 @@ public class UserProfileService {
         profile.setFullName(profileDto.getFullName());
         profile.setPhone(profileDto.getPhone());
         profile.setBio(profileDto.getBio());
-        
+
         // Thêm cập nhật các trường mới
         if (profileDto.getDateOfBirth() != null && !profileDto.getDateOfBirth().isEmpty()) {
             profile.setDateOfBirth(LocalDate.parse(profileDto.getDateOfBirth()));
@@ -337,8 +337,8 @@ public class UserProfileService {
                 .profilePictureUrl(profilePictureUrl)
                 .totalBalance(profile.getTotalBalance())
                 .currency(profile.getCurrency())
-                .dateOfBirth(profile.getDateOfBirth() != null ? 
-                    profile.getDateOfBirth().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) : null)
+                .dateOfBirth(profile.getDateOfBirth() != null ?
+                        profile.getDateOfBirth().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) : null)
                 .address(profile.getAddress())
                 .build();
     }
