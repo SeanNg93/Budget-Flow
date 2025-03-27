@@ -48,12 +48,13 @@ export default function ProfileDialog({ open, onClose, handleClose, onProfileUpd
   const [avatarPreview, setAvatarPreview] = useState(DEFAULT_AVATAR);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+  const [errors, setErrors] = useState({});
+
   // Refs for transitions
   const loadingFadeRef = useRef(null);
   const errorFadeRef = useRef(null);
   const contentFadeRef = useRef(null);
-  
+
   // Get the user context
   const { updateProfilePicture, updateFullName, updateProfile } = useUser();
 
@@ -116,7 +117,7 @@ export default function ProfileDialog({ open, onClose, handleClose, onProfileUpd
       setProfile(profileData);
       setEditedProfile(profileData);
       setAvatarPreview(profileData.profilePictureUrl || DEFAULT_AVATAR);
-      
+
       // Update the context with the profile data
       updateProfile(profileData);
     } catch (err) {
@@ -146,14 +147,14 @@ export default function ProfileDialog({ open, onClose, handleClose, onProfileUpd
   const handleAvatarChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      
+
       // Preview the image
       const reader = new FileReader();
       reader.onload = (event) => {
         setAvatarPreview(event.target.result);
       };
       reader.readAsDataURL(file);
-      
+
       // Upload the image
       uploadProfilePicture(file);
     }
@@ -184,23 +185,23 @@ export default function ProfileDialog({ open, onClose, handleClose, onProfileUpd
       });
 
       const updatedProfile = response.data;
-      
+
       // Update profile state with new avatar URL
       setProfile(prev => ({ ...prev, avatar: updatedProfile.profilePictureUrl }));
       setEditedProfile(prev => ({ ...prev, avatar: updatedProfile.profilePictureUrl }));
-      
+
       // Make sure we use the absolute URL for the avatar preview
       if (updatedProfile.profilePictureUrl) {
         const timestamp = new Date().getTime(); // Add timestamp to prevent caching
         const profilePicUrl = updatedProfile.profilePictureUrl.startsWith('http')
-          ? `${updatedProfile.profilePictureUrl}?t=${timestamp}`
-          : `${API_BASE_URL}${updatedProfile.profilePictureUrl}?t=${timestamp}`;
+            ? `${updatedProfile.profilePictureUrl}?t=${timestamp}`
+            : `${API_BASE_URL}${updatedProfile.profilePictureUrl}?t=${timestamp}`;
         setAvatarPreview(profilePicUrl);
-        
+
         // Update the Context with the new profile picture URL
         updateProfilePicture(updatedProfile.profilePictureUrl);
       }
-      
+
       toast.success("Profile picture updated successfully!");
     } catch (err) {
       console.error(err);
@@ -217,7 +218,38 @@ export default function ProfileDialog({ open, onClose, handleClose, onProfileUpd
     }
   };
 
+  const validateForm = () => {
+    const newErrors = {};
+    
+    // Validate date of birth
+    if (editedProfile.dateOfBirth) {
+      const selectedDate = new Date(editedProfile.dateOfBirth);
+      const today = new Date();
+      
+      // Kiểm tra ngày tháng có hợp lệ không
+      if (isNaN(selectedDate.getTime())) {
+        newErrors.dateOfBirth = 'Vui lòng nhập đúng định dạng';
+      } else if (selectedDate > today) {
+        newErrors.dateOfBirth = 'Ngày sinh không thể ở tương lai';
+      } else {
+        // Kiểm tra năm sinh có đủ 4 số và không có số 0 ở đầu
+        const year = selectedDate.getFullYear().toString();
+        if (year.length !== 4 || year.startsWith('0')) {
+          newErrors.dateOfBirth = 'Vui lòng nhập năm sinh đúng định dạng !';
+        }
+      }
+    } else {
+      newErrors.dateOfBirth = 'Vui lòng nhập đúng định dạng !';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSave = async () => {
+    if (!validateForm()) {
+      return;
+    }
     try {
       const token = localStorage.getItem('userToken');
       if (!token) {
@@ -243,15 +275,15 @@ export default function ProfileDialog({ open, onClose, handleClose, onProfileUpd
       setProfile(updatedProfile);
       setEditedProfile(updatedProfile);
       setIsEditing(false);
-      
+
       // Update the Context with the updated profile
       updateProfile(updatedProfile);
-      
+
       // Also update the full name specifically
       if (updatedProfile.fullName) {
         updateFullName(updatedProfile.fullName);
       }
-      
+
       toast.success("Profile updated successfully!");
     } catch (err) {
       toast.error("Failed to update profile. Please try again.");
@@ -274,366 +306,383 @@ export default function ProfileDialog({ open, onClose, handleClose, onProfileUpd
 
   if (isLoading) {
     return (
-      <Dialog 
-        open={open} 
-        onClose={handleDialogClose}
-        maxWidth="md"
-        fullWidth
-        className="profile-dialog"
-      >
-        <DialogTitle className="dialog-title" component="div">
-          Loading Profile...
-          <IconButton 
-            aria-label="close"
-            onClick={handleDialogClose}
-            className="close-button"
-          >
-            <CloseIcon />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent>
-          <Box className="loading-container">
-            <Typography variant="body1">Loading your profile information...</Typography>
-          </Box>
-        </DialogContent>
-      </Dialog>
+        <Dialog
+            open={open}
+            onClose={handleDialogClose}
+            maxWidth="md"
+            fullWidth
+            className="profile-dialog"
+        >
+          <DialogTitle className="dialog-title" component="div">
+            Loading Profile...
+            <IconButton
+                aria-label="close"
+                onClick={handleDialogClose}
+                className="close-button"
+            >
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent>
+            <Box className="loading-container">
+              <Typography variant="body1">Loading your profile information...</Typography>
+            </Box>
+          </DialogContent>
+        </Dialog>
     );
   }
 
   if (error) {
     return (
-      <Dialog 
-        open={open} 
-        onClose={handleDialogClose}
-        maxWidth="md"
-        fullWidth
-        className="profile-dialog"
-      >
-        <DialogTitle className="dialog-title" component="div">
-          Error
-          <IconButton 
-            aria-label="close"
-            onClick={handleDialogClose}
-            className="close-button"
-          >
-            <CloseIcon />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent>
-          <Alert severity="error">{error}</Alert>
-        </DialogContent>
-      </Dialog>
+        <Dialog
+            open={open}
+            onClose={handleDialogClose}
+            maxWidth="md"
+            fullWidth
+            className="profile-dialog"
+        >
+          <DialogTitle className="dialog-title" component="div">
+            Error
+            <IconButton
+                aria-label="close"
+                onClick={handleDialogClose}
+                className="close-button"
+            >
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent>
+            <Alert severity="error">{error}</Alert>
+          </DialogContent>
+        </Dialog>
     );
   }
 
   if (!profile) {
     return (
-      <Dialog 
-        open={open} 
-        onClose={handleDialogClose}
-        maxWidth="md"
-        fullWidth
-        className="profile-dialog"
-      >
-        <DialogTitle className="dialog-title" component="div">
-          No Profile Data
-          <IconButton 
-            aria-label="close"
-            onClick={handleDialogClose}
-            className="close-button"
-          >
-            <CloseIcon />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent>
-          <Alert severity="warning">No profile data available. Please log in again.</Alert>
-        </DialogContent>
-      </Dialog>
+        <Dialog
+            open={open}
+            onClose={handleDialogClose}
+            maxWidth="md"
+            fullWidth
+            className="profile-dialog"
+        >
+          <DialogTitle className="dialog-title" component="div">
+            No Profile Data
+            <IconButton
+                aria-label="close"
+                onClick={handleDialogClose}
+                className="close-button"
+            >
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent>
+            <Alert severity="warning">No profile data available. Please log in again.</Alert>
+          </DialogContent>
+        </Dialog>
     );
   }
 
   return (
-    <Dialog
-      open={open}
-      onClose={handleDialogClose}
-      maxWidth="sm"
-      fullWidth
-      className="profile-dialog"
-      aria-labelledby="profile-dialog-title"
-      TransitionComponent={SlideTransition}
-    >
-      <DialogTitle className="dialog-title" component="div">
-        <Typography variant="h6" className="profile-title">
-          Profile Information
-        </Typography>
-        <IconButton 
-          aria-label="close"
-          onClick={handleDialogClose}
-          className="close-button"
-        >
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
-      <DialogContent className="dialog-content">
-        <Paper elevation={0} className="profile-card">
-          {/* Loading spinner */}
-          {isLoading && (
-            <Fade in={isLoading} nodeRef={loadingFadeRef} mountOnEnter unmountOnExit>
-              <Box ref={loadingFadeRef} className="loading-container">
-                <CircularProgress color="primary" />
-                <Typography variant="body1" sx={{ mt: 2 }}>
-                  Loading profile information...
-                </Typography>
-              </Box>
-            </Fade>
-          )}
-
-          {/* Error message */}
-          {error && !isLoading && (
-            <Fade in={!!error} nodeRef={errorFadeRef} mountOnEnter unmountOnExit>
-              <Box ref={errorFadeRef} className="loading-container">
-                <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
-                <Button 
-                  variant="outlined" 
-                  color="primary" 
-                  onClick={fetchUserProfile}
-                  startIcon={<RefreshIcon />}
-                >
-                  Try Again
-                </Button>
-              </Box>
-            </Fade>
-          )}
-
-          {/* Profile content */}
-          {!isLoading && !error && profile && (
-            <Box ref={contentFadeRef}>
-              {/* User Section - Compact version */}
-              <Box className="user-section-compact">
-                <Box className="avatar-container">
-                  <Avatar 
-                    src={avatarPreview} 
-                    alt={profile.fullName || profile.username}
-                    className="avatar"
-                    imgProps={{
-                      onError: (e) => {
-                        e.target.src = DEFAULT_AVATAR;
-                      }
-                    }}
-                  />
-                  <input
-                    accept="image/*"
-                    style={{ display: 'none' }}
-                    id="avatar-upload"
-                    type="file"
-                    onChange={handleAvatarChange}
-                  />
-                  <label htmlFor="avatar-upload">
-                    <IconButton 
-                      component="span" 
-                      className="upload-button-right"
-                      size="small"
-                    >
-                      <PhotoCameraIcon />
-                    </IconButton>
-                  </label>
-                </Box>
-                
-                <Box className="user-info-compact">
-                  <Typography variant="h6" className="user-name">
-                    {profile.fullName || profile.username}
-                  </Typography>
-                  
-                  <Typography variant="body2" className="user-role">
-                    <BadgeIcon fontSize="small" className="user-role-icon" />
-                    {profile.role || "User"}
-                  </Typography>
-                  
-                  {!isEditing ? (
-                    <Button
-                      variant="outlined"
-                      color="primary"
-                      size="small"
-                      startIcon={<EditIcon fontSize="small" />}
-                      onClick={handleEditToggle}
-                      className="edit-button-compact"
-                    >
-                      Edit
-                    </Button>
-                  ) : null}
-                </Box>
-              </Box>
-              
-              {/* Details Section - Compact version */}
-              <Box className="details-section-compact">
-                <Typography variant="subtitle1" className="section-title-compact">
-                  Personal Information
-                </Typography>
-                
-                <Box className="field-grid-compact">
-                  <Box className="field-container-compact">
-                    <Typography variant="caption" className="field-label">
-                      <PersonIcon fontSize="small" sx={{ mr: 0.5, verticalAlign: 'text-bottom' }} />
-                      Full Name
+      <Dialog
+          open={open}
+          onClose={handleDialogClose}
+          maxWidth="sm"
+          fullWidth
+          className="profile-dialog"
+          aria-labelledby="profile-dialog-title"
+          TransitionComponent={SlideTransition}
+      >
+        <DialogTitle className="dialog-title" component="div">
+          <Typography variant="h6" className="profile-title">
+            Profile Information
+          </Typography>
+          <IconButton
+              aria-label="close"
+              onClick={handleDialogClose}
+              className="close-button"
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent className="dialog-content">
+          <Paper elevation={0} className="profile-card">
+            {/* Loading spinner */}
+            {isLoading && (
+                <Fade in={isLoading} nodeRef={loadingFadeRef} mountOnEnter unmountOnExit>
+                  <Box ref={loadingFadeRef} className="loading-container">
+                    <CircularProgress color="primary" />
+                    <Typography variant="body1" sx={{ mt: 2 }}>
+                      Loading profile information...
                     </Typography>
-                    {isEditing ? (
-                      <TextField
-                        fullWidth
-                        name="fullName"
-                        value={editedProfile.fullName || ""}
-                        onChange={handleInputChange}
+                  </Box>
+                </Fade>
+            )}
+
+            {/* Error message */}
+            {error && !isLoading && (
+                <Fade in={!!error} nodeRef={errorFadeRef} mountOnEnter unmountOnExit>
+                  <Box ref={errorFadeRef} className="loading-container">
+                    <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
+                    <Button
                         variant="outlined"
-                        size="small"
-                        className="text-field"
-                        placeholder="Enter your full name"
+                        color="primary"
+                        onClick={fetchUserProfile}
+                        startIcon={<RefreshIcon />}
+                    >
+                      Try Again
+                    </Button>
+                  </Box>
+                </Fade>
+            )}
+
+            {/* Profile content */}
+            {!isLoading && !error && profile && (
+                <Box ref={contentFadeRef}>
+                  {/* User Section - Compact version */}
+                  <Box className="user-section-compact">
+                    <Box className="avatar-container">
+                      <Avatar
+                          src={avatarPreview}
+                          alt={profile.fullName || profile.username}
+                          className="avatar"
+                          imgProps={{
+                            onError: (e) => {
+                              e.target.src = DEFAULT_AVATAR;
+                            }
+                          }}
                       />
-                    ) : (
-                      <Typography variant="body2" className="field-value">
+                      <input
+                          accept="image/*"
+                          style={{ display: 'none' }}
+                          id="avatar-upload"
+                          type="file"
+                          onChange={handleAvatarChange}
+                      />
+                      <label htmlFor="avatar-upload">
+                        <IconButton
+                            component="span"
+                            className="upload-button-right"
+                            size="small"
+                        >
+                          <PhotoCameraIcon />
+                        </IconButton>
+                      </label>
+                    </Box>
+
+                    <Box className="user-info-compact">
+                      <Typography variant="h6" className="user-name">
                         {profile.fullName || profile.username}
                       </Typography>
-                    )}
-                  </Box>
-                  
-                  <Box className="field-container-compact">
-                    <Typography variant="caption" className="field-label">
-                      <EmailIcon fontSize="small" sx={{ mr: 0.5, verticalAlign: 'text-bottom' }} />
-                      Email
-                    </Typography>
-                    <Typography variant="body2" className="field-value">
-                      {profile.email}
-                    </Typography>
-                  </Box>
-                  
-                  <Box className="field-container-compact">
-                    <Typography variant="caption" className="field-label">
-                      <PhoneIcon fontSize="small" sx={{ mr: 0.5, verticalAlign: 'text-bottom' }} />
-                      Phone Number
-                    </Typography>
-                    {isEditing ? (
-                      <TextField
-                        fullWidth
-                        name="phone"
-                        value={editedProfile.phone || ""}
-                        onChange={handleInputChange}
-                        variant="outlined"
-                        size="small"
-                        className="text-field"
-                        placeholder="Enter your phone number"
-                      />
-                    ) : (
-                      <Typography variant="body2" className="field-value">
-                        {profile.phone || "Not provided"}
+
+                      <Typography variant="body2" className="user-role">
+                        <BadgeIcon fontSize="small" className="user-role-icon" />
+                        {profile.role || "User"}
                       </Typography>
-                    )}
-                  </Box>
-                  
-                  <Box className="field-container-compact">
-                    <Typography variant="caption" className="field-label">
-                      <CalendarTodayIcon fontSize="small" sx={{ mr: 0.5, verticalAlign: 'text-bottom' }} />
-                      Date of Birth
-                    </Typography>
-                    {isEditing ? (
-                      <TextField
-                        fullWidth
-                        name="dateOfBirth"
-                        type="date"
-                        value={editedProfile.dateOfBirth || ""}
-                        onChange={handleInputChange}
-                        variant="outlined"
-                        size="small"
-                        className="text-field"
-                        InputLabelProps={{
-                          shrink: true,
-                        }}
-                      />
-                    ) : (
-                      <Typography variant="body2" className="field-value">
-                        {profile.dateOfBirth || "Not provided"}
-                      </Typography>
-                    )}
-                  </Box>
-                  
-                  <Box className="field-container-compact">
-                    <Typography variant="caption" className="field-label">
-                      <LocationOnIcon fontSize="small" sx={{ mr: 0.5, verticalAlign: 'text-bottom' }} />
-                      Address
-                    </Typography>
-                    {isEditing ? (
-                      <TextField
-                        fullWidth
-                        name="address"
-                        value={editedProfile.address || ""}
-                        onChange={handleInputChange}
-                        variant="outlined"
-                        size="small"
-                        className="text-field"
-                        placeholder="Enter your address"
-                      />
-                    ) : (
-                      <Typography variant="body2" className="field-value">
-                        {profile.address || "Not provided"}
-                      </Typography>
-                    )}
-                  </Box>
-                </Box>
-                
-                <Box className="field-container-compact bio-container-compact">
-                  <Typography variant="caption" className="field-label">
-                    <InfoIcon fontSize="small" sx={{ mr: 0.5, verticalAlign: 'text-bottom' }} />
-                    Bio
-                  </Typography>
-                  {isEditing ? (
-                    <TextField
-                      fullWidth
-                      multiline
-                      rows={2}
-                      name="bio"
-                      value={editedProfile.bio || ""}
-                      onChange={handleInputChange}
-                      variant="outlined"
-                      size="small"
-                      className="text-field"
-                      placeholder="Tell us about yourself"
-                    />
-                  ) : (
-                    <Box className="bio-field-compact">
-                      <Typography variant="body2" className="field-value">
-                        {profile.bio || "No bio provided"}
-                      </Typography>
+
+                      {!isEditing ? (
+                          <Button
+                              variant="outlined"
+                              color="primary"
+                              size="small"
+                              startIcon={<EditIcon fontSize="small" />}
+                              onClick={handleEditToggle}
+                              className="edit-button-compact"
+                          >
+                            Edit
+                          </Button>
+                      ) : null}
                     </Box>
+                  </Box>
+
+                  {/* Details Section - Compact version */}
+                  <Box className="details-section-compact">
+                    <Typography variant="subtitle1" className="section-title-compact">
+                      Personal Information
+                    </Typography>
+
+                    <Box className="field-grid-compact">
+                      <Box className="field-container-compact">
+                        <Typography variant="caption" className="field-label">
+                          <PersonIcon fontSize="small" sx={{ mr: 0.5, verticalAlign: 'text-bottom' }} />
+                          Full Name
+                        </Typography>
+                        {isEditing ? (
+                            <TextField
+                                fullWidth
+                                name="fullName"
+                                value={editedProfile.fullName || ""}
+                                onChange={handleInputChange}
+                                variant="outlined"
+                                size="small"
+                                className="text-field"
+                                placeholder="Enter your full name"
+                            />
+                        ) : (
+                            <Typography variant="body2" className="field-value">
+                              {profile.fullName || profile.username}
+                            </Typography>
+                        )}
+                      </Box>
+
+                      <Box className="field-container-compact">
+                        <Typography variant="caption" className="field-label">
+                          <EmailIcon fontSize="small" sx={{ mr: 0.5, verticalAlign: 'text-bottom' }} />
+                          Email
+                        </Typography>
+                        <Typography variant="body2" className="field-value">
+                          {profile.email}
+                        </Typography>
+                      </Box>
+
+                      <Box className="field-container-compact">
+                        <Typography variant="caption" className="field-label">
+                          <PhoneIcon fontSize="small" sx={{ mr: 0.5, verticalAlign: 'text-bottom' }} />
+                          Phone Number
+                        </Typography>
+                        {isEditing ? (
+                            <TextField
+                                fullWidth
+                                name="phone"
+                                value={editedProfile.phone || ""}
+                                onChange={handleInputChange}
+                                variant="outlined"
+                                size="small"
+                                className="text-field"
+                                placeholder="Enter your phone number"
+                            />
+                        ) : (
+                            <Typography variant="body2" className="field-value">
+                              {profile.phone || "Not provided"}
+                            </Typography>
+                        )}
+                      </Box>
+
+                      <Box className="field-container-compact">
+                        <Typography variant="caption" className="field-label">
+                          <CalendarTodayIcon fontSize="small" sx={{ mr: 0.5, verticalAlign: 'text-bottom' }} />
+                          Date of Birth
+                        </Typography>
+                        {isEditing ? (
+                            <Box>
+                              <TextField
+                                fullWidth
+                                name="dateOfBirth"
+                                type="date"
+                                value={editedProfile.dateOfBirth || ""}
+                                onChange={handleInputChange}
+                                variant="outlined"
+                                size="small"
+                                className="text-field"
+                                error={!!errors.dateOfBirth}
+                                InputLabelProps={{
+                                  shrink: true,
+                                }}
+                              />
+                              {errors.dateOfBirth && (
+                                <Alert 
+                                  severity="error" 
+                                  sx={{ 
+                                    mt: 1, 
+                                    '& .MuiAlert-message': {
+                                      fontSize: '0.875rem',
+                                      padding: '4px 0'
+                                    }
+                                  }}
+                                >
+                                  {errors.dateOfBirth}
+                                </Alert>
+                              )}
+                            </Box>
+                        ) : (
+                            <Typography variant="body2" className="field-value">
+                              {profile.dateOfBirth || "Not provided"}
+                            </Typography>
+                        )}
+                      </Box>
+
+                      <Box className="field-container-compact">
+                        <Typography variant="caption" className="field-label">
+                          <LocationOnIcon fontSize="small" sx={{ mr: 0.5, verticalAlign: 'text-bottom' }} />
+                          Address
+                        </Typography>
+                        {isEditing ? (
+                            <TextField
+                                fullWidth
+                                name="address"
+                                value={editedProfile.address || ""}
+                                onChange={handleInputChange}
+                                variant="outlined"
+                                size="small"
+                                className="text-field"
+                                placeholder="Enter your address"
+                            />
+                        ) : (
+                            <Typography variant="body2" className="field-value">
+                              {profile.address || "Not provided"}
+                            </Typography>
+                        )}
+                      </Box>
+                    </Box>
+
+                    <Box className="field-container-compact bio-container-compact">
+                      <Typography variant="caption" className="field-label">
+                        <InfoIcon fontSize="small" sx={{ mr: 0.5, verticalAlign: 'text-bottom' }} />
+                        Bio
+                      </Typography>
+                      {isEditing ? (
+                          <TextField
+                              fullWidth
+                              multiline
+                              rows={2}
+                              name="bio"
+                              value={editedProfile.bio || ""}
+                              onChange={handleInputChange}
+                              variant="outlined"
+                              size="small"
+                              className="text-field"
+                              placeholder="Tell us about yourself"
+                          />
+                      ) : (
+                          <Box className="bio-field-compact">
+                            <Typography variant="body2" className="field-value">
+                              {profile.bio || "No bio provided"}
+                            </Typography>
+                          </Box>
+                      )}
+                    </Box>
+                  </Box>
+
+                  {/* Action Buttons */}
+                  {isEditing && (
+                      <Box className="action-buttons-compact">
+                        <Button
+                            variant="outlined"
+                            color="inherit"
+                            onClick={handleEditToggle}
+                            startIcon={<CancelIcon />}
+                            className="cancel-button"
+                            size="small"
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={handleSave}
+                            startIcon={<SaveIcon />}
+                            className="save-button"
+                            size="small"
+                        >
+                          Save
+                        </Button>
+                      </Box>
                   )}
                 </Box>
-              </Box>
-              
-              {/* Action Buttons */}
-              {isEditing && (
-                <Box className="action-buttons-compact">
-                  <Button
-                    variant="outlined"
-                    color="inherit"
-                    onClick={handleEditToggle}
-                    startIcon={<CancelIcon />}
-                    className="cancel-button"
-                    size="small"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={handleSave}
-                    startIcon={<SaveIcon />}
-                    className="save-button"
-                    size="small"
-                  >
-                    Save
-                  </Button>
-                </Box>
-              )}
-            </Box>
-          )}
-        </Paper>
-      </DialogContent>
-    </Dialog>
+            )}
+          </Paper>
+        </DialogContent>
+      </Dialog>
   );
 } 
