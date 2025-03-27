@@ -22,6 +22,7 @@ import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -96,11 +97,32 @@ public class UserProfileService {
         profile.setFullName(profileDto.getFullName());
         profile.setPhone(profileDto.getPhone());
         profile.setBio(profileDto.getBio());
-
-        // Thêm cập nhật các trường mới
+        
+        // Validate and update date of birth
         if (profileDto.getDateOfBirth() != null && !profileDto.getDateOfBirth().isEmpty()) {
-            profile.setDateOfBirth(LocalDate.parse(profileDto.getDateOfBirth()));
+            try {
+                LocalDate dateOfBirth = LocalDate.parse(profileDto.getDateOfBirth());
+                LocalDate today = LocalDate.now();
+                
+                // Validate date of birth
+                if (dateOfBirth.isAfter(today)) {
+                    throw new IllegalArgumentException("Ngày sinh không thể ở tương lai");
+                }
+                
+                // Kiểm tra năm sinh có đủ 4 số và không có số 0 ở đầu
+                String year = String.valueOf(dateOfBirth.getYear());
+                if (year.length() != 4 || year.startsWith("0")) {
+                    throw new IllegalArgumentException("Năm sinh phải đủ 4 số và không được có số 0 ở đầu");
+                }
+                
+                profile.setDateOfBirth(dateOfBirth);
+            } catch (DateTimeParseException e) {
+                throw new IllegalArgumentException("Vui lòng nhập đúng định dạng");
+            }
+        } else {
+            throw new IllegalArgumentException("Vui lòng nhập đúng định dạng");
         }
+        
         profile.setAddress(profileDto.getAddress());
 
         // Save the profile

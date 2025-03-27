@@ -48,6 +48,7 @@ export default function ProfileDialog({ open, onClose, handleClose, onProfileUpd
   const [avatarPreview, setAvatarPreview] = useState(DEFAULT_AVATAR);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [errors, setErrors] = useState({});
 
   // Refs for transitions
   const loadingFadeRef = useRef(null);
@@ -217,7 +218,38 @@ export default function ProfileDialog({ open, onClose, handleClose, onProfileUpd
     }
   };
 
+  const validateForm = () => {
+    const newErrors = {};
+    
+    // Validate date of birth
+    if (editedProfile.dateOfBirth) {
+      const selectedDate = new Date(editedProfile.dateOfBirth);
+      const today = new Date();
+      
+      // Kiểm tra ngày tháng có hợp lệ không
+      if (isNaN(selectedDate.getTime())) {
+        newErrors.dateOfBirth = 'Vui lòng nhập đúng định dạng';
+      } else if (selectedDate > today) {
+        newErrors.dateOfBirth = 'Ngày sinh không thể ở tương lai';
+      } else {
+        // Kiểm tra năm sinh có đủ 4 số và không có số 0 ở đầu
+        const year = selectedDate.getFullYear().toString();
+        if (year.length !== 4 || year.startsWith('0')) {
+          newErrors.dateOfBirth = 'Năm sinh phải đủ 4 số và không được có số 0 ở đầu';
+        }
+      }
+    } else {
+      newErrors.dateOfBirth = 'Vui lòng nhập đúng định dạng';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSave = async () => {
+    if (!validateForm()) {
+      return;
+    }
     try {
       const token = localStorage.getItem('userToken');
       if (!token) {
@@ -542,6 +574,8 @@ export default function ProfileDialog({ open, onClose, handleClose, onProfileUpd
                                 variant="outlined"
                                 size="small"
                                 className="text-field"
+                                error={!!errors.dateOfBirth}
+                                helperText={errors.dateOfBirth}
                                 InputLabelProps={{
                                   shrink: true,
                                 }}
