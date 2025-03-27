@@ -147,6 +147,73 @@ export const getFinancialSummary = () => {
   return axiosInstance.get('/transactions/summary');
 };
 
+// New method for getting financial summary by date range
+export const getFinancialSummaryByDateRange = (timeRange) => {
+  // Calculate date range based on the selected time period
+  const endDate = new Date();
+  let startDate = new Date();
+  
+  switch (timeRange) {
+    case '24h':
+      // Last 24 hours
+      startDate.setHours(startDate.getHours() - 24);
+      break;
+    case '7d':
+      // Last 7 days
+      startDate.setDate(startDate.getDate() - 7);
+      break;
+    case '30d':
+      // Last 30 days
+      startDate.setDate(startDate.getDate() - 30);
+      break;
+    case '3m':
+      // Last 3 months
+      startDate.setMonth(startDate.getMonth() - 3);
+      break;
+    case '1y':
+      // Last year
+      startDate.setFullYear(startDate.getFullYear() - 1);
+      break;
+    case 'all':
+    default:
+      // All time - return regular summary
+      return getFinancialSummary();
+  }
+
+  // Format dates for API
+  const formattedStartDate = startDate.toISOString();
+  const formattedEndDate = endDate.toISOString();
+  
+  // Use existing chart data endpoint which already has date range filtering
+  return axiosInstance.get(
+    `/transactions/chart-data?startDate=${formattedStartDate}&endDate=${formattedEndDate}`
+  ).then(response => {
+    // Extract and format summary data to match the format expected by components
+    const { summaryData } = response.data;
+    
+    // Format to match the structure of getFinancialSummary response
+    return {
+      data: {
+        totalIncome: summaryData.totalIncome || 0,
+        totalExpense: summaryData.totalExpenses || 0, // Note the different key name
+        netSavings: summaryData.netSavings || 0,
+        // Preserve any other fields that might be in the original summary
+        totalBalance: null // This will need to be filled in separately as chart data doesn't include it
+      }
+    };
+  }).catch(error => {
+    console.error('Error fetching financial summary by date range:', error);
+    return {
+      data: {
+        totalIncome: 0,
+        totalExpense: 0,
+        netSavings: 0,
+        totalBalance: 0
+      }
+    };
+  });
+};
+
 // New method for chart data
 export const getFinancialDataByDateRange = (startDate, endDate, categoryId = 'all') => {
   // Format dates properly to match backend expectations (YYYY-MM-DDTHH:mm:ss.sssZ format)
@@ -501,6 +568,7 @@ const FinanceService = {
   getFinancialSummary,
   getFinancialDataByDateRange,
   getFilteredTransactions,
+  getFinancialSummaryByDateRange,
   
   // Category functions
   getCategories,

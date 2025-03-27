@@ -192,6 +192,8 @@
   background-color: #ffffff;
   border-radius: calc(0.95rem * var(--scale-factor));
   box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.08);
+  width: 100%;
+  margin-bottom: calc(1rem * var(--scale-factor));
 }
 
 .welcomeHeader {
@@ -1347,4 +1349,99 @@ button.resetFilterButton {
 .exportButton:disabled {
   color: rgba(0, 0, 0, 0.26);
   border-color: rgba(0, 0, 0, 0.12);
+}
+
+/* Time Range Selector styles */
+.timeRangeSelectorContainer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.timeRangeSelectorWrapper {
+  display: flex;
+  align-items: center;
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 6px 12px;
+  box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.timeRangeLabelContainer {
+  display: flex;
+  align-items: center;
+  margin-right: 12px;
+}
+
+.timeRangeIcon {
+  margin-right: 6px;
+  font-size: 18px;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.timeRangeLabel {
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.timeRangeToggleGroup {
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.timeRangeToggleButton {
+  min-width: 40px;
+  border-radius: 0;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  padding: 4px 10px;
+  color: rgba(0, 0, 0, 0.6);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+.timeRangeToggleButton.Mui-selected {
+  background-color: rgba(0, 122, 255, 0.1);
+  color: #007aff;
+  font-weight: 600;
+}
+
+.timeRangeToggleButton:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.timeRangeToggleButton.Mui-selected:hover {
+  background-color: rgba(0, 122, 255, 0.15);
+}
+
+.loadingIcon {
+  color: rgba(0, 0, 0, 0.4);
+  margin-left: 10px;
+  animation: spin 1.5s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 600px) {
+  .timeRangeSelectorContainer {
+    justify-content: center;
+  }
+  
+  .timeRangeToggleButton {
+    min-width: 32px;
+    padding: 3px 8px;
+    font-size: 0.75rem;
+  }
+  
+  .timeRangeLabelContainer {
+    margin-right: 8px;
+  }
 }

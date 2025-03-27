@@ -10,7 +10,11 @@ import {
   Menu, 
   MenuItem,
   CircularProgress,
-  Tooltip
+  Tooltip,
+  Divider,
+  ListItemIcon,
+  ListItemText,
+  Badge
 } from '@mui/material';
 import { 
   AccountBalanceWallet as AccountBalanceWalletIcon,
@@ -20,7 +24,9 @@ import {
   Add as AddIcon,
   MoreVert as MoreVertIcon,
   Edit as EditIcon,
-  Settings as SettingsIcon
+  Settings as SettingsIcon,
+  AccessTime as TimeIcon,
+  Check as CheckIcon
 } from '@mui/icons-material';
 import styles from '../../styles/dashboard.module.css';
 
@@ -105,9 +111,28 @@ const SummaryCards = ({
   loading, 
   handleEditBalance, 
   handleManageWallets, 
-  handleAddBalance 
+  handleAddBalance,
+  timeRange = 'all',
+  onTimeRangeChange,
+  timeRangeLoading = false
 }) => {
   const [balanceMenuAnchorEl, setBalanceMenuAnchorEl] = useState(null);
+
+  // Time range options
+  const timeRangeOptions = useMemo(() => [
+    { value: '24h', label: 'Last 24 hours' },
+    { value: '7d', label: 'Last 7 days' },
+    { value: '30d', label: 'Last 30 days' },
+    { value: '3m', label: 'Last 3 months' },
+    { value: '1y', label: 'Last year' },
+    { value: 'all', label: 'All time' }
+  ], []);
+  
+  // Get the current time range label
+  const currentTimeRangeLabel = useMemo(() => {
+    const option = timeRangeOptions.find(opt => opt.value === timeRange);
+    return option ? option.label : 'All time';
+  }, [timeRange, timeRangeOptions]);
 
   // Memoize event handlers
   const handleBalanceMenuOpen = useCallback((event) => {
@@ -127,6 +152,13 @@ const SummaryCards = ({
     handleBalanceMenuClose();
     handleManageWallets();
   }, [handleBalanceMenuClose, handleManageWallets]);
+  
+  const handleTimeRangeChange = useCallback((value) => {
+    handleBalanceMenuClose();
+    if (onTimeRangeChange && value !== timeRange) {
+      onTimeRangeChange(value);
+    }
+  }, [handleBalanceMenuClose, onTimeRangeChange, timeRange]);
 
   // Memoize the currency formatter
   const formatCurrency = useCallback((amount) => {
@@ -139,6 +171,14 @@ const SummaryCards = ({
   // Extra header content for balance card with add button and menu
   const balanceHeader = useMemo(() => (
     <>
+      {timeRangeLoading && (
+        <CircularProgress 
+          size={16} 
+          thickness={4}
+          sx={{ mr: 1 }}
+          aria-label="Loading financial data"
+        />
+      )}
       <Tooltip title="Add balance">
         <IconButton 
           color="primary" 
@@ -160,11 +200,18 @@ const SummaryCards = ({
           size="small"
           className={styles.moreOptionsButton}
         >
-          <MoreVertIcon fontSize="small" />
+          <Badge
+            color="primary"
+            variant="dot"
+            invisible={timeRange === 'all'}
+            overlap="circular"
+          >
+            <MoreVertIcon fontSize="small" />
+          </Badge>
         </IconButton>
       </Tooltip>
     </>
-  ), [handleAddBalance, handleBalanceMenuOpen, balanceMenuAnchorEl]);
+  ), [handleAddBalance, handleBalanceMenuOpen, balanceMenuAnchorEl, timeRange, timeRangeLoading]);
 
   // Extra content for balance card with menu
   const balanceMenu = useMemo(() => (
@@ -183,15 +230,59 @@ const SummaryCards = ({
       }}
     >
       <MenuItem onClick={onEditBalance} className={styles.menuItem}>
-        <EditIcon fontSize="small" className={styles.menuIcon} aria-hidden="true" />
-        Edit Balance
+        <ListItemIcon>
+          <EditIcon fontSize="small" className={styles.menuIcon} aria-hidden="true" />
+        </ListItemIcon>
+        <ListItemText>Edit Balance</ListItemText>
       </MenuItem>
       <MenuItem onClick={onManageWallets} className={styles.menuItem}>
-        <SettingsIcon fontSize="small" className={styles.menuIcon} aria-hidden="true" />
-        Manage Wallets
+        <ListItemIcon>
+          <SettingsIcon fontSize="small" className={styles.menuIcon} aria-hidden="true" />
+        </ListItemIcon>
+        <ListItemText>Manage Wallets</ListItemText>
       </MenuItem>
+      
+      {onTimeRangeChange && (
+        <>
+          <Divider sx={{ my: 1 }} />
+          
+          <Typography 
+            variant="caption" 
+            color="textSecondary" 
+            sx={{ px: 2, py: 0.5, display: 'flex', alignItems: 'center' }}
+          >
+            <TimeIcon fontSize="small" sx={{ mr: 1, opacity: 0.7 }} />
+            Time Range for Income, Expenses & Savings
+          </Typography>
+          
+          {timeRangeOptions.map((option) => (
+            <MenuItem 
+              key={option.value}
+              onClick={() => handleTimeRangeChange(option.value)}
+              selected={timeRange === option.value}
+              className={styles.menuItem}
+            >
+              <ListItemIcon sx={{ minWidth: '32px' }}>
+                {timeRange === option.value && (
+                  <CheckIcon fontSize="small" color="primary" />
+                )}
+              </ListItemIcon>
+              <ListItemText>{option.label}</ListItemText>
+            </MenuItem>
+          ))}
+        </>
+      )}
     </Menu>
-  ), [balanceMenuAnchorEl, handleBalanceMenuClose, onEditBalance, onManageWallets]);
+  ), [
+    balanceMenuAnchorEl, 
+    handleBalanceMenuClose, 
+    onEditBalance, 
+    onManageWallets, 
+    onTimeRangeChange,
+    timeRange,
+    timeRangeOptions,
+    handleTimeRangeChange
+  ]);
 
   // Card configurations - Memoized to prevent unnecessary recalculations
   const cardConfigs = useMemo(() => {
@@ -199,7 +290,7 @@ const SummaryCards = ({
     
     return [
       {
-        title: 'Total Balance',
+        title: `Total Balance${timeRange !== 'all' ? '' : ''}`,
         icon: <AccountBalanceWalletIcon />,
         iconColor: '#007aff',
         amount: formatCurrency(totalBalance),
@@ -211,7 +302,7 @@ const SummaryCards = ({
         accessibleLabel: `Total Balance: ${formatCurrency(totalBalance)}`
       },
       {
-        title: 'Income',
+        title: `Income${timeRange !== 'all' ? ` (${currentTimeRangeLabel})` : ''}`,
         icon: <TrendingUpIcon />,
         iconColor: '#34c759',
         amount: formatCurrency(totalIncome),
@@ -222,7 +313,7 @@ const SummaryCards = ({
         accessibleLabel: `Income: ${formatCurrency(totalIncome)}`
       },
       {
-        title: 'Expenses',
+        title: `Expenses${timeRange !== 'all' ? ` (${currentTimeRangeLabel})` : ''}`,
         icon: <TrendingDownIcon />,
         iconColor: '#ff3b30',
         amount: formatCurrency(totalExpense),
@@ -233,7 +324,7 @@ const SummaryCards = ({
         accessibleLabel: `Expenses: ${formatCurrency(totalExpense)}`
       },
       {
-        title: 'Net Savings',
+        title: `Net Savings${timeRange !== 'all' ? ` (${currentTimeRangeLabel})` : ''}`,
         icon: <SavingsIcon />,
         iconColor: netSavings >= 0 ? '#34c759' : '#ff3b30',
         amount: formatCurrency(netSavings),
@@ -248,13 +339,15 @@ const SummaryCards = ({
     financialData,
     formatCurrency,
     balanceHeader,
-    balanceMenu
+    balanceMenu,
+    timeRange,
+    currentTimeRangeLabel
   ]);
 
   // Memoize grid items to prevent unnecessary re-renders
   const gridItems = useMemo(() => (
     cardConfigs.map((config, index) => (
-      <Grid item xs={12} md={config.gridSize} key={index}>
+      <Grid item xs={12} sm={6} md={config.gridSize} key={index}>
         <SummaryCard
           {...config}
           loading={loading}
@@ -263,7 +356,7 @@ const SummaryCards = ({
     ))
   ), [cardConfigs, loading]);
 
-  return <>{gridItems}</>;
+  return <Grid container spacing={2.4}>{gridItems}</Grid>;
 };
 
 export default React.memo(SummaryCards); 

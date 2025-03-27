@@ -122,6 +122,9 @@ export default function Dashboard() {
 
   const [selectedWallet, setSelectedWallet] = useState(null);
 
+  const [timeRange, setTimeRange] = useState('all'); // Default to 'all' time
+  const [timeRangeLoading, setTimeRangeLoading] = useState(false);
+
   // Helper to update dialog states
   const updateDialogState = (dialogName, isOpen) => {
     setDialogStates(prevState => ({
@@ -337,8 +340,8 @@ export default function Dashboard() {
   };
 
   const fetchFinancialData = async () => {
-    setLoading(true);
     try {
+      setLoading(true);
       // Parallel API calls for better performance
       const [summaryResponse, accountsResponse, transactionsResponse, 
              sharedWithMeResponse, sharedByMeResponse] = await Promise.all([
@@ -392,6 +395,11 @@ export default function Dashboard() {
       setTransactions(processedTransactions.slice(0, 8));
       setFilteredTransactions(processedTransactions.slice(0, 8));
       setAllTransactions(processedTransactions || []);
+
+      // If a time range other than 'all' is selected, apply the filter after setting initial data
+      if (timeRange !== 'all') {
+        await fetchFinancialDataByTimeRange(timeRange);
+      }
     } catch (error) {
       setError('Failed to load financial data. Please try again later.');
       setFinancialData({
@@ -639,6 +647,50 @@ export default function Dashboard() {
     }
   };
 
+  // New function to handle time range changes
+  const handleTimeRangeChange = async (newTimeRange) => {
+    if (newTimeRange === timeRange) return;
+    
+    setTimeRangeLoading(true);
+    setTimeRange(newTimeRange);
+    
+    try {
+      // Fetch financial data with the new time range
+      await fetchFinancialDataByTimeRange(newTimeRange);
+    } catch (error) {
+      console.error('Error fetching data for time range:', error);
+      
+      // Show error toast
+      toast.error('Failed to load data for the selected time range', {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    } finally {
+      setTimeRangeLoading(false);
+    }
+  };
+  
+  // New function to fetch financial data by time range
+  const fetchFinancialDataByTimeRange = async (selectedTimeRange) => {
+    try {
+      // Get financial summary by date range for the selected time range
+      const summaryResponse = await FinanceService.getFinancialSummaryByDateRange(selectedTimeRange);
+      
+      // For time-filtered data, we need to preserve the total balance from the original data
+      // as the chart data endpoint doesn't include balance information
+      setFinancialData((prevData) => ({
+        ...prevData,
+        totalIncome: summaryResponse.data.totalIncome || 0,
+        totalExpense: summaryResponse.data.totalExpense || 0,
+        netSavings: summaryResponse.data.netSavings || 0
+        // Preserve total balance from previous state
+      }));
+    } catch (error) {
+      console.error('Error fetching financial data by time range:', error);
+      // Don't reset financial data on error, keep the last valid state
+    }
+  };
+
   // Loading state
   if (loading) {
     return (
@@ -670,24 +722,29 @@ export default function Dashboard() {
           <Container maxWidth="lg" sx={{ p: 2 }}>
             <Box sx={{ p: 2, borderRadius: '12px', backgroundColor: 'rgba(255,255,255,0.8)' }}>
                 <Grid container spacing={2.4}>
-                {/* Welcome Section */}
+                  {/* Welcome Section */}
                   <Grid item xs={12}>
-                  <WelcomeSection 
-                    userProfile={userProfile} 
-                    user={user} 
-                    openFinanceActionPanel={() => updateDialogState('financeActionPanel', true)} 
-                  />
+                    <WelcomeSection 
+                      userProfile={userProfile} 
+                      user={user} 
+                      openFinanceActionPanel={() => updateDialogState('financeActionPanel', true)} 
+                    />
                   </Grid>
-                  
-                  {/* Summary Cards Row */}
+                </Grid>
+                
+                {/* Summary Cards */}
                 <SummaryCards 
                   financialData={financialData}
-                  loading={loading}
+                  loading={loading || timeRangeLoading}
                   handleEditBalance={() => updateDialogState('editBalanceForm', true)}
                   handleManageWallets={() => updateDialogState('walletManageForm', true)}
                   handleAddBalance={() => updateDialogState('addBalanceForm', true)}
+                  timeRange={timeRange}
+                  onTimeRangeChange={handleTimeRangeChange}
+                  timeRangeLoading={timeRangeLoading}
                 />
-                  
+                
+                <Grid container spacing={2.4} sx={{ mt: 1.2 }}>
                   {/* Wallet Overview and Chart Side by Side */}
                   <Grid item xs={12}>
                     <Grid container spacing={2.4}>
@@ -725,7 +782,7 @@ export default function Dashboard() {
                     currency: 'USD'
                   }).format(amount)}
                 />
-                            </Grid>
+                </Grid>
             </Box>
           </Container>
         </Main>
