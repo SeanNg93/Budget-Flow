@@ -263,20 +263,86 @@ const AppTheme = ({ children, themeComponents = {} }) => {
       },
       MuiPopover: {
         defaultProps: {
-          container: document.body
+          container: document.body,
+          disableScrollLock: true,
+          anchorOrigin: {
+            vertical: 'bottom',
+            horizontal: 'left'
+          },
+          transformOrigin: {
+            vertical: 'top',
+            horizontal: 'left'
+          }
+        },
+        styleOverrides: {
+          paper: {
+            marginTop: '2px'
+          }
+        }
+      },
+      MuiMenu: {
+        defaultProps: {
+          disableScrollLock: true,
+          anchorOrigin: {
+            vertical: 'bottom',
+            horizontal: 'left'
+          },
+          transformOrigin: {
+            vertical: 'top',
+            horizontal: 'left'
+          }
+        },
+        styleOverrides: {
+          paper: {
+            marginTop: '2px',
+            minWidth: '200px'
+          },
+          list: {
+            padding: '4px 0'
+          }
         }
       },
       MuiModal: {
         defaultProps: {
+          disableScrollLock: true
         }
       },
       MuiDialog: {
         defaultProps: {
+          disableScrollLock: true
         }
       },
       MuiSelect: {
         defaultProps: {
           MenuProps: {
+            disableScrollLock: true,
+            anchorOrigin: {
+              vertical: 'bottom',
+              horizontal: 'left'
+            },
+            transformOrigin: {
+              vertical: 'top',
+              horizontal: 'left'
+            },
+            PaperProps: {
+              style: {
+                minWidth: '220px',
+                maxWidth: 'none'
+              }
+            },
+            MenuListProps: {
+              style: {
+                paddingTop: '8px',
+                paddingBottom: '8px'
+              }
+            }
+          }
+        },
+        styleOverrides: {
+          select: {
+            minWidth: '100%',
+            display: 'flex',
+            whiteSpace: 'nowrap'
           }
         }
       }

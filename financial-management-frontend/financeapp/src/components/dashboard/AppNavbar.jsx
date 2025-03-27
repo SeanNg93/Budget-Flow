@@ -276,6 +276,7 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
       classes={{
         paper: styles.menuPaper
       }}
+      disableScrollLock={true}
     >
       <Box sx={{ px: 2, py: 1 }}>
         <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
@@ -323,6 +324,7 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
       classes={{
         paper: styles.menuPaper
       }}
+      disableScrollLock={true}
     >
       <MenuItem className={styles.menuItem}>
         <NotificationMenu />
@@ -367,6 +369,8 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
             easing: theme.transitions.easing[open ? 'easeOut' : 'sharp'],
             duration: theme.transitions.duration[open ? 'enteringScreen' : 'leavingScreen'],
           }),
+          right: 0,
+          paddingRight: 'inherit',
         }}
       >
         <Toolbar>
