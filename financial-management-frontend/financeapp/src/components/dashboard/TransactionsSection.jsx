@@ -1219,14 +1219,49 @@ const TransactionsSection = ({
                   startIcon={<FileDownloadIcon />}
                   onClick={() => {
                     // Use the current filtered transactions (respecting applied filters)
-                    const dataToExport = filteredTransactions.map(transaction => ({
-                      ...transaction,
-                      // Add a flag to explicitly mark shared wallets for the export function
-                      isShared: transaction.wallet && 
-                              sharedWallets && 
-                              transaction.wallet.id && 
-                              sharedWallets[transaction.wallet.id]
-                    }));
+                    const dataToExport = filteredTransactions.map(transaction => {
+                      // Determine if this wallet is shared
+                      const isSharedWallet = transaction.wallet && 
+                                           sharedWallets && 
+                                           transaction.wallet.id && 
+                                           sharedWallets[transaction.wallet.id];
+                      
+                      // Get shared wallet info if available
+                      const walletInfo = isSharedWallet && sharedWalletsInfo && 
+                                       transaction.wallet.id && 
+                                       sharedWalletsInfo[transaction.wallet.id];
+                      
+                      // Ensure user information is present for shared wallets
+                      let user = transaction.user || {};
+                      
+                      // If no user info but we have wallet info, try to add user details
+                      if (isSharedWallet && walletInfo && !user.username) {
+                        const isOwnerTransaction = transaction.userId === walletInfo.ownerId;
+                        
+                        if (isOwnerTransaction) {
+                          user = {
+                            id: walletInfo.ownerId,
+                            username: walletInfo.ownerUsername,
+                            profilePicture: walletInfo.ownerProfilePictureUrl
+                          };
+                        } else {
+                          user = {
+                            id: walletInfo.sharedWithId,
+                            username: walletInfo.sharedWithUsername,
+                            profilePicture: walletInfo.sharedWithProfilePictureUrl
+                          };
+                        }
+                      }
+                      
+                      return {
+                        ...transaction,
+                        // Add explicit flags for export function
+                        isShared: isSharedWallet,
+                        sharedWallets,
+                        sharedWalletsInfo,
+                        user
+                      };
+                    });
                     
                     // Create a more descriptive filename that indicates if filters are applied
                     const isFiltered = filterState.open && (

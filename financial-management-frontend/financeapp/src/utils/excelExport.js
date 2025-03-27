@@ -33,7 +33,7 @@ export const exportTransactionsToExcel = async (transactions, formatCurrency, fi
   // Add a worksheet
   const worksheet = workbook.addWorksheet('Transactions');
   
-  // Define columns
+  // Define columns - removing User column, keeping just 6 columns
   worksheet.columns = [
     { header: 'Date', key: 'date', width: 15 },
     { header: 'Description', key: 'description', width: 40 },
@@ -77,35 +77,42 @@ export const exportTransactionsToExcel = async (transactions, formatCurrency, fi
       ? parseFloat(amount.replace(/[^0-9.-]+/g, '')) 
       : amount;
     
-    // Check if this is a shared wallet
-    const hasSharedWalletFlag = transaction.wallet && 
-                      transaction.wallet.id && 
-                      Object.prototype.hasOwnProperty.call(transaction, 'sharedWallets') &&
-                      transaction.sharedWallets &&
-                      transaction.wallet.id in transaction.sharedWallets;
+    // Improved shared wallet detection
+    // Check if this is a shared wallet using multiple methods
+    const isSharedWallet = (
+      // 1. If the transaction has a isShared flag (passed from TransactionsSection)
+      transaction.isShared === true ||
+
+      // 2. Original check from shared wallets object
+      (transaction.wallet && 
+       transaction.wallet.id && 
+       transaction.sharedWallets && 
+       transaction.wallet.id in transaction.sharedWallets) ||
+      
+      // 3. Check if wallet name already includes "(shared)"
+      (transaction.wallet && 
+       transaction.wallet.accountName && 
+       transaction.wallet.accountName.toLowerCase().includes('(shared)')) ||
+
+      // 4. Check for "shared" flag directly in the wallet object
+      (transaction.wallet && transaction.wallet.shared === true)
+    );
     
-    // Special check for "bet" wallet which is shared in the app
-    const isBetWallet = transaction.wallet && 
-                       transaction.wallet.accountName && 
-                       transaction.wallet.accountName.toLowerCase() === 'bet';
-    
-    // Check if wallet name already includes "(shared)"
-    const nameIncludesShared = transaction.wallet && 
-                              transaction.wallet.accountName && 
-                              transaction.wallet.accountName.includes('(shared)');
-    
-    // Determine if it's a shared wallet
-    const isSharedWallet = hasSharedWalletFlag || nameIncludesShared || isBetWallet;
-    
-    // Format wallet name with "(shared)" indicator if needed
-    const walletName = transaction.wallet 
-      ? transaction.wallet.accountName + (isSharedWallet && !nameIncludesShared ? ' (shared)' : '')
-      : (transaction.account ? transaction.account.accountName : 'Unknown');
+    // Format wallet name with clear shared wallet indication
+    let walletName = 'Unknown';
+    if (transaction.wallet) {
+      const baseName = transaction.wallet.accountName || 'Wallet';
+      const sharedTag = isSharedWallet && !baseName.toLowerCase().includes('shared') ? ' [SHARED]' : '';
+      walletName = baseName + sharedTag;
+    } else if (transaction.account) {
+      walletName = transaction.account.accountName || 'Unknown';
+    }
     
     // Format type with username for shared wallets
-    let typeWithUser = transaction.transactionType;
-    if (isSharedWallet && transaction.user && transaction.user.username) {
-      typeWithUser = `${transaction.transactionType} (${transaction.user.username})`;
+    let typeWithUser = transaction.transactionType || '';
+    if (isSharedWallet && transaction.user && (transaction.user.username || transaction.user.name)) {
+      const username = transaction.user.username || transaction.user.name;
+      typeWithUser = `${transaction.transactionType} (${username})`;
     }
     
     // Add row to worksheet
@@ -138,6 +145,21 @@ export const exportTransactionsToExcel = async (transactions, formatCurrency, fi
         cell.font = { color: { argb: 'FFFF0000' } }; // Red for negative
       } else if (value > 0) {
         cell.font = { color: { argb: 'FF008000' } }; // Green for positive
+      }
+    }
+  });
+
+  // Style the Type column to highlight entries with usernames
+  const typeColumn = worksheet.getColumn(5);
+  typeColumn.eachCell((cell, rowNumber) => {
+    // Skip header row
+    if (rowNumber > 1) {
+      // If this is a cell with username info (contains parentheses)
+      if (cell.value && cell.value.toString().includes('(')) {
+        cell.font = { 
+          color: { argb: 'FF0066CC' }, // Blue text
+          bold: true 
+        };
       }
     }
   });
