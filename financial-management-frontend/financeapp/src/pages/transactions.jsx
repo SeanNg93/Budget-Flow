@@ -12,6 +12,7 @@ import TransactionsSection from '../components/dashboard/TransactionsSection';
 import DialogManager from '../components/dashboard/DialogManager';
 import TransactionForm from '../components/dashboard/TransactionForm';
 import CategoryManageForm from '../components/dashboard/CategoryManageForm';
+import ProfileDialog from '../components/user/ProfileDialog';
 
 // Import services
 import FinanceService from '../services/FinanceService';
@@ -702,6 +703,12 @@ const TransactionsPage = () => {
             setCategories(response.data || []);
           });
         }}
+      />
+      
+      {/* Profile Dialog */}
+      <ProfileDialog 
+        open={dialogStates.profileDialog}
+        onClose={() => updateDialogState('profileDialog', false)}
       />
     </AppTheme>
   );
