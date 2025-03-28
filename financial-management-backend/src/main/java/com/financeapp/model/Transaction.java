@@ -23,7 +23,7 @@ public class Transaction {
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "account_id", nullable = true)
+    @JoinColumn(name = "account_id", nullable = true) // Allows null if wallet is deleted
     private Wallet wallet;
 
     @Enumerated(EnumType.STRING)
@@ -51,6 +51,10 @@ public class Transaction {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    // Removed @Transient, added @Column to persist the name
+    @Column(name = "original_wallet_name", length = 100, nullable = true)
+    private String originalWalletName; // Holds the name if wallet is deleted
 
     @PrePersist
     protected void onCreate() {

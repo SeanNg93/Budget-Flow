@@ -99,14 +99,25 @@ export const exportTransactionsToExcel = async (transactions, formatCurrency, fi
       (transaction.wallet && transaction.wallet.shared === true)
     );
     
-    // Format wallet name with clear shared wallet indication
+    // Format wallet name with clear shared wallet indication and deleted status
     let walletName = 'Unknown';
     if (transaction.wallet) {
+      // Wallet exists
       const baseName = transaction.wallet.accountName || 'Wallet';
-      const sharedTag = isSharedWallet && !baseName.toLowerCase().includes('shared') ? ' [SHARED]' : '';
+      const isDirectlyShared = transaction.wallet.shared === true;
+      const sharedTag = (isSharedWallet || isDirectlyShared) && !baseName.toLowerCase().includes('shared') ? ' [SHARED]' : '';
       walletName = baseName + sharedTag;
-    } else if (transaction.account) {
+    } else if (transaction.originalWalletName) {
+      // Wallet is deleted, use original name
+      walletName = `${transaction.originalWalletName} (deleted)`;
+    } else if (transaction.account_id !== undefined && transaction.account_id !== null) {
+      // Fallback if original name wasn't populated for some reason
+      walletName = '(deleted wallet)';
+    } else if (transaction.account) { // Older fallback
       walletName = transaction.account.accountName || 'Unknown';
+    } else {
+      // Completely unknown/deleted
+      walletName = '(deleted wallet)';
     }
     
     // Format type with username for shared wallets
@@ -248,4 +259,4 @@ export const exportTransactionsToExcel = async (transactions, formatCurrency, fi
   
   // Save file
   saveAs(new Blob([buffer]), `${filename}.xlsx`);
-}; 
+};

@@ -159,9 +159,11 @@ public class WalletService {
         // Find transactions associated with this wallet
         List<Transaction> transactions = transactionRepository.findByWalletId(id);
         
-        // Set wallet to null for these transactions
+        // Set original wallet name and then set wallet to null for these transactions
+        String walletName = wallet.getAccountName(); // Get the name before deletion
         for (Transaction transaction : transactions) {
-            transaction.setWallet(null);
+            transaction.setOriginalWalletName(walletName); // Store the original name
+            transaction.setWallet(null); // Unlink the wallet
         }
         
         // Save the updated transactions

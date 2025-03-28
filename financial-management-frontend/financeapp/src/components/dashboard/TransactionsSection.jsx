@@ -345,13 +345,21 @@ const TransactionRow = React.memo(({
           
     <TableCell className={styles.tableCell}>
       {transaction.wallet ? (
+        // Wallet exists, display normally
         <>
           {transaction.wallet.accountName}
           {sharedWallets[transaction.wallet.id] && " (shared)"}
         </>
+      ) : transaction.originalWalletName ? (
+        // Wallet is null, but we have the original name
+        <Typography variant="body2" component="span" sx={{ fontStyle: 'italic', color: 'text.secondary' }}>
+          {transaction.originalWalletName} (deleted)
+        </Typography>
       ) : (
-        transaction.account ? transaction.account.accountName : 
-        'Unknown'
+        // Wallet is null and no original name (fallback)
+        <Typography variant="body2" component="span" sx={{ fontStyle: 'italic', color: 'text.secondary' }}>
+          (deleted wallet)
+        </Typography>
       )}
     </TableCell>
           
@@ -1343,4 +1351,4 @@ const TransactionsSection = ({
   );
 };
 
-export default TransactionsSection; 
+export default TransactionsSection;

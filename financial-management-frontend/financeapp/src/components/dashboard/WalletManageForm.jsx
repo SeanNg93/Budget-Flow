@@ -80,7 +80,8 @@ const FadeTransition = React.forwardRef(function Transition(props, ref) {
   return <Fade ref={ref} {...props} />;
 });
 
-const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false, initialOpenTransfer = false }) => {
+// Add onWalletDeleted prop
+const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted, embedded = false, initialOpenTransfer = false }) => {
   const [wallets, setWallets] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -429,10 +430,13 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
       setDeleteWalletId(null);
       setDeleteWalletName('');
       
-      // Update parent component without triggering a full reload
+      // Notify parent component about the deletion
+      if (onWalletDeleted) {
+        onWalletDeleted(); // Call the new prop
+      }
+      // Also call the existing update prop if needed, maybe without forcing refresh
       if (onWalletUpdated) {
-        // Pass false to prevent full reload, but still notify parent of the change
-        onWalletUpdated(false);
+        onWalletUpdated(false); 
       }
     } catch (err) {
       console.error('Error deleting wallet:', err);
@@ -1256,4 +1260,4 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, embedded = false
   );
 };
 
-export default WalletManageForm; 
+export default WalletManageForm;

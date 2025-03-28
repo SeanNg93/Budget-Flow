@@ -1,9 +1,9 @@
 import React, { useCallback, useMemo } from 'react';
-import { 
-  Dialog, 
-  DialogTitle, 
-  DialogContent, 
-  DialogActions, 
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   DialogContentText,
   Button
 } from '@mui/material';
@@ -24,11 +24,11 @@ import ShareWalletForm from './ShareWalletForm';
 /**
  * DialogComponent - A memo wrapper for dynamic dialog rendering
  */
-const DialogComponent = React.memo(({ 
-  Component, 
-  open, 
-  handleClose, 
-  ...otherProps 
+const DialogComponent = React.memo(({
+  Component,
+  open,
+  handleClose,
+  ...otherProps
 }) => {
   return (
     <Component
@@ -54,15 +54,16 @@ const DialogManager = ({
   selectedWallet,
   wallets,
   handleTransactionAdded,
-  handleAccountAdded,
+  handleAccountAdded, // Used for wallet updates/additions
   handleCategoryAdded,
   handleBalanceAdded,
   handleProfileUpdated,
   handleCategoryUpdated,
-  handleDeleteConfirm,
+  handleDeleteConfirm, // This is for transaction deletion
   setSelectedTransaction,
   setSelectedWallet,
-  fetchFinancialData
+  fetchFinancialData,
+  onWalletDeleted // Added prop for wallet deletion callback
 }) => {
   // Helper function to close dialogs - memoized to prevent unnecessary re-renders
   const closeDialog = useCallback((dialogName) => {
@@ -74,44 +75,44 @@ const DialogManager = ({
     setSelectedTransaction(null);
     updateDialogState('deleteConfirmOpen', false);
   }, [setSelectedTransaction, updateDialogState]);
-  
+
   // Memoized callbacks for dialog actions
-  const openTransactionForm = useCallback(() => 
-    updateDialogState('transactionForm', true), 
+  const openTransactionForm = useCallback(() =>
+    updateDialogState('transactionForm', true),
     [updateDialogState]
   );
-  
-  const openWalletManageForm = useCallback(() => 
+
+  const openWalletManageForm = useCallback(() =>
     updateDialogState('walletManageForm', true),
     [updateDialogState]
   );
-  
-  const openCategoryManageForm = useCallback(() => 
+
+  const openCategoryManageForm = useCallback(() =>
     updateDialogState('categoryManageForm', true),
     [updateDialogState]
   );
-  
-  const openUserTransferDialog = useCallback(() => 
+
+  const openUserTransferDialog = useCallback(() =>
     updateDialogState('userTransferDialog', true),
     [updateDialogState]
   );
-  
+
   const handleTransferCompleted = useCallback(() => {
     closeDialog('userTransferDialog');
     fetchFinancialData();
   }, [closeDialog, fetchFinancialData]);
-  
+
   const handleShareWalletClose = useCallback(() => {
     closeDialog('shareWalletDialog');
     setSelectedWallet(null);
   }, [closeDialog, setSelectedWallet]);
-  
+
   const handleWalletShared = useCallback(() => {
     closeDialog('shareWalletDialog');
     setSelectedWallet(null);
     fetchFinancialData();
   }, [closeDialog, setSelectedWallet, fetchFinancialData]);
-  
+
   const handleEditTransactionClose = useCallback(() => {
     updateDialogState('editTransactionOpen', false);
     setSelectedTransaction(null);
@@ -133,7 +134,8 @@ const DialogManager = ({
       name: 'walletManageForm',
       component: WalletManageForm,
       props: {
-        onWalletUpdated: handleAccountAdded
+        onWalletUpdated: handleAccountAdded,
+        onWalletDeleted: onWalletDeleted // Pass the new prop
       }
     },
     {
@@ -175,7 +177,7 @@ const DialogManager = ({
       name: 'editBalanceForm',
       component: EditBalanceForm,
       props: {
-        onBalanceEdited: handleBalanceAdded
+        onBalanceEdited: handleBalanceAdded // Assuming same handler works
       }
     },
     {
@@ -203,7 +205,8 @@ const DialogManager = ({
     handleBalanceAdded,
     handleProfileUpdated,
     handleCategoryUpdated,
-    handleTransferCompleted
+    handleTransferCompleted,
+    onWalletDeleted // Add dependency here
   ]);
 
   // Find the wallet to share - memoized
@@ -213,7 +216,7 @@ const DialogManager = ({
   }, [selectedWallet, wallets]);
 
   // Render standard dialogs - memoized to prevent unnecessary re-renders
-  const standardDialogComponents = useMemo(() => 
+  const standardDialogComponents = useMemo(() =>
     standardDialogs.map(dialog => (
       <DialogComponent
         key={dialog.name}
@@ -230,20 +233,20 @@ const DialogManager = ({
     <>
       {/* Render standard dialogs using the memoized components */}
       {standardDialogComponents}
-      
+
       {/* Special case dialogs that need custom handling */}
-      
+
       {/* Edit Transaction Form - special case with selected transaction */}
       {selectedTransaction && (
-        <TransactionForm 
+        <TransactionForm
           key={`edit-transaction-${selectedTransaction.id}`}
-          open={dialogStates.editTransactionOpen} 
+          open={dialogStates.editTransactionOpen}
           handleClose={handleEditTransactionClose}
           initialData={selectedTransaction}
           onTransactionAdded={handleTransactionAdded}
         />
       )}
-      
+
       {/* Share Wallet Form - special case with wallet selection */}
       <ShareWalletForm
         open={dialogStates.shareWalletDialog && Boolean(walletToShare)}
@@ -251,7 +254,7 @@ const DialogManager = ({
         handleClose={handleShareWalletClose}
         onWalletShared={handleWalletShared}
       />
-      
+
       {/* Transfer Dialog - special embedded dialog */}
       <Dialog
         open={dialogStates.transferDialog}
@@ -260,16 +263,18 @@ const DialogManager = ({
       >
         <DialogTitle id="transfer-dialog-title">Transfer Money Between Wallets</DialogTitle>
         <DialogContent>
+          {/* Note: WalletManageForm inside Transfer Dialog might need onWalletDeleted too if deletion is possible there */}
           <WalletManageForm
             open={true}
             handleClose={() => closeDialog('transferDialog')}
             onWalletUpdated={handleAccountAdded}
+            onWalletDeleted={onWalletDeleted} // Pass prop here too if needed
             embedded={true}
             initialOpenTransfer={true}
           />
         </DialogContent>
       </Dialog>
-      
+
       {/* Delete Transaction Confirmation Dialog */}
       <Dialog
         open={dialogStates.deleteConfirmOpen}
@@ -295,10 +300,10 @@ const DialogManager = ({
           <Button onClick={handleDeleteCancel} color="primary">
             Cancel
           </Button>
-          <Button 
-            onClick={handleDeleteConfirm} 
-            color="error" 
-            variant="contained" 
+          <Button
+            onClick={handleDeleteConfirm}
+            color="error"
+            variant="contained"
             autoFocus
             aria-label="Confirm delete transaction"
           >
@@ -310,4 +315,4 @@ const DialogManager = ({
   );
 };
 
-export default React.memo(DialogManager); 
+export default React.memo(DialogManager);

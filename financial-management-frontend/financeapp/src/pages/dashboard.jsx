@@ -503,6 +503,19 @@ export default function Dashboard() {
     }
   };
 
+  // Add handler for wallet deletion
+  const handleWalletDeleted = () => {
+    // Refresh transactions to show updated names
+    fetchTransactions();
+    // Refresh financial summary and wallets list
+    updateFinancialSummary();
+    updateWallets();
+    // Refresh chart data
+    setChartRefreshKey(prevKey => prevKey + 1);
+    toast.success('Wallet deleted successfully');
+  };
+
+
   const updateLocalFinancialSummary = () => {
     setFinancialData(prevData => {
       const walletBalance = wallets.reduce((total, wallet) => total + wallet.balance, 0);
@@ -560,7 +573,8 @@ export default function Dashboard() {
         id: transaction.category.id,
         categoryName: transaction.category.categoryName,
         type: transaction.category.type
-      } : null
+      } : null,
+      originalWalletName: transaction.originalWalletName // Include this
     };
 
     setSelectedTransaction(transactionToEdit);
@@ -817,6 +831,7 @@ export default function Dashboard() {
         setSelectedTransaction={setSelectedTransaction}
         setSelectedWallet={setSelectedWallet}
         fetchFinancialData={fetchFinancialData} // Pass fetchFinancialData if needed by DialogManager
+        onWalletDeleted={handleWalletDeleted} // Pass the handler down
       />
     </AppTheme>
   );

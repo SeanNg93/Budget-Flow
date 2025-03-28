@@ -128,10 +128,11 @@ CREATE TABLE transactions (
     transaction_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     description TEXT,
     status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    original_wallet_name VARCHAR(100) NULL, -- Added column to store name of deleted wallet
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (account_id) REFERENCES wallets(id) ON DELETE SET NULL,
+    FOREIGN KEY (account_id) REFERENCES wallets(id) ON DELETE SET NULL, -- Changed ON DELETE CASCADE to SET NULL
     FOREIGN KEY (category_id) REFERENCES transaction_categories(id) ON DELETE SET NULL
 );
 
