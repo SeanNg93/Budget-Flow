@@ -24,7 +24,6 @@ CREATE TABLE users (
     activation_token_expiry TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    -- Add fields for soft delete functionality
     is_pending_deletion BOOLEAN DEFAULT FALSE,
     deletion_requested_at TIMESTAMP NULL
 );
@@ -45,7 +44,7 @@ CREATE TABLE user_delete (
     currency VARCHAR(3) DEFAULT 'USD',
     is_self_delete BOOLEAN DEFAULT FALSE,
     deleted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    user_data JSON, -- Store additional user data as JSON
+    user_data JSON,
     UNIQUE (original_user_id)
 );
 
@@ -122,7 +121,7 @@ CREATE TABLE transaction_categories (
 CREATE TABLE transactions (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
-    account_id INT NOT NULL,
+    account_id INT, 
     transaction_type VARCHAR(20) NOT NULL,
     amount DECIMAL(15,2) NOT NULL,
     category_id INT,
@@ -132,7 +131,7 @@ CREATE TABLE transactions (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (account_id) REFERENCES wallets(id) ON DELETE CASCADE,
+    FOREIGN KEY (account_id) REFERENCES wallets(id) ON DELETE SET NULL,
     FOREIGN KEY (category_id) REFERENCES transaction_categories(id) ON DELETE SET NULL
 );
 
@@ -600,4 +599,4 @@ ORDER BY u.id;
 -- The Wallet table replaces the earlier Account table, with no account_type field
 -- Transaction table's account_id column refers to wallet IDs
 -- User profiles now include total_balance and currency fields to track overall balance 
--- Transaction visibility: Transactions in shared wallets now appear for all users with access to the wallet 
+-- Transaction visibility: Transactions in shared wallets now appear for all users with access to the wallet

@@ -23,7 +23,7 @@ public class Transaction {
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "account_id", nullable = false)
+    @JoinColumn(name = "account_id", nullable = true)
     private Wallet wallet;
 
     @Enumerated(EnumType.STRING)
@@ -73,4 +73,4 @@ public class Transaction {
     public enum TransactionStatus {
         PENDING, COMPLETED, FAILED
     }
-} 
+}

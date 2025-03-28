@@ -1,11 +1,7 @@
 package com.financeapp.service;
 
-import com.financeapp.model.User;
-import com.financeapp.model.Wallet;
-import com.financeapp.model.UserProfile;
-import com.financeapp.repository.UserRepository;
-import com.financeapp.repository.WalletRepository;
-import com.financeapp.repository.UserProfileRepository;
+import com.financeapp.model.*;
+import com.financeapp.repository.*; 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,16 +28,17 @@ public class WalletService {
     private final NotificationService notificationService;
     private final SharedWalletRepository sharedWalletRepository;
     private final WalletAccessService walletAccessService;
+    private final TransactionRepository transactionRepository;
 
-    @Autowired
-    public WalletService(
-            WalletRepository walletRepository, 
-            UserRepository userRepository, 
-            UserProfileService userProfileService, 
-            UserProfileRepository userProfileRepository, 
-            NotificationService notificationService, 
+    public WalletService( 
+            WalletRepository walletRepository,
+            UserRepository userRepository,
+            UserProfileService userProfileService,
+            UserProfileRepository userProfileRepository,
+            NotificationService notificationService,
             SharedWalletRepository sharedWalletRepository,
-            WalletAccessService walletAccessService) {
+            WalletAccessService walletAccessService,
+            TransactionRepository transactionRepository) { 
         this.walletRepository = walletRepository;
         this.userRepository = userRepository;
         this.userProfileService = userProfileService;
@@ -49,6 +46,7 @@ public class WalletService {
         this.notificationService = notificationService;
         this.sharedWalletRepository = sharedWalletRepository;
         this.walletAccessService = walletAccessService;
+        this.transactionRepository = transactionRepository; 
     }
 
     public List<Wallet> getAllWalletsByUserId(Long userId) {
@@ -157,7 +155,19 @@ public class WalletService {
             return;
         }
         
-        // If the user is the owner, delete the wallet
+        // If the user is the owner, unlink transactions and then delete the wallet
+        // Find transactions associated with this wallet
+        List<Transaction> transactions = transactionRepository.findByWalletId(id);
+        
+        // Set wallet to null for these transactions
+        for (Transaction transaction : transactions) {
+            transaction.setWallet(null);
+        }
+        
+        // Save the updated transactions
+        transactionRepository.saveAll(transactions);
+        
+        // Now delete the wallet
         walletRepository.delete(wallet);
     }
 
@@ -436,4 +446,4 @@ public class WalletService {
         // Delegate to WalletAccessService
         return walletAccessService.hasAccessToWallet(walletId, userId);
     }
-} 
+}
