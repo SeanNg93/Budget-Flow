@@ -34,6 +34,13 @@ import ShareWalletForm from './ShareWalletForm';
 import UserTransferForm from './UserTransferForm';
 import WalletForm from './WalletForm';
 
+// Helper to format currency
+const formatCurrency = (value) => {
+  // Ensure value is a number before formatting
+  const numericValue = typeof value === 'number' ? value : parseFloat(value || 0);
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(numericValue);
+};
+
 // Map of icon types to components
 const iconComponents = {
   wallet: <AccountBalanceWalletIcon className={styles.walletIcon} />,
@@ -167,11 +174,11 @@ const WalletCard = React.memo(({ wallet, colorClass, isShared, isWalletOwner, ge
           {wallet.accountName}
         </Typography>
       </Box>
-      
+
       <Typography variant="h4" className={styles.walletBalance}>
-        ${wallet.balance.toFixed(2)}
+        {formatCurrency(wallet.balance)}
       </Typography>
-      
+
       <Box sx={{ flexGrow: 1 }}></Box>
       
       <Divider sx={{ my: 1, opacity: 0.6 }} />
@@ -683,4 +690,4 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
   );
 };
 
-export default WalletOverview; 
+export default WalletOverview;

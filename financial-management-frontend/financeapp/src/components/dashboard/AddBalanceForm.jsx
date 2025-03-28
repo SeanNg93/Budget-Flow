@@ -29,6 +29,11 @@ const AddBalanceForm = ({ open, handleClose, onBalanceAdded }) => {
   const [currentBalance, setCurrentBalance] = useState(0);
   const [totalWalletBalance, setTotalWalletBalance] = useState(0);
 
+  // Helper to format currency
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+  };
+
   // Add refs for transition components
   const dialogRef = useRef(null);
   const alertErrorRef = useRef(null);
@@ -172,11 +177,11 @@ const AddBalanceForm = ({ open, handleClose, onBalanceAdded }) => {
           <Box sx={{ mb: 2 }}>
             <Fade in={open} timeout={400} nodeRef={alertInfoRef}>
               <Alert severity="info" ref={alertInfoRef}>
-                Current balance: {currentBalance.toFixed(2)}
+                Current balance: {formatCurrency(currentBalance)}
                 <br/>
-                Wallet total: {totalWalletBalance.toFixed(2)}
+                Wallet total: {formatCurrency(totalWalletBalance)}
                 <br/>
-                Available for allocation: {(currentBalance - totalWalletBalance).toFixed(2)}
+                Available for allocation: {formatCurrency(currentBalance - totalWalletBalance)}
               </Alert>
             </Fade>
           </Box>
@@ -199,7 +204,7 @@ const AddBalanceForm = ({ open, handleClose, onBalanceAdded }) => {
           <FormHelperText>
             Enter the amount you want to add to your total balance
             <br/>
-            New balance after addition: {(currentBalance + parseFloat(amount || 0)).toFixed(2)}
+            New balance after addition: {formatCurrency(currentBalance + parseFloat(amount || 0))}
           </FormHelperText>
         </DialogContent>
         <DialogActions>
@@ -218,4 +223,4 @@ const AddBalanceForm = ({ open, handleClose, onBalanceAdded }) => {
   );
 };
 
-export default AddBalanceForm; 
+export default AddBalanceForm;

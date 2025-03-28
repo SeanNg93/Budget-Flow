@@ -34,6 +34,13 @@ import {
 } from '@mui/icons-material';
 import styles from '../../styles/walletManage.module.css';
 
+// Helper to format currency
+const formatCurrency = (value) => {
+  // Ensure value is a number before formatting
+  const numericValue = typeof value === 'number' ? value : parseFloat(value || 0);
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(numericValue);
+};
+
 // Create transition components with forwardRef
 const SlideTransition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -292,7 +299,7 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourc
               </MenuItem>
               {wallets.map((wallet) => (
                 <MenuItem key={wallet.id} value={wallet.id.toString()}>
-                  {wallet.accountName} (${wallet.balance.toFixed(2)})
+                  {wallet.accountName} ({formatCurrency(wallet.balance)})
                 </MenuItem>
               ))}
             </Select>
@@ -494,4 +501,4 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourc
   );
 };
 
-export default UserTransferForm; 
+export default UserTransferForm;

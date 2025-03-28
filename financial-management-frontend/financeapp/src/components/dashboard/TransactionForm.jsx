@@ -46,6 +46,13 @@ import CategoryForm from './CategoryForm';
 import CategoryManageForm from './CategoryManageForm';
 import styles from '../../styles/transactionForm.module.css';
 
+// Helper to format currency
+const formatCurrency = (value) => {
+  // Ensure value is a number before formatting
+  const numericValue = typeof value === 'number' ? value : parseFloat(value || 0);
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(numericValue);
+};
+
 // Create a SlideTransition component with forwardRef
 const SlideTransition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -877,11 +884,11 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
                 Wallet
                 {formData.accountId && (
                   <Typography 
-                    component="span" 
-                    variant="caption" 
+                    component="span"
+                    variant="caption"
                     className={styles.walletBalance}
                   >
-                    (Balance: ${accounts.find(a => a.id === parseInt(formData.accountId, 10))?.balance.toFixed(2) || '0.00'})
+                    (Balance: {formatCurrency(accounts.find(a => a.id === parseInt(formData.accountId, 10))?.balance || 0)})
                   </Typography>
                 )}
               </Typography>

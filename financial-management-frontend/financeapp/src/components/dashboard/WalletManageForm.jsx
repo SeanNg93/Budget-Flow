@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Button, 
-  Dialog, 
-  DialogContent, 
+import {
+  Button,
+  Dialog,
+  DialogContent,
   DialogTitle,
   TextField,
   FormControl,
@@ -24,7 +24,7 @@ import {
   DialogContentText,
   InputAdornment,
   Menu,
-  Tooltip,
+  Tooltip, // Import Tooltip
   Fade,
   Slide,
   Zoom,
@@ -85,7 +85,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
   const [wallets, setWallets] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  
+
   // Edit wallet states
   const [editMode, setEditMode] = useState(false);
   const [editWalletId, setEditWalletId] = useState(null);
@@ -97,16 +97,16 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
   const [totalBalance, setTotalBalance] = useState(0);
   const [availableBalance, setAvailableBalance] = useState(0);
   const [balanceError, setBalanceError] = useState('');
-  
+
   // Delete confirmation states
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteWalletId, setDeleteWalletId] = useState(null);
   const [deleteWalletName, setDeleteWalletName] = useState('');
   const [deleting, setDeleting] = useState(false);
-  
+
   // New wallet states
   const [newWalletFormOpen, setNewWalletFormOpen] = useState(false);
-  
+
   // Transfer money states
   const [transferDialogOpen, setTransferDialogOpen] = useState(false);
   const [sourceWalletId, setSourceWalletId] = useState('');
@@ -114,20 +114,28 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
   const [transferAmount, setTransferAmount] = useState('');
   const [transferError, setTransferError] = useState('');
   const [transferring, setTransferring] = useState(false);
-  
+
   // Add state for the user transfer dialog
   const [userTransferDialogOpen, setUserTransferDialogOpen] = useState(false);
-  
+
   // Add state for wallet menu
   const [walletMenuAnchorEl, setWalletMenuAnchorEl] = useState(null);
   const [selectedWalletForMenu, setSelectedWalletForMenu] = useState(null);
-  
+
   // Add state for share wallet dialog
   const [shareWalletDialogOpen, setShareWalletDialogOpen] = useState(false);
   const [walletToShare, setWalletToShare] = useState(null);
 
   // Add state for shared wallets information
   const [sharedWalletsInfo, setSharedWalletsInfo] = useState({});
+
+  // Helper to format currency
+  const formatCurrency = (value) => {
+    // Ensure value is a number before formatting
+    const numericValue = typeof value === 'number' ? value : parseFloat(value || 0);
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(numericValue);
+  };
+
 
   // Add refs for transitions
   const newWalletDialogRef = useRef(null);
@@ -142,7 +150,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
       fetchFinancialData();
     }
   }, [open]);
-  
+
   // Open transfer dialog automatically if initialOpenTransfer is true
   useEffect(() => {
     if (open && initialOpenTransfer && wallets.length > 0) {
@@ -153,21 +161,21 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
   const fetchFinancialData = async () => {
     setLoading(true);
     setError('');
-    
+
     try {
       // First get the total balance from the wallet API to ensure we have the latest data
       const balancesResponse = await FinanceService.getTotalBalance();
       const totalBalance = balancesResponse.data.totalBalance || 0;
       setTotalBalance(totalBalance);
-      
+
       // Then fetch wallets
       const walletsResponse = await FinanceService.getAccounts();
       const wallets = walletsResponse.data || [];
       setWallets(wallets);
-      
+
       // Fetch shared wallets information
       fetchSharedWalletsInfo();
-      
+
       // Calculate available balance
       calculateAvailableBalance(totalBalance, wallets, null);
     } catch (err) {
@@ -186,7 +194,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
         FinanceService.getSharedWalletsWithMe(),
         FinanceService.getSharedWalletsByMe()
       ]);
-      
+
       // Process shared wallets data
       const sharedInfo = {};
       const processSharedWallets = (wallets, isOwner) => {
@@ -206,10 +214,10 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
           }
         });
       };
-      
+
       processSharedWallets(sharedWithMeResponse.data || [], false);
       processSharedWallets(sharedByMeResponse.data || [], true);
-      
+
       setSharedWalletsInfo(sharedInfo);
     } catch (err) {
       console.error('Error fetching shared wallet info:', err);
@@ -247,7 +255,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
       }
       return sum;
     }, 0);
-    
+
     const available = total - usedBalance;
     setAvailableBalance(available);
     return available;
@@ -259,16 +267,16 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
     setEditWalletName(wallet.accountName);
     setEditWalletBalance(wallet.balance.toString());
     setOriginalBalance(wallet.balance);
-    
+
     // Get the current wallet icon and color, or set defaults
     const savedIcon = getWalletIcon(wallet.id);
     setEditWalletIcon(savedIcon || 'wallet');
-    
+
     // Extract color index from the color class
     const colorClass = getWalletColorClass(wallet.id);
     const colorIndex = parseInt(colorClass.replace('walletColor', ''), 10);
     setEditWalletColor(isNaN(colorIndex) ? 1 : colorIndex);
-    
+
     // Calculate available balance excluding this wallet
     calculateAvailableBalance(totalBalance, wallets, wallet.id);
     setBalanceError('');
@@ -283,7 +291,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
     setEditWalletColor(1);
     setOriginalBalance(0);
     setBalanceError('');
-    
+
     // Reset available balance calculation
     calculateAvailableBalance(totalBalance, wallets, null);
   };
@@ -294,15 +302,15 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
       setBalanceError('Valid balance is required');
       return false;
     }
-    
+
     const newBalance = parseFloat(value);
     const maxAllowed = availableBalance + originalBalance;
-    
+
     if (newBalance > maxAllowed) {
-      setBalanceError(`Balance exceeds available amount (max: ${maxAllowed.toFixed(2)})`);
+      setBalanceError(`Balance exceeds available amount (max: ${formatCurrency(maxAllowed)})`); // Use formatCurrency
       return false;
     }
-    
+
     setBalanceError('');
     return true;
   };
@@ -310,17 +318,17 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
   const handleBalanceChange = (e) => {
     const value = e.target.value;
     setEditWalletBalance(value);
-    
+
     // Calculate dynamic available balance as user types
     if (value && !isNaN(value) && parseFloat(value) >= 0) {
       const newBalance = parseFloat(value);
       const dynamicAvailable = availableBalance - (newBalance - originalBalance);
       setBalanceError('');
-      
+
       // Only show error if exceeds available amount
       if (dynamicAvailable < 0) {
         const maxAllowed = availableBalance + originalBalance;
-        setBalanceError(`Balance exceeds available amount (max: ${maxAllowed.toFixed(2)})`);
+        setBalanceError(`Balance exceeds available amount (max: ${formatCurrency(maxAllowed)})`); // Use formatCurrency
       }
     } else {
       validateBalanceEdit(value);
@@ -339,35 +347,35 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
 
     setLoading(true);
     setError('');
-    
+
     try {
       // Find the wallet to update
       const walletToUpdate = wallets.find(w => w.id === editWalletId);
-      
+
       if (!walletToUpdate) {
         throw new Error('Wallet not found');
       }
-      
+
       // Create updated wallet data
       const updatedWallet = {
         ...walletToUpdate,
         accountName: editWalletName.trim(),
         balance: parseFloat(editWalletBalance)
       };
-      
+
       // Update the wallet
       const response = await FinanceService.updateAccount(
-        editWalletId, 
+        editWalletId,
         updatedWallet
       );
-      
+
       // Update icon and color preferences
       saveWalletIcon(editWalletId, editWalletIcon);
       saveWalletColor(editWalletId, editWalletColor);
-      
+
       // Refresh the wallets list
       await fetchFinancialData();
-      
+
       // Reset edit mode
       setEditMode(false);
       setEditWalletId(null);
@@ -375,7 +383,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
       setEditWalletBalance('');
       setEditWalletIcon('wallet');
       setEditWalletColor(1);
-      
+
       // Notify parent component
       if (onWalletUpdated) {
         onWalletUpdated();
@@ -403,40 +411,40 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
   const handleDeleteConfirm = async () => {
     setDeleting(true);
     setError('');
-    
+
     try {
       // Find the wallet to be deleted to get its balance
       const deletedWallet = wallets.find(wallet => wallet.id === deleteWalletId);
       const deletedBalance = deletedWallet ? deletedWallet.balance : 0;
-      
+
       // Call API to delete wallet
       await FinanceService.deleteAccount(deleteWalletId);
-      
+
       // Close confirmation dialog
       setDeleteConfirmOpen(false);
-      
-      // Update local state immediately 
+
+      // Update local state immediately
       const updatedWallets = wallets.filter(wallet => wallet.id !== deleteWalletId);
-      
+
       // Recalculate the available balance based on updated wallets
       // No need to wait for API response - we can update our state directly
       const newAvailableBalance = totalBalance - updatedWallets.reduce((sum, wallet) => sum + wallet.balance, 0);
-      
+
       // Update both states
       setWallets(updatedWallets);
       setAvailableBalance(newAvailableBalance);
-      
+
       // Reset state
       setDeleteWalletId(null);
       setDeleteWalletName('');
-      
+
       // Notify parent component about the deletion
       if (onWalletDeleted) {
         onWalletDeleted(); // Call the new prop
       }
       // Also call the existing update prop if needed, maybe without forcing refresh
       if (onWalletUpdated) {
-        onWalletUpdated(false); 
+        onWalletUpdated(false);
       }
     } catch (err) {
       console.error('Error deleting wallet:', err);
@@ -452,25 +460,25 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
       setDeleting(false);
     }
   };
-  
+
   const handleOpenNewWalletForm = () => {
     setNewWalletFormOpen(true);
   };
-  
+
   const handleCloseNewWalletForm = () => {
     setNewWalletFormOpen(false);
   };
-  
+
   const handleWalletAdded = () => {
     handleCloseNewWalletForm();
     fetchFinancialData();
-    
+
     // Notify parent component
     if (onWalletUpdated) {
       onWalletUpdated();
     }
   };
-  
+
   // Transfer money functions
   const handleOpenTransferDialog = () => {
     setTransferDialogOpen(true);
@@ -490,7 +498,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
     setTransferAmount('');
     setTransferError('');
   };
-  
+
   const handleCloseTransferDialog = () => {
     setTransferDialogOpen(false);
     setSourceWalletId('');
@@ -498,40 +506,40 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
     setTransferAmount('');
     setTransferError('');
   };
-  
+
   const validateTransfer = () => {
     // Reset error
     setTransferError('');
-    
+
     // Check if source and destination are selected and different
     if (!sourceWalletId) {
       setTransferError('Please select a source');
       return false;
     }
-    
+
     if (!destinationWalletId) {
       setTransferError('Please select a destination');
       return false;
     }
-    
+
     if (sourceWalletId === destinationWalletId) {
       setTransferError('Source and destination must be different');
       return false;
     }
-    
+
     // Check if amount is valid
     if (!transferAmount || isNaN(transferAmount) || parseFloat(transferAmount) <= 0) {
       setTransferError('Please enter a valid amount');
       return false;
     }
-    
+
     const amount = parseFloat(transferAmount);
-    
+
     // Check if source has enough balance
     if (sourceWalletId === "total") {
       // If source is total balance, check if there's enough available balance
       if (amount > availableBalance) {
-        setTransferError(`Insufficient available balance (available: ${availableBalance.toFixed(2)})`);
+        setTransferError(`Insufficient available balance (available: ${formatCurrency(availableBalance)})`); // Use formatCurrency
         return false;
       }
     } else {
@@ -541,26 +549,26 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
         setTransferError('Source wallet not found');
         return false;
       }
-      
+
       if (amount > sourceWallet.balance) {
-        setTransferError(`Insufficient funds in source wallet (available: ${sourceWallet.balance.toFixed(2)})`);
+        setTransferError(`Insufficient funds in source wallet (available: ${formatCurrency(sourceWallet.balance)})`); // Use formatCurrency
         return false;
       }
     }
-    
+
     return true;
   };
-  
+
   const handleTransfer = async () => {
     if (!validateTransfer()) {
       return;
     }
-    
+
     setTransferring(true);
-    
+
     try {
       const amount = parseFloat(transferAmount);
-      
+
       // Handle different transfer scenarios
       if (sourceWalletId === "total" && destinationWalletId !== "total") {
         // Transfer from total balance to wallet
@@ -569,10 +577,10 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
           ...destinationWallet,
           balance: destinationWallet.balance + amount
         };
-        
+
         // Update wallet balance
         await FinanceService.updateAccount(destinationWallet.id, updatedDestinationWallet);
-      } 
+      }
       else if (sourceWalletId !== "total" && destinationWalletId === "total") {
         // Transfer from wallet to total balance
         const sourceWallet = wallets.find(w => w.id.toString() === sourceWalletId);
@@ -580,7 +588,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
           ...sourceWallet,
           balance: sourceWallet.balance - amount
         };
-        
+
         // Update wallet balance
         await FinanceService.updateAccount(sourceWallet.id, updatedSourceWallet);
       }
@@ -588,28 +596,28 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
         // Transfer between wallets
         const sourceWallet = wallets.find(w => w.id.toString() === sourceWalletId);
         const destinationWallet = wallets.find(w => w.id.toString() === destinationWalletId);
-        
+
         // Update source wallet
         const updatedSourceWallet = {
           ...sourceWallet,
           balance: sourceWallet.balance - amount
         };
-        
+
         // Update destination wallet
         const updatedDestinationWallet = {
           ...destinationWallet,
           balance: destinationWallet.balance + amount
         };
-        
+
         // Call API to update both wallets
         await FinanceService.updateAccount(sourceWallet.id, updatedSourceWallet);
         await FinanceService.updateAccount(destinationWallet.id, updatedDestinationWallet);
       }
-      
+
       // Close dialog and refresh wallets
       handleCloseTransferDialog();
       fetchFinancialData();
-      
+
       // Notify parent component
       if (onWalletUpdated) {
         onWalletUpdated();
@@ -626,17 +634,17 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
   const handleOpenUserTransferDialog = () => {
     setUserTransferDialogOpen(true);
   };
-  
+
   const handleCloseUserTransferDialog = () => {
     setUserTransferDialogOpen(false);
   };
-  
+
   const handleUserTransferCompleted = () => {
     handleCloseUserTransferDialog();
-    
+
     // Force a full refresh of all financial data
     fetchFinancialData();
-    
+
     // Also refresh the parent dashboard component to update the total balance
     if (onWalletUpdated) {
       onWalletUpdated(true); // Pass true to indicate a balance change occurred
@@ -649,23 +657,23 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
     setWalletMenuAnchorEl(event.currentTarget);
     setSelectedWalletForMenu(wallet);
   };
-  
+
   const handleWalletMenuClose = () => {
     setWalletMenuAnchorEl(null);
   };
-  
+
   // Add functions for share wallet
   const handleShareWallet = () => {
     setWalletToShare(selectedWalletForMenu);
     setShareWalletDialogOpen(true);
     handleWalletMenuClose();
   };
-  
+
   const handleShareWalletClose = () => {
     setShareWalletDialogOpen(false);
     setWalletToShare(null);
   };
-  
+
   const handleWalletShared = () => {
     // Refresh wallet list after sharing
     fetchFinancialData();
@@ -676,19 +684,19 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
     return wallets.map((wallet) => {
       // Get wallet color class
       const colorClass = getWalletColorClass(wallet.id);
-      
+
       // Check if this is a shared wallet
       const isShared = sharedWalletsInfo[wallet.id] !== undefined;
       const isOwner = isShared ? sharedWalletsInfo[wallet.id].isOwner : false;
       const sharedInfo = isShared ? sharedWalletsInfo[wallet.id] : null;
-      
+
       // Get saved icon
       const savedIcon = getWalletIcon(wallet.id);
       const iconToUse = savedIcon || 'wallet';
-      
+
       // Determine if icon is emoji or standard
       const isEmoji = WALLET_ICONS.find(icon => icon.value === iconToUse)?.type === 'emoji';
-      
+
       return (
         <React.Fragment key={wallet.id}>
           {/* Show wallet editing form if this wallet is being edited */}
@@ -698,7 +706,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
                 <Typography variant="subtitle1" className={styles.editLabel}>
                   Edit Wallet
                 </Typography>
-                
+
                 <TextField
                   fullWidth
                   label="Wallet Name"
@@ -709,14 +717,14 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
                   variant="outlined"
                   size="small"
                 />
-                
+
                 <Typography variant="subtitle1" className={styles.fieldLabel} sx={{ mt: 2, mb: 1 }}>
                   Wallet Icon
                 </Typography>
                 <Box className={styles.iconSelection}>
                   {WALLET_ICONS.map(icon => (
                     <Tooltip key={icon.id} title={icon.label}>
-                      <Box 
+                      <Box
                         className={`${styles.iconOption} ${editWalletIcon === icon.value ? styles.selectedIcon : ''}`}
                         onClick={() => setEditWalletIcon(icon.value)}
                       >
@@ -729,7 +737,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
                     </Tooltip>
                   ))}
                 </Box>
-                
+
                 {/* Only show color selection for standard icons, not for emoji */}
                 {(WALLET_ICONS.find(icon => icon.value === editWalletIcon)?.type !== 'emoji') && (
                   <>
@@ -739,7 +747,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
                     <Box className={styles.colorSelection}>
                       {WALLET_COLORS.map(color => (
                         <Tooltip key={color.id} title={color.label}>
-                          <Box 
+                          <Box
                             className={`${styles.colorOption} ${editWalletColor === color.value ? styles.selectedColor : ''}`}
                             sx={{ backgroundColor: color.hex }}
                             onClick={() => setEditWalletColor(color.value)}
@@ -749,7 +757,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
                     </Box>
                   </>
                 )}
-                
+
                 <TextField
                   fullWidth
                   label="Balance"
@@ -768,7 +776,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
                   helperText={balanceError}
                   size="small"
                 />
-                
+
                 <Box className={styles.actionButtonsContainer}>
                   <Button
                     variant="outlined"
@@ -797,10 +805,10 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
               <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
                   {isEmoji ? (
-                    <Typography 
-                      component="span" 
-                      sx={{ 
-                        fontSize: '24px', 
+                    <Typography
+                      component="span"
+                      sx={{
+                        fontSize: '24px',
                         marginRight: '12px',
                         display: 'flex',
                         alignItems: 'center'
@@ -817,38 +825,38 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
                     <Typography variant="subtitle1" className={styles.walletName} sx={{ fontSize: '0.95rem', fontWeight: 600 }}>
                       {wallet.accountName}
                     </Typography>
-                    
+
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                       <Typography variant="body2" className={styles.walletDetails} sx={{ fontSize: '0.8rem' }}>
-                        {isShared 
-                          ? (isOwner ? 'Shared with User' : 'Shared by Owner') 
+                        {isShared
+                          ? (isOwner ? 'Shared with User' : 'Shared by Owner')
                           : (wallet.accountType || "General Account")
                         }
                       </Typography>
-                      
+
                       {isShared && (
-                        <Tooltip 
-                          title={isOwner 
-                            ? `Shared with: ${sharedInfo.sharedWithUsername}` 
+                        <Tooltip
+                          title={isOwner
+                            ? `Shared with: ${sharedInfo.sharedWithUsername}`
                             : `Owner: ${sharedInfo.ownerUsername}`
                           }
                         >
-                          <Avatar 
-                            src={isOwner 
-                              ? sharedInfo.sharedWithProfilePictureUrl 
+                          <Avatar
+                            src={isOwner
+                              ? sharedInfo.sharedWithProfilePictureUrl
                               : sharedInfo.ownerProfilePictureUrl
-                            } 
-                            sx={{ 
-                              width: 20, 
-                              height: 20, 
+                            }
+                            sx={{
+                              width: 20,
+                              height: 20,
                               fontSize: '0.7rem',
                               marginLeft: '8px',
                               backgroundColor: '#1976d2',
                               border: '1px solid white'
                             }}
                           >
-                            {isOwner 
-                              ? sharedInfo.sharedWithUsername?.charAt(0).toUpperCase() 
+                            {isOwner
+                              ? sharedInfo.sharedWithUsername?.charAt(0).toUpperCase()
                               : sharedInfo.ownerUsername?.charAt(0).toUpperCase()
                             }
                           </Avatar>
@@ -857,54 +865,62 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
                     </Box>
                   </Box>
                 </Box>
-                
+
                 <Typography variant="h6" className={styles.walletBalance} sx={{ fontSize: '1rem', mr: 1.5 }}>
-                  ${wallet.balance.toFixed(2)}
+                  {formatCurrency(wallet.balance)}
                 </Typography>
-                
+
                 <Box className={styles.walletActions} sx={{ display: 'flex', gap: 0.5, borderLeft: '1px solid rgba(0,0,0,0.08)', pl: 1 }}>
-                  <IconButton
-                    size="small"
-                    className={`${styles.iconButton} ${styles.sendIconButton}`}
-                    onClick={() => handleOpenUserTransferDialog(wallet)}
-                    aria-label="Send money"
-                    sx={{ width: '28px', height: '28px' }}
-                  >
-                    <SendIcon fontSize="small" />
-                  </IconButton>
-                  
-                  <IconButton
-                    size="small"
-                    className={`${styles.iconButton} ${styles.shareIconButton}`}
-                    onClick={() => {
-                      setWalletToShare(wallet);
-                      updateDialogState('shareWalletDialog', true);
-                    }}
-                    aria-label="Share wallet"
-                    sx={{ width: '28px', height: '28px' }}
-                  >
-                    <PersonAddIcon fontSize="small" />
-                  </IconButton>
-                  
-                  <IconButton
-                    size="small"
-                    className={styles.iconButton}
-                    onClick={() => handleEditClick(wallet)}
-                    aria-label="Edit wallet"
-                    sx={{ width: '28px', height: '28px' }}
-                  >
-                    <EditIcon fontSize="small" />
-                  </IconButton>
-                  
-                  <IconButton
-                    size="small"
-                    className={styles.deleteIconButton}
-                    onClick={() => handleDeleteClick(wallet)}
-                    aria-label="Delete wallet"
-                    sx={{ width: '28px', height: '28px' }}
-                  >
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
+                  <Tooltip title="Send Money to User" arrow>
+                    <IconButton
+                      size="small"
+                      className={`${styles.iconButton} ${styles.sendIconButton}`}
+                      onClick={() => handleOpenUserTransferDialog(wallet)}
+                      aria-label="Send money"
+                      sx={{ width: '28px', height: '28px', color: 'info.main' }}
+                    >
+                      <SendIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+
+                  <Tooltip title="Share Wallet" arrow>
+                    <IconButton
+                      size="small"
+                      className={`${styles.iconButton} ${styles.shareIconButton}`}
+                      onClick={() => {
+                        setWalletToShare(wallet);
+                        updateDialogState('shareWalletDialog', true);
+                      }}
+                      aria-label="Share wallet"
+                      sx={{ width: '28px', height: '28px', color: 'secondary.main' }}
+                    >
+                      <PersonAddIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+
+                  <Tooltip title="Edit Wallet" arrow>
+                    <IconButton
+                      size="small"
+                      className={styles.iconButton}
+                      onClick={() => handleEditClick(wallet)}
+                      aria-label="Edit wallet"
+                      sx={{ width: '28px', height: '28px', color: 'primary.main' }}
+                    >
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+
+                  <Tooltip title="Delete Wallet" arrow>
+                    <IconButton
+                      size="small"
+                      className={styles.deleteIconButton}
+                      onClick={() => handleDeleteClick(wallet)}
+                      aria-label="Delete wallet"
+                      sx={{ width: '28px', height: '28px', color: 'error.main' }} // Added color
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
                 </Box>
               </Box>
             </ListItem>
@@ -919,9 +935,9 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
   const formContent = (
     <>
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-      
+
       <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 2 }}>
-        <Box 
+        <Box
           className={styles.balanceInfoBox}
           sx={{ flex: 1, p: 1, maxWidth: '70%' }}
         >
@@ -930,7 +946,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
               <Box sx={{ display: 'flex', alignItems: 'center' }} className={styles.infoText}>
                 <InfoIcon fontSize="small" sx={{ fontSize: '14px' }} className={styles.infoIcon} />
                 <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
-                  Total: ${totalBalance.toFixed(2)}
+                  Total: {formatCurrency(totalBalance)}
                 </Typography>
               </Box>
             </Grid>
@@ -938,7 +954,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
               <Box sx={{ display: 'flex', alignItems: 'center' }} className={styles.infoText}>
                 <InfoIcon fontSize="small" sx={{ fontSize: '14px' }} className={styles.infoIcon} />
                 <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
-                  Allocated: ${wallets.reduce((sum, wallet) => sum + wallet.balance, 0).toFixed(2)}
+                  Allocated: {formatCurrency(wallets.reduce((sum, wallet) => sum + wallet.balance, 0))}
                 </Typography>
               </Box>
             </Grid>
@@ -946,7 +962,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <InfoIcon fontSize="small" sx={{ fontSize: '14px' }} className={styles.infoIcon} />
                 <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
-                  Available: ${availableBalance.toFixed(2)}
+                  Available: {formatCurrency(availableBalance)}
                 </Typography>
               </Box>
             </Grid>
@@ -977,7 +993,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
           </Button>
         </Box>
       </Box>
-      
+
       {loading ? (
         <Box className={styles.loadingContainer}>
           <CircularProgress size={32} />
@@ -991,7 +1007,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
           {renderWalletListItems()}
         </List>
       )}
-      
+
       {/* Delete Confirmation Dialog */}
       <Dialog
         open={deleteConfirmOpen}
@@ -1016,16 +1032,16 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
           </DialogContentText>
         </DialogContent>
         <DialogActions className={styles.confirmActions}>
-          <Button 
-            onClick={handleDeleteCancel} 
+          <Button
+            onClick={handleDeleteCancel}
             variant="outlined"
             className={styles.cancelButton}
           >
             Cancel
           </Button>
-          <Button 
-            onClick={handleDeleteConfirm} 
-            color="error" 
+          <Button
+            onClick={handleDeleteConfirm}
+            color="error"
             variant="contained"
             disabled={deleting}
             startIcon={deleting ? <CircularProgress size={20} color="inherit" /> : null}
@@ -1035,7 +1051,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
           </Button>
         </DialogActions>
       </Dialog>
-      
+
       {/* New Wallet Form Dialog */}
       <Dialog
         open={newWalletFormOpen}
@@ -1063,7 +1079,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
           />
         </DialogContent>
       </Dialog>
-      
+
       {/* Transfer Money Dialog */}
       <Dialog
         open={transferDialogOpen}
@@ -1090,11 +1106,11 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
               </Alert>
             </Fade>
           )}
-          
+
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             Transfer money between your wallets or allocate funds from your available total balance.
           </Typography>
-          
+
           <FormControl fullWidth margin="normal">
             <Typography variant="subtitle2" gutterBottom>
               From
@@ -1107,16 +1123,16 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
               className={styles.selectField}
             >
               <MenuItem value="total">
-                Total Balance (Available: ${availableBalance.toFixed(2)})
+                Total Balance (Available: {formatCurrency(availableBalance)}) {/* Use formatCurrency */}
               </MenuItem>
               {wallets.map((wallet) => (
                 <MenuItem key={wallet.id} value={wallet.id.toString()}>
-                  {wallet.accountName} (${wallet.balance.toFixed(2)})
+                  {wallet.accountName} ({formatCurrency(wallet.balance)}) {/* Use formatCurrency */}
                 </MenuItem>
               ))}
             </Select>
           </FormControl>
-          
+
           <FormControl fullWidth margin="normal">
             <Typography variant="subtitle2" gutterBottom>
               To
@@ -1129,16 +1145,16 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
               className={styles.selectField}
             >
               <MenuItem value="total">
-                Total Balance (Available: ${availableBalance.toFixed(2)})
+                Total Balance (Available: {formatCurrency(availableBalance)}) {/* Use formatCurrency */}
               </MenuItem>
               {wallets.map((wallet) => (
                 <MenuItem key={wallet.id} value={wallet.id.toString()}>
-                  {wallet.accountName} (${wallet.balance.toFixed(2)})
+                  {wallet.accountName} ({formatCurrency(wallet.balance)}) {/* Use formatCurrency */}
                 </MenuItem>
               ))}
             </Select>
           </FormControl>
-          
+
           <FormControl fullWidth margin="normal">
             <Typography variant="subtitle2" gutterBottom>
               Amount
@@ -1158,7 +1174,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
               }}
             />
           </FormControl>
-          
+
           {/* Show contextual help text based on transfer type */}
           {sourceWalletId && destinationWalletId && sourceWalletId !== destinationWalletId && (
             <Box sx={{ mt: 2 }}>
@@ -1173,19 +1189,19 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
               </Typography>
             </Box>
           )}
-          
+
         </DialogContent>
         <DialogActions className={styles.transferActions}>
-          <Button 
-            onClick={handleCloseTransferDialog} 
+          <Button
+            onClick={handleCloseTransferDialog}
             variant="outlined"
             className={styles.cancelButton}
           >
             Cancel
           </Button>
-          <Button 
-            onClick={handleTransfer} 
-            color="primary" 
+          <Button
+            onClick={handleTransfer}
+            color="primary"
             variant="contained"
             disabled={transferring}
             startIcon={transferring ? <CircularProgress size={20} color="inherit" /> : null}
@@ -1195,14 +1211,14 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
           </Button>
         </DialogActions>
       </Dialog>
-      
+
       {/* User Transfer Dialog */}
       <UserTransferForm
         open={userTransferDialogOpen}
         handleClose={handleCloseUserTransferDialog}
         onTransferCompleted={handleUserTransferCompleted}
       />
-      
+
       {/* Share Wallet Dialog */}
       {walletToShare && (
         <ShareWalletForm
@@ -1222,8 +1238,8 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
 
   // Otherwise, wrap in a Dialog
   return (
-    <Dialog 
-      open={open} 
+    <Dialog
+      open={open}
       onClose={embedded ? null : handleClose}
       maxWidth="sm"
       PaperProps={{
@@ -1252,7 +1268,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
           </IconButton>
         </Box>
       </DialogTitle>
-      
+
       <DialogContent className={styles.dialogContent}>
         {formContent}
       </DialogContent>

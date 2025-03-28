@@ -28,6 +28,11 @@ const EditBalanceForm = ({ open, handleClose, onBalanceUpdated, currentBalance }
   const [success, setSuccess] = useState('');
   const [totalWalletBalance, setTotalWalletBalance] = useState(0);
 
+  // Helper to format currency
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+  };
+
   // Add refs for transition components
   const dialogRef = useRef(null);
   const alertErrorRef = useRef(null);
@@ -153,7 +158,7 @@ const EditBalanceForm = ({ open, handleClose, onBalanceUpdated, currentBalance }
           <Box sx={{ mb: 2 }}>
             <Fade in={open} timeout={400} nodeRef={alertInfoRef}>
               <Alert severity="info" ref={alertInfoRef}>
-                <strong>Required minimum:</strong> ${totalWalletBalance.toFixed(2)} (sum of all wallets)
+                <strong>Required minimum:</strong> {formatCurrency(totalWalletBalance)} (sum of all wallets)
               </Alert>
             </Fade>
           </Box>
@@ -177,11 +182,11 @@ const EditBalanceForm = ({ open, handleClose, onBalanceUpdated, currentBalance }
             }}
             error={Boolean(amount && parseFloat(amount) < totalWalletBalance)}
             helperText={amount && parseFloat(amount) < totalWalletBalance 
-              ? `Must be at least $${totalWalletBalance.toFixed(2)}` 
+              ? `Must be at least ${formatCurrency(totalWalletBalance)}` 
               : ''}
           />
           <FormHelperText>
-            Enter the new total balance amount. It must be at least equal to the sum of all your wallets (${totalWalletBalance.toFixed(2)}).
+            Enter the new total balance amount. It must be at least equal to the sum of all your wallets ({formatCurrency(totalWalletBalance)}).
           </FormHelperText>
         </DialogContent>
         <DialogActions>
@@ -200,4 +205,4 @@ const EditBalanceForm = ({ open, handleClose, onBalanceUpdated, currentBalance }
   );
 };
 
-export default EditBalanceForm; 
+export default EditBalanceForm;
