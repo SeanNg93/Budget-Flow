@@ -5,16 +5,16 @@ import {
   DialogActions, 
   DialogContent, 
   DialogTitle,
-  TextField,
   FormHelperText,
   Box,
-  InputAdornment,
   CircularProgress,
   Alert,
   Fade,
   Slide
 } from '@mui/material';
+import MoneyInput from '../utils/MoneyInput';
 import FinanceService from '../../services/FinanceService';
+import { formatCurrency } from '../../utils/moneyFormatter';
 
 // Create a SlideTransition component with forwardRef
 const SlideTransition = React.forwardRef(function Transition(props, ref) {
@@ -27,11 +27,6 @@ const EditBalanceForm = ({ open, handleClose, onBalanceUpdated, currentBalance }
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [totalWalletBalance, setTotalWalletBalance] = useState(0);
-
-  // Helper to format currency
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
-  };
 
   // Add refs for transition components
   const dialogRef = useRef(null);
@@ -64,8 +59,8 @@ const EditBalanceForm = ({ open, handleClose, onBalanceUpdated, currentBalance }
     }
   };
 
-  const handleChange = (e) => {
-    setAmount(e.target.value);
+  const handleChange = (value) => {
+    setAmount(value);
     setError('');
   };
 
@@ -163,25 +158,17 @@ const EditBalanceForm = ({ open, handleClose, onBalanceUpdated, currentBalance }
             </Fade>
           </Box>
           
-          <TextField
+          <MoneyInput
             autoFocus
             margin="dense"
             label="New Balance"
-            type="number"
-            fullWidth
-            variant="outlined"
             value={amount}
             onChange={handleChange}
-            InputProps={{
-              startAdornment: <InputAdornment position="start">$</InputAdornment>,
-            }}
             disabled={loading}
             inputProps={{ 
-              step: "0.01", 
               min: totalWalletBalance
             }}
-            error={Boolean(amount && parseFloat(amount) < totalWalletBalance)}
-            helperText={amount && parseFloat(amount) < totalWalletBalance 
+            error={Boolean(amount && parseFloat(amount) < totalWalletBalance) 
               ? `Must be at least ${formatCurrency(totalWalletBalance)}` 
               : ''}
           />

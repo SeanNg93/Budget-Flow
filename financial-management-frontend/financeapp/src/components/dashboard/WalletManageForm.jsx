@@ -57,6 +57,8 @@ import UserTransferForm from './UserTransferForm';
 import ShareWalletForm from './ShareWalletForm';
 import styles from '../../styles/walletManage.module.css';
 import { WALLET_ICONS, WALLET_COLORS, getWalletIcon, saveWalletIcon, getWalletColorClass, saveWalletColor } from '../../utils/walletIcons';
+import { formatCurrency } from '../../utils/moneyFormatter';
+import MoneyInput from '../utils/MoneyInput';
 
 // Map of icon names to components
 const iconComponents = {
@@ -128,14 +130,6 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
 
   // Add state for shared wallets information
   const [sharedWalletsInfo, setSharedWalletsInfo] = useState({});
-
-  // Helper to format currency
-  const formatCurrency = (value) => {
-    // Ensure value is a number before formatting
-    const numericValue = typeof value === 'number' ? value : parseFloat(value || 0);
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(numericValue);
-  };
-
 
   // Add refs for transitions
   const newWalletDialogRef = useRef(null);
@@ -307,7 +301,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
     const maxAllowed = availableBalance + originalBalance;
 
     if (newBalance > maxAllowed) {
-      setBalanceError(`Balance exceeds available amount (max: ${formatCurrency(maxAllowed)})`); // Use formatCurrency
+      setBalanceError(`Balance exceeds available amount (max: ${formatCurrency(maxAllowed)})`); 
       return false;
     }
 
@@ -315,8 +309,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
     return true;
   };
 
-  const handleBalanceChange = (e) => {
-    const value = e.target.value;
+  const handleBalanceChange = (value) => {
     setEditWalletBalance(value);
 
     // Calculate dynamic available balance as user types
@@ -328,7 +321,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
       // Only show error if exceeds available amount
       if (dynamicAvailable < 0) {
         const maxAllowed = availableBalance + originalBalance;
-        setBalanceError(`Balance exceeds available amount (max: ${formatCurrency(maxAllowed)})`); // Use formatCurrency
+        setBalanceError(`Balance exceeds available amount (max: ${formatCurrency(maxAllowed)})`);
       }
     } else {
       validateBalanceEdit(value);
@@ -499,6 +492,13 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
     setTransferError('');
   };
 
+  const handleTransferAmountChange = (value) => {
+    setTransferAmount(value);
+    if (transferError) {
+      setTransferError('');
+    }
+  };
+
   const handleCloseTransferDialog = () => {
     setTransferDialogOpen(false);
     setSourceWalletId('');
@@ -539,7 +539,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
     if (sourceWalletId === "total") {
       // If source is total balance, check if there's enough available balance
       if (amount > availableBalance) {
-        setTransferError(`Insufficient available balance (available: ${formatCurrency(availableBalance)})`); // Use formatCurrency
+        setTransferError(`Insufficient available balance (available: ${formatCurrency(availableBalance)})`);
         return false;
       }
     } else {
@@ -551,7 +551,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
       }
 
       if (amount > sourceWallet.balance) {
-        setTransferError(`Insufficient funds in source wallet (available: ${formatCurrency(sourceWallet.balance)})`); // Use formatCurrency
+        setTransferError(`Insufficient funds in source wallet (available: ${formatCurrency(sourceWallet.balance)})`);
         return false;
       }
     }
@@ -758,22 +758,14 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
                   </>
                 )}
 
-                <TextField
+                <MoneyInput
                   fullWidth
                   label="Balance"
                   value={editWalletBalance}
                   onChange={handleBalanceChange}
                   className={styles.textField}
                   margin="normal"
-                  variant="outlined"
-                  type="number"
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">$</InputAdornment>
-                    ),
-                  }}
-                  error={Boolean(balanceError)}
-                  helperText={balanceError}
+                  error={balanceError}
                   size="small"
                 />
 
@@ -1159,19 +1151,12 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
             <Typography variant="subtitle2" gutterBottom>
               Amount
             </Typography>
-            <TextField
+            <MoneyInput
               value={transferAmount}
-              onChange={(e) => setTransferAmount(e.target.value)}
+              onChange={handleTransferAmountChange}
               placeholder="0.00"
-              type="number"
               size="small"
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    $
-                  </InputAdornment>
-                ),
-              }}
+              error={transferError}
             />
           </FormControl>
 

@@ -5,16 +5,16 @@ import {
   DialogActions, 
   DialogContent, 
   DialogTitle,
-  TextField,
   FormHelperText,
   Box,
-  InputAdornment,
   CircularProgress,
   Alert,
   Fade,
   Slide
 } from '@mui/material';
+import MoneyInput from '../utils/MoneyInput';
 import FinanceService from '../../services/FinanceService';
+import { formatCurrency } from '../../utils/moneyFormatter';
 
 // Create a SlideTransition component with forwardRef
 const SlideTransition = React.forwardRef(function Transition(props, ref) {
@@ -28,11 +28,6 @@ const AddBalanceForm = ({ open, handleClose, onBalanceAdded }) => {
   const [success, setSuccess] = useState('');
   const [currentBalance, setCurrentBalance] = useState(0);
   const [totalWalletBalance, setTotalWalletBalance] = useState(0);
-
-  // Helper to format currency
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
-  };
 
   // Add refs for transition components
   const dialogRef = useRef(null);
@@ -71,8 +66,8 @@ const AddBalanceForm = ({ open, handleClose, onBalanceAdded }) => {
     }
   };
 
-  const handleChange = (e) => {
-    setAmount(e.target.value);
+  const handleChange = (value) => {
+    setAmount(value);
     setError('');
   };
 
@@ -186,20 +181,14 @@ const AddBalanceForm = ({ open, handleClose, onBalanceAdded }) => {
             </Fade>
           </Box>
           
-          <TextField
+          <MoneyInput
             autoFocus
             margin="dense"
             label="Amount"
-            type="number"
-            fullWidth
-            variant="outlined"
             value={amount}
             onChange={handleChange}
-            InputProps={{
-              startAdornment: <InputAdornment position="start">$</InputAdornment>,
-            }}
             disabled={loading}
-            inputProps={{ step: "0.01", min: "0.01" }}
+            inputProps={{ min: "0.01" }}
           />
           <FormHelperText>
             Enter the amount you want to add to your total balance

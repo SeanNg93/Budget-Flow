@@ -28,6 +28,7 @@ import {
   Zoom
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers';
+import MoneyInput from '../utils/MoneyInput';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -45,13 +46,7 @@ import WalletForm from './WalletForm';
 import CategoryForm from './CategoryForm';
 import CategoryManageForm from './CategoryManageForm';
 import styles from '../../styles/transactionForm.module.css';
-
-// Helper to format currency
-const formatCurrency = (value) => {
-  // Ensure value is a number before formatting
-  const numericValue = typeof value === 'number' ? value : parseFloat(value || 0);
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(numericValue);
-};
+import { formatCurrency } from '../../utils/moneyFormatter';
 
 // Create a SlideTransition component with forwardRef
 const SlideTransition = React.forwardRef(function Transition(props, ref) {
@@ -383,21 +378,10 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
   
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
-    if (name === 'amount') {
-      // Less restrictive regex to allow more natural typing
-      if (value === '' || /^-?\d*\.?\d{0,2}$/.test(value)) {
-        setFormData(prev => ({
-          ...prev,
-          [name]: value
-        }));
-      }
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }));
-    }
+    setFormData({
+      ...formData,
+      [name]: value
+    });
     
     if (errors[name]) {
       setErrors({
@@ -407,27 +391,18 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
     }
   };
   
-  // Add a handler for when the amount field loses focus
-  const handleAmountBlur = (e) => {
-    const value = e.target.value.trim();
+  // Add special handler for amount field
+  const handleAmountChange = (value) => {
+    setFormData(prev => ({
+      ...prev,
+      amount: value
+    }));
     
-    // If the field is empty, leave it as is
-    if (value === '') {
-      return;
-    }
-    
-    // Format the number with 2 decimal places
-    try {
-      const floatValue = parseFloat(value);
-      if (!isNaN(floatValue)) {
-        setFormData(prev => ({
-          ...prev,
-          amount: floatValue.toFixed(2)
-        }));
-      }
-    } catch (err) {
-      // If parsing fails, leave the value as is
-      console.error('Error formatting amount:', err);
+    if (errors.amount) {
+      setErrors({
+        ...errors,
+        amount: ''
+      });
     }
   };
   
@@ -477,7 +452,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
           const effectiveAmount = numAmount - (initialData ? originalAmount : 0);
           
           if (effectiveAmount > walletBalance) {
-            newErrors.amount = `Insufficient funds in wallet. Available: $${walletBalance.toFixed(2)}, Required: $${numAmount.toFixed(2)}`;
+            newErrors.amount = `Insufficient funds in wallet. Available: ${formatCurrency(walletBalance)}`;
           }
         }
       }
@@ -584,7 +559,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
         const errorData = error.response.data;
         if (errorData.error === 'Insufficient funds') {
           // Format the error message nicely with the available balance
-          setError(`Wallet balance not enough. Available: ${errorData.available}, Required: ${errorData.required}`);
+          setError(`Insufficient funds! Available: ${formatCurrency(parseFloat(errorData.available) || 0)}`);
         } else {
           setError(errorData.message || 'Failed to process transaction. Please try again.');
         }
@@ -1074,29 +1049,16 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
               
               {/* Add a position relative wrapper for the tooltip positioning */}
               <Box sx={{ position: 'relative' }}>
-                <TextField
+                <MoneyInput
                   name="amount"
                   value={formData.amount}
-                  onChange={handleChange}
-                  onBlur={handleAmountBlur}
+                  onChange={handleAmountChange}
                   placeholder="0.00"
-                  error={!!errors.amount}
-                  helperText={errors.amount}
+                  error={errors.amount}
                   disabled={loading}
                   size="small"
-                  type="text"
-                  autoComplete="off"
                   className={`${styles.inputField} ${styles.amountField} ${errors.amount && errors.amount.includes('Insufficient funds') ? styles.insufficientFundsError : ''}`}
                   sx={{ '& .MuiInputBase-root': { height: '36px' } }}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">$</InputAdornment>
-                    ),
-                    inputProps: {
-                      inputMode: 'decimal',
-                      style: { textAlign: 'left' }
-                    }
-                  }}
                 />
                 
                 {/* Add tooltip for insufficient funds - only show when there are insufficient funds */}
@@ -1108,8 +1070,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
                         const selectedAccount = accounts.find(a => a.id.toString() === formData.accountId.toString());
                         if (selectedAccount) {
                           const walletBalance = selectedAccount.balance || 0;
-                          const amount = parseFloat(formData.amount) || 0;
-                          return `Insufficient funds! Available: $${walletBalance.toFixed(2)}, Required: $${amount.toFixed(2)}`;
+                          return `Insufficient funds! Available: ${formatCurrency(walletBalance)}`;
                         }
                         return 'Insufficient funds in wallet';
                       })()}

@@ -155,20 +155,20 @@
 /* Popup for insufficient funds error */
 .fundsErrorPopup {
   position: absolute;
-  top: -50px;
+  top: -75px;
   left: 10px;
   background-color: #ff3b30;
   color: white;
-  padding: 8px 12px;
+  padding: 6px 10px;
   border-radius: 6px;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 500;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   z-index: 100;
   display: flex;
   align-items: center;
-  gap: 6px;
-  max-width: 210px;
+  gap: 5px;
+  max-width: 180px;
   animation: fadeInPopup 0.3s ease;
 }
 

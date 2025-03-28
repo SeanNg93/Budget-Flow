@@ -25,6 +25,7 @@ import {
   FormControlLabel,
   Tooltip
 } from '@mui/material';
+import MoneyInput from '../utils/MoneyInput';
 import FinanceService from '../../services/FinanceService';
 import styles from '../../styles/walletForm.module.css';
 import { WALLET_ICONS, WALLET_COLORS, saveWalletIcon, saveWalletColor, getWalletIcon, getWalletColorClass } from '../../utils/walletIcons';
@@ -36,6 +37,7 @@ import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import ShowChartIcon from '@mui/icons-material/ShowChart';
 import SavingsOutlinedIcon from '@mui/icons-material/SavingsOutlined';
+import { formatCurrency } from '../../utils/moneyFormatter';
 
 // Map of icon names to components
 const iconComponents = {
@@ -156,6 +158,22 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
       setErrors({
         ...errors,
         [name]: ''
+      });
+    }
+  };
+
+  // Handle money input change
+  const handleMoneyChange = (value) => {
+    setFormData({
+      ...formData,
+      balance: value
+    });
+    
+    // Clear error for this field
+    if (errors.balance) {
+      setErrors({
+        ...errors,
+        balance: ''
       });
     }
   };
@@ -316,25 +334,17 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
             <Grid item xs={12}>
               <FormControl fullWidth error={!!errors.balance} size="small" className={styles.formControl}>
                 <Typography variant="caption" className={styles.fieldLabel}>
-                  Initial Balance (Max: {availableBalance.toFixed(2)})
+                  Initial Balance (Max: {formatCurrency(availableBalance)})
                 </Typography>
-                <TextField
+                <MoneyInput
                   name="balance"
                   value={formData.balance}
-                  onChange={handleChange}
+                  onChange={handleMoneyChange}
                   placeholder="0.00"
-                  error={!!errors.balance}
-                  helperText={errors.balance}
+                  error={errors.balance}
                   disabled={loading || availableBalance <= 0}
                   size="small"
                   className={styles.textField}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        $
-                      </InputAdornment>
-                    ),
-                  }}
                 />
               </FormControl>
             </Grid>
@@ -411,23 +421,15 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
                 <Typography variant="caption" className={styles.fieldLabel}>
                   {isEditMode ? 'Balance' : 'Initial Balance'}
                 </Typography>
-                <TextField
+                <MoneyInput
                   name="balance"
                   value={formData.balance}
-                  onChange={handleChange}
+                  onChange={handleMoneyChange}
                   placeholder="0.00"
-                  error={!!errors.balance}
-                  helperText={errors.balance || `Max: ${availableBalance.toFixed(2)}`}
+                  error={errors.balance || `Max: ${formatCurrency(availableBalance)}`}
                   disabled={loading || availableBalance <= 0}
                   size="small"
                   className={styles.textField}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        $
-                      </InputAdornment>
-                    ),
-                  }}
                 />
               </FormControl>
             </Grid>
