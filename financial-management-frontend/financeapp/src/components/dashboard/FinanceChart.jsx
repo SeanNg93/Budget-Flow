@@ -20,7 +20,6 @@ import {
   Divider,
   CircularProgress
 } from '@mui/material';
-import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear } from 'date-fns';
@@ -35,31 +34,12 @@ const TIME_RANGES = [
   { value: 'week', label: 'Week' }
 ];
 
-// Chart summary item component
-const SummaryItem = React.memo(({ label, value, color, onClick, isMockMode }) => (
-  <Box 
-    className={styles.summaryItem} 
-    onClick={onClick}
-    sx={{ 
-      cursor: onClick ? 'pointer' : 'default',
-      position: 'relative',
-      ...(isMockMode && {
-        '&::after': {
-          content: '"DEMO"',
-          position: 'absolute',
-          top: '-5px',
-          right: '-5px',
-          fontSize: '9px',
-          backgroundColor: 'primary.main',
-          color: 'white',
-          padding: '2px 4px',
-          borderRadius: '4px',
-          opacity: 0.8
-        }
-      })
-    }}
+// Chart summary item component - Removed onClick and isMockMode handling
+const SummaryItem = React.memo(({ label, value, color }) => (
+  <Box
+    className={styles.summaryItem}
+    sx={{ cursor: 'default' }} // Always default cursor
     aria-label={label}
-    role={onClick ? "button" : undefined}
   >
     <Typography className={styles.summaryLabel}>{label}</Typography>
     <Typography className={styles.summaryValue} color={color}>{value}</Typography>
@@ -75,7 +55,7 @@ const ChartContent = React.memo(({ loading, renderError, chartData, onRetry, for
       </Box>
     );
   }
-  
+
   if (renderError) {
     return (
       <Box className={styles.errorContainer}>
@@ -83,7 +63,7 @@ const ChartContent = React.memo(({ loading, renderError, chartData, onRetry, for
           Unable to render chart. Please try again later.
         </Typography>
         <Box mt={2}>
-          <Button 
+          <Button
             variant="outlined"
             color="primary"
             onClick={onRetry}
@@ -95,7 +75,7 @@ const ChartContent = React.memo(({ loading, renderError, chartData, onRetry, for
       </Box>
     );
   }
-  
+
   if (chartData.length === 0) {
     return (
       <Box className={styles.loadingContainer} sx={{ bgcolor: 'rgba(0, 0, 0, 0.01)' }}>
@@ -108,7 +88,7 @@ const ChartContent = React.memo(({ loading, renderError, chartData, onRetry, for
       </Box>
     );
   }
-  
+
   return (
     <ResponsiveContainer width="100%" height={240}>
       <BarChart
@@ -135,12 +115,12 @@ const ChartContent = React.memo(({ loading, renderError, chartData, onRetry, for
 });
 
 // Time range navigation component
-const TimeRangeNavigation = React.memo(({ 
-  timeRangeIndex, 
-  handleTimeRangeChange 
+const TimeRangeNavigation = React.memo(({
+  timeRangeIndex,
+  handleTimeRangeChange
 }) => (
   <Box className={styles.timeRangeControls}>
-    <IconButton 
+    <IconButton
       onClick={() => handleTimeRangeChange('prev')}
       disabled={timeRangeIndex >= TIME_RANGES.length - 1}
       size="small"
@@ -150,14 +130,14 @@ const TimeRangeNavigation = React.memo(({
       <NavigateBeforeIcon fontSize="small" />
     </IconButton>
 
-    <Typography 
-      variant="subtitle2" 
+    <Typography
+      variant="subtitle2"
       className={styles.timeRangeLabel}
     >
       {TIME_RANGES[timeRangeIndex].label}
     </Typography>
-    
-    <IconButton 
+
+    <IconButton
       onClick={() => handleTimeRangeChange('next')}
       disabled={timeRangeIndex <= 0}
       size="small"
@@ -169,7 +149,8 @@ const TimeRangeNavigation = React.memo(({
   </Box>
 ));
 
-const FinanceChart = () => {
+// Accept refreshKey prop
+const FinanceChart = ({ refreshKey }) => {
   // State management
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -182,8 +163,7 @@ const FinanceChart = () => {
     netSavings: 0
   });
   const [renderError, setRenderError] = useState(false);
-  const [incomeLabelClicks, setIncomeLabelClicks] = useState(0);
-  const [mockDataMode, setMockDataMode] = useState(false);
+  // Removed mockDataMode and incomeLabelClicks state
 
   // Derived state with useMemo
   const timeRange = useMemo(() => TIME_RANGES[timeRangeIndex].value, [timeRangeIndex]);
@@ -196,44 +176,20 @@ const FinanceChart = () => {
     }).format(amount);
   }, []);
 
-  // Data fetching with useCallback
+  // Data fetching with useCallback - Removed mock data logic
   const fetchChartData = useCallback(async () => {
     setLoading(true);
-    
+    setRenderError(false); // Reset error state on fetch
+
     try {
-      if (mockDataMode) {
-        // Use mock data if in mock mode
-        const mockData = generateMockData();
-        setChartData(mockData.chartData);
-        setSummaryData(mockData.summaryData);
+      // Always use the service method to fetch chart data
+      const response = await FinanceService.getFinancialDataByDateRange(startDate, endDate);
+
+      if (response.data?.chartData) { // Check if chartData exists
+        setChartData(response.data.chartData);
+        setSummaryData(response.data.summaryData || { totalIncome: 0, totalExpenses: 0, netSavings: 0 });
       } else {
-        // Use the service method to fetch chart data
-        const response = await FinanceService.getFinancialDataByDateRange(startDate, endDate);
-        
-        if (response.data?.chartData?.length > 0) {
-          // Use real data if available
-          setChartData(response.data.chartData);
-          setSummaryData(response.data.summaryData);
-        } else {
-          // Show empty chart when no data exists
-          setChartData([]);
-          setSummaryData({
-            totalIncome: 0,
-            totalExpenses: 0,
-            netSavings: 0
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching chart data:', error);
-      
-      if (mockDataMode) {
-        // Use mock data on error if in mock mode
-        const mockData = generateMockData();
-        setChartData(mockData.chartData);
-        setSummaryData(mockData.summaryData);
-      } else {
-        // Reset to empty state on error
+        // Show empty chart if chartData is missing or empty
         setChartData([]);
         setSummaryData({
           totalIncome: 0,
@@ -241,79 +197,26 @@ const FinanceChart = () => {
           netSavings: 0
         });
       }
+    } catch (error) {
+      console.error('Error fetching chart data:', error);
+      setRenderError(true); // Set error state
+      setChartData([]);
+      setSummaryData({
+        totalIncome: 0,
+        totalExpenses: 0,
+        netSavings: 0
+      });
     } finally {
       setLoading(false);
     }
-  }, [startDate, endDate, mockDataMode]);
+  }, [startDate, endDate]); // Removed generateMockData dependency
 
-  // Mock data generator (memoized for performance)
-  const generateMockData = useCallback(() => {
-    const mockData = [];
-    let totalIncome = 0;
-    let totalExpenses = 0;
-    
-    const mockDataConfig = {
-      week: {
-        count: 7,
-        labelFormatter: (i) => {
-          const date = new Date(startDate);
-          date.setDate(date.getDate() + i);
-          return format(date, 'EEE');
-        },
-        valueRange: { income: [100, 500], expenses: [50, 300] }
-      },
-      month: {
-        count: 4,
-        labelFormatter: (i) => `Week ${i + 1}`,
-        valueRange: { income: [500, 2000], expenses: [300, 1500] }
-      },
-      quarter: {
-        count: 3,
-        labelFormatter: (i) => `Month ${i + 1}`,
-        valueRange: { income: [1000, 5000], expenses: [800, 4000] }
-      },
-      year: {
-        count: 12,
-        labelFormatter: (i) => {
-          const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-          return monthNames[i];
-        },
-        valueRange: { income: [2000, 8000], expenses: [1500, 6000] }
-      }
-    };
-    
-    const config = mockDataConfig[timeRange];
-    
-    for (let i = 0; i < config.count; i++) {
-      const income = Math.floor(Math.random() * 
-        (config.valueRange.income[1] - config.valueRange.income[0])) + config.valueRange.income[0];
-      const expenses = Math.floor(Math.random() * 
-        (config.valueRange.expenses[1] - config.valueRange.expenses[0])) + config.valueRange.expenses[0];
-      
-      totalIncome += income;
-      totalExpenses += expenses;
-      
-      mockData.push({
-        name: config.labelFormatter(i),
-        income: income,
-        expenses: expenses
-      });
-    }
-    
-    return {
-      chartData: mockData,
-      summaryData: {
-        totalIncome,
-        totalExpenses,
-        netSavings: totalIncome - totalExpenses
-      }
-    };
-  }, [timeRange, startDate]);
+  // Removed generateMockData function
 
   // Update date range based on time range with useCallback
   const updateDateRangeForTimeRange = useCallback((index) => {
     const today = new Date();
-    
+
     const dateRangeUpdaters = [
       // year
       () => {
@@ -336,7 +239,7 @@ const FinanceChart = () => {
         setEndDate(endOfWeek(today, { weekStartsOn: 1 }));
       }
     ];
-    
+
     if (index >= 0 && index < dateRangeUpdaters.length) {
       dateRangeUpdaters[index]();
     }
@@ -352,65 +255,46 @@ const FinanceChart = () => {
     } else {
       return;
     }
-    
+
     setTimeRangeIndex(newIndex);
     updateDateRangeForTimeRange(newIndex);
   }, [timeRangeIndex, updateDateRangeForTimeRange]);
 
-  // Secret feature handler with useCallback
-  const handleIncomeLabelClick = useCallback(() => {
-    if (mockDataMode) {
-      // Turn off mock mode
-      setMockDataMode(false);
-      setIncomeLabelClicks(0);
-      fetchChartData();
-    } else {
-      // Increment click counter
-      const newClickCount = incomeLabelClicks + 1;
-      setIncomeLabelClicks(newClickCount);
-      
-      // Activate mock mode after 5 clicks
-      if (newClickCount >= 5) {
-        setMockDataMode(true);
-        fetchChartData();
-      }
-    }
-  }, [mockDataMode, incomeLabelClicks, fetchChartData]);
+  // Removed handleIncomeLabelClick function
 
   const handleRetry = useCallback(() => {
-    setRenderError(false);
     fetchChartData();
   }, [fetchChartData]);
 
-  // Set time range and fetch data with useEffect
+  // Fetch data when time range, dates, or refreshKey changes
   useEffect(() => {
     fetchChartData();
-  }, [timeRange, startDate, endDate, fetchChartData]);
+  // Added refreshKey to dependency array
+  }, [timeRange, startDate, endDate, fetchChartData, refreshKey]);
 
-  // Memoized summary items rendering
+  // Memoized summary items rendering - Removed onClick and isMockMode from Total Income
   const renderSummaryItems = useMemo(() => (
     <Box className={styles.summaryContainer}>
-      <SummaryItem 
+      <SummaryItem
         label="Total Income"
         value={formatCurrency(summaryData.totalIncome)}
         color="primary"
-        onClick={handleIncomeLabelClick}
-        isMockMode={mockDataMode}
       />
-      
-      <SummaryItem 
+
+      <SummaryItem
         label="Total Expenses"
         value={formatCurrency(summaryData.totalExpenses)}
         color="error"
       />
-      
-      <SummaryItem 
+
+      <SummaryItem
         label="Net Savings"
         value={formatCurrency(summaryData.netSavings)}
         color={summaryData.netSavings >= 0 ? "success" : "error"}
       />
     </Box>
-  ), [summaryData, formatCurrency, handleIncomeLabelClick, mockDataMode]);
+  // Removed handleIncomeLabelClick and mockDataMode dependencies
+  ), [summaryData, formatCurrency]);
 
   return (
     <Card className={styles.chartCard}>
@@ -418,24 +302,24 @@ const FinanceChart = () => {
         title="Financial performance chart"
         action={
           <Box className={styles.headerControls}>
-            <TimeRangeNavigation 
+            <TimeRangeNavigation
               timeRangeIndex={timeRangeIndex}
               handleTimeRangeChange={handleTimeRangeChange}
             />
           </Box>
         }
       />
-      
+
       <Divider />
-      
+
       <CardContent>
         <Box className={styles.chartContentWrapper}>
           {/* Summary Section */}
           {renderSummaryItems}
-          
+
           {/* Chart */}
           <Box className={styles.chartContainer}>
-            <ChartContent 
+            <ChartContent
               loading={loading}
               renderError={renderError}
               chartData={chartData}
@@ -449,4 +333,4 @@ const FinanceChart = () => {
   );
 };
 
-export default FinanceChart; 
+export default FinanceChart;

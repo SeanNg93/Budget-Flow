@@ -101,6 +101,7 @@ export default function Dashboard() {
   const [sharedWallets, setSharedWallets] = useState({});
   const [sharedWalletsInfo, setSharedWalletsInfo] = useState({});
   const [error, setError] = useState(null);
+  const [chartRefreshKey, setChartRefreshKey] = useState(0); // State to trigger chart refresh
 
   // Dialog states centralized
   const [dialogStates, setDialogStates] = useState({
@@ -142,7 +143,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (user) {
       fetchFinancialData();
-      
+
       // Set a default userProfile from existing user data to avoid API call
       setUserProfile({
         id: user.id,
@@ -153,7 +154,7 @@ export default function Dashboard() {
         profilePicturePath: user.profilePicture || '',
         currency: 'USD'
       });
-      
+
       // Only try to fetch user profile if we already have the data
       if (user.hasProfile) {
       fetchUserProfile();
@@ -179,14 +180,14 @@ export default function Dashboard() {
       }
       return;
     }
-    
+
     // Store current state in sessionStorage before processing
     try {
       sessionStorage.setItem('dashboardDialogState', JSON.stringify(location.state));
     } catch (err) {
       console.error('Error storing dialog state:', err);
     }
-    
+
     // Extract dialog actions from location state
     const dialogMappings = {
       openWalletForm: 'accountForm',
@@ -196,24 +197,24 @@ export default function Dashboard() {
       openShareWalletDialog: 'shareWalletDialog',
       openCategoryForm: 'categoryForm'
     };
-    
+
     // Open dialogs based on location state
     Object.entries(dialogMappings).forEach(([stateKey, dialogKey]) => {
       if (location.state[stateKey]) {
         updateDialogState(dialogKey, true);
       }
     });
-    
+
     // Handle item selection from search
     if (location.state.selectedWallet) {
       setSelectedWallet(location.state.selectedWallet);
       updateDialogState('walletManageForm', true);
     }
-    
+
     if (location.state.selectedTransaction) {
       const transactionId = location.state.selectedTransaction;
       const transaction = transactions.find(t => t.id === transactionId);
-      
+
       if (transaction) {
         setSelectedTransaction(transaction);
         updateDialogState('editTransactionOpen', true);
@@ -221,10 +222,10 @@ export default function Dashboard() {
         fetchTransactionDetails(transactionId);
       }
     }
-      
+
     // Clear location state
     navigate(location.pathname, { replace: true, state: {} });
-    
+
     // Also clear from sessionStorage when processed
     try {
       sessionStorage.removeItem('dashboardDialogState');
@@ -259,18 +260,18 @@ export default function Dashboard() {
     return transactions.map(transaction => {
       // Skip processing if no transaction data
       if (!transaction) return transaction;
-      
+
       // For shared wallets, ensure proper user data and profile pictures
       if (transaction.wallet && sharedWallets[transaction.wallet.id]) {
         const walletInfo = sharedWalletsInfo[transaction.wallet.id];
-        
+
         // If no wallet info available, skip additional processing
         if (!walletInfo) return transaction;
-        
+
         // If no user at all, create one with wallet owner info
         if (!transaction.user) {
           const isOwnerTransaction = transaction.userId === walletInfo.ownerId;
-          
+
           if (isOwnerTransaction) {
             transaction.user = {
               id: walletInfo.ownerId,
@@ -284,7 +285,7 @@ export default function Dashboard() {
               profilePicture: walletInfo.sharedWithProfilePictureUrl
             };
           }
-        } 
+        }
         // If user exists but no profile picture, try to add from wallet info
         else if (!transaction.user.profilePicture) {
           if (transaction.user.id === walletInfo.ownerId) {
@@ -294,15 +295,15 @@ export default function Dashboard() {
           }
         }
       }
-      
+
       // Ensure all profile picture URLs have the API base URL if they're relative paths
       if (transaction.user && transaction.user.profilePicture) {
-        if (!transaction.user.profilePicture.startsWith('http') && 
+        if (!transaction.user.profilePicture.startsWith('http') &&
             !transaction.user.profilePicture.startsWith('data:')) {
           transaction.user.profilePicture = `${API_BASE_URL}${transaction.user.profilePicture}`;
         }
       }
-      
+
       return transaction;
     });
   };
@@ -311,7 +312,7 @@ export default function Dashboard() {
   const fetchUserProfile = async () => {
     try {
       if (!user?.id) return;
-      
+
       const response = await FinanceService.getUserProfile(user.id);
 
       if (response.data) {
@@ -343,7 +344,7 @@ export default function Dashboard() {
     try {
       setLoading(true);
       // Parallel API calls for better performance
-      const [summaryResponse, accountsResponse, transactionsResponse, 
+      const [summaryResponse, accountsResponse, transactionsResponse,
              sharedWithMeResponse, sharedByMeResponse] = await Promise.all([
         FinanceService.getFinancialSummary(),
         FinanceService.getAccounts(),
@@ -351,11 +352,11 @@ export default function Dashboard() {
         FinanceService.getSharedWalletsWithMe(),
         FinanceService.getSharedWalletsByMe()
       ]);
-      
+
       // Process shared wallets
       const sharedWalletsMap = {};
       const sharedInfo = {};
-      
+
       // Process shared wallets similar to WalletOverview component
       const processSharedWallets = (wallets, isOwner) => {
         wallets.forEach(sharedWallet => {
@@ -375,10 +376,10 @@ export default function Dashboard() {
           }
         });
       };
-      
+
       processSharedWallets(sharedWithMeResponse.data || [], false);
       processSharedWallets(sharedByMeResponse.data || [], true);
-      
+
       // Update state with fetched data
       setSharedWallets(sharedWalletsMap);
       setSharedWalletsInfo(sharedInfo);
@@ -389,7 +390,7 @@ export default function Dashboard() {
         netSavings: summaryResponse.data.netSavings || 0
       });
       setWallets(accountsResponse.data || []);
-      
+
       // Process and set transactions
       const processedTransactions = processTransactions(transactionsResponse.data || []);
       setTransactions(processedTransactions.slice(0, 8));
@@ -400,6 +401,8 @@ export default function Dashboard() {
       if (timeRange !== 'all') {
         await fetchFinancialDataByTimeRange(timeRange);
       }
+      // Trigger chart refresh after initial full data load
+      setChartRefreshKey(prevKey => prevKey + 1);
     } catch (error) {
       setError('Failed to load financial data. Please try again later.');
       setFinancialData({
@@ -418,7 +421,7 @@ export default function Dashboard() {
       const response = applyFilters
         ? await FinanceService.getFilteredTransactions(filterParams)
         : await FinanceService.getTransactions();
-      
+
       const processedTransactions = processTransactions(response.data || []);
       setFilteredTransactions(processedTransactions);
       setAllTransactions(processedTransactions);
@@ -430,21 +433,21 @@ export default function Dashboard() {
 
   const fetchCategories = async () => {
     try {
-      const [expenseCategoriesResponse, incomeCategoriesResponse, transactionsResponse] = 
+      const [expenseCategoriesResponse, incomeCategoriesResponse, transactionsResponse] =
         await Promise.all([
           FinanceService.getCategoriesByType('EXPENSE'),
           FinanceService.getCategoriesByType('INCOME'),
           FinanceService.getTransactions()
         ]);
-      
+
       // Combine categories
       const allCategoriesData = [
         ...(expenseCategoriesResponse.data || []),
         ...(incomeCategoriesResponse.data || [])
       ];
-      
+
       setAllCategories(allCategoriesData);
-      
+
       // Find used categories
       if (transactionsResponse.data?.length > 0) {
         const usedCategoryIds = new Set();
@@ -452,8 +455,8 @@ export default function Dashboard() {
           const categoryId = transaction.category?.id || transaction.categoryId;
           if (categoryId) usedCategoryIds.add(categoryId.toString());
         });
-        
-        setCategories(allCategoriesData.filter(category => 
+
+        setCategories(allCategoriesData.filter(category =>
           usedCategoryIds.has(category.id.toString())
         ));
       } else {
@@ -474,7 +477,8 @@ export default function Dashboard() {
     updateFinancialSummary();
     fetchTransactions();
     updateWallets();
-    
+    setChartRefreshKey(prevKey => prevKey + 1); // Trigger chart refresh
+
     // Show success toast
     toast.success(isUpdate ? 'Transaction updated successfully' : 'Transaction added successfully', {
       position: "top-right",
@@ -488,13 +492,14 @@ export default function Dashboard() {
 
   const handleAccountAdded = (forceFullRefresh = false) => {
     if (forceFullRefresh) {
-      fetchFinancialData();
+      fetchFinancialData(); // This already triggers chart refresh
       fetchTransactions();
       fetchCategories();
       updateFinancialSummary();
     } else {
       updateLocalFinancialSummary();
       updateWallets();
+      setChartRefreshKey(prevKey => prevKey + 1); // Trigger chart refresh
     }
   };
 
@@ -520,17 +525,20 @@ export default function Dashboard() {
     }
   };
 
-  const handleCategoryAdded = () => fetchFinancialData();
+  const handleCategoryAdded = () => {
+      fetchFinancialData(); // This already triggers chart refresh
+  };
 
   const handleBalanceAdded = async () => {
     try {
       const summaryResponse = await FinanceService.getFinancialSummary();
-      
+
       setFinancialData(prevData => ({
         ...prevData,
         totalBalance: summaryResponse.data.totalBalance || 0,
         netSavings: summaryResponse.data.netSavings || 0
       }));
+      setChartRefreshKey(prevKey => prevKey + 1); // Trigger chart refresh
     } catch (error) {
       console.error("Error updating balance:", error);
     }
@@ -554,7 +562,7 @@ export default function Dashboard() {
         type: transaction.category.type
       } : null
     };
-    
+
     setSelectedTransaction(transactionToEdit);
     updateDialogState('editTransactionOpen', true);
   };
@@ -567,21 +575,22 @@ export default function Dashboard() {
   const handleDeleteConfirm = async () => {
     try {
       await FinanceService.deleteTransaction(selectedTransaction.id);
-      
+
       // Update all affected transaction lists
       const filterPredicate = t => t.id !== selectedTransaction.id;
       setAllTransactions(prev => prev.filter(filterPredicate));
       setFilteredTransactions(prev => prev.filter(filterPredicate));
-      
+
       setTransactions(prev => {
         const updated = prev.filter(filterPredicate);
         return updated.length < 8 ? allTransactions.filter(filterPredicate).slice(0, 8) : updated;
       });
-      
+
       // Update financial data
       updateFinancialSummary();
       updateWallets();
-      
+      setChartRefreshKey(prevKey => prevKey + 1); // Trigger chart refresh
+
       // Reset state and show confirmation
       setSelectedTransaction(null);
       updateDialogState('deleteConfirmOpen', false);
@@ -595,7 +604,7 @@ export default function Dashboard() {
   const updateFinancialSummary = async () => {
     try {
       const summaryResponse = await FinanceService.getFinancialSummary();
-      
+
       setFinancialData({
         totalBalance: summaryResponse.data.totalBalance || 0,
         totalIncome: summaryResponse.data.totalIncome || 0,
@@ -608,18 +617,19 @@ export default function Dashboard() {
   };
 
   const handleProfileUpdated = () => fetchUserProfile();
-  
+
   const handleCategoryUpdated = async () => {
     toast.success('Categories updated successfully!');
     await fetchCategories();
     await fetchTransactions();
+    setChartRefreshKey(prevKey => prevKey + 1); // Trigger chart refresh
   };
 
   // Handle transaction filter application
   const handleApplyFilters = async (filterParams) => {
     try {
       setFilterLoading(true);
-      
+
       // Check if client-filtered data was provided directly
       if (filterParams.clientFiltered) {
         // If we have client-filtered data, use it directly
@@ -629,14 +639,14 @@ export default function Dashboard() {
         setFilterLoading(false);
         return;
       }
-      
+
       // Otherwise, make API call for server filtering
       const response = await FinanceService.getFilteredTransactions(filterParams);
       const processedTransactions = processTransactions(response.data || []);
-      
+
       setFilteredTransactions(processedTransactions);
       setTransactions(processedTransactions.slice(0, 8));
-      
+
       // Return the processed transactions for potential client-side filtering
       return processedTransactions;
     } catch (error) {
@@ -650,16 +660,17 @@ export default function Dashboard() {
   // New function to handle time range changes
   const handleTimeRangeChange = async (newTimeRange) => {
     if (newTimeRange === timeRange) return;
-    
+
     setTimeRangeLoading(true);
     setTimeRange(newTimeRange);
-    
+
     try {
       // Fetch financial data with the new time range
       await fetchFinancialDataByTimeRange(newTimeRange);
+      // Chart refresh is handled by its internal useEffect watching startDate/endDate
     } catch (error) {
       console.error('Error fetching data for time range:', error);
-      
+
       // Show error toast
       toast.error('Failed to load data for the selected time range', {
         position: "top-right",
@@ -669,13 +680,13 @@ export default function Dashboard() {
       setTimeRangeLoading(false);
     }
   };
-  
+
   // New function to fetch financial data by time range
   const fetchFinancialDataByTimeRange = async (selectedTimeRange) => {
     try {
       // Get financial summary by date range for the selected time range
       const summaryResponse = await FinanceService.getFinancialSummaryByDateRange(selectedTimeRange);
-      
+
       // For time-filtered data, we need to preserve the total balance from the original data
       // as the chart data endpoint doesn't include balance information
       setFinancialData((prevData) => ({
@@ -694,11 +705,11 @@ export default function Dashboard() {
   // Loading state
   if (loading) {
     return (
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh' 
+      <Box sx={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh'
       }}>
         <CircularProgress />
       </Box>
@@ -710,11 +721,11 @@ export default function Dashboard() {
       <Box sx={{ display: 'flex' }}>
         <CssBaseline />
         <AppNavbar open={open} handleDrawerOpen={handleDrawerOpen} />
-        <SideMenu 
-          open={open} 
-          handleDrawerClose={handleDrawerClose} 
+        <SideMenu
+          open={open}
+          handleDrawerClose={handleDrawerClose}
           setProfileDialogOpen={() => updateDialogState('profileDialog', true)}
-          setCategoryManageFormOpen={() => updateDialogState('categoryManageForm', true)} 
+          setCategoryManageFormOpen={() => updateDialogState('categoryManageForm', true)}
         />
         <PendingDeletionAlert />
         <Main open={open}>
@@ -724,16 +735,16 @@ export default function Dashboard() {
                 <Grid container spacing={2.4}>
                   {/* Welcome Section */}
                   <Grid item xs={12}>
-                    <WelcomeSection 
-                      userProfile={userProfile} 
-                      user={user} 
-                      openFinanceActionPanel={() => updateDialogState('financeActionPanel', true)} 
+                    <WelcomeSection
+                      userProfile={userProfile}
+                      user={user}
+                      openFinanceActionPanel={() => updateDialogState('financeActionPanel', true)}
                     />
                   </Grid>
                 </Grid>
-                
+
                 {/* Summary Cards */}
-                <SummaryCards 
+                <SummaryCards
                   financialData={financialData}
                   loading={loading || timeRangeLoading}
                   handleEditBalance={() => updateDialogState('editBalanceForm', true)}
@@ -743,28 +754,28 @@ export default function Dashboard() {
                   onTimeRangeChange={handleTimeRangeChange}
                   timeRangeLoading={timeRangeLoading}
                 />
-                
+
                 <Grid container spacing={2.4} sx={{ mt: 1.2 }}>
                   {/* Wallet Overview and Chart Side by Side */}
                   <Grid item xs={12}>
                     <Grid container spacing={2.4}>
                       {/* Wallet Overview */}
                       <Grid item xs={12} md={6}>
-                        <WalletOverview 
-                        onManageWallets={() => updateDialogState('walletManageForm', true)} 
+                        <WalletOverview
+                        onManageWallets={() => updateDialogState('walletManageForm', true)}
                           externalWallets={wallets}
                         />
                       </Grid>
-                      
-                      {/* Financial Chart */}
+
+                      {/* Financial Chart - Pass refreshKey */}
                       <Grid item xs={12} md={6}>
-                        <FinanceChart />
+                        <FinanceChart refreshKey={chartRefreshKey} />
                       </Grid>
                     </Grid>
                   </Grid>
-                  
+
                 {/* Transactions Section */}
-                <TransactionsSection 
+                <TransactionsSection
                   transactions={transactions}
                   allTransactions={allTransactions}
                   filteredTransactions={filteredTransactions}
@@ -787,9 +798,9 @@ export default function Dashboard() {
           </Container>
         </Main>
       </Box>
-      
+
       {/* All dialogs and forms managed in DialogManager */}
-      <DialogManager 
+      <DialogManager
         dialogStates={dialogStates}
         updateDialogState={updateDialogState}
         userProfile={userProfile}
@@ -805,7 +816,7 @@ export default function Dashboard() {
         handleDeleteConfirm={handleDeleteConfirm}
         setSelectedTransaction={setSelectedTransaction}
         setSelectedWallet={setSelectedWallet}
-        fetchFinancialData={fetchFinancialData}
+        fetchFinancialData={fetchFinancialData} // Pass fetchFinancialData if needed by DialogManager
       />
     </AppTheme>
   );
