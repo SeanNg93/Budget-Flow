@@ -3,6 +3,7 @@ import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
 import { register } from '../../config/axiosInstance';
+import { useTranslation } from 'react-i18next';
 import styles from '../../styles/auth.module.css';
 import emailjs from '../../config/emailjs';
 import { EMAILJS_CONFIG } from '../../config/emailjs.config';
@@ -29,26 +30,8 @@ import {
 } from '@mui/material';
 import { Visibility, VisibilityOff, Person, Email, Lock, CheckCircle, Error } from '@mui/icons-material';
 
-// Validation schema
-const RegisterSchema = Yup.object().shape({
-  username: Yup.string()
-    .min(3, 'Username must be at least 3 characters')
-    .max(20, 'Username must be less than 20 characters')
-    .required('Username is required'),
-  email: Yup.string()
-    .email('Invalid email address')
-    .required('Email is required'),
-  password: Yup.string()
-    .min(6, 'Password must be at least 6 characters')
-    .required('Password is required'),
-  confirmPassword: Yup.string()
-    .oneOf([Yup.ref('password'), null], 'Passwords must match')
-    .required('Confirm password is required'),
-  terms: Yup.boolean()
-    .oneOf([true], 'You must accept the terms and conditions')
-});
-
 const Register = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -60,6 +43,25 @@ const Register = () => {
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [emailStatus, setEmailStatus] = useState(null); // null, 'available', 'taken'
   const [emailTimeout, setEmailTimeout] = useState(null);
+
+  // Validation schema
+  const RegisterSchema = Yup.object().shape({
+    username: Yup.string()
+      .min(3, t('auth.errors.usernameMin', 'Username must be at least 3 characters'))
+      .max(20, t('auth.errors.usernameMax', 'Username must be less than 20 characters'))
+      .required(t('auth.errors.usernameRequired', 'Username is required')),
+    email: Yup.string()
+      .email(t('auth.errors.emailInvalid', 'Invalid email address'))
+      .required(t('auth.errors.emailRequired', 'Email is required')),
+    password: Yup.string()
+      .min(6, t('auth.errors.passwordMin', 'Password must be at least 6 characters'))
+      .required(t('auth.errors.passwordRequired', 'Password is required')),
+    confirmPassword: Yup.string()
+      .oneOf([Yup.ref('password'), null], t('auth.errors.passwordMatch', 'Passwords must match'))
+      .required(t('auth.errors.confirmPasswordRequired', 'Confirm password is required')),
+    terms: Yup.boolean()
+      .oneOf([true], t('auth.errors.termsRequired', 'You must accept the terms and conditions'))
+  });
 
   const handleClickShowPassword = () => {
     setShowPassword(!showPassword);
@@ -181,14 +183,14 @@ const Register = () => {
 
     // If username is taken, prevent submission
     if (usernameStatus === 'taken') {
-      setError('Username is already taken. Please choose a different username.');
+      setError(t('auth.errors.usernameTaken', 'Username is already taken. Please choose a different username.'));
       setSubmitting(false);
       return;
     }
     
     // If email is taken, prevent submission
     if (emailStatus === 'taken') {
-      setError('Email address is already registered. Please use a different email or try to login.');
+      setError(t('auth.errors.emailTaken', 'Email address is already registered. Please use a different email or try to login.'));
       setSubmitting(false);
       return;
     }
@@ -212,19 +214,19 @@ const Register = () => {
                 activation_link: response.data.activationLink
               }
             );
-            setSuccess('Registration successful! We have sent an activation link to your email. Please check your inbox and spam folder.');
+            setSuccess(t('auth.activationEmailSent', 'Registration successful! We have sent an activation link to your email. Please check your inbox and spam folder.'));
           } catch (emailError) {
             console.error('Failed to send activation email:', emailError);
             // Redirect to login page if email fails
-            navigate('/login', { state: { message: 'Registration successful! Please check your email for activation instructions.' } });
+            navigate('/login', { state: { message: t('auth.checkEmailForActivation', 'Registration successful! Please check your email for activation instructions.') } });
           }
         } else {
           // No activation link in response
-          setSuccess('Registration successful! Please check your email for activation instructions or contact support.');
+          setSuccess(t('auth.registrationSuccessNoLink', 'Registration successful! Please check your email for activation instructions or contact support.'));
         }
       } else {
         // Redirect to login page with success message if no specific success data
-        navigate('/login', { state: { message: 'Registration successful! Please login.' } });
+        navigate('/login', { state: { message: t('auth.registrationSuccessGeneral', 'Registration successful! Please login.') } });
       }
     } catch (error) {
       console.error('Registration error:', error);
@@ -233,25 +235,25 @@ const Register = () => {
       if (error.response && error.response.data) {
         // Check specifically for username already exists error
         if (error.response.data.message && error.response.data.message.includes('Username already exists')) {
-          setError('Username is already taken. Please choose a different username.');
+          setError(t('auth.errors.usernameTaken', 'Username is already taken. Please choose a different username.'));
           setUsernameStatus('taken');
         }
         // Check for email already exists error
         else if (error.response.data.message && error.response.data.message.includes('Email already exists')) {
-          setError('Email address is already registered. Please use a different email or try to login.');
+          setError(t('auth.errors.emailTaken', 'Email address is already registered. Please use a different email or try to login.'));
         }
         // Use the message directly if available
         else if (error.response.data.message) {
           setError(error.response.data.message);
         } else {
-          setError('Registration failed');
+          setError(t('auth.errors.registrationFailed', 'Registration failed'));
         }
       } else if (error.request) {
         // The request was made but no response was received
-        setError('No response from server. Please try again later.');
+        setError(t('auth.errors.noResponse', 'No response from server. Please try again later.'));
       } else {
         // Something happened in setting up the request that triggered an Error
-        setError(error.message || 'An unexpected error occurred');
+        setError(error.message || t('auth.errors.unexpected', 'An unexpected error occurred'));
       }
     } finally {
       setSubmitting(false);
@@ -264,298 +266,277 @@ const Register = () => {
         <Paper elevation={3} className={styles.authCard}>
           <Box className={styles.logoContainer}>
             <div className={styles.logoBackground}>
-              <img src="/Dollarnote_siegel_hq.jpg" alt="Budget Flow Logo" className={styles.logo} />
+              <img src="/Dollarnote_siegel_hq.jpg" alt={t('common.appName')} className={styles.logo} />
             </div>
           </Box>
           
           <Typography variant="h4" component="h1" className={styles.appTitle}>
-            BUDGET FLOW
+            {t('common.appName', 'BUDGET FLOW')}
           </Typography>
           
           <Typography variant="body2" className={styles.appTagline}>
-            Illuminate Your Financial Future
+            {t('auth.appTagline', 'Illuminate Your Financial Future')}
           </Typography>
 
           <AuthError message={error} visible={!!error} />
-
           <AuthSuccess message={success} visible={!!success} />
 
-          {!success && (
-            <Formik
-              initialValues={{
-                username: '',
-                email: '',
-                password: '',
-                confirmPassword: '',
-                terms: false
-              }}
-              validationSchema={RegisterSchema}
-              onSubmit={handleSubmit}
-            >
-              {({ errors, touched, isSubmitting, handleSubmit: formikSubmit, handleChange }) => (
-                <Form>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 1.5 }}>
-                    <FormControl className={styles.formField}>
-                      <FormLabel htmlFor="username" className={styles.formLabel}>Username</FormLabel>
-                      <Field name="username">
-                        {({ field, meta }) => (
-                          <TextField
-                            {...field}
-                            onChange={(e) => handleUsernameChange(e, field.onChange)}
-                            id="username"
-                            placeholder="Type your username"
-                            autoComplete="username"
-                            autoFocus
-                            fullWidth
-                            variant="outlined"
-                            size="small"
-                            className={styles.inputField}
-                            error={meta.touched && (Boolean(meta.error) || usernameStatus === 'taken')}
-                            helperText={
-                              meta.touched ? (
-                                usernameStatus === 'available' ? (
-                                  <Typography component="span" sx={{ color: 'green', display: 'flex', alignItems: 'center', fontSize: '0.75rem' }}>
-                                    <CheckCircle fontSize="small" sx={{ mr: 0.5, fontSize: '0.9rem' }} />
-                                    Username available
-                                  </Typography>
-                                ) : usernameStatus === 'taken' ? (
-                                  <Typography component="span" sx={{ color: 'error.main', display: 'flex', alignItems: 'center', fontSize: '0.75rem' }}>
-                                    <Error fontSize="small" sx={{ mr: 0.5, fontSize: '0.9rem' }} />
-                                    Username already taken
-                                  </Typography>
-                                ) : meta.error
-                              ) : null
-                            }
-                            InputProps={{
-                              startAdornment: (
-                                <InputAdornment position="start">
-                                  <Person fontSize="small" sx={{ color: '#888' }} />
-                                </InputAdornment>
-                              ),
-                              endAdornment: (
-                                <InputAdornment position="end">
-                                  {isCheckingUsername && (
-                                    <CircularProgress size={16} />
-                                  )}
-                                  {!isCheckingUsername && usernameStatus === 'available' && (
-                                    <CheckCircle fontSize="small" sx={{ color: 'green' }} />
-                                  )}
-                                  {!isCheckingUsername && usernameStatus === 'taken' && (
-                                    <Error fontSize="small" color="error" />
-                                  )}
-                                </InputAdornment>
-                              ),
-                            }}
-                          />
-                        )}
-                      </Field>
-                    </FormControl>
-
-                    <FormControl className={styles.formField}>
-                      <FormLabel htmlFor="email" className={styles.formLabel}>Email</FormLabel>
-                      <Field name="email">
-                        {({ field, meta }) => (
-                          <TextField
-                            {...field}
-                            onChange={(e) => handleEmailChange(e, field.onChange)}
-                            id="email"
-                            placeholder="Type your email"
-                            autoComplete="email"
-                            fullWidth
-                            variant="outlined"
-                            size="small"
-                            className={styles.inputField}
-                            error={meta.touched && (Boolean(meta.error) || emailStatus === 'taken')}
-                            helperText={
-                              meta.touched ? (
-                                emailStatus === 'available' ? (
-                                  <Typography component="span" sx={{ color: 'green', display: 'flex', alignItems: 'center', fontSize: '0.75rem' }}>
-                                    <CheckCircle fontSize="small" sx={{ mr: 0.5, fontSize: '0.9rem' }} />
-                                    Email available
-                                  </Typography>
-                                ) : emailStatus === 'taken' ? (
-                                  <Typography component="span" sx={{ color: 'error.main', display: 'flex', alignItems: 'center', fontSize: '0.75rem' }}>
-                                    <Error fontSize="small" sx={{ mr: 0.5, fontSize: '0.9rem' }} />
-                                    Email already registered
-                                  </Typography>
-                                ) : meta.error
-                              ) : null
-                            }
-                            InputProps={{
-                              startAdornment: (
-                                <InputAdornment position="start">
-                                  <Email fontSize="small" sx={{ color: '#888' }} />
-                                </InputAdornment>
-                              ),
-                              endAdornment: (
-                                <InputAdornment position="end">
-                                  {isCheckingEmail && (
-                                    <CircularProgress size={16} />
-                                  )}
-                                  {!isCheckingEmail && emailStatus === 'available' && (
-                                    <CheckCircle fontSize="small" sx={{ color: 'green' }} />
-                                  )}
-                                  {!isCheckingEmail && emailStatus === 'taken' && (
-                                    <Error fontSize="small" color="error" />
-                                  )}
-                                </InputAdornment>
-                              ),
-                            }}
-                          />
-                        )}
-                      </Field>
-                    </FormControl>
-
-                    <FormControl className={styles.formField}>
-                      <FormLabel htmlFor="password" className={styles.formLabel}>Password</FormLabel>
-                      <Field name="password">
-                        {({ field, meta }) => (
-                          <TextField
-                            {...field}
-                            id="password"
-                            placeholder="Type your password"
-                            type={showPassword ? 'text' : 'password'}
-                            autoComplete="new-password"
-                            fullWidth
-                            variant="outlined"
-                            size="small"
-                            className={styles.inputField}
-                            error={meta.touched && Boolean(meta.error)}
-                            helperText={meta.touched && meta.error}
-                            InputProps={{
-                              startAdornment: (
-                                <InputAdornment position="start">
-                                  <Lock fontSize="small" sx={{ color: '#888' }} />
-                                </InputAdornment>
-                              ),
-                              endAdornment: (
-                                <InputAdornment position="end">
-                                  <IconButton
-                                    aria-label="toggle password visibility"
-                                    onClick={handleClickShowPassword}
-                                    onMouseDown={handleMouseDownPassword}
-                                    edge="end"
-                                    size="small"
-                                  >
-                                    {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
-                                  </IconButton>
-                                </InputAdornment>
-                              ),
-                            }}
-                          />
-                        )}
-                      </Field>
-                    </FormControl>
-
-                    <FormControl className={styles.formField}>
-                      <FormLabel htmlFor="confirmPassword" className={styles.formLabel}>Confirm Password</FormLabel>
-                      <Field name="confirmPassword">
-                        {({ field, meta }) => (
-                          <TextField
-                            {...field}
-                            id="confirmPassword"
-                            placeholder="Confirm your password"
-                            type={showConfirmPassword ? 'text' : 'password'}
-                            autoComplete="new-password"
-                            fullWidth
-                            variant="outlined"
-                            size="small"
-                            className={styles.inputField}
-                            error={meta.touched && Boolean(meta.error)}
-                            helperText={meta.touched && meta.error}
-                            InputProps={{
-                              startAdornment: (
-                                <InputAdornment position="start">
-                                  <Lock fontSize="small" sx={{ color: '#888' }} />
-                                </InputAdornment>
-                              ),
-                              endAdornment: (
-                                <InputAdornment position="end">
-                                  <IconButton
-                                    aria-label="toggle password visibility"
-                                    onClick={handleClickShowConfirmPassword}
-                                    onMouseDown={handleMouseDownPassword}
-                                    edge="end"
-                                    size="small"
-                                  >
-                                    {showConfirmPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
-                                  </IconButton>
-                                </InputAdornment>
-                              ),
-                            }}
-                          />
-                        )}
-                      </Field>
-                    </FormControl>
-
-                    <FormControl className={styles.formField}>
-                      <Field name="terms">
-                        {({ field, meta }) => (
-                          <FormControlLabel
-                            control={
-                              <Checkbox
-                                {...field}
-                                size="small"
-                                color="primary"
-                              />
-                            }
-                            label={
-                              <Typography variant="body2" sx={{ fontSize: '0.85rem' }}>
-                                I agree to the{' '}
-                                <Link component={RouterLink} to="/terms" className={styles.authLink}>
-                                  Terms and Conditions
-                                </Link>
-                              </Typography>
-                            }
-                            className={styles.checkboxLabel}
-                          />
-                        )}
-                      </Field>
-                      {errors.terms && touched.terms && (
-                        <Typography color="error" variant="caption" sx={{ mt: 0.5 }}>
-                          {errors.terms}
-                        </Typography>
+          <Formik
+            initialValues={{
+              username: '',
+              email: '',
+              password: '',
+              confirmPassword: '',
+              terms: false
+            }}
+            validationSchema={RegisterSchema}
+            onSubmit={handleSubmit}
+          >
+            {({ errors, touched, values, isSubmitting, handleChange: formikHandleChange }) => (
+              <Form>
+                <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 1.5 }}>
+                  {/* Username field */}
+                  <FormControl className={styles.formField}>
+                    <FormLabel htmlFor="username" className={styles.formLabel}>
+                      {t('auth.username', 'Username')}
+                    </FormLabel>
+                    <Field name="username">
+                      {({ field, meta, form }) => (
+                        <TextField
+                          {...field}
+                          id="username"
+                          placeholder={t('auth.placeholders.username', 'Choose a username')}
+                          autoComplete="username"
+                          autoFocus
+                          fullWidth
+                          variant="outlined"
+                          size="small"
+                          className={styles.inputField}
+                          error={meta.touched && (Boolean(meta.error) || usernameStatus === 'taken')}
+                          helperText={
+                            meta.touched && meta.error ? meta.error :
+                            usernameStatus === 'taken' ? t('auth.errors.usernameTaken', 'Username is already taken') :
+                            usernameStatus === 'available' ? t('auth.usernameAvailable', 'Username is available') : ''
+                          }
+                          onChange={(e) => handleUsernameChange(e, field.onChange)}
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <Person fontSize="small" sx={{ color: '#888' }} />
+                              </InputAdornment>
+                            ),
+                            endAdornment: (
+                              <InputAdornment position="end">
+                                {isCheckingUsername && <CircularProgress size={16} />}
+                                {!isCheckingUsername && usernameStatus === 'available' && (
+                                  <CheckCircle fontSize="small" sx={{ color: 'success.main' }} />
+                                )}
+                                {!isCheckingUsername && usernameStatus === 'taken' && (
+                                  <Error fontSize="small" sx={{ color: 'error.main' }} />
+                                )}
+                              </InputAdornment>
+                            ),
+                          }}
+                        />
                       )}
-                    </FormControl>
+                    </Field>
+                  </FormControl>
 
-                    <Button
-                      type="submit"
-                      fullWidth
-                      variant="contained"
-                      disabled={isSubmitting}
-                      className={styles.submitButton}
-                      onClick={() => {
-                        formikSubmit();
-                      }}
-                    >
-                      {isSubmitting ? 'Creating Account...' : 'SIGN UP'}
-                    </Button>
-                  </Box>
-                </Form>
-              )}
-            </Formik>
-          )}
+                  {/* Email field */}
+                  <FormControl className={styles.formField}>
+                    <FormLabel htmlFor="email" className={styles.formLabel}>
+                      {t('auth.email', 'Email')}
+                    </FormLabel>
+                    <Field name="email">
+                      {({ field, meta }) => (
+                        <TextField
+                          {...field}
+                          id="email"
+                          placeholder={t('auth.placeholders.email', 'Enter your email address')}
+                          autoComplete="email"
+                          fullWidth
+                          variant="outlined"
+                          size="small"
+                          className={styles.inputField}
+                          error={meta.touched && (Boolean(meta.error) || emailStatus === 'taken')}
+                          helperText={
+                            meta.touched && meta.error ? meta.error :
+                            emailStatus === 'taken' ? t('auth.errors.emailTaken', 'Email address is already registered') :
+                            emailStatus === 'available' ? t('auth.emailAvailable', 'Email is available') : ''
+                          }
+                          onChange={(e) => handleEmailChange(e, field.onChange)}
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <Email fontSize="small" sx={{ color: '#888' }} />
+                              </InputAdornment>
+                            ),
+                            endAdornment: (
+                              <InputAdornment position="end">
+                                {isCheckingEmail && <CircularProgress size={16} />}
+                                {!isCheckingEmail && emailStatus === 'available' && (
+                                  <CheckCircle fontSize="small" sx={{ color: 'success.main' }} />
+                                )}
+                                {!isCheckingEmail && emailStatus === 'taken' && (
+                                  <Error fontSize="small" sx={{ color: 'error.main' }} />
+                                )}
+                              </InputAdornment>
+                            ),
+                          }}
+                        />
+                      )}
+                    </Field>
+                  </FormControl>
 
-          {success && (
-            <Button
-              component={RouterLink}
-              to="/login"
-              fullWidth
-              variant="contained"
-              className={styles.gradientButton}
-            >
-              Go to Login
-            </Button>
-          )}
+                  {/* Password field */}
+                  <FormControl className={styles.formField}>
+                    <FormLabel htmlFor="password" className={styles.formLabel}>
+                      {t('auth.password', 'Password')}
+                    </FormLabel>
+                    <Field name="password">
+                      {({ field, meta }) => (
+                        <TextField
+                          {...field}
+                          id="password"
+                          placeholder={t('auth.placeholders.password', 'Create a password')}
+                          type={showPassword ? 'text' : 'password'}
+                          autoComplete="new-password"
+                          fullWidth
+                          variant="outlined"
+                          size="small"
+                          className={styles.inputField}
+                          error={meta.touched && Boolean(meta.error)}
+                          helperText={meta.touched && meta.error}
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <Lock fontSize="small" sx={{ color: '#888' }} />
+                              </InputAdornment>
+                            ),
+                            endAdornment: (
+                              <InputAdornment position="end">
+                                <IconButton
+                                  aria-label="toggle password visibility"
+                                  onClick={handleClickShowPassword}
+                                  onMouseDown={handleMouseDownPassword}
+                                  edge="end"
+                                  size="small"
+                                >
+                                  {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                                </IconButton>
+                              </InputAdornment>
+                            ),
+                          }}
+                        />
+                      )}
+                    </Field>
+                  </FormControl>
+
+                  {/* Confirm Password field */}
+                  <FormControl className={styles.formField}>
+                    <FormLabel htmlFor="confirmPassword" className={styles.formLabel}>
+                      {t('auth.confirmPassword', 'Confirm Password')}
+                    </FormLabel>
+                    <Field name="confirmPassword">
+                      {({ field, meta }) => (
+                        <TextField
+                          {...field}
+                          id="confirmPassword"
+                          placeholder={t('auth.placeholders.confirmPassword', 'Confirm your password')}
+                          type={showConfirmPassword ? 'text' : 'password'}
+                          autoComplete="new-password"
+                          fullWidth
+                          variant="outlined"
+                          size="small"
+                          className={styles.inputField}
+                          error={meta.touched && Boolean(meta.error)}
+                          helperText={meta.touched && meta.error}
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <Lock fontSize="small" sx={{ color: '#888' }} />
+                              </InputAdornment>
+                            ),
+                            endAdornment: (
+                              <InputAdornment position="end">
+                                <IconButton
+                                  aria-label="toggle confirm password visibility"
+                                  onClick={handleClickShowConfirmPassword}
+                                  onMouseDown={handleMouseDownPassword}
+                                  edge="end"
+                                  size="small"
+                                >
+                                  {showConfirmPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                                </IconButton>
+                              </InputAdornment>
+                            ),
+                          }}
+                        />
+                      )}
+                    </Field>
+                  </FormControl>
+
+                  {/* Terms & Conditions checkbox */}
+                  <FormControl className={styles.formField}>
+                    <Field name="terms">
+                      {({ field, meta }) => (
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              {...field}
+                              size="small"
+                              color="primary"
+                              checked={field.value}
+                            />
+                          }
+                          label={
+                            <Typography variant="body2" sx={{ fontSize: '0.85rem' }}>
+                              {t('auth.agreeToTerms', 'I agree to the')} {' '}
+                              <Link href="#" underline="hover" className={styles.termsLink}>
+                                {t('auth.termsAndConditions', 'Terms and Conditions')}
+                              </Link>
+                            </Typography>
+                          }
+                          className={styles.termsCheckbox}
+                        />
+                      )}
+                    </Field>
+                    {errors.terms && touched.terms && (
+                      <Typography variant="caption" color="error">
+                        {errors.terms}
+                      </Typography>
+                    )}
+                  </FormControl>
+
+                  <Button
+                    type="submit"
+                    fullWidth
+                    variant="contained"
+                    disabled={isSubmitting}
+                    className={styles.submitButton}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <CircularProgress size={20} sx={{ mr: 1 }} />
+                        {t('auth.registering', 'Registering...')}
+                      </>
+                    ) : (
+                      t('auth.register', 'REGISTER')
+                    )}
+                  </Button>
+                </Box>
+              </Form>
+            )}
+          </Formik>
 
           <Typography sx={{ textAlign: 'center', mt: 2, fontSize: '0.85rem' }}>
-            Already have an account?{' '}
+            {t('auth.alreadyHaveAccount', 'Already have an account?')}{' '}
             <Link
               component={RouterLink}
               to="/login"
               className={styles.authLink}
             >
-              Sign in
+              {t('auth.login', 'Login')}
             </Link>
           </Typography>
         </Paper>

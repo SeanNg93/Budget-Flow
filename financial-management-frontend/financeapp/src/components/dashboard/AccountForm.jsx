@@ -26,7 +26,7 @@ const WalletForm = ({ open, handleClose, onAccountAdded, embedded = false }) => 
     accountName: '',
     accountType: 'Checking',
     balance: '',
-    currency: 'USD'  // Keeping this in the state but not showing in UI
+    currency: 'USD'  
   });
   const [errors, setErrors] = useState({});
   const [error, setError] = useState('');

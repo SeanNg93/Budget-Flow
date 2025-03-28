@@ -6,6 +6,7 @@ import {
   AccountBalance as SavingsIcon 
 } from '@mui/icons-material';
 import styles from '../../styles/transactions.module.css';
+import { useTranslation } from 'react-i18next';
 
 /**
  * TransactionSummaryCards component displays financial summary metrics 
@@ -18,6 +19,8 @@ const TransactionSummaryCards = ({
   formatCurrency,
   currency = 'USD' 
 }) => {
+  const { t } = useTranslation();
+
   // Helper to determine if a value is positive, negative, or zero
   const getAmountClass = (amount) => {
     if (amount > 0) return styles.positiveAmount;
@@ -36,7 +39,7 @@ const TransactionSummaryCards = ({
             </Box>
             <Box className={styles.cardTextContent}>
               <Typography variant="body2" className={styles.cardLabel}>
-                Total Expense
+                {t('transaction.expense', 'Total Expense')}
               </Typography>
               <Typography 
                 variant="h5" 
@@ -58,7 +61,7 @@ const TransactionSummaryCards = ({
             </Box>
             <Box className={styles.cardTextContent}>
               <Typography variant="body2" className={styles.cardLabel}>
-                Total Income
+                {t('transaction.income', 'Total Income')}
               </Typography>
               <Typography 
                 variant="h5" 
@@ -80,7 +83,7 @@ const TransactionSummaryCards = ({
             </Box>
             <Box className={styles.cardTextContent}>
               <Typography variant="body2" className={styles.cardLabel}>
-                Net Savings
+                {t('wallet.netSavings', 'Net Savings')}
               </Typography>
               <Typography 
                 variant="h5" 

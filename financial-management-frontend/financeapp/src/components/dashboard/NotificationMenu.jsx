@@ -37,8 +37,10 @@ import styles from '../../styles/notificationMenu.module.css';
 import clsx from 'clsx';
 // Import our new notification service
 import { useNotifications } from '../../services/NotificationService';
+import { useTranslation } from 'react-i18next';
 
 const NotificationMenu = () => {
+  const { t } = useTranslation();
   // Local state for UI elements
   const [anchorEl, setAnchorEl] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -184,7 +186,7 @@ const NotificationMenu = () => {
   return (
     <>
       <IconButton 
-        aria-label={`${unreadCount} unread notifications`}
+        aria-label={`${unreadCount} ${t('notifications.unread', 'unread notifications')}`}
         color="inherit" 
         onClick={handleMenuOpen}
         size="large"
@@ -230,7 +232,7 @@ const NotificationMenu = () => {
         <Box className={styles.headerContainer}>
           <Box className={styles.titleContainer}>
             <Typography variant="h6" className={styles.title}>
-              Notifications
+              {t('common.notifications', 'Notifications')}
             </Typography>
             {unreadCount > 0 && (
               <Box 
@@ -248,104 +250,90 @@ const NotificationMenu = () => {
                 size="small" 
                 startIcon={<MarkReadIcon fontSize="small" />}
                 onClick={handleMarkAllAsRead}
-                className={styles.markAllReadButton}
+                className={styles.actionButton}
               >
-                Mark all read
+                {t('notifications.markAllRead', 'Mark all as read')}
               </Button>
-            ) : (notifications.length > 0 && !loading) && (
+            ) : notifications.length > 0 ? (
               <Button 
                 size="small" 
                 startIcon={<DeleteIcon fontSize="small" />}
                 onClick={handleClearNotifications}
-                className={styles.clearButton}
+                className={styles.actionButton}
               >
-                Clear all
+                {t('notifications.clearAll', 'Clear all')}
               </Button>
-            )}
+            ) : null}
           </Box>
         </Box>
+        
+        <Divider />
         
         {loading ? (
           <Box className={styles.loadingContainer}>
             <CircularProgress size={24} />
+            <Typography variant="body2">
+              {t('notifications.loading', 'Loading notifications...')}
+            </Typography>
           </Box>
         ) : notifications.length === 0 ? (
-          <Box className={styles.emptyNotification}>
-            <Typography variant="body2">
-              No notifications yet
+          <Box className={styles.emptyContainer}>
+            <Typography variant="body2" align="center">
+              {t('notifications.noNotifications', 'No notifications to display')}
             </Typography>
           </Box>
         ) : (
-          <List className={styles.notificationList}>
+          <List dense className={styles.list}>
             {notifications.map((notification) => (
               <ListItem
                 key={notification.id}
-                className={clsx(
-                  styles.notificationItem,
-                  !notification.read && styles.notificationItemUnread
-                )}
+                className={clsx(styles.listItem, {
+                  [styles.unread]: !notification.read
+                })}
+                disableGutters
               >
-                <ListItemIcon className={styles.itemIcon}>
+                <ListItemIcon className={styles.listItemIcon}>
                   {getNotificationIcon(notification.type)}
                 </ListItemIcon>
                 <ListItemText
                   primary={notification.message}
-                  secondaryTypographyProps={{ component: 'div' }}
-                  secondary={
-                    <>
-                      <Box className={styles.metaContainer}>
-                        <Typography component="span" variant="caption" color="text.secondary">
-                          {formatDate(notification.createdAt)}
-                        </Typography>
-                        {notification.read && (
-                          <Typography 
-                            component="span" 
-                            variant="caption" 
-                            color="success.main" 
-                            className={styles.readStatus}
-                          >
-                            <ReadIcon fontSize="inherit" className={styles.readIcon} />
-                            Read
-                          </Typography>
-                        )}
-                      </Box>
-                      
-                      {/* Render action buttons for wallet notifications */}
-                      {isAcceptableWalletNotification(notification) && (
-                        <Box className={styles.notificationActions}>
-                          <Button
-                            size="small"
-                            variant="contained"
-                            color="success"
-                            startIcon={acceptingWallet === notification.id ? null : <AcceptIcon fontSize="small" />}
-                            onClick={() => handleAcceptSharedWallet(notification)}
-                            disabled={acceptingWallet === notification.id}
-                            className={styles.acceptButton}
-                          >
-                            {acceptingWallet === notification.id ? (
-                              <CircularProgress size={16} color="inherit" />
-                            ) : (
-                              'Accept'
-                            )}
-                          </Button>
-                          <Button
-                            size="small"
-                            variant="text"
-                            onClick={() => handleMarkAsRead(notification.id)}
-                            className={styles.dismissButton}
-                          >
-                            Dismiss
-                          </Button>
-                        </Box>
-                      )}
-                    </>
-                  }
-                  primaryTypographyProps={{
-                    style: { fontWeight: notification.read ? 'normal' : 'bold' }
-                  }}
-                  onClick={() => !notification.read && !isAcceptableWalletNotification(notification) && handleMarkAsRead(notification.id)}
-                  className={!notification.read && !isAcceptableWalletNotification(notification) ? styles.clickableNotification : ''}
+                  secondary={formatDate(notification.createdAt)}
+                  className={styles.listItemText}
                 />
+                <Box className={styles.notificationActions}>
+                  {isAcceptableWalletNotification(notification) && (
+                    <Tooltip title={t('notifications.acceptWallet', 'Accept shared wallet')}>
+                      <IconButton
+                        size="small"
+                        edge="end"
+                        aria-label={t('notifications.acceptWallet', 'Accept shared wallet')}
+                        onClick={() => handleAcceptSharedWallet(notification)}
+                        disabled={acceptingWallet === notification.id}
+                        className={styles.acceptButton}
+                      >
+                        {acceptingWallet === notification.id ? (
+                          <CircularProgress size={16} />
+                        ) : (
+                          <AcceptIcon fontSize="small" />
+                        )}
+                      </IconButton>
+                    </Tooltip>
+                  )}
+                  
+                  {!notification.read && (
+                    <Tooltip title={t('notifications.markRead', 'Mark as read')}>
+                      <IconButton
+                        size="small"
+                        edge="end"
+                        aria-label={t('notifications.markRead', 'Mark as read')}
+                        onClick={() => handleMarkAsRead(notification.id)}
+                        className={styles.markReadButton}
+                      >
+                        <ReadIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  )}
+                </Box>
               </ListItem>
             ))}
           </List>
@@ -355,4 +343,4 @@ const NotificationMenu = () => {
   );
 };
 
-export default React.memo(NotificationMenu); 
+export default NotificationMenu; 

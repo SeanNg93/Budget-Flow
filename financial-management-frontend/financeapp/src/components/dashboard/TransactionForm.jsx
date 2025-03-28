@@ -47,6 +47,7 @@ import CategoryForm from './CategoryForm';
 import CategoryManageForm from './CategoryManageForm';
 import styles from '../../styles/transactionForm.module.css';
 import { formatCurrency } from '../../utils/moneyFormatter';
+import { useTranslation } from 'react-i18next';
 
 // Create a SlideTransition component with forwardRef
 const SlideTransition = React.forwardRef(function Transition(props, ref) {
@@ -54,6 +55,7 @@ const SlideTransition = React.forwardRef(function Transition(props, ref) {
 });
 
 const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = false, initialData = null }) => {
+  const { t } = useTranslation();
   const [accounts, setAccounts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -422,16 +424,16 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
   const validateForm = () => {
     const newErrors = {};
     if (!formData.accountId) {
-      newErrors.accountId = 'Account is required';
+      newErrors.accountId = t('transaction.errors.accountRequired', 'Account is required');
     }
     
     // Improved amount validation
     if (!formData.amount || formData.amount === '') {
-      newErrors.amount = 'Amount is required';
+      newErrors.amount = t('transaction.errors.amountRequired', 'Amount is required');
     } else {
       const numAmount = parseFloat(formData.amount);
       if (isNaN(numAmount) || numAmount <= 0) {
-        newErrors.amount = 'Amount must be a positive number';
+        newErrors.amount = t('transaction.errors.amountPositive', 'Amount must be a positive number');
       }
       
       // Check for sufficient funds when transaction is an EXPENSE
@@ -452,7 +454,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
           const effectiveAmount = numAmount - (initialData ? originalAmount : 0);
           
           if (effectiveAmount > walletBalance) {
-            newErrors.amount = `Insufficient funds in wallet. Available: ${formatCurrency(walletBalance)}`;
+            newErrors.amount = `${t('wallet.insufficient')} ${formatCurrency(walletBalance)}`;
           }
         }
       }
@@ -460,13 +462,13 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
     
     // Validate description
     if (!formData.description) {
-      newErrors.description = 'Description is required';
+      newErrors.description = t('transaction.errors.descriptionRequired', 'Description is required');
     } else if (formData.description.length > 500) {
-      newErrors.description = 'Description must be less than 500 characters';
+      newErrors.description = t('transaction.errors.descriptionLength', 'Description must be less than 500 characters');
     }
     
     if (!formData.transactionDate) {
-      newErrors.transactionDate = 'Date is required';
+      newErrors.transactionDate = t('transaction.errors.dateRequired', 'Date is required');
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -784,18 +786,17 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
     }
   };
 
-  // Add a helper function to check if there are insufficient funds
+  // Add a helper function to check if the user has insufficient funds
   const hasInsufficientFunds = () => {
     if (formData.transactionType !== 'EXPENSE' || !formData.accountId || !formData.amount) {
       return false;
     }
     
-    const selectedAccount = accounts.find(a => a.id.toString() === formData.accountId.toString());
-    if (!selectedAccount) {
-      return false;
-    }
+    // Find the selected account
+    const account = accounts.find(a => a.id.toString() === formData.accountId.toString());
+    if (!account) return false;
     
-    const walletBalance = selectedAccount.balance || 0;
+    const walletBalance = account.balance || 0;
     const amount = parseFloat(formData.amount) || 0;
     
     // If editing, account for the original amount
@@ -824,23 +825,32 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
   };
 
   const renderValue = (selected) => {
-    if (!selected) {
-      return <Typography sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>Select a category</Typography>;
-    }
-    // Convert to string for safe comparison
-    const selectedStr = selected.toString();
-    const category = categories.find(c => c.id.toString() === selectedStr);
-    return <Typography sx={{ fontSize: '0.8rem' }}>{category ? category.categoryName : ''}</Typography>;
+    const category = categories.find(c => c.id.toString() === selected);
+    if (!category) return '';
+    
+    return (
+      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <Box 
+          component="span" 
+          sx={{ 
+            width: 12, 
+            height: 12, 
+            borderRadius: '50%', 
+            backgroundColor: category.color || '#ccc',
+            mr: 1 
+          }} 
+        />
+        {category.name}
+      </Box>
+    );
   };
 
-  // Use this version of handleClose in the component
+  // Get the selected account for display
+  const selectedAccount = formData.accountId ? accounts.find(a => a.id.toString() === formData.accountId.toString()) : null;
+
   const handleDialogClose = () => {
-    // Reset form data
     resetForm();
-    // Reset the initialization flag
-    formInitialized.current = false;
-    // Call the parent's handleClose function
-    handleClose();
+    handleClose(false);
   };
 
   // Form content that will be used in both embedded and non-embedded modes
@@ -856,16 +866,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
             <Box className={styles.labelContainer}>
               <Typography variant="subtitle2" className={styles.labelText}>
                 <AccountBalanceWalletIcon className={styles.labelIcon} />
-                Wallet
-                {formData.accountId && (
-                  <Typography 
-                    component="span"
-                    variant="caption"
-                    className={styles.walletBalance}
-                  >
-                    (Balance: {formatCurrency(accounts.find(a => a.id === parseInt(formData.accountId, 10))?.balance || 0)})
-                  </Typography>
-                )}
+                {t('transaction.wallet')}
               </Typography>
               <Box className={styles.actionButtonsContainer}>
                 <IconButton 
@@ -936,21 +937,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
             <Box className={styles.labelContainer}>
               <Typography variant="subtitle2" className={styles.labelText}>
                 <CategoryIcon className={styles.labelIcon} />
-                Category
-                {formData.transactionType === 'EXPENSE' && categorySpendingData && categorySpendingData.limit > 0 && (
-                  <Typography 
-                    component="span" 
-                    variant="caption" 
-                    className={`${styles.categoryInfoText} ${categoryExcessAmount > 0 ? styles.categoryExceedingText : ''}`}
-                  >
-                    {categoryExcessAmount > 0 ? 
-                      `(Exceeding limit by $${categoryExcessAmount.toFixed(2)})` : 
-                      initialData ?
-                        `(Limit: $${categorySpendingData.limit.toFixed(2)}, Current: $${categorySpendingData.originalTotalSpent ? categorySpendingData.originalTotalSpent.toFixed(2) : categorySpendingData.totalSpent.toFixed(2)})` :
-                        `(Limit: $${categorySpendingData.limit.toFixed(2)}, Left: $${Math.max(0, categorySpendingData.limit - categorySpendingData.totalSpent).toFixed(2)})`
-                    }
-                  </Typography>
-                )}
+                {t('transaction.category')}
               </Typography>
               <Box className={styles.actionButtonsContainer}>
                 <IconButton
@@ -1043,7 +1030,12 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
               <Box className={styles.labelContainer}>
                 <Typography variant="subtitle2" className={styles.labelText}>
                   <AttachMoneyIcon className={styles.labelIcon} />
-                  Amount
+                  {t('transaction.amount')}
+                  {selectedAccount && (
+                    <Typography className={styles.walletBalance}>
+                      ({t('wallet.walletBalance')}: {formatCurrency(selectedAccount.balance)})
+                    </Typography>
+                  )}
                 </Typography>
               </Box>
               
@@ -1067,12 +1059,12 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
                     <ErrorIcon fontSize="small" />
                     <span>
                       {(() => {
-                        const selectedAccount = accounts.find(a => a.id.toString() === formData.accountId.toString());
-                        if (selectedAccount) {
-                          const walletBalance = selectedAccount.balance || 0;
-                          return `Insufficient funds! Available: ${formatCurrency(walletBalance)}`;
+                        const account = accounts.find(a => a.id.toString() === formData.accountId.toString());
+                        if (account) {
+                          const walletBalance = account.balance || 0;
+                          return `${t('wallet.insufficient')} ${formatCurrency(walletBalance)}`;
                         }
-                        return 'Insufficient funds in wallet';
+                        return t('wallet.insufficient');
                       })()}
                     </span>
                   </Box>
@@ -1086,7 +1078,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
               <Box className={styles.labelContainer}>
                 <Typography variant="subtitle2" className={styles.labelText}>
                   <CalendarTodayIcon className={styles.labelIcon} />
-                  Date
+                  {t('transaction.date')}
                 </Typography>
               </Box>
               <DatePicker
@@ -1117,7 +1109,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
           <Box className={styles.labelContainer}>
             <Typography variant="subtitle2" className={styles.labelText}>
               <DescriptionIcon className={styles.labelIcon} />
-              Description
+              {t('transaction.description')}
             </Typography>
           </Box>
           <TextField
@@ -1161,11 +1153,11 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
         >
           <ToggleButton value="EXPENSE" aria-label="expense" className={styles.expenseToggle}>
             <ArrowUpwardIcon fontSize="small" sx={{ fontSize: '0.9rem' }} />
-            <span style={{ marginLeft: '3px' }}>Expense</span>
+            <span style={{ marginLeft: '3px' }}>{t('transaction.expense')}</span>
           </ToggleButton>
           <ToggleButton value="INCOME" aria-label="income" className={styles.incomeToggle}>
             <ArrowDownwardIcon fontSize="small" sx={{ fontSize: '0.9rem' }} />
-            <span style={{ marginLeft: '3px' }}>Income</span>
+            <span style={{ marginLeft: '3px' }}>{t('transaction.income')}</span>
           </ToggleButton>
         </ToggleButtonGroup>
 
@@ -1176,7 +1168,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
               disabled={submitting} 
               className={styles.cancelButton}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
           )}
           <Button 
@@ -1187,7 +1179,12 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
             startIcon={submitting ? <CircularProgress size={18} /> : null}
             className={styles.saveTransactionButton}
           >
-            {submitting ? 'Saving...' : formData.transactionType === 'EXPENSE' ? 'Save Expense' : 'Save Income'}
+            {submitting 
+              ? t('common.saving', 'Saving...') 
+              : formData.transactionType === 'EXPENSE' 
+                ? t('transaction.saveExpense') 
+                : t('transaction.saveIncome')
+            }
           </Button>
         </Box>
       </Box>
@@ -1430,11 +1427,11 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
         {formData.transactionType === 'EXPENSE' ? 
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <ArrowUpwardIcon sx={{ mr: 0.8, color: '#ff3b30', fontSize: '1.1rem' }} />
-            {initialData ? 'Edit Expense' : 'Add Transaction'}
+            {initialData ? t('transaction.editTransaction') : t('transaction.addTransaction')}
           </Box> : 
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <ArrowDownwardIcon sx={{ mr: 0.8, color: '#34c759', fontSize: '1.1rem' }} />
-            {initialData ? 'Edit Income' : 'Add Transaction'}
+            {initialData ? t('transaction.editTransaction') : t('transaction.addTransaction')}
           </Box>
         }
       </DialogTitle>

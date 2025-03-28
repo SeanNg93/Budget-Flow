@@ -25,6 +25,7 @@ import CategoryIcon from '@mui/icons-material/Category';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import TransactionForm from './TransactionForm';
 import styles from '../../styles/walletManage.module.css';
+import { useTranslation } from 'react-i18next';
 
 // Create a SlideTransition component with forwardRef
 const SlideTransition = React.forwardRef(function Transition(props, ref) {
@@ -39,6 +40,7 @@ const FinanceActionPanel = ({
   setCategoryManageFormOpen,
   setUserTransferDialogOpen
 }) => {
+  const { t } = useTranslation();
   // Add ref for transition
   const dialogRef = useRef(null);
 
@@ -67,32 +69,32 @@ const FinanceActionPanel = ({
   const financeOptions = [
     {
       id: 'transaction',
-      title: 'Add Transaction',
-      description: 'Record income or expense transactions',
+      title: t('financeOptions.addTransaction', 'Add Transaction'),
+      description: t('financeOptions.transactionDescription', 'Record income or expense transactions'),
       icon: <AddIcon fontSize="large" />,
       color: '#4CAF50',
       action: () => handleOption('transaction')
     },
     {
       id: 'wallet',
-      title: 'Manage Wallets',
-      description: 'Create, edit, and manage your wallets',
+      title: t('financeOptions.manageWallets', 'Manage Wallets'),
+      description: t('financeOptions.walletsDescription', 'Create, edit, and manage your wallets'),
       icon: <AccountBalanceWalletIcon fontSize="large" />,
       color: '#2196F3',
       action: () => handleOption('wallet')
     },
     {
       id: 'category',
-      title: 'Manage Categories',
-      description: 'Create and edit categories with spending limits',
+      title: t('financeOptions.manageCategories', 'Manage Categories'),
+      description: t('financeOptions.categoriesDescription', 'Create and edit categories with spending limits'),
       icon: <CategoryIcon fontSize="large" />,
       color: '#FF9800',
       action: () => handleOption('category')
     },
     {
       id: 'transfer',
-      title: 'Transfer Money',
-      description: 'Send money to other users',
+      title: t('financeOptions.transferMoney', 'Transfer Money'),
+      description: t('financeOptions.transferDescription', 'Send money to other users'),
       icon: <SendIcon fontSize="large" />,
       color: '#9C27B0',
       action: () => handleOption('transfer')
@@ -126,9 +128,9 @@ const FinanceActionPanel = ({
       <DialogTitle className={styles.dialogTitle} sx={{ py: 1.5 }}>
         <Box className={styles.headerContainer}>
           <Typography variant="h6" className={styles.title}>
-            Finance Options
+            {t('financeOptions.title', 'Finance Options')}
           </Typography>
-          <IconButton aria-label="close" onClick={handleClose} size="small">
+          <IconButton aria-label={t('common.close', 'close')} onClick={handleClose} size="small">
             <CloseIcon />
           </IconButton>
         </Box>

@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
 import { sendForm } from '@emailjs/browser';
 import { EMAILJS_CONFIG } from '../config/emailjs.config';
+import { useTranslation } from 'react-i18next';
 import { 
   Container, 
   Box, 
@@ -16,6 +17,7 @@ import {
 import styles from '../styles/contact.module.css';
 
 export default function Contact() {
+  const { t } = useTranslation();
   const formRef = useRef();
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -41,11 +43,11 @@ export default function Contact() {
       );
       
       setIsSuccess(true);
-      setMessage('Thank you for your message! We will get back to you soon.');
+      setMessage(t('contact.messageSent', 'Thank you for your message! We will get back to you soon.'));
       reset();
     } catch (error) {
       setIsSuccess(false);
-      setMessage(error.text || 'Failed to send message. Please try again.');
+      setMessage(error.text || t('contact.sendFailed', 'Failed to send message. Please try again.'));
       console.error('Email sending failed:', error);
     } finally {
       setIsLoading(false);
@@ -56,10 +58,10 @@ export default function Contact() {
     <Container maxWidth="sm" className={styles.contactContainer}>
       <Box sx={{ my: 4, textAlign: 'center' }}>
         <Typography variant="h4" component="h2" gutterBottom>
-          Contact Us
+          {t('contact.title', 'Contact Us')}
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          Have a question? We'd love to hear from you.
+          {t('contact.subtitle', 'Have a question? We\'d love to hear from you.')}
         </Typography>
       </Box>
 
@@ -77,21 +79,23 @@ export default function Contact() {
           <TextField
             id="from_name"
             name="from_name"
-            label="Name"
+            label={t('contact.name', 'Name')}
             fullWidth
             margin="normal"
             variant="outlined"
             error={!!errors.from_name}
             helperText={errors.from_name?.message}
             inputProps={{
-              ...register('from_name', { required: 'Name is required' })
+              ...register('from_name', { 
+                required: t('contact.errors.nameRequired', 'Name is required') 
+              })
             }}
           />
 
           <TextField
             id="from_email"
             name="from_email"
-            label="Email"
+            label={t('contact.email', 'Email')}
             fullWidth
             margin="normal"
             variant="outlined"
@@ -99,10 +103,10 @@ export default function Contact() {
             helperText={errors.from_email?.message}
             inputProps={{
               ...register('from_email', { 
-                required: 'Email is required',
+                required: t('contact.errors.emailRequired', 'Email is required'),
                 pattern: {
                   value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                  message: 'Invalid email address'
+                  message: t('contact.errors.emailInvalid', 'Invalid email address')
                 }
               })
             }}
@@ -111,7 +115,7 @@ export default function Contact() {
           <TextField
             id="message"
             name="message"
-            label="Message"
+            label={t('contact.message', 'Message')}
             fullWidth
             margin="normal"
             variant="outlined"
@@ -120,7 +124,9 @@ export default function Contact() {
             error={!!errors.message}
             helperText={errors.message?.message}
             inputProps={{
-              ...register('message', { required: 'Message is required' })
+              ...register('message', { 
+                required: t('contact.errors.messageRequired', 'Message is required') 
+              })
             }}
           />
 
@@ -131,7 +137,7 @@ export default function Contact() {
               variant="outlined"
               color="primary"
             >
-              Back to Home
+              {t('contact.backToHome', 'Back to Home')}
             </Button>
             <Button
               type="submit"
@@ -140,7 +146,7 @@ export default function Contact() {
               disabled={isLoading}
               startIcon={isLoading ? <CircularProgress size={20} /> : null}
             >
-              {isLoading ? 'Sending...' : 'Send Message'}
+              {isLoading ? t('contact.sending', 'Sending...') : t('contact.sendMessage', 'Send Message')}
             </Button>
           </Box>
         </form>

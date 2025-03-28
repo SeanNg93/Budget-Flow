@@ -2,6 +2,7 @@ import React from 'react';
 import { Box } from '@mui/material';
 import { CheckCircleOutline } from '@mui/icons-material';
 import styles from '../styles/auth.module.css';
+import { useTranslation } from 'react-i18next';
 
 /**
  * AuthSuccess component for displaying authentication success messages with consistent styling
@@ -10,6 +11,8 @@ import styles from '../styles/auth.module.css';
  * @param {boolean} props.visible - Whether the success message should be visible
  */
 const AuthSuccess = ({ message, visible = true }) => {
+  const { t } = useTranslation();
+  
   if (!visible || !message) return null;
   
   return (

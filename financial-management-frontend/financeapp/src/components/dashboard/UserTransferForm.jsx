@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import FinanceService from '../../services/FinanceService';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogTitle,
@@ -47,6 +48,7 @@ const SlideTransition = React.forwardRef(function Transition(props, ref) {
 });
 
 const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourceWallet = null }) => {
+  const { t } = useTranslation();
   // Wallets state
   const [wallets, setWallets] = useState([]);
   const [sourceWalletId, setSourceWalletId] = useState('');
@@ -114,7 +116,7 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourc
       }
     } catch (error) {
       console.error('Failed to load wallets:', error);
-      setError('Failed to load wallets. Please try again.');
+      setError(t('wallet.errors.failedToLoadWallets'));
     }
   };
   
@@ -129,7 +131,7 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourc
       setSearchResults(response.data || []);
     } catch (error) {
       console.error('Error searching users:', error);
-      setError('Failed to search users. Please try again.');
+      setError(t('userTransfer.errors.searchFailed'));
       setSearchResults([]);
     } finally {
       setSearching(false);
@@ -145,24 +147,27 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourc
   const handleTransfer = async () => {
     // Validate input
     if (!sourceWalletId) {
-      setError('Please select a source wallet');
+      setError(t('userTransfer.errors.selectSourceWallet'));
       return;
     }
     
     if (!selectedUser) {
-      setError('Please select a recipient');
+      setError(t('userTransfer.errors.selectRecipient'));
       return;
     }
     
     if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
-      setError('Please enter a valid amount');
+      setError(t('userTransfer.errors.enterValidAmount'));
       return;
     }
     
     // Check if source wallet has enough balance
     const sourceWallet = wallets.find(w => w.id.toString() === sourceWalletId);
     if (!sourceWallet || parseFloat(amount) > sourceWallet.balance) {
-      setError(`Insufficient funds in ${sourceWallet?.accountName}. Available: $${sourceWallet?.balance.toFixed(2)}`);
+      setError(t('userTransfer.errors.insufficientFunds', { 
+        walletName: sourceWallet?.accountName, 
+        available: sourceWallet?.balance.toFixed(2) 
+      }));
       return;
     }
     
@@ -194,7 +199,7 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourc
       }, 2000);
     } catch (error) {
       console.error('Error transferring funds:', error);
-      setError(error.response?.data?.error || 'Failed to transfer funds. Please try again.');
+      setError(error.response?.data?.error || t('userTransfer.errors.transferFailed'));
     } finally {
       setTransferring(false);
     }
@@ -228,7 +233,7 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourc
       <DialogTitle className={styles.dialogTitle}>
         <Box className={styles.headerContainer}>
           <Typography variant="h6" className={styles.title}>
-            Transfer Money
+            {t('userTransfer.title')}
           </Typography>
           <IconButton 
             aria-label="close" 
@@ -270,7 +275,7 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourc
               style={{ marginBottom: '12px' }}
               ref={successAlertRef}
             >
-              Transfer completed successfully!
+              {t('userTransfer.transferSuccess')}
             </Alert>
           </Fade>
         )}
@@ -279,7 +284,7 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourc
           {/* Source wallet selector */}
           <FormControl fullWidth sx={{ mb: 2 }} size="small">
             <Typography variant="body2" gutterBottom sx={{ fontWeight: 500, color: 'text.secondary' }}>
-              From Wallet
+              {t('userTransfer.fromWallet')}
             </Typography>
             <Select
               value={sourceWalletId}
@@ -295,7 +300,7 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourc
               }}
             >
               <MenuItem value="" disabled>
-                Select Wallet
+                {t('userTransfer.selectWallet')}
               </MenuItem>
               {wallets.map((wallet) => (
                 <MenuItem key={wallet.id} value={wallet.id.toString()}>
@@ -308,12 +313,12 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourc
           {/* User search */}
           <FormControl fullWidth sx={{ mb: 2 }} size="small">
             <Typography variant="body2" gutterBottom sx={{ fontWeight: 500, color: 'text.secondary' }}>
-              To User
+              {t('userTransfer.toUser')}
             </Typography>
             <TextField
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by name or username"
+              placeholder={t('userTransfer.searchUserPlaceholder')}
               size="small"
               fullWidth
               InputProps={{
@@ -438,7 +443,7 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourc
                       color: 'primary.main'
                     }}
                   >
-                    Change
+                    {t('common.change')}
                   </Button>
                 </Box>
               </Paper>
@@ -448,7 +453,7 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourc
           {/* Amount input */}
           <FormControl fullWidth sx={{ mb: 1 }} size="small">
             <Typography variant="body2" gutterBottom sx={{ fontWeight: 500, color: 'text.secondary' }}>
-              Amount
+              {t('transaction.amount')}
             </Typography>
             <TextField
               value={amount}
@@ -483,7 +488,7 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourc
           size="small"
           sx={{ mr: 1 }}
         >
-          Cancel
+          {t('common.cancel')}
         </Button>
         <Button 
           onClick={handleTransfer}
@@ -494,7 +499,7 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourc
           className={`${styles.standardButton} ${styles.transferButton}`}
           size="small"
         >
-          {transferring ? 'Sending...' : 'Send Money'}
+          {transferring ? t('userTransfer.sending') : t('userTransfer.sendMoney')}
         </Button>
       </DialogActions>
     </Dialog>

@@ -42,6 +42,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import FinanceService from '../../services/FinanceService';
 import CategoryForm from './CategoryForm';
 import styles from '../../styles/walletManage.module.css';
+import { useTranslation } from 'react-i18next';
 
 // Create a FadeTransition component with forwardRef
 const FadeTransition = React.forwardRef(function Transition(props, ref) {
@@ -49,6 +50,7 @@ const FadeTransition = React.forwardRef(function Transition(props, ref) {
 });
 
 const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = false }) => {
+  const { t } = useTranslation();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -313,7 +315,7 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
           <Tab 
             label={
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <span>Expenses</span>
+                <span>{t('category.expense', 'Expenses')}</span>
                 <Box 
                   component="span"
                   onClick={(e) => {
@@ -333,7 +335,7 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
           <Tab 
             label={
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <span>Income</span>
+                <span>{t('category.income', 'Income')}</span>
                 <Box 
                   component="span"
                   onClick={(e) => {
@@ -355,7 +357,7 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
       
       <Box sx={{ display: 'flex', mb: 2 }}>
         <TextField
-          placeholder="Search categories..."
+          placeholder={t('category.search', 'Search categories...')}
           size="small"
           fullWidth
           value={searchQuery || ''}
@@ -380,7 +382,7 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
         </Box>
       ) : categories.length === 0 ? (
         <Typography variant="body1" className={styles.emptyMessage}>
-          No categories found. Create a category to get started.
+          {t('category.noCategories', 'No categories found. Create a category to get started.')}
         </Typography>
       ) : (
         <>
@@ -394,7 +396,7 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
             if (filteredCategories.length === 0) {
               return (
                 <Typography variant="body1" className={styles.emptyMessage}>
-                  No categories match your search.
+                  {t('category.noSearchMatch', 'No categories match your search.')}
                 </Typography>
               );
             }
@@ -422,7 +424,7 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
                               size="small"
                               value={editCategoryName}
                               onChange={(e) => setEditCategoryName(e.target.value)}
-                              placeholder="Category name"
+                              placeholder={t('category.name', 'Category name')}
                               className={styles.textField}
                               sx={{ mb: 2 }}
                             />
@@ -433,7 +435,7 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
                                   fullWidth
                                   size="small"
                                   type="number"
-                                  label="Spending Limit"
+                                  label={t('category.spendingLimit', 'Spending Limit')}
                                   value={editSpendingLimit}
                                   onChange={(e) => setEditSpendingLimit(e.target.value)}
                                   InputProps={{
@@ -443,14 +445,14 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
                                       </InputAdornment>
                                     ),
                                   }}
-                                  placeholder="Set a spending limit"
+                                  placeholder={t('category.setSpendingLimit', 'Set a spending limit')}
                                   className={styles.textField}
                                   sx={{ mb: 2 }}
                                 />
                                 
                                 <Box sx={{ px: 1, mb: 1 }}>
                                   <Typography id="warning-percentage-slider" gutterBottom variant="body2" sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                    <span>Warning at percentage:</span>
+                                    <span>{t('category.warningPercentage', 'Warning at percentage')}:</span>
                                     <span>{editWarningPercentage}%</span>
                                   </Typography>
                                   <Slider
@@ -474,7 +476,7 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
                                   {editSpendingLimit && (
                                     <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
                                       <WarningIcon fontSize="small" sx={{ mr: 1, color: 'warning.main' }} />
-                                      Warning at: ${calculateWarningAmount(editSpendingLimit, editWarningPercentage).toFixed(2)}
+                                      {t('category.warningAt', 'Warning at')}: ${calculateWarningAmount(editSpendingLimit, editWarningPercentage).toFixed(2)}
                                     </Typography>
                                   )}
                                 </Box>
@@ -485,7 +487,7 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
                                   fullWidth
                                   size="small"
                                   type="number"
-                                  label="Income Goal"
+                                  label={t('category.incomeGoal', 'Income Goal')}
                                   value={editSpendingLimit}
                                   onChange={(e) => setEditSpendingLimit(e.target.value)}
                                   InputProps={{
@@ -495,7 +497,7 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
                                       </InputAdornment>
                                     ),
                                   }}
-                                  placeholder="Set an income goal"
+                                  placeholder={t('category.setIncomeGoal', 'Set an income goal')}
                                   className={styles.textField}
                                   sx={{ mb: 2 }}
                                 />
@@ -516,7 +518,7 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
                               }}
                               className={styles.cancelButton}
                             >
-                              Cancel
+                              {t('common.cancel', 'Cancel')}
                             </Button>
                             <Button 
                               variant="contained" 
@@ -532,7 +534,7 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
                               }}
                               className={`${styles.standardButton} ${styles.primaryButton}`}
                             >
-                              Save
+                              {t('common.save', 'Save')}
                             </Button>
                           </Box>
                         </Box>
@@ -571,13 +573,14 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
                               <Box sx={{ width: '100%' }}>
                                 <Box className={styles.limitInfo}>
                                   <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center' }}>
-                                    <AttachMoneyIcon fontSize="small" sx={{ mr: 0.5, color: 'primary.main', opacity: 0.8 }} />
-                                    {tabValue === 'EXPENSE' ? 'Limit: ' : 'Goal: '}${parseFloat(category.spendingLimit).toFixed(2)}
+                                    {tabValue === 'EXPENSE' 
+                                      ? t('category.limitColon', 'Limit: ') 
+                                      : t('category.goalColon', 'Goal: ')}${parseFloat(category.spendingLimit).toFixed(2)}
                                   </Typography>
                                   {tabValue === 'EXPENSE' && (
                                     <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center' }}>
                                       <WarningIcon fontSize="small" sx={{ mr: 0.5, color: 'warning.main' }} />
-                                      Warn at: ${calculateWarningAmount(category.spendingLimit, category.warningPercentage || 80).toFixed(2)}
+                                      {t('category.warnAtColon', 'Warn at')}: ${calculateWarningAmount(category.spendingLimit, category.warningPercentage || 80).toFixed(2)}
                                     </Typography>
                                   )}
                                 </Box>
@@ -632,7 +635,7 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
                                 alignItems: 'center'
                               }}>
                                 <InfoIcon fontSize="small" className={styles.infoIconSmall} />
-                                No spending limit set
+                                {t('category.noSpendingLimit', 'No spending limit set')}
                               </Typography>
                             ) : (
                               <Typography variant="body2" color="text.secondary" sx={{ 
@@ -641,7 +644,7 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
                                 alignItems: 'center'
                               }}>
                                 <InfoIcon fontSize="small" className={styles.infoIconSmall} />
-                                No income goal set
+                                {t('category.noIncomeGoal', 'No income goal set')}
                               </Typography>
                             )}
                           </Box>
@@ -674,10 +677,10 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
         }}
         ref={deleteDialogRef}
       >
-        <DialogTitle className={styles.confirmTitle}>Confirm Deletion</DialogTitle>
+        <DialogTitle className={styles.confirmTitle}>{t('category.deleteConfirmTitle', 'Confirm Deletion')}</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete the category "{deleteCategoryName}"? This action cannot be undone.
+            {t('category.deleteConfirmText', 'Are you sure you want to delete the category "{{categoryName}}"? This action cannot be undone.', { categoryName: deleteCategoryName })}
           </DialogContentText>
         </DialogContent>
         <DialogActions className={styles.confirmActions}>
@@ -686,7 +689,7 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
             variant="outlined"
             className={styles.cancelButton}
           >
-            Cancel
+            {t('common.cancel', 'Cancel')}
           </Button>
           <Button 
             onClick={handleDeleteConfirm} 
@@ -696,7 +699,7 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
             startIcon={deleting ? <CircularProgress size={20} color="inherit" /> : null}
             className={`${styles.standardButton} ${styles.deleteButton}`}
           >
-            {deleting ? 'Deleting...' : 'Delete'}
+            {deleting ? t('common.deleting', 'Deleting...') : t('common.delete', 'Delete')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -720,7 +723,7 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
       >
         <DialogTitle sx={{ pb: 1, pt: 1.5, fontWeight: 600 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            Add New Category
+            {t('category.addNew', 'Add New Category')}
             <IconButton size="small" onClick={handleCloseNewCategoryForm}>
               <CloseIcon fontSize="small" />
             </IconButton>
@@ -765,9 +768,9 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
       <DialogTitle className={styles.dialogTitle}>
         <Box className={styles.headerContainer}>
           <Typography variant="h6" className={styles.title}>
-            Manage Categories
+            {t('category.manageCategories', 'Manage Categories')}
             <span className={styles.walletCount}>
-              (Total: {categories.length})
+              {t('category.totalCount', '(Total: {{count}})', { count: categories.length })}
             </span>
           </Typography>
           <IconButton 

@@ -2,6 +2,7 @@ import React from 'react';
 import { Box } from '@mui/material';
 import { ErrorOutline } from '@mui/icons-material';
 import styles from '../styles/auth.module.css';
+import { useTranslation } from 'react-i18next';
 
 /**
  * AuthError component for displaying authentication errors with consistent styling
@@ -10,6 +11,8 @@ import styles from '../styles/auth.module.css';
  * @param {boolean} props.visible - Whether the error should be visible
  */
 const AuthError = ({ message, visible = true }) => {
+  const { t } = useTranslation();
+  
   if (!visible || !message) return null;
   
   return (

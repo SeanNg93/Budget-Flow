@@ -15,6 +15,7 @@ import {
 import MoneyInput from '../utils/MoneyInput';
 import FinanceService from '../../services/FinanceService';
 import { formatCurrency } from '../../utils/moneyFormatter';
+import { useTranslation } from 'react-i18next';
 
 // Create a SlideTransition component with forwardRef
 const SlideTransition = React.forwardRef(function Transition(props, ref) {
@@ -22,6 +23,7 @@ const SlideTransition = React.forwardRef(function Transition(props, ref) {
 });
 
 const AddBalanceForm = ({ open, handleClose, onBalanceAdded }) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [amount, setAmount] = useState('');
   const [error, setError] = useState('');
@@ -60,7 +62,7 @@ const AddBalanceForm = ({ open, handleClose, onBalanceAdded }) => {
       setTotalWalletBalance(walletsTotal);
     } catch (err) {
       console.error('Error fetching balance data:', err);
-      setError('Failed to load balance data. Please try again.');
+      setError(t('wallet.errors.failedToLoadBalance', 'Failed to load balance data. Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -73,7 +75,7 @@ const AddBalanceForm = ({ open, handleClose, onBalanceAdded }) => {
 
   const validateForm = () => {
     if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
-      setError('Please enter a valid amount greater than 0');
+      setError(t('wallet.errors.enterValidAmount', 'Please enter a valid amount greater than 0'));
       return false;
     }
     return true;
@@ -94,7 +96,7 @@ const AddBalanceForm = ({ open, handleClose, onBalanceAdded }) => {
       // Make sure we have a token in localStorage
       const token = localStorage.getItem('userToken');
       if (!token) {
-        setError('You must be logged in to add to your balance');
+        setError(t('auth.errors.loginRequired', 'You must be logged in to add to your balance'));
         setLoading(false);
         return;
       }
@@ -107,7 +109,7 @@ const AddBalanceForm = ({ open, handleClose, onBalanceAdded }) => {
       isSuccess = true;
       
       // Show a success message briefly before closing
-      setSuccess('Balance updated successfully!');
+      setSuccess(t('wallet.messages.balanceUpdateSuccess', 'Balance updated successfully!'));
       
       // Notify parent component to refresh data
       if (onBalanceAdded) {
@@ -123,9 +125,9 @@ const AddBalanceForm = ({ open, handleClose, onBalanceAdded }) => {
       
     } catch (err) {
       if (err.response && err.response.status === 403) {
-        setError('You are not authorized to add to the balance. Please log in again.');
+        setError(t('auth.errors.notAuthorized', 'You are not authorized to add to the balance. Please log in again.'));
       } else {
-        setError(err.response?.data?.message || 'Failed to update balance. Please try again.');
+        setError(err.response?.data?.message || t('wallet.errors.updateFailed', 'Failed to update balance. Please try again.'));
       }
     } finally {
       setLoading(false);
@@ -155,7 +157,7 @@ const AddBalanceForm = ({ open, handleClose, onBalanceAdded }) => {
       }}
       ref={dialogRef}
     >
-      <DialogTitle>Add to Total Balance</DialogTitle>
+      <DialogTitle>{t('wallet.addBalance', 'Add to Total Balance')}</DialogTitle>
       <form onSubmit={handleSubmit}>
         <DialogContent>
           {error && (
@@ -172,11 +174,11 @@ const AddBalanceForm = ({ open, handleClose, onBalanceAdded }) => {
           <Box sx={{ mb: 2 }}>
             <Fade in={open} timeout={400} nodeRef={alertInfoRef}>
               <Alert severity="info" ref={alertInfoRef}>
-                Current balance: {formatCurrency(currentBalance)}
+                {t('wallet.currentBalance', 'Current balance')}: {formatCurrency(currentBalance)}
                 <br/>
-                Wallet total: {formatCurrency(totalWalletBalance)}
+                {t('wallet.walletTotal', 'Wallet total')}: {formatCurrency(totalWalletBalance)}
                 <br/>
-                Available for allocation: {formatCurrency(currentBalance - totalWalletBalance)}
+                {t('wallet.availableForAllocation', 'Available for allocation')}: {formatCurrency(currentBalance - totalWalletBalance)}
               </Alert>
             </Fade>
           </Box>
@@ -184,27 +186,27 @@ const AddBalanceForm = ({ open, handleClose, onBalanceAdded }) => {
           <MoneyInput
             autoFocus
             margin="dense"
-            label="Amount"
+            label={t('transaction.amount', 'Amount')}
             value={amount}
             onChange={handleChange}
             disabled={loading}
             inputProps={{ min: "0.01" }}
           />
           <FormHelperText>
-            Enter the amount you want to add to your total balance
+            {t('wallet.addBalanceDescription', 'Enter the amount you want to add to your total balance')}
             <br/>
-            New balance after addition: {formatCurrency(currentBalance + parseFloat(amount || 0))}
+            {t('wallet.newBalanceAfterAddition', 'New balance after addition')}: {formatCurrency(currentBalance + parseFloat(amount || 0))}
           </FormHelperText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleFormClose} disabled={loading}>Cancel</Button>
+          <Button onClick={handleFormClose} disabled={loading}>{t('common.cancel', 'Cancel')}</Button>
           <Button 
             type="submit" 
             variant="contained" 
             color="primary"
             disabled={loading}
           >
-            {loading ? <CircularProgress size={24} /> : 'Add Money'}
+            {loading ? <CircularProgress size={24} /> : t('wallet.addMoney', 'Add Money')}
           </Button>
         </DialogActions>
       </form>

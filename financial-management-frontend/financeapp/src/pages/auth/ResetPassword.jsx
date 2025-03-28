@@ -4,6 +4,7 @@ import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
 import { resetPassword, verifyResetToken } from '../../config/axiosInstance';
 import styles from '../../styles/auth.module.css';
+import { useTranslation } from 'react-i18next';
 
 // Material UI imports
 import {
@@ -21,17 +22,18 @@ import {
 } from '@mui/material';
 import { Visibility, VisibilityOff, Lock } from '@mui/icons-material';
 
-// Validation schema
-const ResetPasswordSchema = Yup.object().shape({
+// Validation schema with translation
+const ResetPasswordSchema = (t) => Yup.object().shape({
   password: Yup.string()
-    .min(6, 'Password must be at least 6 characters')
-    .required('Password is required'),
+    .min(6, t('auth.errors.passwordMin', 'Password must be at least 6 characters'))
+    .required(t('auth.errors.passwordRequired', 'Password is required')),
   confirmPassword: Yup.string()
-    .oneOf([Yup.ref('password'), null], 'Passwords must match')
-    .required('Confirm password is required'),
+    .oneOf([Yup.ref('password'), null], t('auth.errors.passwordMatch', 'Passwords must match'))
+    .required(t('auth.errors.confirmPasswordRequired', 'Confirm password is required')),
 });
 
 const ResetPassword = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { token: pathToken } = useParams();
   const location = useLocation();
@@ -51,7 +53,7 @@ const ResetPassword = () => {
   useEffect(() => {
     const checkToken = async () => {
       if (!token) {
-        setMessage('Invalid or missing reset token');
+        setMessage(t('auth.invalidOrMissingToken', 'Invalid or missing reset token'));
         setIsLoading(false);
         return;
       }
@@ -61,17 +63,17 @@ const ResetPassword = () => {
         if (response.data && response.data.valid) {
           setIsTokenValid(true);
         } else {
-          setMessage('This password reset link is invalid or has expired');
+          setMessage(t('auth.invalidOrExpiredLink', 'This password reset link is invalid or has expired'));
         }
       } catch (error) {
-        setMessage('This password reset link is invalid or has expired');
+        setMessage(t('auth.invalidOrExpiredLink', 'This password reset link is invalid or has expired'));
       } finally {
         setIsLoading(false);
       }
     };
 
     checkToken();
-  }, [token]);
+  }, [token, t]);
 
   const handleClickShowPassword = () => {
     setShowPassword(!showPassword);
@@ -93,21 +95,21 @@ const ResetPassword = () => {
       
       if (response.data) {
         setIsSuccess(true);
-        setMessage('Your password has been successfully reset');
+        setMessage(t('auth.passwordResetSuccess', 'Your password has been successfully reset'));
         
         // Redirect to login after 3 seconds
         setTimeout(() => {
-          navigate('/login', { state: { message: 'Password reset successful. Please login with your new password.' } });
+          navigate('/login', { state: { message: t('auth.resetSuccess', 'Password reset successful. Please login with your new password.') } });
         }, 3000);
       }
     } catch (error) {
       setIsSuccess(false);
       if (error.response) {
-        setMessage(`Failed to reset password: ${error.response.data.message || error.response.statusText || 'Server error'}`);
+        setMessage(`${t('auth.resetFailedPrefix', 'Failed to reset password')}: ${error.response.data.message || error.response.statusText || t('auth.serverError', 'Server error')}`);
       } else if (error.request) {
-        setMessage('Failed to reset password: No response from server. Please try again later.');
+        setMessage(t('auth.resetFailedNoResponse', 'Failed to reset password: No response from server. Please try again later.'));
       } else {
-        setMessage(`Failed to reset password: ${error.message}`);
+        setMessage(`${t('auth.resetFailedPrefix', 'Failed to reset password')}: ${error.message}`);
       }
     } finally {
       setSubmitting(false);
@@ -120,16 +122,16 @@ const ResetPassword = () => {
         <Paper elevation={3} className={styles.authCard}>
           <Box className={styles.logoContainer}>
             <div className={styles.logoBackground}>
-              <img src="/Dollarnote_siegel_hq.jpg" alt="Budget Flow Logo" className={styles.logo} />
+              <img src="/Dollarnote_siegel_hq.jpg" alt={t('common.appName', 'Budget Flow Logo')} className={styles.logo} />
             </div>
           </Box>
           
           <Typography variant="h4" component="h1" className={styles.appTitle}>
-            BUDGET FLOW
+            {t('common.appName', 'BUDGET FLOW')}
           </Typography>
           
           <Typography variant="body2" className={styles.appTagline}>
-            Illuminate Your Financial Future
+            {t('auth.appTagline', 'Illuminate Your Financial Future')}
           </Typography>
 
           {message && (
@@ -140,7 +142,7 @@ const ResetPassword = () => {
 
           {isLoading ? (
             <Box sx={{ textAlign: 'center', py: 2 }}>
-              <Typography>Verifying your reset link...</Typography>
+              <Typography>{t('auth.verifyingResetLink', 'Verifying your reset link...')}</Typography>
             </Box>
           ) : isTokenValid ? (
             <Formik
@@ -148,20 +150,20 @@ const ResetPassword = () => {
                 password: '',
                 confirmPassword: '',
               }}
-              validationSchema={ResetPasswordSchema}
+              validationSchema={ResetPasswordSchema(t)}
               onSubmit={handleSubmit}
             >
               {({ errors, touched, isSubmitting, handleSubmit: formikSubmit }) => (
                 <Form>
                   <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 1.5 }}>
                     <FormControl className={styles.formField}>
-                      <FormLabel htmlFor="password" className={styles.formLabel}>New Password</FormLabel>
+                      <FormLabel htmlFor="password" className={styles.formLabel}>{t('auth.newPassword', 'New Password')}</FormLabel>
                       <Field name="password">
                         {({ field, meta }) => (
                           <TextField
                             {...field}
                             id="password"
-                            placeholder="Enter new password"
+                            placeholder={t('auth.enterNewPassword', 'Enter new password')}
                             type={showPassword ? 'text' : 'password'}
                             autoComplete="new-password"
                             fullWidth
@@ -196,13 +198,13 @@ const ResetPassword = () => {
                     </FormControl>
 
                     <FormControl className={styles.formField}>
-                      <FormLabel htmlFor="confirmPassword" className={styles.formLabel}>Confirm New Password</FormLabel>
+                      <FormLabel htmlFor="confirmPassword" className={styles.formLabel}>{t('auth.confirmPassword', 'Confirm New Password')}</FormLabel>
                       <Field name="confirmPassword">
                         {({ field, meta }) => (
                           <TextField
                             {...field}
                             id="confirmPassword"
-                            placeholder="Confirm new password"
+                            placeholder={t('auth.confirmNewPassword', 'Confirm new password')}
                             type={showConfirmPassword ? 'text' : 'password'}
                             autoComplete="new-password"
                             fullWidth
@@ -246,34 +248,36 @@ const ResetPassword = () => {
                         formikSubmit();
                       }}
                     >
-                      {isSubmitting ? 'Resetting...' : 'RESET PASSWORD'}
+                      {isSubmitting ? t('auth.resetting', 'Resetting...') : t('auth.resetPassword', 'RESET PASSWORD')}
                     </Button>
                   </Box>
                 </Form>
               )}
             </Formik>
           ) : (
-            <Box sx={{ textAlign: 'center', py: 2 }}>
-              <Typography>
-                Please request a new password reset link from the{' '}
-                <Link component={RouterLink} to="/forgot-password" className={styles.authLink}>
-                  forgot password
-                </Link>{' '}
-                page.
-              </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', my: 2 }}>
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="body1" sx={{ textAlign: 'center', fontWeight: 500 }}>
+                  {message}
+                </Typography>
+              </Box>
+              <Button
+                component={RouterLink}
+                to="/forgot-password"
+                variant="contained"
+                color="primary"
+              >
+                {t('auth.requestNewLink', 'Request a new reset link')}
+              </Button>
+              <Button
+                component={RouterLink}
+                to="/login"
+                sx={{ mt: 2 }}
+              >
+                {t('auth.backToLogin', 'Back to login')}
+              </Button>
             </Box>
           )}
-
-          <Typography sx={{ textAlign: 'center', mt: 2, fontSize: '0.85rem' }}>
-            Remember your password?{' '}
-            <Link
-              component={RouterLink}
-              to="/login"
-              className={styles.authLink}
-            >
-              Back to login
-            </Link>
-          </Typography>
         </Paper>
       </div>
     </CssBaseline>

@@ -1,18 +1,36 @@
 import React, { useState } from 'react';
+import i18next from 'i18next';
 
 /**
  * Utility functions for money/currency formatting
  */
 
 /**
- * Format a number as USD currency for display
+ * Format a number as currency for display
  * @param {number|string} value - The numeric value to format
+ * @param {string} currency - The currency code (default: 'USD')
  * @returns {string} Formatted currency string (e.g., $1,234.56)
  */
-export const formatCurrency = (value) => {
+export const formatCurrency = (value, currency = 'USD') => {
   // Ensure value is a number before formatting
   const numericValue = typeof value === 'number' ? value : parseFloat(value || 0);
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(numericValue);
+  
+  // Get current language from i18next
+  const currentLanguage = i18next.language;
+  
+  // Define currency options based on the provided currency code
+  const currencyOptions = { 
+    style: 'currency', 
+    currency: currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  };
+  
+  // Use appropriate locale based on language
+  const locale = currentLanguage === 'vi' ? 'vi-VN' : 'en-US';
+  
+  // Return the formatted currency string
+  return new Intl.NumberFormat(locale, currencyOptions).format(numericValue);
 };
 
 /**
@@ -40,6 +58,13 @@ export const formatNumberWithCommas = (value) => {
   // If it's a negative sign only, return it
   if (numericString === '-') return numericString;
   
+  // Get current language for localization
+  const currentLanguage = i18next.language;
+  const locale = currentLanguage === 'vi' ? 'vi-VN' : 'en-US';
+  
+  // Get decimal separator for the current locale
+  const decimalSeparator = new Intl.NumberFormat(locale).format(1.1).substring(1, 2);
+  
   // Check if there's a decimal part
   const hasDecimal = numericString.includes('.');
   
@@ -48,17 +73,17 @@ export const formatNumberWithCommas = (value) => {
     // Split into whole and decimal parts
     const [wholePart, decimalPart] = numericString.split('.');
     
-    // Format the whole part with commas
+    // Format the whole part with commas using the appropriate locale
     const formattedWholePart = parseFloat(wholePart) ? 
-      parseFloat(wholePart).toLocaleString('en-US') : 
+      parseFloat(wholePart).toLocaleString(locale) : 
       (wholePart === '-' ? '-' : '0');
       
-    // Combine with decimal part
-    formattedValue = `${formattedWholePart}.${decimalPart}`;
+    // Combine with decimal part using the correct decimal separator
+    formattedValue = `${formattedWholePart}${decimalSeparator}${decimalPart}`;
   } else {
-    // No decimal, just format the whole number
+    // No decimal, just format the whole number with the appropriate locale
     formattedValue = parseFloat(numericString) ? 
-      parseFloat(numericString).toLocaleString('en-US') : 
+      parseFloat(numericString).toLocaleString(locale) : 
       (numericString === '-' ? '-' : '0');
   }
   
@@ -72,7 +97,16 @@ export const formatNumberWithCommas = (value) => {
  */
 export const parseFormattedNumber = (formattedValue) => {
   if (!formattedValue) return 0;
-  // Remove commas and convert to number
+  
+  // Get current language for localization
+  const currentLanguage = i18next.language;
+  
+  if (currentLanguage === 'vi') {
+    // For Vietnamese, replace dots with empty and commas with dots
+    return parseFloat(formattedValue.toString().replace(/\./g, '').replace(/,/g, '.'));
+  }
+  
+  // For English and others, just remove commas
   return parseFloat(formattedValue.toString().replace(/,/g, ''));
 };
 
@@ -127,4 +161,31 @@ export const formatMoneyOnBlur = (value) => {
   
   // Format with 2 decimal places and add commas
   return formatNumberWithCommas(numValue.toFixed(2));
+};
+
+/**
+ * Get the appropriate currency symbol based on locale and currency code
+ * @param {string} currencyCode - The currency code (e.g., 'USD', 'VND')
+ * @param {string} locale - The locale string (e.g., 'en-US', 'vi-VN')
+ * @returns {string} Currency symbol (e.g., '$', '₫')
+ */
+export const getCurrencySymbol = (currencyCode = 'USD', locale = null) => {
+  if (!locale) {
+    // Get current language for localization if none provided
+    const currentLanguage = i18next.language;
+    locale = currentLanguage === 'vi' ? 'vi-VN' : 'en-US';
+  }
+  
+  // Use a formatter to get the symbol
+  const formatter = new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency: currencyCode,
+    currencyDisplay: 'symbol'
+  });
+  
+  // Extract just the symbol
+  const parts = formatter.formatToParts(0);
+  const symbol = parts.find(part => part.type === 'currency')?.value || '';
+  
+  return symbol;
 }; 

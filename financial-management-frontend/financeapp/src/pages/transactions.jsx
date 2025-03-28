@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import CssBaseline from '@mui/material/CssBaseline';
 import { styled } from '@mui/material/styles';
 import { toast } from 'react-toastify';
+import { useTranslation } from 'react-i18next';
 
 // Import components
 import SideMenu from '../components/dashboard/SideMenu';
@@ -492,6 +493,8 @@ const TransactionsPage = () => {
     setFinancialSummary(summary);
   };
 
+  const { t } = useTranslation();
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -535,7 +538,7 @@ const TransactionsPage = () => {
               width: '100%'
             }}>
               <Typography variant="h4" component="h1" sx={{ mb: 2 }}>
-                Transactions
+                {t('dashboard.transactions', 'Transactions')}
               </Typography>
               <Divider sx={{ mb: 3 }} />
               
@@ -551,7 +554,7 @@ const TransactionsPage = () => {
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                   <Typography variant="body1" sx={{ mr: 2 }}>
-                    Rows per page:
+                    {t('transactions.rowsPerPage', 'Rows per page')}:
                   </Typography>
                   <FormControl size="small" sx={{ minWidth: 65, maxWidth: 65 }}>
                     <Select
@@ -619,7 +622,7 @@ const TransactionsPage = () => {
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
                   <Typography variant="body2" sx={{ mr: 1.5 }}>
-                    Rows per page:
+                    {t('transactions.rowsPerPage', 'Rows per page')}:
                   </Typography>
                   <FormControl size="small" sx={{ minWidth: 65, maxWidth: 65 }}>
                     <Select
@@ -687,28 +690,22 @@ const TransactionsPage = () => {
         }}
       >
         <DialogTitle id="delete-dialog-title">
-          Confirm Transaction Deletion
+          {t('transaction.deleteTransaction', 'Confirm Transaction Deletion')}
         </DialogTitle>
         <DialogContent>
           <DialogContentText id="delete-dialog-description">
-            Are you sure you want to delete this transaction? This action cannot be undone.
+            {t('transactions.deleteConfirmation', 'Are you sure you want to delete this transaction? This action cannot be undone.')}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => {
             setSelectedTransaction(null);
             updateDialogState('deleteConfirmOpen', false);
-          }} color="primary">
-            Cancel
+          }}>
+            {t('common.cancel', 'Cancel')}
           </Button>
-          <Button 
-            onClick={handleDeleteConfirm} 
-            color="error" 
-            variant="contained" 
-            autoFocus
-            aria-label="Confirm delete transaction"
-          >
-            Delete
+          <Button onClick={handleDeleteConfirm} color="error" variant="contained">
+            {t('common.delete', 'Delete')}
           </Button>
         </DialogActions>
       </Dialog>

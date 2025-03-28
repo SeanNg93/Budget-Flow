@@ -11,6 +11,9 @@ import './styles/globals.css';
 import {GoogleOAuthProvider} from "@react-oauth/google";
 import { datePickersCustomizations } from './theme/customizations/datePickers';
 
+// Import i18n configuration
+import './i18n/i18n';
+
 // Create a theme instance
 const theme = createTheme({
   palette: {

@@ -36,6 +36,7 @@ import styles from '../../styles/settings.module.css';
 import FinanceService from '../../services/FinanceService';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { useTranslation } from 'react-i18next';
 
 // Slide transition for dialog
 const SlideTransition = React.forwardRef(function Transition(props, ref) {
@@ -44,6 +45,7 @@ const SlideTransition = React.forwardRef(function Transition(props, ref) {
 
 const SettingsPanel = ({ open, handleClose }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [resetComplete, setResetComplete] = useState(false);
@@ -108,19 +110,19 @@ const SettingsPanel = ({ open, handleClose }) => {
     const errors = {};
     
     if (!passwordForm.currentPassword) {
-      errors.currentPassword = 'Current password is required';
+      errors.currentPassword = t('settings.passwordErrors.currentRequired');
     }
     
     if (!passwordForm.newPassword) {
-      errors.newPassword = 'New password is required';
+      errors.newPassword = t('settings.passwordErrors.newRequired');
     } else if (passwordForm.newPassword.length < 8) {
-      errors.newPassword = 'Password must be at least 8 characters';
+      errors.newPassword = t('settings.passwordErrors.minLength');
     }
     
     if (!passwordForm.confirmPassword) {
-      errors.confirmPassword = 'Please confirm your new password';
+      errors.confirmPassword = t('settings.passwordErrors.confirmRequired');
     } else if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      errors.confirmPassword = 'Passwords do not match';
+      errors.confirmPassword = t('settings.passwordErrors.noMatch');
     }
     
     return errors;
@@ -141,7 +143,7 @@ const SettingsPanel = ({ open, handleClose }) => {
         passwordForm.newPassword
       );
       
-      toast.success('Password changed successfully', {
+      toast.success(t('settings.toasts.passwordSuccess'), {
         position: "top-right",
         autoClose: 3000,
         hideProgressBar: false,
@@ -157,10 +159,10 @@ const SettingsPanel = ({ open, handleClose }) => {
       
       if (error.response && error.response.status === 401) {
         setPasswordErrors({
-          currentPassword: 'Current password is incorrect'
+          currentPassword: t('settings.passwordErrors.currentIncorrect')
         });
       } else {
-        toast.error('Failed to change password. Please try again later.', {
+        toast.error(t('settings.toasts.passwordError'), {
           position: "top-right",
           autoClose: 3000,
           hideProgressBar: false,
@@ -186,7 +188,7 @@ const SettingsPanel = ({ open, handleClose }) => {
   
   const handleDeleteAccount = async () => {
     if (confirmDeleteText !== 'DELETE') {
-      toast.error('Please type DELETE to confirm account deletion', {
+      toast.error(t('settings.toasts.deleteConfirmError'), {
         position: "top-right",
         autoClose: 3000,
       });
@@ -197,31 +199,21 @@ const SettingsPanel = ({ open, handleClose }) => {
     try {
       await FinanceService.deleteUserAccount();
       
-      toast.success('Your account has been deleted', {
+      toast.success(t('settings.toasts.accountDeleted'), {
         position: "top-right",
         autoClose: 3000,
       });
       
-      // Clear user data and redirect to login
+      // Clear user data, token, etc.
       localStorage.removeItem('userToken');
       localStorage.removeItem('userData');
       
-      // Close dialogs
-      setDeleteAccountOpen(false);
-      handleClose();
-      
-      // Navigate to login page
-      setTimeout(() => {
-        navigate('/login');
-      }, 1500);
+      // Redirect to login
+      navigate('/login');
     } catch (error) {
       console.error('Error deleting account:', error);
-      toast.error('Failed to delete account. Please try again later.', {
-        position: "top-right",
-        autoClose: 3000,
-      });
-    } finally {
       setIsDeletingAccount(false);
+      handleCloseDeleteAccount();
     }
   };
 
@@ -234,7 +226,7 @@ const SettingsPanel = ({ open, handleClose }) => {
       
       // Set reset complete and notify user
       setResetComplete(true);
-      toast.success('All financial data has been reset to default', {
+      toast.success(t('settings.toasts.resetSuccess', 'All financial data has been reset to default'), {
         position: "top-right",
         autoClose: 3000,
         hideProgressBar: false,
@@ -254,7 +246,7 @@ const SettingsPanel = ({ open, handleClose }) => {
       }, 1500);
     } catch (error) {
       console.error('Error resetting data:', error);
-      toast.error('Failed to reset data. Please try again later.', {
+      toast.error(t('settings.toasts.resetError', 'Failed to reset data. Please try again later.'), {
         position: "top-right",
         autoClose: 3000,
         hideProgressBar: false,
@@ -282,7 +274,7 @@ const SettingsPanel = ({ open, handleClose }) => {
         <DialogTitle className={styles.dialogTitle}>
           <Box display="flex" alignItems="center" justifyContent="space-between">
             <Typography variant="h5" component="div" className={styles.dialogTitleText}>
-              Settings
+              {t('settings.settingsTitle')}
             </Typography>
             <IconButton 
               edge="end" 
@@ -302,14 +294,14 @@ const SettingsPanel = ({ open, handleClose }) => {
           {resetComplete ? (
             <Box className={styles.resetSuccessContainer}>
               <Alert severity="success" className={styles.resetSuccessAlert}>
-                All financial data has been reset to default. The page will reload shortly.
+                {t('settings.resetSuccessMessage')}
               </Alert>
             </Box>
           ) : (
             <>
               {/* Password Management Section */}
               <Typography variant="subtitle1" className={styles.sectionTitle}>
-                Password Management
+                {t('settings.passwordManagement')}
               </Typography>
               
               <Paper elevation={0} className={styles.settingsSection}>
@@ -323,8 +315,8 @@ const SettingsPanel = ({ open, handleClose }) => {
                       <PasswordIcon color="action" />
                     </ListItemIcon>
                     <ListItemText 
-                      primary="Change Password" 
-                      secondary="Update your account password" 
+                      primary={t('settings.changePassword')} 
+                      secondary={t('settings.updatePassword')} 
                       primaryTypographyProps={{ className: styles.settingOptionText }}
                       secondaryTypographyProps={{ className: styles.settingOptionDescription }}
                     />
@@ -335,7 +327,7 @@ const SettingsPanel = ({ open, handleClose }) => {
               
               {/* Data Management Section */}
               <Typography variant="subtitle1" className={styles.sectionTitle} sx={{ mt: 3 }}>
-                Data Management
+                {t('settings.dataManagement')}
               </Typography>
               
               <Paper elevation={0} className={styles.settingsSection}>
@@ -349,8 +341,8 @@ const SettingsPanel = ({ open, handleClose }) => {
                       <ResetIcon color="action" />
                     </ListItemIcon>
                     <ListItemText 
-                      primary="Reset to Default" 
-                      secondary="Reset all financial data including transactions, wallets, categories, and settings to default values." 
+                      primary={t('settings.resetToDefault')} 
+                      secondary={t('settings.resetDescription')} 
                       primaryTypographyProps={{ className: styles.resetOptionText }}
                       secondaryTypographyProps={{ className: styles.resetOptionDescription }}
                     />
@@ -360,7 +352,7 @@ const SettingsPanel = ({ open, handleClose }) => {
               
               {/* Account Management Section */}
               <Typography variant="subtitle1" className={styles.sectionTitle} sx={{ mt: 3 }}>
-                Account Management
+                {t('settings.accountManagement')}
               </Typography>
               
               <Paper elevation={0} className={styles.settingsSection}>
@@ -374,8 +366,8 @@ const SettingsPanel = ({ open, handleClose }) => {
                       <DeleteIcon color="error" />
                     </ListItemIcon>
                     <ListItemText 
-                      primary="Delete Account" 
-                      secondary="Permanently delete your account and all associated data" 
+                      primary={t('settings.deleteAccount')} 
+                      secondary={t('settings.deleteAccountDescription')} 
                       primaryTypographyProps={{ className: styles.deleteAccountText }}
                       secondaryTypographyProps={{ className: styles.deleteAccountDescription }}
                     />
@@ -400,14 +392,14 @@ const SettingsPanel = ({ open, handleClose }) => {
           <Box display="flex" alignItems="center">
             <WarningIcon color="warning" className={styles.warningIcon} />
             <Typography variant="h6" className={styles.resetConfirmTitleText}>
-              Reset All Financial Data
+              {t('settings.resetConfirmTitle')}
             </Typography>
           </Box>
         </DialogTitle>
         
         <DialogContent className={styles.resetConfirmContent}>
           <Typography variant="body1" className={styles.resetConfirmMessage}>
-            You are about to reset <strong>all financial data</strong> including:
+            {t('settings.resetConfirmMessage')}
           </Typography>
           
           <List className={styles.resetList}>
@@ -415,30 +407,30 @@ const SettingsPanel = ({ open, handleClose }) => {
               <ListItemIcon>
                 <DeleteIcon color="error" fontSize="small" />
               </ListItemIcon>
-              <ListItemText primary="All transactions" />
+              <ListItemText primary={t('settings.allTransactions')} />
             </ListItem>
             <ListItem>
               <ListItemIcon>
                 <DeleteIcon color="error" fontSize="small" />
               </ListItemIcon>
-              <ListItemText primary="All wallets and accounts" />
+              <ListItemText primary={t('settings.allWallets')} />
             </ListItem>
             <ListItem>
               <ListItemIcon>
                 <DeleteIcon color="error" fontSize="small" />
               </ListItemIcon>
-              <ListItemText primary="All categories" />
+              <ListItemText primary={t('settings.allCategories')} />
             </ListItem>
             <ListItem>
               <ListItemIcon>
                 <DeleteIcon color="error" fontSize="small" />
               </ListItemIcon>
-              <ListItemText primary="All budget settings" />
+              <ListItemText primary={t('settings.allBudgets')} />
             </ListItem>
           </List>
           
           <Alert severity="warning" className={styles.warningAlert}>
-            This action cannot be undone. All your data will be permanently deleted.
+            {t('settings.cannotUndo')}
           </Alert>
         </DialogContent>
         
@@ -448,7 +440,7 @@ const SettingsPanel = ({ open, handleClose }) => {
             color="primary"
             className={styles.cancelButton}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button 
             onClick={handleResetData} 
@@ -458,7 +450,7 @@ const SettingsPanel = ({ open, handleClose }) => {
             startIcon={isResetting ? <CircularProgress size={18} color="inherit" /> : <DeleteIcon />}
             className={styles.resetButton}
           >
-            {isResetting ? "Resetting..." : "Reset All Data"}
+            {isResetting ? t('settings.resetting') : t('settings.resetAllData')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -477,7 +469,7 @@ const SettingsPanel = ({ open, handleClose }) => {
           <Box display="flex" alignItems="center">
             <PasswordIcon className={styles.passwordIcon} />
             <Typography variant="h6" className={styles.passwordChangeTitleText}>
-              Change Password
+              {t('settings.changePassword')}
             </Typography>
           </Box>
         </DialogTitle>
@@ -486,7 +478,7 @@ const SettingsPanel = ({ open, handleClose }) => {
           <FormControl fullWidth margin="normal" error={!!passwordErrors.currentPassword}>
             <TextField
               name="currentPassword"
-              label="Current Password"
+              label={t('settings.currentPassword')}
               type="password"
               value={passwordForm.currentPassword}
               onChange={handlePasswordInputChange}
@@ -501,7 +493,7 @@ const SettingsPanel = ({ open, handleClose }) => {
           <FormControl fullWidth margin="normal" error={!!passwordErrors.newPassword}>
             <TextField
               name="newPassword"
-              label="New Password"
+              label={t('settings.newPassword')}
               type="password"
               value={passwordForm.newPassword}
               onChange={handlePasswordInputChange}
@@ -516,7 +508,7 @@ const SettingsPanel = ({ open, handleClose }) => {
           <FormControl fullWidth margin="normal" error={!!passwordErrors.confirmPassword}>
             <TextField
               name="confirmPassword"
-              label="Confirm New Password"
+              label={t('settings.confirmNewPassword')}
               type="password"
               value={passwordForm.confirmPassword}
               onChange={handlePasswordInputChange}
@@ -535,7 +527,7 @@ const SettingsPanel = ({ open, handleClose }) => {
             color="primary"
             className={styles.cancelButton}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button 
             onClick={handleChangePassword} 
@@ -545,7 +537,7 @@ const SettingsPanel = ({ open, handleClose }) => {
             startIcon={isChangingPassword ? <CircularProgress size={18} color="inherit" /> : null}
             className={styles.saveButton}
           >
-            {isChangingPassword ? "Updating..." : "Update Password"}
+            {isChangingPassword ? t('settings.updating') : t('settings.updatePassword')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -563,22 +555,22 @@ const SettingsPanel = ({ open, handleClose }) => {
           <Box display="flex" alignItems="center">
             <WarningIcon color="warning" className={styles.warningIcon} />
             <Typography variant="h6" className={styles.deleteAccountConfirmTitleText}>
-              Delete Account
+              {t('settings.deleteAccount')}
             </Typography>
           </Box>
         </DialogTitle>
         
         <DialogContent className={styles.deleteAccountConfirmContent}>
           <Typography variant="body1" className={styles.deleteAccountConfirmMessage}>
-            You are about to <strong>permanently delete</strong> your account and all associated data. This action cannot be undone.
+            {t('settings.deleteAccountConfirm')}
           </Typography>
           
           <Alert severity="error" className={styles.deleteAccountWarningAlert} sx={{ mt: 2, mb: 2 }}>
-            All your personal information, financial data, and settings will be permanently removed from our servers.
+            {t('settings.deleteAccountWarning')}
           </Alert>
           
           <Typography variant="body2" sx={{ mt: 2, mb: 1 }}>
-            To confirm, please type <strong>DELETE</strong> in the field below:
+            {t('settings.typeDeleteToConfirm')}
           </Typography>
           
           <TextField
@@ -586,9 +578,9 @@ const SettingsPanel = ({ open, handleClose }) => {
             variant="outlined"
             value={confirmDeleteText}
             onChange={(e) => setConfirmDeleteText(e.target.value)}
-            placeholder="Type DELETE to confirm"
+            placeholder={t('settings.typeDeletePlaceholder')}
             error={confirmDeleteText !== '' && confirmDeleteText !== 'DELETE'}
-            helperText={confirmDeleteText !== '' && confirmDeleteText !== 'DELETE' ? 'Please type DELETE to confirm' : ''}
+            helperText={confirmDeleteText !== '' && confirmDeleteText !== 'DELETE' ? t('settings.incorrectDeleteConfirmation') : ''}
           />
         </DialogContent>
         
@@ -598,7 +590,7 @@ const SettingsPanel = ({ open, handleClose }) => {
             color="primary"
             className={styles.cancelButton}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button 
             onClick={handleDeleteAccount} 
@@ -608,7 +600,7 @@ const SettingsPanel = ({ open, handleClose }) => {
             startIcon={isDeletingAccount ? <CircularProgress size={18} color="inherit" /> : <DeleteIcon />}
             className={styles.deleteButton}
           >
-            {isDeletingAccount ? "Deleting..." : "Delete Account"}
+            {isDeletingAccount ? t('settings.deleting') : t('settings.deleteMyAccount')}
           </Button>
         </DialogActions>
       </Dialog>

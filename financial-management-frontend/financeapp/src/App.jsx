@@ -16,7 +16,6 @@ import Contact from './pages/Contact.jsx';
 import Transactions from './pages/transactions.jsx';
 
 // User Pages
-import Profile from './pages/user/Profile.jsx';
 import DeleteUser from './pages/user/DeleteUser.jsx';
 
 // Account Pages
@@ -63,11 +62,6 @@ function App() {
           } />
           
           {/* User Routes */}
-          <Route path="/profile" element={
-            <ProtectedRoute>
-              <Profile />
-            </ProtectedRoute>
-          } />
           <Route path="/admin/users" element={
             <ProtectedRoute>
               <DeleteUser />

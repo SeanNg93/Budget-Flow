@@ -30,6 +30,7 @@ import { Slide, Fade } from "@mui/material";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { useUser } from "../../context/UserContext";
+import { useTranslation } from 'react-i18next';
 
 import "../../styles/ProfileDialog.css";
 
@@ -47,6 +48,7 @@ export default function ProfileDialog({
   handleClose,
   onProfileUpdated,
 }) {
+  const { t, i18n } = useTranslation();
   const [profile, setProfile] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedProfile, setEditedProfile] = useState({});
@@ -77,7 +79,7 @@ export default function ProfileDialog({
       const userData = JSON.parse(localStorage.getItem("userData") || "{}");
 
       if (!token) {
-        setError("Authentication token not found. Please log in again.");
+        setError(t('profile.errors.tokenNotFound', 'Authentication token not found. Please log in again.'));
         setIsLoading(false);
         return;
       }
@@ -132,7 +134,7 @@ export default function ProfileDialog({
       // Update the context with the profile data
       updateProfile(profileData);
     } catch (err) {
-      setError(`Failed to load profile data: ${err.message}`);
+      setError(t('profile.errors.loadFailed', 'Failed to load profile data: {{message}}', { message: err.message }));
     } finally {
       setIsLoading(false);
     }
@@ -175,13 +177,13 @@ export default function ProfileDialog({
     try {
       const token = localStorage.getItem("userToken");
       if (!token) {
-        toast.error("You need to be logged in to upload a profile picture");
+        toast.error(t('profile.errors.loginRequired', 'You need to be logged in to upload a profile picture'));
         return;
       }
 
       const userId = profile.userId || (getUserData() && getUserData().id);
       if (!userId) {
-        toast.error("User ID not found");
+        toast.error(t('profile.errors.userIdNotFound', 'User ID not found'));
         return;
       }
 
@@ -199,36 +201,28 @@ export default function ProfileDialog({
         }
       );
 
-      const updatedProfile = response.data;
+      if (response.data && response.data.profilePictureUrl) {
+        // Ensure URL is absolute
+        let profilePictureUrl = response.data.profilePictureUrl;
+        if (!profilePictureUrl.startsWith("http")) {
+          profilePictureUrl = `${API_BASE_URL}${profilePictureUrl}`;
+        }
 
-      // Update profile state with new avatar URL
-      setProfile((prev) => ({
-        ...prev,
-        avatar: updatedProfile.profilePictureUrl,
-      }));
-      setEditedProfile((prev) => ({
-        ...prev,
-        avatar: updatedProfile.profilePictureUrl,
-      }));
+        // Update both profile states with the new URL
+        setProfile({ ...profile, profilePictureUrl });
+        setEditedProfile({ ...editedProfile, profilePictureUrl });
 
-      // Make sure we use the absolute URL for the avatar preview
-      if (updatedProfile.profilePictureUrl) {
-        const timestamp = new Date().getTime(); // Add timestamp to prevent caching
-        const profilePicUrl = updatedProfile.profilePictureUrl.startsWith(
-          "http"
-        )
-          ? `${updatedProfile.profilePictureUrl}?t=${timestamp}`
-          : `${API_BASE_URL}${updatedProfile.profilePictureUrl}?t=${timestamp}`;
-        setAvatarPreview(profilePicUrl);
+        // Update the global user context
+        updateProfilePicture(profilePictureUrl);
 
-        // Update the Context with the new profile picture URL
-        updateProfilePicture(updatedProfile.profilePictureUrl);
+        toast.success(t('profile.pictureUploadSuccess', 'Profile picture updated successfully'));
       }
-
-      toast.success("Profile picture updated successfully!");
     } catch (err) {
-      console.error(err);
-      toast.error(`Failed to upload profile picture: ${err.message}`);
+      console.error("Error uploading profile picture:", err);
+      toast.error(
+        t('profile.errors.pictureUploadFailed', 'Failed to upload profile picture: {{message}}', 
+        { message: err.response?.data?.message || err.message })
+      );
     }
   };
 
@@ -236,7 +230,6 @@ export default function ProfileDialog({
     try {
       return JSON.parse(localStorage.getItem("userData") || "{}");
     } catch (e) {
-      console.error("Failed to parse user data:", e);
       return {};
     }
   };
@@ -244,46 +237,61 @@ export default function ProfileDialog({
   const validateForm = () => {
     const newErrors = {};
 
-    // Validate date of birth
-    if (editedProfile.dateOfBirth) {
-      const selectedDate = new Date(editedProfile.dateOfBirth);
-      const today = new Date();
+    // Validate fullName
+    if (editedProfile.fullName && editedProfile.fullName.length > 50) {
+      newErrors.fullName = t('profile.errors.fullNameTooLong', 'Full name must be less than 50 characters');
+    }
 
-      // Check if date is valid
-      if (isNaN(selectedDate.getTime())) {
-        newErrors.dateOfBirth = "Please enter a valid date format";
-      } else if (selectedDate > today) {
-        newErrors.dateOfBirth = "Date of birth cannot be in the future";
-      } else {
-        // Check if year has 4 digits and doesn't start with 0
-        const year = selectedDate.getFullYear().toString();
-        if (year.length !== 4 || year.startsWith("0")) {
-          newErrors.dateOfBirth = "Please enter a valid year format!";
-        }
+    // Validate phoneNumber format (optional field)
+    if (
+      editedProfile.phone &&
+      !/^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,4}[-\s.]?[0-9]{1,9}$/.test(
+        editedProfile.phone
+      )
+    ) {
+      newErrors.phone = t('profile.errors.invalidPhoneFormat', 'Invalid phone number format');
+    }
+
+    // Validate dateOfBirth (optional)
+    if (editedProfile.dateOfBirth) {
+      const dateOfBirth = new Date(editedProfile.dateOfBirth);
+      const now = new Date();
+      if (isNaN(dateOfBirth.getTime())) {
+        newErrors.dateOfBirth = t('profile.errors.invalidDateFormat', 'Invalid date format');
+      } else if (dateOfBirth > now) {
+        newErrors.dateOfBirth = t('profile.errors.futureBirthDate', 'Birth date cannot be in the future');
       }
-    } else {
-      newErrors.dateOfBirth = "Please enter a valid date format!";
+    }
+
+    // Validate bio length (optional)
+    if (editedProfile.bio && editedProfile.bio.length > 500) {
+      newErrors.bio = t('profile.errors.bioTooLong', 'Bio must be less than 500 characters');
+    }
+
+    // Validate address length (optional)
+    if (editedProfile.address && editedProfile.address.length > 100) {
+      newErrors.address = t('profile.errors.locationTooLong', 'Location must be less than 100 characters');
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSave = async () => {
+  const handleSaveProfile = async () => {
     if (!validateForm()) {
       return;
     }
+
     try {
       const token = localStorage.getItem("userToken");
       if (!token) {
-        toast.error("You need to be logged in to update your profile");
+        toast.error(t('profile.errors.loginRequired', 'You need to be logged in to update your profile'));
         return;
       }
 
-      // Get user ID from profile or localStorage
       const userId = profile.userId || (getUserData() && getUserData().id);
       if (!userId) {
-        toast.error("User ID not found");
+        toast.error(t('profile.errors.userIdNotFound', 'User ID not found'));
         return;
       }
 
@@ -298,36 +306,143 @@ export default function ProfileDialog({
         }
       );
 
-      const updatedProfile = response.data;
-      setProfile(updatedProfile);
-      setEditedProfile(updatedProfile);
-      setIsEditing(false);
-
-      // Update the Context with the updated profile
-      updateProfile(updatedProfile);
-
-      // Also update the full name specifically
-      if (updatedProfile.fullName) {
-        updateFullName(updatedProfile.fullName);
+      if (response.data) {
+        // Update the profile state
+        setProfile(response.data);
+        
+        // Update the global user context for the full name
+        updateFullName(response.data.fullName);
+        
+        // Exit editing mode
+        setIsEditing(false);
+        
+        // Notify parent component
+        if (onProfileUpdated) {
+          onProfileUpdated(response.data);
+        }
+        
+        toast.success(t('profile.updateSuccess', 'Profile updated successfully'));
       }
-
-      toast.success("Profile updated successfully!");
     } catch (err) {
-      toast.error("Failed to update profile. Please try again.");
-      console.error(err);
+      console.error("Error updating profile:", err);
+      toast.error(
+        t('profile.errors.updateFailed', 'Failed to update profile: {{message}}', 
+        { message: err.response?.data?.message || err.message })
+      );
     }
   };
 
-  const handleDialogClose = () => {
-    if (isEditing) {
-      setIsEditing(false);
-      setEditedProfile(profile);
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString();
+    } catch (e) {
+      return dateString;
     }
-    // Use the appropriate closing function (handleClose takes priority if available)
-    if (handleClose) {
-      handleClose();
-    } else if (onClose) {
-      onClose();
+  };
+
+  // Function to get the correct translation text based on language
+  const getBilingualText = (key, englishText) => {
+    const currentLanguage = i18n.language;
+    
+    // Hard-coded translations for critical UI elements
+    const directTranslations = {
+      'profile.profileInformation': {
+        'en': 'Profile Information',
+        'vi': 'Thông tin hồ sơ'
+      },
+      'profile.personalInformation': {
+        'en': 'Personal Information',
+        'vi': 'Thông tin cá nhân'
+      },
+      'profile.fullName': {
+        'en': 'Full Name',
+        'vi': 'Họ và tên'
+      },
+      'profile.phoneNumber': {
+        'en': 'Phone Number',
+        'vi': 'Số điện thoại'
+      },
+      'profile.dateOfBirth': {
+        'en': 'Date of Birth',
+        'vi': 'Ngày sinh'
+      },
+      'profile.address': {
+        'en': 'Address',
+        'vi': 'Địa chỉ'
+      },
+      'profile.bio': {
+        'en': 'Bio',
+        'vi': 'Tiểu sử'
+      },
+      'profile.placeholders.fullName': {
+        'en': 'Enter your full name',
+        'vi': 'Nhập họ và tên của bạn'
+      },
+      'profile.placeholders.phone': {
+        'en': 'Enter your phone number',
+        'vi': 'Nhập số điện thoại của bạn'
+      },
+      'profile.placeholders.address': {
+        'en': 'Enter your address',
+        'vi': 'Nhập địa chỉ của bạn'
+      },
+      'profile.placeholders.bio': {
+        'en': 'Tell us about yourself',
+        'vi': 'Hãy cho chúng tôi biết về bạn'
+      },
+      'profile.notProvided': {
+        'en': 'Not provided',
+        'vi': 'Chưa cung cấp'
+      },
+      'profile.noBioProvided': {
+        'en': 'No bio provided',
+        'vi': 'Chưa cung cấp tiểu sử'
+      },
+      'common.save': {
+        'en': 'Save', 
+        'vi': 'Lưu'
+      },
+      'common.cancel': {
+        'en': 'Cancel',
+        'vi': 'Hủy'
+      },
+      'common.edit': {
+        'en': 'Edit',
+        'vi': 'Sửa'
+      },
+      'common.email': {
+        'en': 'Email',
+        'vi': 'Email'
+      }
+    };
+    
+    if (directTranslations[key]) {
+      return directTranslations[key][currentLanguage] || directTranslations[key]['en'] || englishText;
+    }
+    
+    return t(key, englishText);
+  };
+
+  // Ensure the close handlers work properly
+  const safeHandleClose = () => {
+    try {
+      // Reset any editing state to prevent conflicts on next open
+      setIsEditing(false);
+      
+      // Call the parent's close handler
+      if (typeof handleClose === 'function') {
+        handleClose();
+      } else if (typeof onClose === 'function') {
+        onClose();
+      }
+    } catch (error) {
+      console.error("Error closing dialog:", error);
+      // Force close the dialog if an error occurs
+      if (typeof onClose === 'function') {
+        onClose();
+      }
     }
   };
 
@@ -335,16 +450,16 @@ export default function ProfileDialog({
     return (
       <Dialog
         open={open}
-        onClose={handleDialogClose}
+        onClose={safeHandleClose}
         maxWidth="md"
         fullWidth
         className="profile-dialog"
       >
         <DialogTitle className="dialog-title" component="div">
-          Loading Profile...
+          {t('profile.loadingProfile', 'Loading Profile...')}
           <IconButton
-            aria-label="close"
-            onClick={handleDialogClose}
+            aria-label={t('common.close', 'Close')}
+            onClick={safeHandleClose}
             className="close-button"
           >
             <CloseIcon />
@@ -353,7 +468,7 @@ export default function ProfileDialog({
         <DialogContent>
           <Box className="loading-container">
             <Typography variant="body1">
-              Loading your profile information...
+              {t('profile.loadingInfo', 'Loading your profile information...')}
             </Typography>
           </Box>
         </DialogContent>
@@ -365,16 +480,16 @@ export default function ProfileDialog({
     return (
       <Dialog
         open={open}
-        onClose={handleDialogClose}
+        onClose={safeHandleClose}
         maxWidth="md"
         fullWidth
         className="profile-dialog"
       >
         <DialogTitle className="dialog-title" component="div">
-          Error
+          {t('common.error', 'Error')}
           <IconButton
-            aria-label="close"
-            onClick={handleDialogClose}
+            aria-label={t('common.close', 'Close')}
+            onClick={safeHandleClose}
             className="close-button"
           >
             <CloseIcon />
@@ -391,16 +506,16 @@ export default function ProfileDialog({
     return (
       <Dialog
         open={open}
-        onClose={handleDialogClose}
+        onClose={safeHandleClose}
         maxWidth="md"
         fullWidth
         className="profile-dialog"
       >
         <DialogTitle className="dialog-title" component="div">
-          No Profile Data
+          {t('profile.noProfileData', 'No Profile Data')}
           <IconButton
-            aria-label="close"
-            onClick={handleDialogClose}
+            aria-label={t('common.close', 'Close')}
+            onClick={safeHandleClose}
             className="close-button"
           >
             <CloseIcon />
@@ -408,7 +523,7 @@ export default function ProfileDialog({
         </DialogTitle>
         <DialogContent>
           <Alert severity="warning">
-            No profile data available. Please log in again.
+            {t('profile.noProfileAvailable', 'No profile data available. Please log in again.')}
           </Alert>
         </DialogContent>
       </Dialog>
@@ -418,7 +533,7 @@ export default function ProfileDialog({
   return (
     <Dialog
       open={open}
-      onClose={handleDialogClose}
+      onClose={safeHandleClose}
       maxWidth="sm"
       fullWidth
       className="profile-dialog"
@@ -427,11 +542,11 @@ export default function ProfileDialog({
     >
       <DialogTitle className="dialog-title" component="div">
         <Typography variant="h6" className="profile-title">
-          Profile Information
+          {getBilingualText('profile.profileInformation', 'Profile Information')}
         </Typography>
         <IconButton
-          aria-label="close"
-          onClick={handleDialogClose}
+          aria-label={t('common.close', 'Close')}
+          onClick={safeHandleClose}
           className="close-button"
         >
           <CloseIcon />
@@ -450,7 +565,7 @@ export default function ProfileDialog({
               <Box ref={loadingFadeRef} className="loading-container">
                 <CircularProgress color="primary" />
                 <Typography variant="body1" sx={{ mt: 2 }}>
-                  Loading profile information...
+                  {t('profile.loadingInfo', 'Loading profile information...')}
                 </Typography>
               </Box>
             </Fade>
@@ -474,7 +589,7 @@ export default function ProfileDialog({
                   onClick={fetchUserProfile}
                   startIcon={<RefreshIcon />}
                 >
-                  Try Again
+                  {t('common.tryAgain', 'Try Again')}
                 </Button>
               </Box>
             </Fade>
@@ -508,6 +623,7 @@ export default function ProfileDialog({
                       component="span"
                       className="upload-button-right"
                       size="small"
+                      aria-label={t('profile.changePicture', 'Change profile picture')}
                     >
                       <PhotoCameraIcon />
                     </IconButton>
@@ -521,7 +637,7 @@ export default function ProfileDialog({
 
                   <Typography variant="body2" className="user-role">
                     <BadgeIcon fontSize="small" className="user-role-icon" />
-                    {profile.role || "User"}
+                    {profile.role || t('common.userRole', 'User')}
                   </Typography>
 
                   {!isEditing ? (
@@ -533,7 +649,7 @@ export default function ProfileDialog({
                       onClick={handleEditToggle}
                       className="edit-button-compact"
                     >
-                      Edit
+                      {t('common.edit', 'Edit')}
                     </Button>
                   ) : null}
                 </Box>
@@ -545,7 +661,7 @@ export default function ProfileDialog({
                   variant="subtitle1"
                   className="section-title-compact"
                 >
-                  Personal Information
+                  {getBilingualText('profile.personalInformation', 'Personal Information')}
                 </Typography>
 
                 <Box className="field-grid-compact">
@@ -555,7 +671,7 @@ export default function ProfileDialog({
                         fontSize="small"
                         sx={{ mr: 0.5, verticalAlign: "text-bottom" }}
                       />
-                      Full Name
+                      {getBilingualText('profile.fullName', 'Full Name')}
                     </Typography>
                     {isEditing ? (
                       <TextField
@@ -566,7 +682,10 @@ export default function ProfileDialog({
                         variant="outlined"
                         size="small"
                         className="text-field"
-                        placeholder="Enter your full name"
+                        placeholder={getBilingualText('profile.placeholders.fullName', 'Enter your full name')}
+                        error={!!errors.fullName}
+                        helperText={errors.fullName}
+                        aria-label={getBilingualText('profile.fullName', 'Full Name')}
                       />
                     ) : (
                       <Typography variant="body2" className="field-value">
@@ -581,7 +700,7 @@ export default function ProfileDialog({
                         fontSize="small"
                         sx={{ mr: 0.5, verticalAlign: "text-bottom" }}
                       />
-                      Email
+                      {getBilingualText('common.email', 'Email')}
                     </Typography>
                     <Typography variant="body2" className="field-value">
                       {profile.email}
@@ -594,7 +713,7 @@ export default function ProfileDialog({
                         fontSize="small"
                         sx={{ mr: 0.5, verticalAlign: "text-bottom" }}
                       />
-                      Phone Number
+                      {getBilingualText('profile.phoneNumber', 'Phone Number')}
                     </Typography>
                     {isEditing ? (
                       <TextField
@@ -605,11 +724,14 @@ export default function ProfileDialog({
                         variant="outlined"
                         size="small"
                         className="text-field"
-                        placeholder="Enter your phone number"
+                        placeholder={getBilingualText('profile.placeholders.phone', 'Enter your phone number')}
+                        error={!!errors.phone}
+                        helperText={errors.phone}
+                        aria-label={getBilingualText('profile.phoneNumber', 'Phone Number')}
                       />
                     ) : (
                       <Typography variant="body2" className="field-value">
-                        {profile.phone || "Not provided"}
+                        {profile.phone || getBilingualText('profile.notProvided', 'Not provided')}
                       </Typography>
                     )}
                   </Box>
@@ -620,7 +742,7 @@ export default function ProfileDialog({
                         fontSize="small"
                         sx={{ mr: 0.5, verticalAlign: "text-bottom" }}
                       />
-                      Date of Birth
+                      {getBilingualText('profile.dateOfBirth', 'Date of Birth')}
                     </Typography>
                     {isEditing ? (
                       <Box>
@@ -637,6 +759,8 @@ export default function ProfileDialog({
                           InputLabelProps={{
                             shrink: true,
                           }}
+                          placeholder="dd/mm/yyyy"
+                          aria-label={getBilingualText('profile.dateOfBirth', 'Date of Birth')}
                         />
                         {errors.dateOfBirth && (
                           <Alert
@@ -655,7 +779,7 @@ export default function ProfileDialog({
                       </Box>
                     ) : (
                       <Typography variant="body2" className="field-value">
-                        {profile.dateOfBirth || "Not provided"}
+                        {profile.dateOfBirth ? formatDate(profile.dateOfBirth) : getBilingualText('profile.notProvided', 'Not provided')}
                       </Typography>
                     )}
                   </Box>
@@ -666,7 +790,7 @@ export default function ProfileDialog({
                         fontSize="small"
                         sx={{ mr: 0.5, verticalAlign: "text-bottom" }}
                       />
-                      Address
+                      {getBilingualText('profile.address', 'Address')}
                     </Typography>
                     {isEditing ? (
                       <TextField
@@ -677,11 +801,14 @@ export default function ProfileDialog({
                         variant="outlined"
                         size="small"
                         className="text-field"
-                        placeholder="Enter your address"
+                        placeholder={getBilingualText('profile.placeholders.address', 'Enter your address')}
+                        error={!!errors.address}
+                        helperText={errors.address}
+                        aria-label={getBilingualText('profile.address', 'Address')}
                       />
                     ) : (
                       <Typography variant="body2" className="field-value">
-                        {profile.address || "Not provided"}
+                        {profile.address || getBilingualText('profile.notProvided', 'Not provided')}
                       </Typography>
                     )}
                   </Box>
@@ -693,7 +820,7 @@ export default function ProfileDialog({
                       fontSize="small"
                       sx={{ mr: 0.5, verticalAlign: "text-bottom" }}
                     />
-                    Bio
+                    {getBilingualText('profile.bio', 'Bio')}
                   </Typography>
                   {isEditing ? (
                     <TextField
@@ -706,12 +833,15 @@ export default function ProfileDialog({
                       variant="outlined"
                       size="small"
                       className="text-field"
-                      placeholder="Tell us about yourself"
+                      placeholder={getBilingualText('profile.placeholders.bio', 'Tell us about yourself')}
+                      error={!!errors.bio}
+                      helperText={errors.bio}
+                      aria-label={getBilingualText('profile.bio', 'Bio')}
                     />
                   ) : (
                     <Box className="bio-field-compact">
                       <Typography variant="body2" className="field-value">
-                        {profile.bio || "No bio provided"}
+                        {profile.bio || getBilingualText('profile.noBioProvided', 'No bio provided')}
                       </Typography>
                     </Box>
                   )}
@@ -729,17 +859,17 @@ export default function ProfileDialog({
                     className="cancel-button"
                     size="small"
                   >
-                    Cancel
+                    {getBilingualText('common.cancel', 'Cancel')}
                   </Button>
                   <Button
                     variant="contained"
                     color="primary"
-                    onClick={handleSave}
+                    onClick={handleSaveProfile}
                     startIcon={<SaveIcon />}
                     className="save-button"
                     size="small"
                   >
-                    Save
+                    {getBilingualText('common.save', 'Save')}
                   </Button>
                 </Box>
               )}

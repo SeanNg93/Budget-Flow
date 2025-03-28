@@ -25,6 +25,7 @@ import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear } from 'date-fns';
 import styles from '../../styles/financeChart.module.css';
 import FinanceService from '../../services/FinanceService';
+import { useTranslation } from 'react-i18next';
 
 // Time range configuration
 const TIME_RANGES = [
@@ -48,6 +49,8 @@ const SummaryItem = React.memo(({ label, value, color }) => (
 
 // Chart content state component
 const ChartContent = React.memo(({ loading, renderError, chartData, onRetry, formatCurrency }) => {
+  const { t } = useTranslation();
+  
   if (loading) {
     return (
       <Box className={styles.loadingContainer}>
@@ -60,7 +63,7 @@ const ChartContent = React.memo(({ loading, renderError, chartData, onRetry, for
     return (
       <Box className={styles.errorContainer}>
         <Typography color="error" align="center">
-          Unable to render chart. Please try again later.
+          {t('common.error', 'Unable to render chart. Please try again later.')}
         </Typography>
         <Box mt={2}>
           <Button
@@ -69,7 +72,7 @@ const ChartContent = React.memo(({ loading, renderError, chartData, onRetry, for
             onClick={onRetry}
             aria-label="Retry loading chart"
           >
-            Retry
+            {t('common.retry', 'Retry')}
           </Button>
         </Box>
       </Box>
@@ -80,10 +83,10 @@ const ChartContent = React.memo(({ loading, renderError, chartData, onRetry, for
     return (
       <Box className={styles.loadingContainer} sx={{ bgcolor: 'rgba(0, 0, 0, 0.01)' }}>
         <Typography color="textSecondary" align="center">
-          No financial data available for this time period.
+          {t('chart.noData', 'No financial data available for this time period.')}
         </Typography>
         <Typography color="textSecondary" align="center" variant="body2" sx={{ mt: 1 }}>
-          Add transactions to see your financial performance chart.
+          {t('chart.addTransactionsToSee', 'Add transactions to see your financial performance chart.')}
         </Typography>
       </Box>
     );
@@ -107,8 +110,8 @@ const ChartContent = React.memo(({ loading, renderError, chartData, onRetry, for
         <YAxis tick={{ fontSize: 11 }} />
         <Tooltip formatter={(value) => formatCurrency(value)} />
         <Legend wrapperStyle={{ fontSize: '11px' }} />
-        <Bar dataKey="income" name="Income" fill="#4caf50" />
-        <Bar dataKey="expenses" name="Expenses" fill="#f44336" />
+        <Bar dataKey="income" name={t('transaction.income', 'Income')} fill="#4caf50" />
+        <Bar dataKey="expenses" name={t('transaction.expense', 'Expenses')} fill="#f44336" />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -118,39 +121,44 @@ const ChartContent = React.memo(({ loading, renderError, chartData, onRetry, for
 const TimeRangeNavigation = React.memo(({
   timeRangeIndex,
   handleTimeRangeChange
-}) => (
-  <Box className={styles.timeRangeControls}>
-    <IconButton
-      onClick={() => handleTimeRangeChange('prev')}
-      disabled={timeRangeIndex >= TIME_RANGES.length - 1}
-      size="small"
-      className={styles.navButton}
-      aria-label="Previous time range"
-    >
-      <NavigateBeforeIcon fontSize="small" />
-    </IconButton>
+}) => {
+  const { t } = useTranslation();
+  
+  return (
+    <Box className={styles.timeRangeControls}>
+      <IconButton
+        onClick={() => handleTimeRangeChange('prev')}
+        disabled={timeRangeIndex >= TIME_RANGES.length - 1}
+        size="small"
+        className={styles.navButton}
+        aria-label={t('chart.previousTimeRange', 'Previous time range')}
+      >
+        <NavigateBeforeIcon fontSize="small" />
+      </IconButton>
 
-    <Typography
-      variant="subtitle2"
-      className={styles.timeRangeLabel}
-    >
-      {TIME_RANGES[timeRangeIndex].label}
-    </Typography>
+      <Typography
+        variant="subtitle2"
+        className={styles.timeRangeLabel}
+      >
+        {t(`chart.timeRanges.${TIME_RANGES[timeRangeIndex].value}`, TIME_RANGES[timeRangeIndex].label)}
+      </Typography>
 
-    <IconButton
-      onClick={() => handleTimeRangeChange('next')}
-      disabled={timeRangeIndex <= 0}
-      size="small"
-      className={styles.navButton}
-      aria-label="Next time range"
-    >
-      <NavigateNextIcon fontSize="small" />
-    </IconButton>
-  </Box>
-));
+      <IconButton
+        onClick={() => handleTimeRangeChange('next')}
+        disabled={timeRangeIndex <= 0}
+        size="small"
+        className={styles.navButton}
+        aria-label={t('chart.nextTimeRange', 'Next time range')}
+      >
+        <NavigateNextIcon fontSize="small" />
+      </IconButton>
+    </Box>
+  );
+});
 
 // Accept refreshKey prop
 const FinanceChart = ({ refreshKey }) => {
+  const { t } = useTranslation();
   // State management
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -276,30 +284,30 @@ const FinanceChart = ({ refreshKey }) => {
   const renderSummaryItems = useMemo(() => (
     <Box className={styles.summaryContainer}>
       <SummaryItem
-        label="Total Income"
+        label={t('chart.totalIncome', 'Total Income')}
         value={formatCurrency(summaryData.totalIncome)}
-        color="primary"
+        color="#4caf50"
       />
 
       <SummaryItem
-        label="Total Expenses"
+        label={t('chart.totalExpenses', 'Total Expenses')}
         value={formatCurrency(summaryData.totalExpenses)}
-        color="error"
+        color="#f44336"
       />
 
       <SummaryItem
-        label="Net Savings"
+        label={t('chart.netSavings', 'Net Savings')}
         value={formatCurrency(summaryData.netSavings)}
         color={summaryData.netSavings >= 0 ? "success" : "error"}
       />
     </Box>
   // Removed handleIncomeLabelClick and mockDataMode dependencies
-  ), [summaryData, formatCurrency]);
+  ), [summaryData, formatCurrency, t]);
 
   return (
     <Card className={styles.chartCard}>
       <CardHeader
-        title="Financial performance chart"
+        title={t('chart.financialPerformance', 'Financial performance chart')}
         action={
           <Box className={styles.headerControls}>
             <TimeRangeNavigation

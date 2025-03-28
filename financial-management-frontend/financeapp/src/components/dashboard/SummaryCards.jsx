@@ -29,6 +29,7 @@ import {
   Check as CheckIcon
 } from '@mui/icons-material';
 import styles from '../../styles/dashboard.module.css';
+import { useTranslation } from 'react-i18next';
 
 /**
  * CardHeader component for consistent header styling across cards
@@ -116,23 +117,24 @@ const SummaryCards = ({
   onTimeRangeChange,
   timeRangeLoading = false
 }) => {
+  const { t } = useTranslation();
   const [balanceMenuAnchorEl, setBalanceMenuAnchorEl] = useState(null);
 
   // Time range options
   const timeRangeOptions = useMemo(() => [
-    { value: '24h', label: 'Last 24 hours' },
-    { value: '7d', label: 'Last 7 days' },
-    { value: '30d', label: 'Last 30 days' },
-    { value: '3m', label: 'Last 3 months' },
-    { value: '1y', label: 'Last year' },
-    { value: 'all', label: 'All time' }
-  ], []);
+    { value: '24h', label: t('dashboard.timeRanges.last24h', 'Last 24 hours') },
+    { value: '7d', label: t('dashboard.timeRanges.last7d', 'Last 7 days') },
+    { value: '30d', label: t('dashboard.timeRanges.last30d', 'Last 30 days') },
+    { value: '3m', label: t('dashboard.timeRanges.last3m', 'Last 3 months') },
+    { value: '1y', label: t('dashboard.timeRanges.last1y', 'Last year') },
+    { value: 'all', label: t('dashboard.timeRanges.allTime', 'All time') }
+  ], [t]);
   
   // Get the current time range label
   const currentTimeRangeLabel = useMemo(() => {
     const option = timeRangeOptions.find(opt => opt.value === timeRange);
-    return option ? option.label : 'All time';
-  }, [timeRange, timeRangeOptions]);
+    return option ? option.label : t('dashboard.timeRanges.allTime', 'All time');
+  }, [timeRange, timeRangeOptions, t]);
 
   // Memoize event handlers
   const handleBalanceMenuOpen = useCallback((event) => {
@@ -176,23 +178,23 @@ const SummaryCards = ({
           size={16} 
           thickness={4}
           sx={{ mr: 1 }}
-          aria-label="Loading financial data"
+          aria-label={t('common.loading', 'Loading financial data')}
         />
       )}
-      <Tooltip title="Add balance">
+      <Tooltip title={t('wallet.addBalance', 'Add balance')}>
         <IconButton 
           color="primary" 
           size="small" 
           onClick={handleAddBalance}
           className={styles.addIconButton}
-          aria-label="Add balance"
+          aria-label={t('wallet.addBalance', 'Add balance')}
         >
           <AddIcon fontSize="small" />
         </IconButton>
       </Tooltip>
-      <Tooltip title="Balance options">
+      <Tooltip title={t('common.options', 'Balance options')}>
         <IconButton
-          aria-label="Balance options"
+          aria-label={t('common.options', 'Balance options')}
           aria-controls={Boolean(balanceMenuAnchorEl) ? "balance-menu" : undefined}
           aria-haspopup="true"
           aria-expanded={Boolean(balanceMenuAnchorEl) ? "true" : undefined}
@@ -211,7 +213,7 @@ const SummaryCards = ({
         </IconButton>
       </Tooltip>
     </>
-  ), [handleAddBalance, handleBalanceMenuOpen, balanceMenuAnchorEl, timeRange, timeRangeLoading]);
+  ), [handleAddBalance, handleBalanceMenuOpen, balanceMenuAnchorEl, timeRange, timeRangeLoading, t]);
 
   // Extra content for balance card with menu
   const balanceMenu = useMemo(() => (
@@ -233,13 +235,13 @@ const SummaryCards = ({
         <ListItemIcon>
           <EditIcon fontSize="small" className={styles.menuIcon} aria-hidden="true" />
         </ListItemIcon>
-        <ListItemText>Edit Balance</ListItemText>
+        <ListItemText>{t('wallet.editBalance', 'Edit Balance')}</ListItemText>
       </MenuItem>
       <MenuItem onClick={onManageWallets} className={styles.menuItem}>
         <ListItemIcon>
           <SettingsIcon fontSize="small" className={styles.menuIcon} aria-hidden="true" />
         </ListItemIcon>
-        <ListItemText>Manage Wallets</ListItemText>
+        <ListItemText>{t('wallet.manageWallets', 'Manage Wallets')}</ListItemText>
       </MenuItem>
       
       {onTimeRangeChange && (
@@ -252,7 +254,7 @@ const SummaryCards = ({
             sx={{ px: 2, py: 0.5, display: 'flex', alignItems: 'center' }}
           >
             <TimeIcon fontSize="small" sx={{ mr: 1, opacity: 0.7 }} />
-            Time Range for Income, Expenses & Savings
+            {t('dashboard.timeRangeDescription', 'Time Range for Income, Expenses & Savings')}
           </Typography>
           
           {timeRangeOptions.map((option) => (
@@ -290,7 +292,7 @@ const SummaryCards = ({
     
     return [
       {
-        title: `Total Balance${timeRange !== 'all' ? '' : ''}`,
+        title: `${t('wallet.totalBalance')}${timeRange !== 'all' ? '' : ''}`,
         icon: <AccountBalanceWalletIcon />,
         iconColor: '#007aff',
         amount: formatCurrency(totalBalance),
@@ -299,10 +301,10 @@ const SummaryCards = ({
         extraHeader: balanceHeader,
         extraContent: balanceMenu,
         gridSize: 3,
-        accessibleLabel: `Total Balance: ${formatCurrency(totalBalance)}`
+        accessibleLabel: `${t('wallet.totalBalance')}: ${formatCurrency(totalBalance)}`
       },
       {
-        title: `Income${timeRange !== 'all' ? ` (${currentTimeRangeLabel})` : ''}`,
+        title: `${t('transaction.income')}${timeRange !== 'all' ? ` (${currentTimeRangeLabel})` : ''}`,
         icon: <TrendingUpIcon />,
         iconColor: '#34c759',
         amount: formatCurrency(totalIncome),
@@ -310,10 +312,10 @@ const SummaryCards = ({
         amountClass: styles.incomeAmount,
         amountColor: 'success.main',
         gridSize: 3,
-        accessibleLabel: `Income: ${formatCurrency(totalIncome)}`
+        accessibleLabel: `${t('transaction.income')}: ${formatCurrency(totalIncome)}`
       },
       {
-        title: `Expenses${timeRange !== 'all' ? ` (${currentTimeRangeLabel})` : ''}`,
+        title: `${t('transaction.expense')}${timeRange !== 'all' ? ` (${currentTimeRangeLabel})` : ''}`,
         icon: <TrendingDownIcon />,
         iconColor: '#ff3b30',
         amount: formatCurrency(totalExpense),
@@ -321,10 +323,10 @@ const SummaryCards = ({
         amountClass: styles.expenseAmount,
         amountColor: 'error.main',
         gridSize: 3,
-        accessibleLabel: `Expenses: ${formatCurrency(totalExpense)}`
+        accessibleLabel: `${t('transaction.expense')}: ${formatCurrency(totalExpense)}`
       },
       {
-        title: `Net Savings${timeRange !== 'all' ? ` (${currentTimeRangeLabel})` : ''}`,
+        title: `${t('wallet.netSavings')}${timeRange !== 'all' ? ` (${currentTimeRangeLabel})` : ''}`,
         icon: <SavingsIcon />,
         iconColor: netSavings >= 0 ? '#34c759' : '#ff3b30',
         amount: formatCurrency(netSavings),
@@ -332,7 +334,7 @@ const SummaryCards = ({
         amountClass: styles.savingsAmount,
         amountColor: netSavings >= 0 ? 'success.main' : 'error.main',
         gridSize: 3,
-        accessibleLabel: `Net Savings: ${formatCurrency(netSavings)}`
+        accessibleLabel: `${t('wallet.netSavings')}: ${formatCurrency(netSavings)}`
       }
     ];
   }, [
@@ -341,7 +343,8 @@ const SummaryCards = ({
     balanceHeader,
     balanceMenu,
     timeRange,
-    currentTimeRangeLabel
+    currentTimeRangeLabel,
+    t
   ]);
 
   // Memoize grid items to prevent unnecessary re-renders

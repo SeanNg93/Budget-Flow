@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link as RouterLink } from 'react-router-dom';
 import { activateAccount } from '../../config/axiosInstance';
 import styles from '../../styles/auth.module.css';
+import { useTranslation } from 'react-i18next';
 
 // Material UI imports
 import {
@@ -17,11 +18,12 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 
 export default function ActivateAccount() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const [activating, setActivating] = useState(true);
   const [activated, setActivated] = useState(false);
-  const [message, setMessage] = useState('Activating your account...');
+  const [message, setMessage] = useState(t('auth.activatingAccount', 'Activating your account...'));
 
   useEffect(() => {
     const activateUserAccount = async () => {
@@ -31,21 +33,21 @@ export default function ActivateAccount() {
         const token = queryParams.get('token');
         
         if (!token) {
-          setMessage('Invalid activation link. The token is missing.');
+          setMessage(t('auth.invalidActivationLink', 'Invalid activation link. The token is missing.'));
           setActivating(false);
           return;
         }
         
         const response = await activateAccount(token);
         setActivated(true);
-        setMessage(response.data.message || 'Your account has been successfully activated! You can now log in.');
+        setMessage(response.data.message || t('auth.accountActivated', 'Your account has been successfully activated! You can now log in.'));
       } catch (error) {
         setActivated(false);
         const errorMessage = error.response?.data 
           ? (typeof error.response.data === 'string' 
               ? error.response.data 
               : error.response.data.message || JSON.stringify(error.response.data))
-          : 'Account activation failed. The link may have expired or is invalid.';
+          : t('auth.activationFailed', 'Account activation failed. The link may have expired or is invalid.');
         setMessage(errorMessage);
       } finally {
         setActivating(false);
@@ -53,7 +55,7 @@ export default function ActivateAccount() {
     };
 
     activateUserAccount();
-  }, [location]);
+  }, [location, t]);
 
   return (
     <CssBaseline>
@@ -61,16 +63,16 @@ export default function ActivateAccount() {
         <Paper elevation={3} className={styles.authCard}>
           <Box className={styles.logoContainer}>
             <div className={styles.logoBackground}>
-              <img src="/Dollarnote_siegel_hq.jpg" alt="Budget Flow Logo" className={styles.logo} />
+              <img src="/Dollarnote_siegel_hq.jpg" alt={t('common.appName', 'Budget Flow Logo')} className={styles.logo} />
             </div>
           </Box>
           
           <Typography variant="h4" component="h1" className={styles.appTitle}>
-            BUDGET FLOW
+            {t('common.appName', 'BUDGET FLOW')}
           </Typography>
           
           <Typography variant="body2" className={styles.appTagline}>
-            Illuminate Your Financial Future
+            {t('auth.appTagline', 'Illuminate Your Financial Future')}
           </Typography>
           
           {activating ? (
@@ -97,7 +99,7 @@ export default function ActivateAccount() {
                 variant="contained"
                 className={styles.gradientButton}
               >
-                Go to Login
+                {t('auth.goToLogin', 'Go to Login')}
               </Button>
               
               {!activated && (
@@ -107,7 +109,7 @@ export default function ActivateAccount() {
                     to="/register"
                     className={styles.authLink}
                   >
-                    Register again
+                    {t('auth.registerAgain', 'Register again')}
                   </Link>
                 </Typography>
               )}

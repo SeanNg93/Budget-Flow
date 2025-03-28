@@ -34,6 +34,8 @@ import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import styles from '../../styles/appNavbar.module.css';
 import { useUser } from '../../context/UserContext';
+import LanguageSelector from '../utils/LanguageSelector';
+import { useTranslation } from 'react-i18next';
 
 const API_BASE_URL = "http://localhost:8080";
 const DEFAULT_AVATAR = "/default-avatar.svg";
@@ -42,6 +44,7 @@ const drawerWidth = 280;
 
 const AppNavbar = ({ open, handleDrawerOpen }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState(null);
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = useState(null);
   const userData = JSON.parse(localStorage.getItem('userData') || '{}');
@@ -278,10 +281,10 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
         </Typography>
       </Box>
       <Divider className={styles.menuDivider} />
-      <MenuItem onClick={handleProfile} className={styles.menuItem}>Profile</MenuItem>
-      <MenuItem onClick={handleOpenSettings} className={styles.menuItem}>Settings</MenuItem>
+      <MenuItem onClick={handleProfile} className={styles.menuItem}>{t('common.profile')}</MenuItem>
+      <MenuItem onClick={handleOpenSettings} className={styles.menuItem}>{t('common.settings')}</MenuItem>
       <Divider className={styles.menuDivider} />
-      <MenuItem onClick={handleLogout} className={styles.menuItem}>Logout</MenuItem>
+      <MenuItem onClick={handleLogout} className={styles.menuItem}>{t('common.logout')}</MenuItem>
     </Menu>
   );
 
@@ -308,7 +311,11 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
     >
       <MenuItem className={styles.menuItem}>
         <NotificationMenu />
-        <Typography variant="body1" sx={{ ml: 1 }}>Notifications</Typography>
+        <Typography variant="body1" sx={{ ml: 1 }}>{t('common.notifications')}</Typography>
+      </MenuItem>
+      <MenuItem className={styles.menuItem}>
+        <LanguageSelector />
+        <Typography variant="body1" sx={{ ml: 1 }}>{t('common.language')}</Typography>
       </MenuItem>
       <MenuItem onClick={handleProfileMenuOpen} className={styles.menuItem}>
         <IconButton
@@ -332,7 +339,7 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
             {!profileData.profilePicture && (profileData.fullName || userData.username) ? (profileData.fullName || userData.username).charAt(0).toUpperCase() : null}
           </Avatar>
         </IconButton>
-        <Typography variant="body1" sx={{ ml: 1 }}>Profile</Typography>
+        <Typography variant="body1" sx={{ ml: 1 }}>{t('common.profile')}</Typography>
       </MenuItem>
     </Menu>
   );
@@ -373,7 +380,7 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
               letterSpacing: '-0.01em'
             }}
           >
-            Budget Flow
+            {t('common.appName')}
           </Typography>
           
           <ClickAwayListener onClickAway={handleClickAway}>
@@ -383,8 +390,8 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
                   <SearchIcon />
                 </div>
                 <InputBase
-                  placeholder="Search…"
-                  inputProps={{ 'aria-label': 'search' }}
+                  placeholder={t('common.search')}
+                  inputProps={{ 'aria-label': t('common.search') }}
                   value={searchValue}
                   onChange={handleSearchChange}
                   onFocus={handleSearchFocus}
@@ -448,7 +455,7 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
           
           <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center' }}>
             <NotificationMenu />
-            
+            <LanguageSelector />
             <Box 
               onClick={handleProfileMenuOpen}
               className={styles.profileButton}

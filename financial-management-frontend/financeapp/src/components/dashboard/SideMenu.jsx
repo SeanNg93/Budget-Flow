@@ -23,6 +23,7 @@ import CategoryIcon from '@mui/icons-material/Category';
 import axios from 'axios';
 import { useUser } from '../../context/UserContext';
 import SettingsPanel from '../settings/SettingsPanel';
+import { useTranslation } from 'react-i18next';
 
 const API_BASE_URL = "http://localhost:8080";
 const DEFAULT_AVATAR = "/default-avatar.svg";
@@ -58,6 +59,7 @@ const StyledListItemButton = styled(ListItemButton)(({ theme }) => ({
 }));
 
 const SideMenu = ({ open, handleDrawerClose, setProfileDialogOpen, setCategoryManageFormOpen }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const userData = JSON.parse(localStorage.getItem('userData') || '{}');
@@ -84,13 +86,14 @@ const SideMenu = ({ open, handleDrawerClose, setProfileDialogOpen, setCategoryMa
   };
 
   const handleMenuItemClick = (item) => {
-    if (item.text === 'Profile') {
+    // Check path instead of text for more reliability with translations
+    if (item.path === '/profile') {
       // Open profile dialog instead of navigating
       setProfileDialogOpen(true);
-    } else if (item.text === 'Category Manage') {
+    } else if (item.path === '/categories') {
       // Open category manage dialog instead of navigating
       setCategoryManageFormOpen(true);
-    } else if (item.text === 'Settings') {
+    } else if (item.path === '/settings') {
       // Open settings panel instead of navigating
       setSettingsPanelOpen(true);
     } else {
@@ -100,11 +103,11 @@ const SideMenu = ({ open, handleDrawerClose, setProfileDialogOpen, setCategoryMa
   };
 
   const menuItems = [
-    { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
-    { text: 'Transactions', icon: <AccountBalanceWalletIcon />, path: '/transactions' },
-    { text: 'Category Manage', icon: <CategoryIcon />, path: '/categories' },
-    { text: 'Profile', icon: <PersonIcon />, path: '/profile' },
-    { text: 'Settings', icon: <SettingsIcon />, path: '/settings' },
+    { text: t('dashboard.dashboard', 'Dashboard'), icon: <DashboardIcon />, path: '/dashboard' },
+    { text: t('dashboard.transactions', 'Transactions'), icon: <AccountBalanceWalletIcon />, path: '/transactions' },
+    { text: t('dashboard.categories', 'Category Manage'), icon: <CategoryIcon />, path: '/categories' },
+    { text: t('common.profile', 'Profile'), icon: <PersonIcon />, path: '/profile' },
+    { text: t('common.settings', 'Settings'), icon: <SettingsIcon />, path: '/settings' },
   ];
 
   return (
@@ -166,7 +169,7 @@ const SideMenu = ({ open, handleDrawerClose, setProfileDialogOpen, setCategoryMa
               letterSpacing: '0.05em'
             }}
           >
-            MENU
+            {t('common.menu', 'MENU')}
           </Typography>
           
           <List sx={{ mt: 1 }}>
@@ -210,7 +213,7 @@ const SideMenu = ({ open, handleDrawerClose, setProfileDialogOpen, setCategoryMa
                 <LogoutIcon />
               </ListItemIcon>
               <ListItemText 
-                primary="Logout" 
+                primary={t('common.logout', 'Logout')}
                 primaryTypographyProps={{ 
                   fontSize: '0.95rem',
                   fontWeight: 500

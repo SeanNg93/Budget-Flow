@@ -33,6 +33,7 @@ import { getWalletColorClass, getWalletIcon, WALLET_ICONS } from '../../utils/wa
 import ShareWalletForm from './ShareWalletForm';
 import UserTransferForm from './UserTransferForm';
 import WalletForm from './WalletForm';
+import { useTranslation } from 'react-i18next';
 
 // Helper to format currency
 const formatCurrency = (value) => {
@@ -97,12 +98,13 @@ const WalletIcon = React.memo(({ wallet }) => {
 
 // Extracted Shared Wallet Avatar component
 const SharedWalletAvatar = React.memo(({ info, isOwner }) => {
+  const { t } = useTranslation();
   const avatarUrl = isOwner ? info.sharedWithProfilePictureUrl : info.ownerProfilePictureUrl;
   const username = isOwner ? info.sharedWithUsername : info.ownerUsername;
   
   const tooltipTitle = isOwner 
-    ? `Shared with: ${info.sharedWithUsername}`
-    : `Owner: ${info.ownerUsername}`;
+    ? t('wallet.sharedWith', 'Shared with: {{username}}', { username: info.sharedWithUsername })
+    : t('wallet.sharedBy', 'Owner: {{username}}', { username: info.ownerUsername });
   
   return (
     <Tooltip title={tooltipTitle}>
@@ -127,6 +129,7 @@ const SharedWalletAvatar = React.memo(({ info, isOwner }) => {
 
 // Extracted Wallet Card component
 const WalletCard = React.memo(({ wallet, colorClass, isShared, isWalletOwner, getSharedWalletInfo, onMenuOpen }) => {
+  const { t } = useTranslation();
   const handleMenuOpen = useCallback((e) => {
     e.stopPropagation();
     onMenuOpen(e, wallet);
@@ -196,14 +199,16 @@ const WalletCard = React.memo(({ wallet, colorClass, isShared, isWalletOwner, ge
       >
         {isShared ? (
           <>
-            {isWalletOwner(wallet.id) ? 'Shared Wallet with:' : 'Shared Wallet by:'}
+            {isWalletOwner(wallet.id) ? 
+              t('wallet.sharedWith', 'Shared with:') : 
+              t('wallet.sharedBy', 'Shared by:')}
             <SharedWalletAvatar 
               info={getSharedWalletInfo(wallet.id)} 
               isOwner={isWalletOwner(wallet.id)} 
             />
           </>
         ) : (
-          wallet.accountType || "General Account"
+          wallet.accountType || t('wallet.generalAccount', 'General Account')
         )}
       </Typography>
     </Box>
@@ -221,6 +226,7 @@ const WalletCard = React.memo(({ wallet, colorClass, isShared, isWalletOwner, ge
 });
 
 const WalletOverview = ({ onManageWallets, externalWallets }) => {
+  const { t } = useTranslation();
   const [wallets, setWallets] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -599,40 +605,20 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
 
   return (
     <Paper className={styles.walletOverviewCard}>
-      <Box className={styles.walletOverviewHeader}>
-        <Typography 
-          component="h2" 
-          variant="h5" 
-          color="text.primary" 
-          className={styles.sectionTitle}
-        >
-          Your Wallets
-          {wallets.length > 0 && (
-            <Typography 
-              component="span" 
-              variant="h6" 
-              sx={{ 
-                ml: 1, 
-                color: 'text.secondary', 
-                fontWeight: 'normal',
-                fontSize: '1.1rem',
-                opacity: 0.8
-              }}
-            >
-              ({wallets.length})
-            </Typography>
-          )}
+      <Box className={styles.walletHeader}>
+        <Typography variant="h6" component="h2">
+          {t('wallet.yourWallets', 'Your Wallets')} ({wallets.length})
         </Typography>
         <Button 
-          variant="contained" 
-          color="primary" 
-          onClick={onManageWallets}
+          startIcon={<SettingsIcon />} 
+          variant="outlined" 
+          size="small" 
+          color="primary"
           className={styles.manageWalletsButton}
-          size="small"
-          startIcon={<SettingsIcon />}
-          aria-label="Manage wallets"
+          onClick={onManageWallets}
+          aria-label="Manage your wallets"
         >
-          Manage Wallets
+          {t('wallet.manageWallets', 'Manage Wallets')}
         </Button>
       </Box>
       

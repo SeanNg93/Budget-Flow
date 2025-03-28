@@ -16,8 +16,10 @@ import {
 } from '@mui/material';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import styles from '../styles/delete-account.module.css';
+import { useTranslation } from 'react-i18next';
 
 export default function DeleteAccount() {
+    const { t } = useTranslation();
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
@@ -28,7 +30,7 @@ export default function DeleteAccount() {
 
     const handleDeleteRequest = () => {
         if (!password.trim()) {
-            setError("Please enter your password to confirm.");
+            setError(t('settings.errors.passwordRequired', 'Please enter your password to confirm.'));
             return;
         }
         
@@ -49,7 +51,7 @@ export default function DeleteAccount() {
             // Get token from localStorage and verify
             const token = localStorage.getItem('userToken');
             if (!token) {
-                setError("Your session has expired. Please log in again.");
+                setError(t('auth.errors.sessionExpired', 'Your session has expired. Please log in again.'));
                 navigate('/login');
                 return;
             }
@@ -71,7 +73,7 @@ export default function DeleteAccount() {
 
             // Check status code
             if (response.status === 403) {
-                throw new Error('Access denied. Please log in again.');
+                throw new Error(t('auth.errors.accessDenied', 'Access denied. Please log in again.'));
             }
 
             const data = await response.json();
@@ -79,10 +81,10 @@ export default function DeleteAccount() {
 
             if (data.success === true || data.success === "true") {
                 // Show success dialog instead of alert
-                setSuccessMessage(data.message || "Account marked for deletion. You have 30 minutes to log back in if you change your mind.");
+                setSuccessMessage(data.message || t('settings.accountMarkedForDeletion', 'Account marked for deletion. You have 30 minutes to log back in if you change your mind.'));
                 setSuccessDialogOpen(true);
             } else {
-                setError(data.message || "An error occurred.");
+                setError(data.message || t('common.error', 'An error occurred.'));
             }
         } catch (error) {
             console.error('Error:', error);
@@ -90,7 +92,7 @@ export default function DeleteAccount() {
                 localStorage.clear();
                 navigate('/login');
             } else {
-                setError(error.message || "An error occurred, please try again later.");
+                setError(error.message || t('common.errorTryAgain', 'An error occurred, please try again later.'));
             }
         } finally {
             setIsLoading(false);
@@ -108,14 +110,14 @@ export default function DeleteAccount() {
             <Container maxWidth="sm" className={styles.container}>
                 <Paper elevation={3} className={styles.deleteAccountForm}>
                     <Typography variant="h4" component="h2" className={styles.title}>
-                        Delete Account
+                        {t('settings.deleteAccount', 'Delete Account')}
                     </Typography>
                     <Typography variant="body1" color="error" className={styles.warning}>
-                        This action will mark your account for deletion. After 30 minutes, your account and all related information will be permanently deleted.
+                        {t('settings.deleteAccountWarning', 'This action will mark your account for deletion. After 30 minutes, your account and all related information will be permanently deleted.')}
                     </Typography>
                     
                     <Typography variant="body2" sx={{ mt: 1, mb: 2 }}>
-                        If you change your mind, you can cancel the deletion by logging back in within the 30-minute period.
+                        {t('settings.deleteCancelInfo', 'If you change your mind, you can cancel the deletion by logging back in within the 30-minute period.')}
                     </Typography>
 
                     {error && (
@@ -127,7 +129,7 @@ export default function DeleteAccount() {
                     <Box sx={{ my: 3 }}>
                         <TextField
                             type="password"
-                            label="Enter your password to confirm"
+                            label={t('settings.enterPasswordToConfirm', 'Enter your password to confirm')}
                             variant="outlined"
                             fullWidth
                             value={password}
@@ -143,7 +145,7 @@ export default function DeleteAccount() {
                             disabled={isLoading}
                             className={styles.cancelButton}
                         >
-                            Back
+                            {t('common.back', 'Back')}
                         </Button>
                         <Button
                             variant="contained"
@@ -153,7 +155,7 @@ export default function DeleteAccount() {
                             startIcon={isLoading ? <CircularProgress size={20} /> : null}
                             className={styles.deleteButton}
                         >
-                            {isLoading ? 'Processing...' : 'Delete My Account'}
+                            {isLoading ? t('common.processing', 'Processing...') : t('settings.deleteMyAccount', 'Delete My Account')}
                         </Button>
                     </Box>
                 </Paper>
@@ -172,11 +174,11 @@ export default function DeleteAccount() {
                 }}
             >
                 <DialogTitle>
-                    Confirm Account Deletion
+                    {t('settings.confirmAccountDeletion', 'Confirm Account Deletion')}
                 </DialogTitle>
                 <DialogContent>
                     <Typography variant="body1">
-                        Are you sure you want to delete your account? Your account will be marked for deletion and will be permanently deleted after 30 minutes. You can cancel this by logging back in within the 30-minute period.
+                        {t('settings.deleteConfirmMessage', 'Are you sure you want to delete your account? Your account will be marked for deletion and will be permanently deleted after 30 minutes. You can cancel this by logging back in within the 30-minute period.')}
                     </Typography>
                 </DialogContent>
                 <DialogActions>
@@ -184,7 +186,7 @@ export default function DeleteAccount() {
                         variant="outlined" 
                         onClick={handleConfirmCancel}
                     >
-                        Cancel
+                        {t('common.cancel', 'Cancel')}
                     </Button>
                     <Button 
                         variant="contained" 
@@ -192,7 +194,7 @@ export default function DeleteAccount() {
                         onClick={handleDelete}
                         autoFocus
                     >
-                        Yes, Delete My Account
+                        {t('settings.confirmDeleteAccount', 'Yes, Delete My Account')}
                     </Button>
                 </DialogActions>
             </Dialog>
@@ -211,7 +213,7 @@ export default function DeleteAccount() {
             >
                 <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <CheckCircleOutlineIcon color="success" />
-                    <span>Account Deletion Requested</span>
+                    <span>{t('settings.accountDeletionRequested', 'Account Deletion Requested')}</span>
                 </DialogTitle>
                 <DialogContent>
                     <Typography variant="body1">
@@ -225,7 +227,7 @@ export default function DeleteAccount() {
                         onClick={handleSuccessClose}
                         autoFocus
                     >
-                        OK
+                        {t('common.ok', 'OK')}
                     </Button>
                 </DialogActions>
             </Dialog>

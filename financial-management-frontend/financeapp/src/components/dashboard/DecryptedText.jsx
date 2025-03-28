@@ -56,6 +56,40 @@ export default function DecryptedText({
   const containerRef = useRef(null)
   const intervalRef = useRef(null)
   const iterationCountRef = useRef(0)
+  const prevTextRef = useRef(text)
+
+  // Reset animation state when text changes (e.g., when language changes)
+  useEffect(() => {
+    if (prevTextRef.current !== text) {
+      setHasAnimated(false)
+      setIsHovering(false)
+      setRevealedIndices(new Set())
+      setDisplayText(text)
+      
+      // If animateOn is "view" and element is already in view,
+      // we need to manually trigger animation
+      if (animateOn === 'view' && containerRef.current) {
+        const isInView = () => {
+          const rect = containerRef.current.getBoundingClientRect()
+          return (
+            rect.top >= 0 &&
+            rect.left >= 0 &&
+            rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+            rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+          )
+        }
+        
+        if (isInView()) {
+          // Short delay to ensure component is fully re-rendered
+          setTimeout(() => {
+            setIsHovering(true)
+          }, 50)
+        }
+      }
+      
+      prevTextRef.current = text
+    }
+  }, [text, animateOn])
 
   // Memoize the available characters to avoid recalculating
   const availableChars = useMemo(() => {

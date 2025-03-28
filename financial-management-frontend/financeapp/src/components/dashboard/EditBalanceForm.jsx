@@ -15,6 +15,7 @@ import {
 import MoneyInput from '../utils/MoneyInput';
 import FinanceService from '../../services/FinanceService';
 import { formatCurrency } from '../../utils/moneyFormatter';
+import { useTranslation } from 'react-i18next';
 
 // Create a SlideTransition component with forwardRef
 const SlideTransition = React.forwardRef(function Transition(props, ref) {
@@ -22,6 +23,7 @@ const SlideTransition = React.forwardRef(function Transition(props, ref) {
 });
 
 const EditBalanceForm = ({ open, handleClose, onBalanceUpdated, currentBalance }) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [amount, setAmount] = useState('');
   const [error, setError] = useState('');
@@ -53,7 +55,7 @@ const EditBalanceForm = ({ open, handleClose, onBalanceUpdated, currentBalance }
       setTotalWalletBalance(walletsTotal);
     } catch (err) {
       console.error('Error fetching wallets:', err);
-      setError('Failed to calculate wallet totals. Please try again.');
+      setError(t('wallet.errors.failedToCalculateWalletTotals', 'Failed to calculate wallet totals. Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -66,13 +68,13 @@ const EditBalanceForm = ({ open, handleClose, onBalanceUpdated, currentBalance }
 
   const validateForm = () => {
     if (!amount || isNaN(amount) || parseFloat(amount) < 0) {
-      setError('Please enter a valid amount (0 or greater)');
+      setError(t('wallet.errors.enterValidAmountZeroOrGreater', 'Please enter a valid amount (0 or greater)'));
       return false;
     }
 
     const newBalance = parseFloat(amount);
     if (newBalance < totalWalletBalance) {
-      setError(`Total balance can't be less than the sum of your wallets (${totalWalletBalance.toFixed(2)})`);
+      setError(t('wallet.errors.balanceLessThanWallets', `Total balance can't be less than the sum of your wallets (${totalWalletBalance.toFixed(2)})`));
       return false;
     }
     
@@ -94,7 +96,7 @@ const EditBalanceForm = ({ open, handleClose, onBalanceUpdated, currentBalance }
       // Make sure we have a token in localStorage
       const token = localStorage.getItem('userToken');
       if (!token) {
-        setError('You must be logged in to update your balance');
+        setError(t('auth.errors.loginRequired', 'You must be logged in to update your balance'));
         setLoading(false);
         return;
       }
@@ -110,9 +112,9 @@ const EditBalanceForm = ({ open, handleClose, onBalanceUpdated, currentBalance }
       handleClose();
     } catch (err) {
       if (err.response && err.response.status === 403) {
-        setError('You are not authorized to update the balance. Please log in again.');
+        setError(t('auth.errors.notAuthorizedToUpdate', 'You are not authorized to update the balance. Please log in again.'));
       } else {
-        setError(err.response?.data?.message || 'Failed to update balance. Please try again.');
+        setError(err.response?.data?.message || t('wallet.errors.updateFailed', 'Failed to update balance. Please try again.'));
       }
       setLoading(false);
     }
@@ -136,7 +138,7 @@ const EditBalanceForm = ({ open, handleClose, onBalanceUpdated, currentBalance }
       }}
       ref={dialogRef}
     >
-      <DialogTitle>Edit Total Balance</DialogTitle>
+      <DialogTitle>{t('wallet.editBalance', 'Edit Total Balance')}</DialogTitle>
       <form onSubmit={handleSubmit}>
         <DialogContent>
           {error && (
@@ -153,7 +155,7 @@ const EditBalanceForm = ({ open, handleClose, onBalanceUpdated, currentBalance }
           <Box sx={{ mb: 2 }}>
             <Fade in={open} timeout={400} nodeRef={alertInfoRef}>
               <Alert severity="info" ref={alertInfoRef}>
-                <strong>Required minimum:</strong> {formatCurrency(totalWalletBalance)} (sum of all wallets)
+                <strong>{t('wallet.requiredMinimum', 'Required minimum')}:</strong> {formatCurrency(totalWalletBalance)} ({t('wallet.sumOfAllWallets', 'sum of all wallets')})
               </Alert>
             </Fade>
           </Box>
@@ -161,7 +163,7 @@ const EditBalanceForm = ({ open, handleClose, onBalanceUpdated, currentBalance }
           <MoneyInput
             autoFocus
             margin="dense"
-            label="New Balance"
+            label={t('wallet.newBalance', 'New Balance')}
             value={amount}
             onChange={handleChange}
             disabled={loading}
@@ -169,22 +171,22 @@ const EditBalanceForm = ({ open, handleClose, onBalanceUpdated, currentBalance }
               min: totalWalletBalance
             }}
             error={Boolean(amount && parseFloat(amount) < totalWalletBalance) 
-              ? `Must be at least ${formatCurrency(totalWalletBalance)}` 
+              ? `${t('wallet.errors.mustBeAtLeast', 'Must be at least')} ${formatCurrency(totalWalletBalance)}` 
               : ''}
           />
           <FormHelperText>
-            Enter the new total balance amount. It must be at least equal to the sum of all your wallets ({formatCurrency(totalWalletBalance)}).
+            {t('wallet.editBalanceDescription', 'Enter the new total balance amount. It must be at least equal to the sum of all your wallets')} ({formatCurrency(totalWalletBalance)}).
           </FormHelperText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleClose} disabled={loading}>Cancel</Button>
+          <Button onClick={handleClose} disabled={loading}>{t('common.cancel', 'Cancel')}</Button>
           <Button 
             type="submit" 
             variant="contained" 
             color="primary"
             disabled={Boolean(loading || (amount && parseFloat(amount) < totalWalletBalance))}
           >
-            {loading ? <CircularProgress size={24} /> : 'Update Balance'}
+            {loading ? <CircularProgress size={24} /> : t('wallet.updateBalance', 'Update Balance')}
           </Button>
         </DialogActions>
       </form>

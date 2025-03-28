@@ -6,6 +6,7 @@ import { sendForm } from '@emailjs/browser';
 import { EMAILJS_CONFIG } from '../../config/emailjs.config';
 import { requestPasswordReset } from '../../config/axiosInstance';
 import styles from '../../styles/auth.module.css';
+import { useTranslation } from 'react-i18next';
 
 // Material UI imports
 import {
@@ -22,14 +23,15 @@ import {
 } from '@mui/material';
 import { LockResetOutlined as LockResetIcon, Email as EmailIcon } from '@mui/icons-material';
 
-// Validation schema
-const ForgotPasswordSchema = Yup.object().shape({
+// Validation schema with translation
+const ForgotPasswordSchema = (t) => Yup.object().shape({
   email: Yup.string()
-    .email('Invalid email address')
-    .required('Email is required'),
+    .email(t('auth.errors.emailInvalid', 'Invalid email address'))
+    .required(t('auth.errors.emailRequired', 'Email is required')),
 });
 
 const ForgotPassword = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [message, setMessage] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
@@ -62,7 +64,7 @@ const ForgotPassword = () => {
             
             if (emailResult.status === 200) {
               setIsSuccess(true);
-              setMessage('Password reset instructions have been sent to your email.');
+              setMessage(t('auth.resetInstructionsSent', 'Password reset instructions have been sent to your email.'));
               resetForm();
             } else {
               throw new Error('Failed to send email');
@@ -71,24 +73,24 @@ const ForgotPassword = () => {
             console.error('Error sending reset email:', emailError);
             // Still show success since the backend created the token
             setIsSuccess(true);
-            setMessage('Password reset has been initiated. You should receive an email shortly.');
+            setMessage(t('auth.resetInitiated', 'Password reset has been initiated. You should receive an email shortly.'));
             resetForm();
           }
         } else {
           // No reset link in response
           setIsSuccess(true);
-          setMessage(response.data.message || 'Password reset instructions have been sent to your email.');
+          setMessage(response.data.message || t('auth.resetInstructionsSent', 'Password reset instructions have been sent to your email.'));
           resetForm();
         }
       } else {
-        throw new Error(response.data?.message || 'Failed to initiate password reset');
+        throw new Error(response.data?.message || t('auth.resetFailed', 'Failed to initiate password reset'));
       }
     } catch (error) {
       setIsSuccess(false);
       if (error.response && error.response.data) {
-        setMessage(error.response.data.message || 'Failed to send reset instructions. Please try again later.');
+        setMessage(error.response.data.message || t('auth.resetFailedTryAgain', 'Failed to send reset instructions. Please try again later.'));
       } else {
-        setMessage('Failed to send reset instructions. Please try again later.');
+        setMessage(t('auth.resetFailedTryAgain', 'Failed to send reset instructions. Please try again later.'));
       }
       console.error('Error initiating password reset:', error);
     } finally {
@@ -102,16 +104,16 @@ const ForgotPassword = () => {
         <Paper elevation={3} className={styles.authCard}>
           <Box className={styles.logoContainer}>
             <div className={styles.logoBackground}>
-              <img src="/Dollarnote_siegel_hq.jpg" alt="Budget Flow Logo" className={styles.logo} />
+              <img src="/Dollarnote_siegel_hq.jpg" alt={t('common.appName', 'Budget Flow Logo')} className={styles.logo} />
             </div>
           </Box>
           
           <Typography variant="h4" component="h1" className={styles.appTitle}>
-            BUDGET FLOW
+            {t('common.appName', 'BUDGET FLOW')}
           </Typography>
           
           <Typography variant="body2" className={styles.appTagline}>
-            Illuminate Your Financial Future
+            {t('auth.appTagline', 'Illuminate Your Financial Future')}
           </Typography>
 
           {message && (
@@ -121,25 +123,25 @@ const ForgotPassword = () => {
           )}
 
           <Typography variant="body2" sx={{ textAlign: 'center', mb: 2, fontSize: '0.9rem' }}>
-            Enter your email address and we'll send you instructions to reset your password.
+            {t('auth.resetInstructions', 'Enter your email address and we\'ll send you instructions to reset your password.')}
           </Typography>
 
           <Formik
             initialValues={{ email: '' }}
-            validationSchema={ForgotPasswordSchema}
+            validationSchema={ForgotPasswordSchema(t)}
             onSubmit={handleSubmit}
           >
             {({ errors, touched, handleSubmit: formikSubmit }) => (
               <Form>
                 <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 1.5 }}>
                   <FormControl className={styles.formField}>
-                    <FormLabel htmlFor="email" className={styles.formLabel}>Email</FormLabel>
+                    <FormLabel htmlFor="email" className={styles.formLabel}>{t('auth.email', 'Email')}</FormLabel>
                     <Field name="email">
                       {({ field, meta }) => (
                         <TextField
                           {...field}
                           id="email"
-                          placeholder="Enter your email address"
+                          placeholder={t('auth.placeholders.email', 'Enter your email address')}
                           autoComplete="email"
                           autoFocus
                           fullWidth
@@ -171,7 +173,7 @@ const ForgotPassword = () => {
                     }}
                     startIcon={<LockResetIcon fontSize="small" />}
                   >
-                    {isSubmitting ? 'Sending...' : 'RESET PASSWORD'}
+                    {isSubmitting ? t('auth.sending', 'Sending...') : t('auth.resetPassword', 'RESET PASSWORD')}
                   </Button>
                 </Box>
               </Form>
@@ -179,13 +181,13 @@ const ForgotPassword = () => {
           </Formik>
 
           <Typography sx={{ textAlign: 'center', mt: 2, fontSize: '0.85rem' }}>
-            Remember your password?{' '}
+            {t('auth.rememberPassword', 'Remember your password?')}{' '}
             <Link
               component={RouterLink}
               to="/login"
               className={styles.authLink}
             >
-              Back to login
+              {t('auth.backToLogin', 'Back to login')}
             </Link>
           </Typography>
 
