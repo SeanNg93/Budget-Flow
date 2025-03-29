@@ -33,6 +33,7 @@ import { getWalletColorClass, getWalletIcon, WALLET_ICONS } from '../../utils/wa
 import ShareWalletForm from './ShareWalletForm';
 import UserTransferForm from './UserTransferForm';
 import WalletForm from './WalletForm';
+import FinancialTips from './FinancialTips';
 
 // Helper to format currency
 const formatCurrency = (value) => {
@@ -488,7 +489,7 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
   const renderContent = useCallback(() => {
     if (loading) {
       return (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 3, flexGrow: 1 }}>
           <CircularProgress size={32} />
         </Box>
       );
@@ -496,88 +497,115 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
     
     if (error) {
       return (
-        <Typography color="error" variant="body2" sx={{ textAlign: 'center', py: 2 }}>
-          {error}
-        </Typography>
+        <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
+          <Typography color="error" variant="body2" sx={{ textAlign: 'center', py: 2 }}>
+            {error}
+          </Typography>
+          <FinancialTips maxTips={3} />
+        </Box>
       );
     }
     
     if (wallets.length === 0) {
       return (
-        <Box sx={{ textAlign: 'center', py: 3 }}>
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-            You don't have any wallets yet. Create one to get started!
-          </Typography>
-          <Button 
-            variant="contained" 
-            color="primary" 
-            onClick={onManageWallets}
-            size="small"
-          >
-            Create Wallet
-          </Button>
+        <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, justifyContent: 'space-between' }}>
+          <Box sx={{ textAlign: 'center', py: 3 }}>
+            <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+              You don't have any wallets yet. Create one to get started!
+            </Typography>
+            <Button 
+              variant="contained" 
+              color="primary" 
+              onClick={onManageWallets}
+              size="small"
+            >
+              Create Wallet
+            </Button>
+          </Box>
+          
+          {/* Show financial tips when no wallets exist */}
+          <Box sx={{ mt: 'auto' }}>
+            <FinancialTips maxTips={3} />
+          </Box>
         </Box>
       );
     }
     
+    // Determine if we should show tips based on the number of wallets
+    const showFinancialTips = wallets.length <= 2;
+    
     return (
-      <Box className={styles.walletsContainer} sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-        {wallets.length > walletsPerPage && (
-          <IconButton 
-            className={styles.walletNavButton} 
-            onClick={() => changePage('prev')}
-            sx={{ left: -20 }}
-            disabled={!!slideDirection}
-            aria-label="Previous wallets"
-          >
-            <ArrowBackIosNewIcon fontSize="small" />
-          </IconButton>
-        )}
-        
-        <Box className={`${styles.walletsList} ${slideDirection ? styles[slideDirection] : ''}`} sx={{ flexGrow: 1 }}>
-          {displayedWallets.map((wallet) => (
-            <WalletCard
-              key={wallet.id}
-              wallet={wallet}
-              colorClass={getWalletColorClass(wallet.id)}
-              isShared={isSharedWallet(wallet.id)}
-              isWalletOwner={isWalletOwner}
-              getSharedWalletInfo={getSharedWalletInfo}
-              onMenuOpen={handleWalletMenuOpen}
-            />
-          ))}
-        </Box>
-        
-        {wallets.length > walletsPerPage && (
-          <IconButton 
-            className={styles.walletNavButton} 
-            onClick={() => changePage('next')}
-            sx={{ right: -20 }}
-            disabled={!!slideDirection}
-            aria-label="Next wallets"
-          >
-            <ArrowForwardIosIcon fontSize="small" />
-          </IconButton>
-        )}
-        
-        {totalPages > 1 && (
-          <Box className={styles.paginationDots} role="navigation" aria-label="Wallet pages">
-            {[...Array(totalPages)].map((_, index) => (
-              <Box 
-                key={index}
-                className={`${styles.paginationDot} ${currentPage === index ? styles.activeDot : ''}`}
-                onClick={() => {
-                  if (slideDirection || index === currentPage) return;
-                  changePage(index > currentPage ? 'next' : 'prev', index);
-                }}
-                role="button"
-                tabIndex={0}
-                aria-label={`Go to page ${index + 1}`}
-                aria-current={currentPage === index ? 'page' : undefined}
+      <Box className={styles.walletsContainer} sx={{ 
+        flexGrow: 1, 
+        display: 'flex', 
+        flexDirection: 'column', 
+        justifyContent: wallets.length <= 2 ? 'space-between' : 'flex-start' 
+      }}>
+        <Box>
+          {wallets.length > walletsPerPage && (
+            <IconButton 
+              className={styles.walletNavButton} 
+              onClick={() => changePage('prev')}
+              sx={{ left: -20 }}
+              disabled={!!slideDirection}
+              aria-label="Previous wallets"
+            >
+              <ArrowBackIosNewIcon fontSize="small" />
+            </IconButton>
+          )}
+          
+          <Box className={`${styles.walletsList} ${slideDirection ? styles[slideDirection] : ''}`}>
+            {displayedWallets.map((wallet) => (
+              <WalletCard
+                key={wallet.id}
+                wallet={wallet}
+                colorClass={getWalletColorClass(wallet.id)}
+                isShared={isSharedWallet(wallet.id)}
+                isWalletOwner={isWalletOwner}
+                getSharedWalletInfo={getSharedWalletInfo}
+                onMenuOpen={handleWalletMenuOpen}
               />
             ))}
           </Box>
-        )}
+          
+          {wallets.length > walletsPerPage && (
+            <IconButton 
+              className={styles.walletNavButton} 
+              onClick={() => changePage('next')}
+              sx={{ right: -20 }}
+              disabled={!!slideDirection}
+              aria-label="Next wallets"
+            >
+              <ArrowForwardIosIcon fontSize="small" />
+            </IconButton>
+          )}
+          
+          {/* Show financial tips when there are few wallets - position directly after wallets */}
+          {showFinancialTips && (
+            <Box sx={{ mt: 2, mb: 1 }}>
+              <FinancialTips maxTips={1} />
+            </Box>
+          )}
+          
+          {totalPages > 1 && (
+            <Box className={styles.paginationDots} role="navigation" aria-label="Wallet pages">
+              {[...Array(totalPages)].map((_, index) => (
+                <Box 
+                  key={index}
+                  className={`${styles.paginationDot} ${currentPage === index ? styles.activeDot : ''}`}
+                  onClick={() => {
+                    if (slideDirection || index === currentPage) return;
+                    changePage(index > currentPage ? 'next' : 'prev', index);
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Go to page ${index + 1}`}
+                  aria-current={currentPage === index ? 'page' : undefined}
+                />
+              ))}
+            </Box>
+          )}
+        </Box>
       </Box>
     );
   }, [
