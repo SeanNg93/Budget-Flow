@@ -1,0 +1,223 @@
+{
+  "common": {
+    "welcome": "Chào mừng",
+    "home": "Trang chủ",
+    "dashboard": "Bảng điều khiển",
+    "wallets": "Ví",
+    "transactions": "Giao dịch",
+    "categories": "Danh mục",
+    "settings": "Cài đặt",
+    "profile": "Hồ sơ",
+    "logout": "Đăng xuất",
+    "login": "Đăng nhập",
+    "register": "Đăng ký",
+    "save": "Lưu",
+    "cancel": "Hủy",
+    "delete": "Xóa",
+    "edit": "Sửa",
+    "add": "Thêm",
+    "search": "Tìm kiếm",
+    "filter": "Lọc",
+    "export": "Xuất",
+    "import": "Nhập",
+    "loading": "Đang tải...",
+    "error": "Lỗi",
+    "success": "Thành công",
+    "warning": "Cảnh báo",
+    "info": "Thông tin",
+    "confirm": "Xác nhận",
+    "yes": "Có",
+    "no": "Không",
+    "user": "Người dùng",
+    "language": "Đổi Ngôn Ngữ",
+    "retry": "Thử Lại",
+    "menu": "MENU",
+    "closeMenu": "Đóng menu"
+  },
+  "app": {
+    "name": "Budget Flow"
+  },
+  "navbar": {
+    "profile": "Hồ sơ",
+    "settings": "Cài đặt",
+    "logout": "Đăng xuất",
+    "notifications": "Thông báo",
+    "search": "Tìm kiếm..."
+  },
+  "search": {
+    "actions": {
+      "newWallet": {
+        "title": "Tạo ví mới",
+        "description": "Tạo một ví mới để quản lý tiền của bạn"
+      },
+      "transferMoney": {
+        "title": "Chuyển tiền",
+        "description": "Chuyển tiền giữa các ví"
+      },
+      "sendMoney": {
+        "title": "Gửi tiền",
+        "description": "Gửi tiền cho người dùng khác"
+      },
+      "shareWallet": {
+        "title": "Chia sẻ ví",
+        "description": "Chia sẻ ví với người dùng khác"
+      },
+      "newTransaction": {
+        "title": "Giao dịch mới",
+        "description": "Thêm thu nhập hoặc chi phí mới"
+      },
+      "manageCategories": {
+        "title": "Quản lý danh mục",
+        "description": "Tạo hoặc chỉnh sửa danh mục giao dịch"
+      }
+    }
+  },
+  "auth": {
+    "username": "Tên đăng nhập",
+    "password": "Mật khẩu",
+    "email": "Email",
+    "forgotPassword": "Quên mật khẩu",
+    "rememberMe": "Ghi nhớ đăng nhập",
+    "signIn": "Đăng nhập",
+    "signUp": "Đăng ký",
+    "createAccount": "Tạo tài khoản",
+    "alreadyHaveAccount": "Đã có tài khoản?",
+    "dontHaveAccount": "Chưa có tài khoản?"
+  },
+  "dashboard": {
+    "yourWallets": "Ví của bạn",
+    "recentTransactions": "Giao dịch gần đây",
+    "financialPerformance": "Biểu đồ tài chính",
+    "summary": "Tổng quan",
+    "totalBalance": "Tổng số dư",
+    "totalIncome": "Tổng thu nhập",
+    "totalExpenses": "Tổng chi phí",
+    "netSavings": "Tiết kiệm ròng",
+    "manageWallets": "Quản lý ví",
+    "welcomeMessage": "Đây là bảng điều khiển tài chính của bạn. Tại đây bạn có thể quản lý tài chính, theo dõi chi phí và lập kế hoạch ngân sách.",
+    "clickHere": "Nhấp vào đây",
+    "forQuickNavigation": "để điều hướng nhanh",
+    "welcomeGreeting": "Chào mừng, {{name}}! 👋",
+    "welcomeImageAlt": "Hình ảnh chào mừng {{number}}",
+    "viewImage": "Xem hình ảnh {{number}}",
+    "openNavigationMenu": "Mở menu điều hướng nhanh"
+  },
+  "wallets": {
+    "createWallet": "Tạo ví",
+    "walletName": "Tên ví",
+    "walletType": "Loại ví",
+    "walletCurrency": "Tiền tệ",
+    "balance": "Số dư",
+    "initialBalance": "Số dư ban đầu",
+    "accountName": "Tên tài khoản",
+    "accountType": "Loại tài khoản",
+    "shareWallet": "Chia sẻ ví",
+    "sendMoney": "Gửi tiền",
+    "editWallet": "Chỉnh sửa ví",
+    "deleteWallet": "Xóa ví",
+    "sharedWallet": "Ví được chia sẻ",
+    "sharedWalletWith": "Đã chia sẻ ví với:",
+    "sharedWalletBy": "Được chia sẻ bởi:",
+    "noWallets": "Bạn chưa có ví nào. Hãy tạo một ví để bắt đầu!",
+    "options": "Tùy chọn ví",
+    "generalAccount": "Tài khoản chung",
+    "previousWallets": "Ví trước đó",
+    "nextWallets": "Ví tiếp theo",
+    "walletPages": "Trang ví",
+    "goToPage": "Đến trang {{number}}",
+    "sharedWithUser": "Đã chia sẻ với: {{username}}",
+    "ownedByUser": "Chủ sở hữu: {{username}}",
+    "fetchError": "Không thể tải ví. Vui lòng thử lại.",
+    "manageWallets": "Quản lý ví"
+  },
+  "transactions": {
+    "addTransaction": "Thêm giao dịch",
+    "editTransaction": "Sửa giao dịch",
+    "deleteTransaction": "Xóa giao dịch",
+    "transactionType": "Loại giao dịch",
+    "amount": "Số tiền",
+    "category": "Danh mục",
+    "date": "Ngày",
+    "description": "Mô tả",
+    "wallet": "Ví",
+    "income": "Thu nhập",
+    "expense": "Chi phí",
+    "transfer": "Chuyển khoản",
+    "from": "Từ",
+    "to": "Đến",
+    "status": "Trạng thái",
+    "pending": "Đang chờ",
+    "completed": "Đã hoàn thành",
+    "cancelled": "Đã hủy",
+    "noTransactions": "Không tìm thấy giao dịch nào.",
+    "id": "ID",
+    "actions": "Thao tác"
+  },
+  "categories": {
+    "title": "Danh mục",
+    "addCategory": "Thêm danh mục",
+    "editCategory": "Sửa danh mục",
+    "deleteCategory": "Xóa danh mục",
+    "categoryName": "Tên danh mục",
+    "categoryType": "Loại danh mục",
+    "categoryIcon": "Biểu tượng",
+    "spendingLimit": "Hạn mức chi tiêu",
+    "warningThreshold": "Ngưỡng cảnh báo",
+    "noCategories": "Không tìm thấy danh mục nào."
+  },
+  "financialTips": {
+    "title": "Mẹo tài chính",
+    "tipCounter": "Mẹo {{current}} / {{total}}",
+    "previousTip": "Mẹo trước",
+    "nextTip": "Mẹo tiếp theo",
+    "goToTip": "Đến mẹo {{number}}",
+    "emergencyFund": {
+      "title": "Tạo quỹ khẩn cấp",
+      "content": "Cố gắng tiết kiệm 3-6 tháng chi tiêu cho các sự kiện bất ngờ."
+    },
+    "fiftyThirtyTwenty": {
+      "title": "Quy tắc 50/30/20",
+      "content": "Cố gắng phân bổ 50% thu nhập cho nhu cầu, 30% cho mong muốn và 20% để tiết kiệm."
+    },
+    "payYourselfFirst": {
+      "title": "Trả tiền cho bản thân trước",
+      "content": "Để dành tiền tiết kiệm ngay khi nhận được thu nhập, trước khi chi tiêu cho các khoản khác."
+    },
+    "trackSpending": {
+      "title": "Theo dõi chi tiêu",
+      "content": "Thường xuyên xem xét chi phí của bạn để xác định các khoản có thể cắt giảm."
+    },
+    "automateFinances": {
+      "title": "Tự động hóa tài chính",
+      "content": "Thiết lập chuyển khoản tự động vào tài khoản tiết kiệm và thanh toán hóa đơn tự động."
+    },
+    "diversifyInvestments": {
+      "title": "Đa dạng hóa đầu tư",
+      "content": "Đừng đặt tất cả trứng vào một giỏ. Phân bổ đầu tư trên các loại tài sản khác nhau."
+    },
+    "reviewGoals": {
+      "title": "Xem xét mục tiêu tài chính thường xuyên",
+      "content": "Điều chỉnh kế hoạch tài chính khi hoàn cảnh cuộc sống thay đổi."
+    },
+    "minimizeDebt": {
+      "title": "Giảm thiểu nợ",
+      "content": "Thanh toán nợ lãi suất cao trước và tránh vay mượn không cần thiết."
+    }
+  },
+  "timeRanges": {
+    "day": "Ngày",
+    "week": "Tuần",
+    "month": "Tháng",
+    "year": "Năm",
+    "all": "Tất cả",
+    "custom": "Tùy chỉnh"
+  },
+  "validation": {
+    "required": "Trường này là bắt buộc",
+    "invalidEmail": "Địa chỉ email không hợp lệ",
+    "passwordLength": "Mật khẩu phải có ít nhất 6 ký tự",
+    "passwordMismatch": "Mật khẩu không khớp",
+    "invalidAmount": "Vui lòng nhập số tiền hợp lệ",
+    "greaterThanZero": "Giá trị phải lớn hơn 0"
+  }
+} 

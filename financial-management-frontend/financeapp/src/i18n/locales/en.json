@@ -1,0 +1,223 @@
+{
+  "common": {
+    "welcome": "Welcome",
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "wallets": "Wallets",
+    "transactions": "Transactions",
+    "categories": "Categories",
+    "settings": "Settings",
+    "profile": "Profile",
+    "logout": "Logout",
+    "login": "Login",
+    "register": "Register",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "search": "Search",
+    "filter": "Filter",
+    "export": "Export",
+    "import": "Import",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "warning": "Warning",
+    "info": "Information",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No",
+    "user": "User",
+    "language": "Change Language",
+    "retry": "Try Again",
+    "menu": "MENU",
+    "closeMenu": "Close menu"
+  },
+  "app": {
+    "name": "Budget Flow"
+  },
+  "navbar": {
+    "profile": "Profile",
+    "settings": "Settings",
+    "logout": "Logout",
+    "notifications": "Notifications",
+    "search": "Search..."
+  },
+  "search": {
+    "actions": {
+      "newWallet": {
+        "title": "Create New Wallet",
+        "description": "Create a new wallet to manage your money"
+      },
+      "transferMoney": {
+        "title": "Transfer Money",
+        "description": "Transfer money between wallets"
+      },
+      "sendMoney": {
+        "title": "Send Money",
+        "description": "Send money to another user"
+      },
+      "shareWallet": {
+        "title": "Share Wallet",
+        "description": "Share a wallet with another user"
+      },
+      "newTransaction": {
+        "title": "New Transaction",
+        "description": "Add a new income or expense"
+      },
+      "manageCategories": {
+        "title": "Manage Categories",
+        "description": "Create or edit transaction categories"
+      }
+    }
+  },
+  "auth": {
+    "username": "Username",
+    "password": "Password",
+    "email": "Email",
+    "forgotPassword": "Forgot Password",
+    "rememberMe": "Remember Me",
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "createAccount": "Create an Account",
+    "alreadyHaveAccount": "Already have an account?",
+    "dontHaveAccount": "Don't have an account?"
+  },
+  "dashboard": {
+    "yourWallets": "Your Wallets",
+    "recentTransactions": "Recent Transactions",
+    "financialPerformance": "Financial Performance",
+    "summary": "Summary",
+    "totalBalance": "Total Balance",
+    "totalIncome": "Total Income",
+    "totalExpenses": "Total Expenses",
+    "netSavings": "Net Savings",
+    "manageWallets": "Manage Wallets",
+    "welcomeMessage": "This is your financial dashboard. Here you can manage your finances, track expenses, and plan your budget.",
+    "clickHere": "Click here",
+    "forQuickNavigation": "for quick navigation",
+    "welcomeGreeting": "Welcome, {{name}}! 👋",
+    "welcomeImageAlt": "Welcome image {{number}}",
+    "viewImage": "View image {{number}}",
+    "openNavigationMenu": "Open quick navigation menu"
+  },
+  "wallets": {
+    "createWallet": "Create Wallet",
+    "walletName": "Wallet Name",
+    "walletType": "Wallet Type",
+    "walletCurrency": "Currency",
+    "balance": "Balance",
+    "initialBalance": "Initial Balance",
+    "accountName": "Account Name",
+    "accountType": "Account Type",
+    "shareWallet": "Share Wallet",
+    "sendMoney": "Send Money",
+    "editWallet": "Edit Wallet",
+    "deleteWallet": "Delete Wallet",
+    "sharedWallet": "Shared Wallet",
+    "sharedWalletWith": "Shared Wallet with:",
+    "sharedWalletBy": "Shared Wallet by:",
+    "noWallets": "You don't have any wallets yet. Create one to get started!",
+    "options": "Wallet options",
+    "generalAccount": "General Account",
+    "previousWallets": "Previous wallets",
+    "nextWallets": "Next wallets",
+    "walletPages": "Wallet pages",
+    "goToPage": "Go to page {{number}}",
+    "sharedWithUser": "Shared with: {{username}}",
+    "ownedByUser": "Owner: {{username}}",
+    "fetchError": "Failed to load wallets. Please try again.",
+    "manageWallets": "Manage Wallets"
+  },
+  "transactions": {
+    "addTransaction": "Add Transaction",
+    "editTransaction": "Edit Transaction",
+    "deleteTransaction": "Delete Transaction",
+    "transactionType": "Transaction Type",
+    "amount": "Amount",
+    "category": "Category",
+    "date": "Date",
+    "description": "Description",
+    "wallet": "Wallet",
+    "income": "Income",
+    "expense": "Expense",
+    "transfer": "Transfer",
+    "from": "From",
+    "to": "To",
+    "status": "Status",
+    "pending": "Pending",
+    "completed": "Completed",
+    "cancelled": "Cancelled",
+    "noTransactions": "No transactions found.",
+    "id": "ID",
+    "actions": "Actions"
+  },
+  "categories": {
+    "title": "Categories",
+    "addCategory": "Add Category",
+    "editCategory": "Edit Category",
+    "deleteCategory": "Delete Category",
+    "categoryName": "Category Name",
+    "categoryType": "Category Type",
+    "categoryIcon": "Icon",
+    "spendingLimit": "Spending Limit",
+    "warningThreshold": "Warning Threshold",
+    "noCategories": "No categories found."
+  },
+  "financialTips": {
+    "title": "Financial Tips",
+    "tipCounter": "Tip {{current}} of {{total}}",
+    "previousTip": "Previous tip",
+    "nextTip": "Next tip",
+    "goToTip": "Go to tip {{number}}",
+    "emergencyFund": {
+      "title": "Create an Emergency Fund",
+      "content": "Aim to save 3-6 months of expenses for unexpected events."
+    },
+    "fiftyThirtyTwenty": {
+      "title": "The 50/30/20 Rule",
+      "content": "Try to allocate 50% of income to needs, 30% to wants, and 20% to savings."
+    },
+    "payYourselfFirst": {
+      "title": "Pay Yourself First",
+      "content": "Set aside savings as soon as you receive income, before spending on other things."
+    },
+    "trackSpending": {
+      "title": "Track Your Spending",
+      "content": "Regularly review your expenses to identify areas where you can cut back."
+    },
+    "automateFinances": {
+      "title": "Automate Your Finances",
+      "content": "Set up automatic transfers to savings accounts and automatic bill payments."
+    },
+    "diversifyInvestments": {
+      "title": "Diversify Your Investments",
+      "content": "Don't put all your eggs in one basket. Spread investments across different asset classes."
+    },
+    "reviewGoals": {
+      "title": "Review Financial Goals Regularly",
+      "content": "Adjust your financial plan as your life circumstances change."
+    },
+    "minimizeDebt": {
+      "title": "Minimize Debt",
+      "content": "Pay off high-interest debt first and avoid unnecessary borrowing."
+    }
+  },
+  "timeRanges": {
+    "day": "Day",
+    "week": "Week",
+    "month": "Month",
+    "year": "Year",
+    "all": "All Time",
+    "custom": "Custom"
+  },
+  "validation": {
+    "required": "This field is required",
+    "invalidEmail": "Invalid email address",
+    "passwordLength": "Password must be at least 6 characters",
+    "passwordMismatch": "Passwords do not match",
+    "invalidAmount": "Please enter a valid amount",
+    "greaterThanZero": "Value must be greater than zero"
+  }
+} 
