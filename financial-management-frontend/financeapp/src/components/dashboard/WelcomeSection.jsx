@@ -2,12 +2,13 @@ import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { Paper, Box, Fade } from '@mui/material';
 import SplitText from './SplitText';
 import styles from '../../styles/dashboard.module.css';
+import FinancialTips from './FinancialTips';
 
 /**
  * WelcomeSection component displays a greeting to the user
  * and provides introduction text to the dashboard
  */
-const WelcomeSection = ({ userProfile, user, openFinanceActionPanel }) => {
+const WelcomeSection = ({ userProfile, user, openFinanceActionPanel, walletCount = 0 }) => {
   // Get user name from profile with fallbacks
   const userName = useMemo(() => 
     userProfile?.fullName || user?.username || 'User'
@@ -17,11 +18,17 @@ const WelcomeSection = ({ userProfile, user, openFinanceActionPanel }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [fadeIn, setFadeIn] = useState(true);
   
+  // State for controlling welcome/tips display
+  const [showWelcome, setShowWelcome] = useState(true);
+  const [contentFadeIn, setContentFadeIn] = useState(true);
+  
   // Array of welcome images
   const welcomeImages = [
     "/Welcome.jpg",
     "/Welcome_2.jpg",
-    "/Welcome_3.png"
+    "/Welcome_3.png",
+    "/Welcome_4.jpg",
+    "/Welcome_5.jpg"
   ];
 
   // Auto-rotate images every 7 seconds
@@ -34,10 +41,30 @@ const WelcomeSection = ({ userProfile, user, openFinanceActionPanel }) => {
         setCurrentImageIndex((prevIndex) => (prevIndex + 1) % welcomeImages.length);
         setFadeIn(true);
       }, 500);
-    }, 7000);
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [welcomeImages.length]);
+
+  // Effect to swap welcome text with financial tips after delay
+  useEffect(() => {
+    // Only set up transition timer if wallet count is 3 or more
+    if (walletCount >= 3) {
+      // Wait 20 seconds before transitioning to financial tips
+      const tipTransitionTimer = setTimeout(() => {
+        // Fade out current content
+        setContentFadeIn(false);
+        
+        // Wait for fade-out to complete before switching content
+        setTimeout(() => {
+          setShowWelcome(false);
+          setContentFadeIn(true);
+        }, 500);
+      }, 20000);
+      
+      return () => clearTimeout(tipTransitionTimer);
+    }
+  }, [walletCount]);
 
   // Handle manual image change
   const handleImageChange = (index) => {
@@ -86,100 +113,112 @@ const WelcomeSection = ({ userProfile, user, openFinanceActionPanel }) => {
           </Box>
         </Box>
         
-        <Box className={styles.welcomeTextContent}>
-          <Box className={styles.welcomeHeader}>
-            <SplitText
-              text={`Welcome, ${userName}! 👋`}
-              className={styles.welcomeTitle}
-              {...animationProps}
-              delay={35}
-              style={{ display: 'block', width: '100%' }}
-              textAlign="left"
-            />
-          </Box>
-          
-          <SplitText
-            text="This is your financial dashboard. Here you can manage your finances, track expenses, and plan your budget."
-            className={styles['subtitle-split']}
-            {...animationProps}
-            delay={15}
-            style={{ display: 'block', width: '100%', marginBottom: '10px' }}
-            textAlign="left"
-          />
-          
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            {/* Navigation text with animated elements */}
-            <Box 
-              sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                color: 'rgba(0, 0, 0, 0.6)', 
-                fontSize: 'calc(0.97rem * var(--scale-factor))'
-              }}
-              className={styles['subtitle-split']}
-            >
-              <SplitText
-                text="👉"
-                className={styles['subtitle-split']}
-                {...animationProps}
-                delay={25}
-                style={{ marginRight: '2px' }}
-                textAlign="left"
-              />
-              
-              <Box 
-                component="span" 
-                onClick={openFinanceActionPanel}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    openFinanceActionPanel();
-                  }
-                }}
-                role="button"
-                tabIndex={0}
-                aria-label="Open quick navigation menu"
-                className={styles['nav-link-highlight']}
-                sx={{
-                  marginLeft: '2px',
-                  marginRight: '2px',
-                  display: 'inline-block'
-                }}
-              >
+        <Fade in={contentFadeIn} timeout={{ enter: 800, exit: 500 }}>
+          <Box className={styles.welcomeTextContent}>
+            {showWelcome ? (
+              /* Welcome Message Content */
+              <>
+                <Box className={styles.welcomeHeader}>
+                  <SplitText
+                    text={`Welcome, ${userName}! 👋`}
+                    className={styles.welcomeTitle}
+                    {...animationProps}
+                    delay={35}
+                    style={{ display: 'block', width: '100%' }}
+                    textAlign="left"
+                  />
+                </Box>
+                
                 <SplitText
-                  text="Click here"
+                  text="This is your financial dashboard. Here you can manage your finances, track expenses, and plan your budget."
                   className={styles['subtitle-split']}
                   {...animationProps}
-                  delay={30}
-                  style={{ 
-                    display: 'inline-block',
-                    color: 'inherit',
-                    textDecoration: 'inherit',
-                    fontWeight: 'inherit'
-                  }}
+                  delay={15}
+                  style={{ display: 'block', width: '100%', marginBottom: '10px' }}
                   textAlign="left"
                 />
+                
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  {/* Navigation text with animated elements */}
+                  <Box 
+                    sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      color: 'rgba(0, 0, 0, 0.6)', 
+                      fontSize: 'calc(0.97rem * var(--scale-factor))'
+                    }}
+                    className={styles['subtitle-split']}
+                  >
+                    <SplitText
+                      text="👉"
+                      className={styles['subtitle-split']}
+                      {...animationProps}
+                      delay={25}
+                      style={{ marginRight: '2px' }}
+                      textAlign="left"
+                    />
+                    
+                    <Box 
+                      component="span" 
+                      onClick={openFinanceActionPanel}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          openFinanceActionPanel();
+                        }
+                      }}
+                      role="button"
+                      tabIndex={0}
+                      aria-label="Open quick navigation menu"
+                      className={styles['nav-link-highlight']}
+                      sx={{
+                        marginLeft: '2px',
+                        marginRight: '2px',
+                        display: 'inline-block'
+                      }}
+                    >
+                      <SplitText
+                        text="Click here"
+                        className={styles['subtitle-split']}
+                        {...animationProps}
+                        delay={30}
+                        style={{ 
+                          display: 'inline-block',
+                          color: 'inherit',
+                          textDecoration: 'inherit',
+                          fontWeight: 'inherit'
+                        }}
+                        textAlign="left"
+                      />
+                    </Box>
+                    
+                    <SplitText
+                      text="👈"
+                      className={styles['subtitle-split']}
+                      {...animationProps}
+                      delay={25}
+                      style={{ marginRight: '2px', marginLeft: '2px' }}
+                      textAlign="left"
+                    />
+                    
+                    <SplitText
+                      text="for quick navigation."
+                      className={styles['subtitle-split']}
+                      {...animationProps}
+                      delay={35}
+                      style={{ marginLeft: '2px' }}
+                      textAlign="left"
+                    />
+                  </Box>
+                </Box>
+              </>
+            ) : (
+              /* Financial Tips Content */
+              <Box className={styles.tipsSection}>
+                <FinancialTips maxTips={1} inWelcomeSection={true} />
               </Box>
-              
-              <SplitText
-                text="👈"
-                className={styles['subtitle-split']}
-                {...animationProps}
-                delay={25}
-                style={{ marginRight: '2px', marginLeft: '2px' }}
-                textAlign="left"
-              />
-              
-              <SplitText
-                text="for quick navigation."
-                className={styles['subtitle-split']}
-                {...animationProps}
-                delay={35}
-                style={{ marginLeft: '2px' }}
-                textAlign="left"
-              />
-            </Box>
+            )}
           </Box>
-        </Box>
+        </Fade>
       </Box>
     </Paper>
   );

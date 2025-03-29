@@ -531,9 +531,6 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
       );
     }
     
-    // Determine if we should show tips based on the number of wallets
-    const showFinancialTips = wallets.length <= 2;
-    
     return (
       <Box className={styles.walletsContainer} sx={{ 
         flexGrow: 1, 
@@ -580,13 +577,6 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
             </IconButton>
           )}
           
-          {/* Show financial tips when there are few wallets - position directly after wallets */}
-          {showFinancialTips && (
-            <Box sx={{ mt: 2, mb: 1 }}>
-              <FinancialTips maxTips={1} />
-            </Box>
-          )}
-          
           {totalPages > 1 && (
             <Box className={styles.paginationDots} role="navigation" aria-label="Wallet pages">
               {[...Array(totalPages)].map((_, index) => (
@@ -606,6 +596,13 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
             </Box>
           )}
         </Box>
+        
+        {/* Only show financial tips when there are 2 or fewer wallets */}
+        {wallets.length <= 2 && (
+          <Box sx={{ mt: 2, mb: 1 }}>
+            <FinancialTips maxTips={1} />
+          </Box>
+        )}
       </Box>
     );
   }, [
