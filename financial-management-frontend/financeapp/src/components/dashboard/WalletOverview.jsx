@@ -521,7 +521,7 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
     }
     
     return (
-      <Box className={styles.walletsContainer}>
+      <Box className={styles.walletsContainer} sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
         {wallets.length > walletsPerPage && (
           <IconButton 
             className={styles.walletNavButton} 
@@ -534,7 +534,7 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
           </IconButton>
         )}
         
-        <Box className={`${styles.walletsList} ${slideDirection ? styles[slideDirection] : ''}`}>
+        <Box className={`${styles.walletsList} ${slideDirection ? styles[slideDirection] : ''}`} sx={{ flexGrow: 1 }}>
           {displayedWallets.map((wallet) => (
             <WalletCard
               key={wallet.id}
@@ -598,7 +598,7 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
   ]);
 
   return (
-    <Paper className={styles.walletOverviewCard}>
+    <Paper className={styles.walletOverviewCard} sx={{ display: 'flex', flexDirection: 'column' }}>
       <Box className={styles.walletOverviewHeader}>
         <Typography 
           component="h2" 
