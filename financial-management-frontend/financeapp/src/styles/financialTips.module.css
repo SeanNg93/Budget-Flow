@@ -1,6 +1,6 @@
 .tipsContainer {
   width: 100%;
-  margin-top: 0.5rem;
+  margin-top: 0.3rem;
   transition: all 0.3s ease;
   overflow: visible;
 }
@@ -15,7 +15,7 @@
 
 .tipsTitle {
   font-size: 1rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.6rem;
   display: flex;
   align-items: center;
   color: var(--text-secondary, rgba(0, 0, 0, 0.6));
@@ -27,9 +27,9 @@
 }
 
 .tipCard {
-  padding: 1rem;
-  margin-top: 0.95rem;
-  margin-bottom: 0.75rem;
+  padding: 0.8rem;
+  margin-top: 0.4rem;
+  margin-bottom: 0.4rem;
   border-radius: 10px;
   background-color: rgba(0, 122, 255, 0.04);
   border: 1px solid rgba(0, 122, 255, 0.1);
@@ -41,8 +41,8 @@
 
 /* Styling for tip cards in welcome section */
 .welcomeTipCard {
-  margin-top: 0.5rem;
-  margin-bottom: 0.5rem;
+  margin-top: 0.2rem;
+  margin-bottom: 0.3rem;
   background-color: rgba(0, 122, 255, 0.06);
   border: 1px solid rgba(0, 122, 255, 0.15);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);

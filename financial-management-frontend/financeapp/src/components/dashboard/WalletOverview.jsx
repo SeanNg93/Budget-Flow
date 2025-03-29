@@ -599,7 +599,7 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
         
         {/* Only show financial tips when there are 2 or fewer wallets */}
         {wallets.length <= 2 && (
-          <Box sx={{ mt: 2, mb: 1 }}>
+          <Box sx={{ mt: 1, mb: 0.5 }}>
             <FinancialTips maxTips={1} />
           </Box>
         )}

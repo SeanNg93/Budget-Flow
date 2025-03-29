@@ -41,16 +41,16 @@ const WelcomeSection = ({ userProfile, user, openFinanceActionPanel, walletCount
         setCurrentImageIndex((prevIndex) => (prevIndex + 1) % welcomeImages.length);
         setFadeIn(true);
       }, 500);
-    }, 5000);
+    }, 7000);
 
     return () => clearInterval(interval);
   }, [welcomeImages.length]);
 
   // Effect to swap welcome text with financial tips after delay
   useEffect(() => {
-    // Only set up transition timer if wallet count is 3 or more
+    // If wallet count is 3 or more, set up transition to financial tips
     if (walletCount >= 3) {
-      // Wait 20 seconds before transitioning to financial tips
+      // Wait 10 seconds before transitioning to financial tips
       const tipTransitionTimer = setTimeout(() => {
         // Fade out current content
         setContentFadeIn(false);
@@ -60,11 +60,21 @@ const WelcomeSection = ({ userProfile, user, openFinanceActionPanel, walletCount
           setShowWelcome(false);
           setContentFadeIn(true);
         }, 500);
-      }, 20000);
+      }, 10000);
       
       return () => clearTimeout(tipTransitionTimer);
+    } else if (!showWelcome) {
+      // If wallet count drops below 3 and we're showing tips, transition back to welcome text
+      // Fade out current content
+      setContentFadeIn(false);
+      
+      // Wait for fade-out to complete before switching content back to welcome
+      setTimeout(() => {
+        setShowWelcome(true);
+        setContentFadeIn(true);
+      }, 500);
     }
-  }, [walletCount]);
+  }, [walletCount, showWelcome]);
 
   // Handle manual image change
   const handleImageChange = (index) => {
