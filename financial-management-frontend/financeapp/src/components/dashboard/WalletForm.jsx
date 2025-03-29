@@ -345,6 +345,7 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
                   disabled={loading || availableBalance <= 0}
                   size="small"
                   className={styles.textField}
+                  label=""
                 />
               </FormControl>
             </Grid>
@@ -426,11 +427,15 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
                   value={formData.balance}
                   onChange={handleMoneyChange}
                   placeholder="0.00"
-                  error={errors.balance || `Max: ${formatCurrency(availableBalance)}`}
+                  error={errors.balance}
                   disabled={loading || availableBalance <= 0}
                   size="small"
                   className={styles.textField}
+                  label=""
                 />
+                {!errors.balance && (
+                  <FormHelperText>Max: {formatCurrency(availableBalance)}</FormHelperText>
+                )}
               </FormControl>
             </Grid>
             
