@@ -1,0 +1,91 @@
+.tipsContainer {
+  width: 100%;
+  margin-top: 0.5rem;
+  transition: all 0.3s ease;
+  overflow: visible;
+}
+
+.tipsTitle {
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  color: var(--text-secondary, rgba(0, 0, 0, 0.6));
+}
+
+.tipIcon {
+  margin-right: 0.5rem;
+  color: #FFC107;
+}
+
+.tipCard {
+  padding: 1rem;
+  margin-top: 0.95rem;
+  margin-bottom: 0.75rem;
+  border-radius: 10px;
+  background-color: rgba(0, 122, 255, 0.04);
+  border: 1px solid rgba(0, 122, 255, 0.1);
+  display: flex;
+  align-items: flex-start;
+  transition: all 0.3s ease;
+  overflow: visible;
+}
+
+.iconContainer {
+  margin-right: 0.75rem;
+  color: var(--primary-main, #007aff);
+  background-color: rgba(0, 122, 255, 0.1);
+  border-radius: 50%;
+  padding: 0.4rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.tipContent {
+  flex: 1;
+}
+
+.tipTitle {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  color: var(--text-primary, rgba(0, 0, 0, 0.87));
+}
+
+.tipText {
+  color: var(--text-secondary, rgba(0, 0, 0, 0.6));
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+/* Animation for tip rotation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+.fadeIn {
+  animation: fadeIn 0.8s ease forwards;
+}
+
+.fadeOut {
+  animation: fadeOut 0.5s ease forwards;
+} 

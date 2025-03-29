@@ -45,6 +45,7 @@ import FinanceService from '../../services/FinanceService';
 import WalletForm from './WalletForm';
 import CategoryForm from './CategoryForm';
 import CategoryManageForm from './CategoryManageForm';
+import WalletManageForm from './WalletManageForm';
 import styles from '../../styles/transactionForm.module.css';
 import { formatCurrency } from '../../utils/moneyFormatter';
 
@@ -90,6 +91,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
   const [categorySpendingData, setCategorySpendingData] = useState(null);
   const [categoryExcessAmount, setCategoryExcessAmount] = useState(0);
   const [sharedWallets, setSharedWallets] = useState({});
+  const [walletManageFormOpen, setWalletManageFormOpen] = useState(false);
 
   // Track if form has been initialized with initial data
   const formInitialized = useRef(false);
@@ -113,6 +115,14 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
 
   const handleCloseCategoryManage = () => {
     setCategoryManageFormOpen(false);
+  };
+
+  const handleOpenWalletManage = () => {
+    setWalletManageFormOpen(true);
+  };
+
+  const handleCloseWalletManage = () => {
+    setWalletManageFormOpen(false);
   };
 
   // Helper function to fetch category spending data - memoize with useCallback
@@ -302,8 +312,28 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
           }, 100);
         }
       }, 300); // Short delay to ensure component is fully mounted
+    } else if (!initialData && open && !formInitialized.current) {
+      // This is a new transaction (not editing), so load last used category
+      formInitialized.current = true;
+      
+      // Get the last used category from localStorage
+      try {
+        const lastTransactionType = localStorage.getItem('lastTransactionType') || 'EXPENSE';
+        const lastCategoryType = lastTransactionType === 'EXPENSE' ? 'lastExpenseCategory' : 'lastIncomeCategory';
+        const lastCategoryId = localStorage.getItem(lastCategoryType);
+
+        if (lastCategoryId) {
+          setFormData(prev => ({
+            ...prev,
+            transactionType: lastTransactionType,
+            categoryId: lastCategoryId
+          }));
+        }
+      } catch (err) {
+        console.error('Error loading last category from localStorage:', err);
+      }
     }
-  }, [open, initialData, fetchCategorySpendingData]);
+  }, [open, initialData, fetchCategorySpendingData, categories.length]);
   
   // Update the useEffect for the checkCategoryLimit function
   useEffect(() => {
@@ -382,6 +412,56 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
       ...formData,
       [name]: value
     });
+    
+    // Save category selection to localStorage when user chooses a category
+    if (name === 'categoryId' && value) {
+      try {
+        const categoryType = formData.transactionType === 'EXPENSE' ? 'lastExpenseCategory' : 'lastIncomeCategory';
+        localStorage.setItem(categoryType, value);
+        localStorage.setItem('lastTransactionType', formData.transactionType);
+      } catch (err) {
+        console.error('Error saving category to localStorage:', err);
+      }
+    }
+    
+    // Save transaction type to localStorage when it changes
+    if (name === 'transactionType') {
+      try {
+        localStorage.setItem('lastTransactionType', value);
+        
+        // If we have categories loaded, check if there's a saved category for this type
+        if (categories.length > 0) {
+          const categoryType = value === 'EXPENSE' ? 'lastExpenseCategory' : 'lastIncomeCategory';
+          const savedCategoryId = localStorage.getItem(categoryType);
+          
+          // Check if the saved category exists and matches the current transaction type
+          if (savedCategoryId) {
+            const savedCategory = categories.find(c => 
+              c.id.toString() === savedCategoryId && c.type === value
+            );
+            
+            if (savedCategory) {
+              // Update the category in the form
+              setFormData(prev => ({
+                ...prev,
+                categoryId: savedCategoryId,
+                transactionType: value
+              }));
+              return;
+            }
+          }
+        }
+        
+        // If we couldn't find a matching saved category, just clear the selection
+        setFormData(prev => ({
+          ...prev,
+          categoryId: '',
+          transactionType: value
+        }));
+      } catch (err) {
+        console.error('Error working with localStorage:', err);
+      }
+    }
     
     if (errors[name]) {
       setErrors({
@@ -825,12 +905,12 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
 
   const renderValue = (selected) => {
     if (!selected) {
-      return <Typography sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>Select a category</Typography>;
+      return <Typography sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>Select your category</Typography>;
     }
     // Convert to string for safe comparison
     const selectedStr = selected.toString();
     const category = categories.find(c => c.id.toString() === selectedStr);
-    return <Typography sx={{ fontSize: '0.8rem' }}>{category ? category.categoryName : ''}</Typography>;
+    return <Typography sx={{ fontSize: '0.8rem' }}>{category ? category.categoryName : 'Uncategorized'}</Typography>;
   };
 
   // Use this version of handleClose in the component
@@ -870,27 +950,12 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
               <Box className={styles.actionButtonsContainer}>
                 <IconButton 
                   size="small" 
-                  className={styles.editButton}
-                  onClick={handleEditWalletClick}
-                  disabled={loading || !formData.accountId}
+                  className={styles.manageButton}
+                  onClick={handleOpenWalletManage}
+                  disabled={loading}
+                  title="Manage Wallets"
                 >
-                  <EditIcon fontSize="small" />
-                </IconButton>
-                <IconButton 
-                  size="small" 
-                  className={styles.deleteButton}
-                  onClick={handleDeleteWalletClick}
-                  disabled={loading || !formData.accountId}
-                  color="error"
-                >
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
-                <IconButton 
-                  size="small" 
-                  className={styles.addIconButton}
-                  onClick={() => setAccountFormOpen(true)}
-                >
-                  <AddIcon fontSize="small" />
+                  <AccountBalanceWalletIcon fontSize="small" />
                 </IconButton>
               </Box>
             </Box>
@@ -953,6 +1018,14 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
                 )}
               </Typography>
               <Box className={styles.actionButtonsContainer}>
+                <IconButton 
+                  size="small" 
+                  className={styles.addIconButton}
+                  onClick={() => setCategoryFormOpen(true)}
+                  disabled={loading}
+                >
+                  <AddIcon fontSize="small" />
+                </IconButton>
                 <IconButton
                   size="small"
                   color="primary"
@@ -962,14 +1035,6 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
                   title="Manage Categories"
                 >
                   <CategoryIcon fontSize="small" />
-                </IconButton>
-                <IconButton 
-                  size="small" 
-                  className={styles.addIconButton}
-                  onClick={() => setCategoryFormOpen(true)}
-                  disabled={loading}
-                >
-                  <AddIcon fontSize="small" />
                 </IconButton>
               </Box>
             </Box>
@@ -991,7 +1056,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
               renderValue={renderValue}
             >
               <MenuItem value="" disabled>
-                <Typography sx={{ fontSize: '0.8rem' }}>Select a category</Typography>
+                <Typography sx={{ fontSize: '0.8rem' }}>Select your category</Typography>
               </MenuItem>
               {categories
                 .filter(category => category.type === formData.transactionType)
@@ -1057,6 +1122,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
                   error={errors.amount}
                   disabled={loading}
                   size="small"
+                  label=""
                   className={`${styles.inputField} ${styles.amountField} ${errors.amount && errors.amount.includes('Insufficient funds') ? styles.insufficientFundsError : ''}`}
                   sx={{ '& .MuiInputBase-root': { height: '36px' } }}
                 />
@@ -1399,6 +1465,18 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
           />
         </DialogContent>
       </Dialog>
+      
+      {/* Wallet Management Form */}
+      <WalletManageForm
+        open={walletManageFormOpen}
+        handleClose={handleCloseWalletManage}
+        onWalletUpdated={() => {
+          // Refresh wallets data
+          FinanceService.getAccounts().then(response => {
+            setAccounts(response.data || []);
+          });
+        }}
+      />
     </Box>
   );
 
