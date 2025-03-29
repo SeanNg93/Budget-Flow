@@ -24,6 +24,8 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 public class TransactionService {
@@ -34,6 +36,7 @@ public class TransactionService {
     private final WalletService walletService;
     private final UserProfileService userProfileService;
     private final EntityManager entityManager;
+    private static final Logger logger = LoggerFactory.getLogger(TransactionService.class);
 
     @Autowired
     public TransactionService(
@@ -111,20 +114,27 @@ public class TransactionService {
     public Transaction updateTransaction(Long transactionId, Transaction transactionDetails) {
         Transaction transaction = getTransactionById(transactionId);
         
-        // Get the wallet owner ID instead of the transaction creator ID
-        Long walletOwnerId = transaction.getWallet().getUser().getId();
-        
-        // Revert the old transaction's effect on the wallet balance and total balance
-        if (transaction.getTransactionType() == Transaction.TransactionType.INCOME) {
-            walletService.subtractFromBalance(transaction.getWallet().getId(), transaction.getAmount());
+        // Only adjust balances if the wallet still exists
+        if (transaction.getWallet() != null) {
+            // Get the wallet owner ID instead of the transaction creator ID
+            Long walletOwnerId = transaction.getWallet().getUser().getId();
             
-            // Subtract from the wallet OWNER's total balance
-            userProfileService.subtractFromTotalBalance(walletOwnerId, transaction.getAmount());
-        } else if (transaction.getTransactionType() == Transaction.TransactionType.EXPENSE) {
-            walletService.addToBalance(transaction.getWallet().getId(), transaction.getAmount());
-            
-            // Add back to the wallet OWNER's total balance
-            userProfileService.addToTotalBalance(walletOwnerId, transaction.getAmount());
+            // Revert the old transaction's effect on the wallet balance and total balance
+            if (transaction.getTransactionType() == Transaction.TransactionType.INCOME) {
+                walletService.subtractFromBalance(transaction.getWallet().getId(), transaction.getAmount());
+                
+                // Subtract from the wallet OWNER's total balance
+                userProfileService.subtractFromTotalBalance(walletOwnerId, transaction.getAmount());
+            } else if (transaction.getTransactionType() == Transaction.TransactionType.EXPENSE) {
+                walletService.addToBalance(transaction.getWallet().getId(), transaction.getAmount());
+                
+                // Add back to the wallet OWNER's total balance
+                userProfileService.addToTotalBalance(walletOwnerId, transaction.getAmount());
+            }
+        } else {
+            // If wallet is null (deleted), log this situation
+            // We can't adjust balances since the wallet doesn't exist anymore
+            logger.info("Updating transaction with ID {} that references a deleted wallet", transactionId);
         }
         
         // Update transaction details
@@ -135,16 +145,21 @@ public class TransactionService {
         transaction.setTransactionDate(transactionDetails.getTransactionDate());
         
         // Apply the new transaction's effect on the wallet balance and total balance
-        if (transaction.getTransactionType() == Transaction.TransactionType.INCOME) {
-            walletService.addToBalance(transaction.getWallet().getId(), transaction.getAmount());
+        // Only if wallet exists and only if one is specified in transaction details
+        if (transaction.getWallet() != null && transactionDetails.getWallet() != null) {
+            Long walletOwnerId = transaction.getWallet().getUser().getId();
             
-            // Add to the wallet OWNER's total balance
-            userProfileService.addToTotalBalance(walletOwnerId, transaction.getAmount());
-        } else if (transaction.getTransactionType() == Transaction.TransactionType.EXPENSE) {
-            walletService.subtractFromBalance(transaction.getWallet().getId(), transaction.getAmount());
-            
-            // Subtract from the wallet OWNER's total balance
-            userProfileService.subtractFromTotalBalance(walletOwnerId, transaction.getAmount());
+            if (transactionDetails.getTransactionType() == Transaction.TransactionType.INCOME) {
+                walletService.addToBalance(transaction.getWallet().getId(), transactionDetails.getAmount());
+                
+                // Add to the wallet OWNER's total balance
+                userProfileService.addToTotalBalance(walletOwnerId, transactionDetails.getAmount());
+            } else if (transactionDetails.getTransactionType() == Transaction.TransactionType.EXPENSE) {
+                walletService.subtractFromBalance(transaction.getWallet().getId(), transactionDetails.getAmount());
+                
+                // Subtract from the wallet OWNER's total balance
+                userProfileService.subtractFromTotalBalance(walletOwnerId, transactionDetails.getAmount());
+            }
         }
         
         return transactionRepository.save(transaction);
@@ -154,20 +169,28 @@ public class TransactionService {
     public void deleteTransaction(Long transactionId) {
         Transaction transaction = getTransactionById(transactionId);
         
-        // Get the wallet owner ID
-        Long walletOwnerId = transaction.getWallet().getUser().getId();
-        
-        // Revert the transaction's effect on the wallet balance
-        if (transaction.getTransactionType() == Transaction.TransactionType.INCOME) {
-            walletService.subtractFromBalance(transaction.getWallet().getId(), transaction.getAmount());
+        // Only adjust balances if the wallet still exists
+        if (transaction.getWallet() != null) {
+            // Get the wallet owner ID
+            Long walletOwnerId = transaction.getWallet().getUser().getId();
             
-            // Subtract from the wallet OWNER's total balance
-            userProfileService.subtractFromTotalBalance(walletOwnerId, transaction.getAmount());
-        } else if (transaction.getTransactionType() == Transaction.TransactionType.EXPENSE) {
-            walletService.addToBalance(transaction.getWallet().getId(), transaction.getAmount());
-            
-            // Add back to the wallet OWNER's total balance
-            userProfileService.addToTotalBalance(walletOwnerId, transaction.getAmount());
+            // Revert the transaction's effect on the wallet balance
+            if (transaction.getTransactionType() == Transaction.TransactionType.INCOME) {
+                walletService.subtractFromBalance(transaction.getWallet().getId(), transaction.getAmount());
+                
+                // Subtract from the wallet OWNER's total balance
+                userProfileService.subtractFromTotalBalance(walletOwnerId, transaction.getAmount());
+            } else if (transaction.getTransactionType() == Transaction.TransactionType.EXPENSE) {
+                walletService.addToBalance(transaction.getWallet().getId(), transaction.getAmount());
+                
+                // Add back to the wallet OWNER's total balance
+                userProfileService.addToTotalBalance(walletOwnerId, transaction.getAmount());
+            }
+        } else {
+            // If wallet is null (deleted), log this situation
+            // We can't adjust balances since the wallet doesn't exist anymore
+            // The transaction is likely using originalWalletName instead
+            logger.info("Deleting transaction with ID {} that references a deleted wallet", transactionId);
         }
         
         // The before_transaction_delete trigger in MySQL will handle deleting

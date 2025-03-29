@@ -753,6 +753,7 @@ export default function Dashboard() {
                       userProfile={userProfile}
                       user={user}
                       openFinanceActionPanel={() => updateDialogState('financeActionPanel', true)}
+                      walletCount={wallets?.length || 0}
                     />
                   </Grid>
                 </Grid>
