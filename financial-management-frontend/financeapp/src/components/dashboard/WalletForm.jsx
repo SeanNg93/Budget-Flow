@@ -20,9 +20,6 @@ import {
   Fade,
   Slide,
   Zoom,
-  Radio,
-  RadioGroup,
-  FormControlLabel,
   Tooltip
 } from '@mui/material';
 import MoneyInput from '../utils/MoneyInput';
@@ -283,32 +280,69 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
     setError('');
   };
   
+  // Helper function to check if the selected icon is an emoji
+  const isEmojiIcon = (iconName) => {
+    const selectedIcon = WALLET_ICONS.find(icon => icon.value === iconName);
+    return selectedIcon && selectedIcon.type === 'emoji';
+  };
+  
+  const handleIconChange = (iconName) => {
+    // For emoji icons, we don't need color selection
+    if (isEmojiIcon(iconName)) {
+      setFormData({
+        ...formData,
+        iconName,
+        colorIndex: null // Reset color when emoji is selected
+      });
+    } else {
+      // For regular icons, keep color selection
+      setFormData({
+        ...formData,
+        iconName,
+        colorIndex: formData.colorIndex || 1 // Default to blue if no color was selected
+      });
+    }
+  };
+  
   // Create the form content
   const formContent = (
     <Box className={styles.formContainer}>
       {error && (
         <Fade in={!!error} timeout={300} nodeRef={errorAlertRef}>
-          <Alert severity="error" className={styles.errorAlert} ref={errorAlertRef}>
+          <Alert severity="error" className={styles.alertContainer} ref={errorAlertRef}>
             {error}
           </Alert>
         </Fade>
       )}
       
-      {!compact && !isEditMode && !embedded && (
+      {!isEditMode && (
         <Fade in={true} timeout={600} nodeRef={infoAlertRef}>
-          <Box sx={{ mb: 2 }} ref={infoAlertRef}>
-            <Alert severity="info">
-              {t('wallets.totalBalance')}: {formatCurrency(totalBalance, i18n.language)}
-              <br />
-              {t('wallets.usedAmount')}: {formatCurrency(usedBalance, i18n.language)}
-              <br />
-              {t('wallets.availableAmount')}: {formatCurrency(availableBalance, i18n.language)}
-            </Alert>
+          <Box sx={{ mb: 1 }} ref={infoAlertRef}>
+            <Box className={styles.balanceInfoBox}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <Box className={styles.circleIcon}>1</Box>
+                <Typography variant="body2" sx={{ fontSize: '0.9rem' }}>
+                  Total: {formatCurrency(totalBalance, i18n.language)}
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <Box className={styles.circleIcon}>2</Box>
+                <Typography variant="body2" sx={{ fontSize: '0.9rem' }}>
+                  Allocated: {formatCurrency(usedBalance, i18n.language)}
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Box className={styles.circleIcon}>3</Box>
+                <Typography variant="body2" sx={{ fontSize: '0.9rem' }}>
+                  Available: {formatCurrency(availableBalance, i18n.language)}
+                </Typography>
+              </Box>
+            </Box>
           </Box>
         </Fade>
       )}
       
-      <Grid container spacing={compact ? 1 : 2} sx={{ mt: compact ? 0 : 0.5 }}>
+      <Grid container spacing={1} sx={{ mt: 0 }}>
         {compact ? (
           // Compact layout - 2 fields per row
           <>
@@ -327,6 +361,7 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
                   disabled={loading}
                   size="small"
                   className={styles.textField}
+                  sx={{ marginBottom: 0 }}
                 />
               </FormControl>
             </Grid>
@@ -354,67 +389,49 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
             
             {/* Icon Selection - Compact */}
             <Grid item xs={12}>
-              <FormControl fullWidth size="small" className={styles.formControl}>
-                <Typography variant="caption" className={styles.fieldLabel}>
-                  {t('wallets.iconAndColor')}
-                </Typography>
-                <Box className={styles.compactIconSelector}>
-                  {/* Icon Selector */}
-                  <FormControl className={styles.iconSelectorCompact}>
-                    <RadioGroup 
-                      row 
-                      value={formData.iconName}
-                      onChange={(e) => handleChange({
-                        target: { name: 'iconName', value: e.target.value }
-                      })}
-                      className={styles.iconRadioGroup}
+              <Typography variant="caption" className={styles.fieldLabel}>
+                {t('wallets.selectIcon')}
+              </Typography>
+              <Box className={styles.iconSelectionCompact}>
+                {WALLET_ICONS.slice(0, 10).map((icon, index) => (
+                  <Tooltip key={index} title={t(`wallets.iconNames.${icon.value}`) || icon.label || ''} placement="top">
+                    <Box
+                      onClick={() => handleIconChange(icon.value)}
+                      className={`${styles.iconOptionCompact} ${formData.iconName === icon.value ? styles.selectedIcon : ''}`}
                     >
-                      {WALLET_ICONS.map((icon, index) => (
-                        <Tooltip key={index} title={icon.label || ''} placement="top">
-                          <FormControlLabel
-                            value={icon.value}
-                            control={<Radio className={styles.iconRadio} />}
-                            label={icon.type === 'emoji' ? (
-                              <span className={styles.emojiIcon}>{icon.value}</span>
-                            ) : (
-                              <Box className={styles.iconWrapper}>
-                                {iconComponents[icon.value] || <AccountBalanceWalletIcon />}
-                              </Box>
-                            )}
-                            className={styles.iconRadioLabel}
-                          />
-                        </Tooltip>
-                      ))}
-                    </RadioGroup>
-                  </FormControl>
-                  
-                  {/* Color Selector */}
-                  <FormControl className={styles.colorSelectorCompact}>
-                    <RadioGroup 
-                      row 
-                      value={formData.colorIndex}
-                      onChange={(e) => handleChange({
-                        target: { name: 'colorIndex', value: parseInt(e.target.value, 10) }
-                      })}
-                      className={styles.colorRadioGroup}
-                    >
-                      {WALLET_COLORS.map((color, index) => (
-                        <FormControlLabel
-                          key={index}
-                          value={color.index}
-                          control={<Radio className={styles.colorRadio} />}
-                          label={<Box className={`${styles.colorSwatch} ${styles[`color${color.index}`]}`} />}
-                          className={styles.colorRadioLabel}
-                        />
-                      ))}
-                    </RadioGroup>
-                  </FormControl>
-                </Box>
-              </FormControl>
+                      {icon.type === 'emoji' ? (
+                        <span className={styles.emojiIcon}>{icon.value}</span>
+                      ) : (
+                        iconComponents[icon.value] || <AccountBalanceWalletIcon />
+                      )}
+                    </Box>
+                  </Tooltip>
+                ))}
+              </Box>
             </Grid>
+            
+            {/* Color Selection - Compact - Only show for non-emoji icons */}
+            {!isEmojiIcon(formData.iconName) && (
+              <Grid item xs={12}>
+                <Typography variant="caption" className={styles.fieldLabel}>
+                  {t('wallets.selectColor')}
+                </Typography>
+                <Box className={styles.colorSelectionCompact}>
+                  {WALLET_COLORS.map((color) => (
+                    <Tooltip key={color.id} title={color.label} placement="top">
+                      <Box
+                        onClick={() => handleChange({ target: { name: 'colorIndex', value: color.value }})}
+                        className={`${styles.colorOptionCompact} ${formData.colorIndex === color.value ? styles.selectedColor : ''}`}
+                        sx={{ backgroundColor: color.hex }}
+                      />
+                    </Tooltip>
+                  ))}
+                </Box>
+              </Grid>
+            )}
           </>
         ) : (
-          // Original layout - 1 field per row
+          // Original layout - more compact than before
           <>
             <Grid item xs={12}>
               <FormControl fullWidth error={!!errors.accountName} size="small" className={styles.formControl}>
@@ -452,70 +469,57 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
                   label=""
                 />
                 {!errors.balance && (
-                  <FormHelperText>{t('wallets.maxAmount', { amount: formatCurrency(availableBalance, i18n.language) })}</FormHelperText>
+                  <FormHelperText sx={{ mt: 0 }}>{t('wallets.maxAmount', { amount: formatCurrency(availableBalance, i18n.language) })}</FormHelperText>
                 )}
               </FormControl>
             </Grid>
             
-            {/* Icon Selection - Full Layout */}
+            {/* Icon Selection - Compact Layout */}
             <Grid item xs={12}>
-              <FormControl fullWidth className={styles.formControl}>
+              <FormControl fullWidth className={styles.formControlCompact}>
                 <Typography variant="caption" className={styles.fieldLabel}>
                   {t('wallets.selectIcon')}
                 </Typography>
-                <RadioGroup 
-                  row 
-                  value={formData.iconName}
-                  onChange={(e) => handleChange({
-                    target: { name: 'iconName', value: e.target.value }
-                  })}
-                  className={styles.iconRadioGroup}
-                >
+                <Box className={styles.iconSelectionCompact}>
                   {WALLET_ICONS.map((icon, index) => (
-                    <Tooltip key={index} title={t(`wallets.iconNames.${icon.value}`) || ''} placement="top">
-                      <FormControlLabel
-                        value={icon.value}
-                        control={<Radio className={styles.iconRadio} />}
-                        label={icon.type === 'emoji' ? (
+                    <Tooltip key={index} title={t(`wallets.iconNames.${icon.value}`) || icon.label || ''} placement="top">
+                      <Box
+                        onClick={() => handleIconChange(icon.value)}
+                        className={`${styles.iconOptionCompact} ${formData.iconName === icon.value ? styles.selectedIcon : ''}`}
+                      >
+                        {icon.type === 'emoji' ? (
                           <span className={styles.emojiIcon}>{icon.value}</span>
                         ) : (
-                          <Box className={styles.iconWrapper}>
-                            {iconComponents[icon.value] || <AccountBalanceWalletIcon />}
-                          </Box>
+                          iconComponents[icon.value] || <AccountBalanceWalletIcon />
                         )}
-                        className={styles.iconRadioLabel}
-                      />
+                      </Box>
                     </Tooltip>
                   ))}
-                </RadioGroup>
+                </Box>
               </FormControl>
             </Grid>
             
-            <Grid item xs={12}>
-              <FormControl fullWidth className={styles.formControl}>
-                <Typography variant="caption" className={styles.fieldLabel}>
-                  {t('wallets.selectColor')}
-                </Typography>
-                <RadioGroup 
-                  row 
-                  value={formData.colorIndex}
-                  onChange={(e) => handleChange({
-                    target: { name: 'colorIndex', value: parseInt(e.target.value, 10) }
-                  })}
-                  className={styles.colorRadioGroup}
-                >
-                  {WALLET_COLORS.map((color, index) => (
-                    <FormControlLabel
-                      key={index}
-                      value={color.index}
-                      control={<Radio className={styles.colorRadio} />}
-                      label={<Box className={`${styles.colorSwatch} ${styles[`color${color.index}`]}`} />}
-                      className={styles.colorRadioLabel}
-                    />
-                  ))}
-                </RadioGroup>
-              </FormControl>
-            </Grid>
+            {/* Color Selection - Only show for non-emoji icons */}
+            {!isEmojiIcon(formData.iconName) && (
+              <Grid item xs={12}>
+                <FormControl fullWidth className={styles.formControlCompact}>
+                  <Typography variant="caption" className={styles.fieldLabel}>
+                    {t('wallets.selectColor')}
+                  </Typography>
+                  <Box className={styles.colorSelectionCompact}>
+                    {WALLET_COLORS.map((color) => (
+                      <Tooltip key={color.id} title={color.label} placement="top">
+                        <Box
+                          onClick={() => handleChange({ target: { name: 'colorIndex', value: color.value }})}
+                          className={`${styles.colorOptionCompact} ${formData.colorIndex === color.value ? styles.selectedColor : ''}`}
+                          sx={{ backgroundColor: color.hex }}
+                        />
+                      </Tooltip>
+                    ))}
+                  </Box>
+                </FormControl>
+              </Grid>
+            )}
           </>
         )}
       </Grid>
@@ -549,7 +553,8 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
       open={open} 
       onClose={handleClose} 
       fullWidth 
-      maxWidth="sm"
+      maxWidth="xs"
+      PaperProps={{ className: styles.dialogPaper }}
       TransitionComponent={SlideTransition}
       TransitionProps={{
         nodeRef: dialogRef,
@@ -559,19 +564,21 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
       }}
       ref={dialogRef}
     >
-      <DialogTitle>{wallet ? t('wallets.editWallet') : t('wallets.createWallet')}</DialogTitle>
-      <DialogContent>
+      <DialogTitle sx={{ pb: 1 }}>{wallet ? t('wallets.editWallet') : t('wallets.createWallet')}</DialogTitle>
+      <DialogContent sx={{ pt: 1, pb: 1 }}>
         {formContent}
       </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose} disabled={submitting}>{t('common.cancel')}</Button>
+      <DialogActions sx={{ px: 2, pb: 2 }}>
+        <Button onClick={handleClose} disabled={submitting} size="small" className={styles.cancelButton}>{t('common.cancel')}</Button>
         <Button 
           onClick={handleSubmit}
           variant="contained" 
           color="primary" 
+          size="small"
           disabled={submitting}
+          className={styles.submitButton}
         >
-          {submitting ? <CircularProgress size={24} /> : 
+          {submitting ? <CircularProgress size={20} /> : 
            isEditMode ? t('wallets.updateWallet') : t('wallets.createWallet')}
         </Button>
       </DialogActions>
