@@ -33,13 +33,8 @@ import {
   ErrorOutline as ErrorIcon
 } from '@mui/icons-material';
 import styles from '../../styles/walletManage.module.css';
-
-// Helper to format currency
-const formatCurrency = (value) => {
-  // Ensure value is a number before formatting
-  const numericValue = typeof value === 'number' ? value : parseFloat(value || 0);
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(numericValue);
-};
+import { useTranslation } from 'react-i18next';
+import { formatCurrency } from '../../utils/formatters';
 
 // Create transition components with forwardRef
 const SlideTransition = React.forwardRef(function Transition(props, ref) {
@@ -47,6 +42,8 @@ const SlideTransition = React.forwardRef(function Transition(props, ref) {
 });
 
 const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourceWallet = null }) => {
+  const { t, i18n } = useTranslation();
+  
   // Wallets state
   const [wallets, setWallets] = useState([]);
   const [sourceWalletId, setSourceWalletId] = useState('');
@@ -114,7 +111,7 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourc
       }
     } catch (error) {
       console.error('Failed to load wallets:', error);
-      setError('Failed to load wallets. Please try again.');
+      setError(t('wallets.errorLoadingWallets'));
     }
   };
   
@@ -129,7 +126,7 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourc
       setSearchResults(response.data || []);
     } catch (error) {
       console.error('Error searching users:', error);
-      setError('Failed to search users. Please try again.');
+      setError(t('wallets.errorSearchingUsers'));
       setSearchResults([]);
     } finally {
       setSearching(false);
@@ -145,24 +142,27 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourc
   const handleTransfer = async () => {
     // Validate input
     if (!sourceWalletId) {
-      setError('Please select a source wallet');
+      setError(t('transactions.selectSourceWallet'));
       return;
     }
     
     if (!selectedUser) {
-      setError('Please select a recipient');
+      setError(t('transactions.selectRecipient'));
       return;
     }
     
     if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
-      setError('Please enter a valid amount');
+      setError(t('validation.invalidAmount'));
       return;
     }
     
     // Check if source wallet has enough balance
     const sourceWallet = wallets.find(w => w.id.toString() === sourceWalletId);
     if (!sourceWallet || parseFloat(amount) > sourceWallet.balance) {
-      setError(`Insufficient funds in ${sourceWallet?.accountName}. Available: $${sourceWallet?.balance.toFixed(2)}`);
+      setError(t('transactions.insufficientFunds', { 
+        wallet: sourceWallet?.accountName,
+        balance: formatCurrency(sourceWallet?.balance, i18n.language)
+      }));
       return;
     }
     
@@ -194,7 +194,7 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourc
       }, 2000);
     } catch (error) {
       console.error('Error transferring funds:', error);
-      setError(error.response?.data?.error || 'Failed to transfer funds. Please try again.');
+      setError(error.response?.data?.error || t('transactions.errorTransferringFunds'));
     } finally {
       setTransferring(false);
     }
@@ -228,10 +228,10 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourc
       <DialogTitle className={styles.dialogTitle}>
         <Box className={styles.headerContainer}>
           <Typography variant="h6" className={styles.title}>
-            Transfer Money
+            {t('transactions.transferMoney')}
           </Typography>
           <IconButton 
-            aria-label="close" 
+            aria-label={t('common.close')} 
             onClick={handleClose} 
             size="small"
             sx={{
@@ -248,13 +248,13 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourc
       </DialogTitle>
       
       <DialogContent className={styles.dialogContent} sx={{ px: 2, py: 1 }}>
-        {/* Error message */}
         {error && (
           <Fade in={!!error} timeout={300} nodeRef={errorAlertRef}>
             <Alert 
               severity="error" 
-              icon={<ErrorIcon />}
-              style={{ marginBottom: '12px' }}
+              className={styles.alert}
+              sx={{ mb: 2, mt: 1 }}
+              onClose={() => setError('')}
               ref={errorAlertRef}
             >
               {error}
@@ -262,239 +262,177 @@ const UserTransferForm = ({ open, handleClose, onTransferCompleted, defaultSourc
           </Fade>
         )}
         
-        {/* Success message */}
         {success && (
           <Fade in={success} timeout={300} nodeRef={successAlertRef}>
             <Alert 
               severity="success" 
-              style={{ marginBottom: '12px' }}
+              className={styles.alert}
+              sx={{ mb: 2, mt: 1 }}
               ref={successAlertRef}
             >
-              Transfer completed successfully!
+              {t('transactions.transferSuccess', { recipient: selectedUser?.username })}
             </Alert>
           </Fade>
         )}
         
-        <Box sx={{ pt: 1 }}>
-          {/* Source wallet selector */}
-          <FormControl fullWidth sx={{ mb: 2 }} size="small">
-            <Typography variant="body2" gutterBottom sx={{ fontWeight: 500, color: 'text.secondary' }}>
-              From Wallet
+        <Box className={styles.formContainer}>
+          <FormControl fullWidth margin="normal">
+            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+              {t('transactions.from')}
             </Typography>
             <Select
               value={sourceWalletId}
               onChange={(e) => setSourceWalletId(e.target.value)}
               displayEmpty
-              size="small"
-              sx={{
-                borderRadius: '8px',
-                fontSize: '0.9rem',
-                '& .MuiOutlinedInput-notchedOutline': {
-                  borderColor: 'rgba(0, 0, 0, 0.1)'
-                }
-              }}
+              variant="outlined"
+              disabled={transferring}
+              className={styles.formSelect}
             >
               <MenuItem value="" disabled>
-                Select Wallet
+                {t('transactions.selectWallet')}
               </MenuItem>
               {wallets.map((wallet) => (
                 <MenuItem key={wallet.id} value={wallet.id.toString()}>
-                  {wallet.accountName} ({formatCurrency(wallet.balance)})
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                    <Typography>{wallet.accountName}</Typography>
+                    <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: '500' }}>
+                      {formatCurrency(wallet.balance, i18n.language)}
+                    </Typography>
+                  </Box>
                 </MenuItem>
               ))}
             </Select>
           </FormControl>
           
-          {/* User search */}
-          <FormControl fullWidth sx={{ mb: 2 }} size="small">
-            <Typography variant="body2" gutterBottom sx={{ fontWeight: 500, color: 'text.secondary' }}>
-              To User
+          <FormControl fullWidth margin="normal">
+            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+              {t('transactions.to')}
             </Typography>
+            
             <TextField
+              fullWidth
+              placeholder={t('wallets.searchUsersPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by name or username"
-              size="small"
-              fullWidth
+              variant="outlined"
+              disabled={transferring}
+              className={styles.formInput}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
                     <SearchIcon fontSize="small" />
                   </InputAdornment>
                 ),
-                endAdornment: searching ? (
+                endAdornment: selectedUser && (
                   <InputAdornment position="end">
-                    <CircularProgress size={16} />
+                    <IconButton 
+                      size="small" 
+                      onClick={handleReset}
+                      disabled={transferring}
+                    >
+                      <CloseIcon fontSize="small" />
+                    </IconButton>
                   </InputAdornment>
-                ) : null,
-                sx: {
-                  borderRadius: '8px',
-                  fontSize: '0.9rem',
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'rgba(0, 0, 0, 0.1)'
-                  }
-                }
+                )
               }}
             />
             
-            {/* Search results */}
+            {searching && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', my: 1 }}>
+                <CircularProgress size={24} />
+              </Box>
+            )}
+            
             {searchResults.length > 0 && !selectedUser && (
-              <Paper 
-                elevation={2} 
-                sx={{ 
-                  mt: 0.5, 
-                  maxHeight: '180px', 
-                  overflow: 'auto',
-                  borderRadius: '8px'
-                }}
-              >
-                <List dense sx={{ py: 0.5 }}>
-                  {searchResults.map((user, index) => (
+              <Paper className={styles.searchResults} elevation={3}>
+                <List sx={{ maxHeight: '200px', overflow: 'auto' }}>
+                  {searchResults.map((user) => (
                     <React.Fragment key={user.id}>
                       <ListItem 
                         button 
                         onClick={() => handleSelectUser(user)}
-                        dense
-                        sx={{ 
-                          py: 0.5,
-                          '&:hover': {
-                            backgroundColor: 'rgba(0, 122, 255, 0.08)'
-                          }
-                        }}
+                        className={styles.userItem}
                       >
-                        <ListItemAvatar sx={{ minWidth: 40 }}>
+                        <ListItemAvatar>
                           <Avatar 
-                            src={user.profilePicture} 
+                            src={user.profilePicture || ''}
                             alt={user.username}
-                            sx={{ 
-                              width: 30, 
-                              height: 30,
-                              backgroundColor: 'primary.main',
-                              fontSize: '0.85rem'
-                            }}
                           >
-                            {user.fullName ? user.fullName.charAt(0).toUpperCase() : user.username.charAt(0).toUpperCase()}
+                            {user.username.charAt(0).toUpperCase()}
                           </Avatar>
                         </ListItemAvatar>
                         <ListItemText 
-                          primary={user.fullName || user.username}
-                          secondary={user.fullName ? `@${user.username}` : ''}
-                          primaryTypographyProps={{ fontSize: '0.9rem' }}
-                          secondaryTypographyProps={{ fontSize: '0.75rem' }}
+                          primary={user.username} 
+                          secondary={user.fullName || t('common.user')} 
                         />
                       </ListItem>
-                      {index < searchResults.length - 1 && <Divider component="li" variant="middle" />}
+                      <Divider component="li" />
                     </React.Fragment>
                   ))}
                 </List>
               </Paper>
             )}
             
-            {/* Selected user */}
             {selectedUser && (
-              <Paper 
-                elevation={1} 
-                sx={{ 
-                  mt: 0.5, 
-                  p: 0.75, 
-                  display: 'flex', 
-                  alignItems: 'center',
-                  borderRadius: '8px',
-                  backgroundColor: 'rgba(0, 122, 255, 0.05)',
-                  border: '1px solid rgba(0, 122, 255, 0.1)'
-                }}
-              >
-                <Avatar 
-                  src={selectedUser.profilePicture} 
-                  alt={selectedUser.username}
-                  sx={{ 
-                    backgroundColor: 'primary.main',
-                    mr: 1,
-                    width: 28,
-                    height: 28,
-                    fontSize: '0.85rem'
-                  }}
-                >
-                  {selectedUser.fullName ? selectedUser.fullName.charAt(0).toUpperCase() : selectedUser.username.charAt(0).toUpperCase()}
-                </Avatar>
-                <Box>
-                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                    {selectedUser.fullName || selectedUser.username}
-                  </Typography>
-                  {selectedUser.fullName && (
-                    <Typography variant="caption" color="text.secondary">
-                      @{selectedUser.username}
-                    </Typography>
-                  )}
-                </Box>
-                <Box sx={{ ml: 'auto' }}>
-                  <Button 
-                    size="small" 
-                    onClick={handleReset}
-                    sx={{ 
-                      minWidth: 'auto', 
-                      p: 0.5, 
-                      fontSize: '0.75rem',
-                      color: 'primary.main'
-                    }}
-                  >
-                    Change
-                  </Button>
-                </Box>
-              </Paper>
+              <Box sx={{ mt: 1 }}>
+                <Paper className={styles.selectedUserPaper} elevation={1}>
+                  <Box className={styles.selectedUser}>
+                    <Avatar 
+                      src={selectedUser.profilePicture || ''}
+                      alt={selectedUser.username}
+                    >
+                      {selectedUser.username.charAt(0).toUpperCase()}
+                    </Avatar>
+                    <Box sx={{ ml: 1 }}>
+                      <Typography variant="body1">{selectedUser.username}</Typography>
+                      <Typography variant="body2" color="textSecondary">
+                        {selectedUser.fullName || t('common.user')}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Paper>
+              </Box>
             )}
           </FormControl>
           
-          {/* Amount input */}
-          <FormControl fullWidth sx={{ mb: 1 }} size="small">
-            <Typography variant="body2" gutterBottom sx={{ fontWeight: 500, color: 'text.secondary' }}>
-              Amount
+          <FormControl fullWidth margin="normal">
+            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+              {t('transactions.amount')}
             </Typography>
             <TextField
+              type="number"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="0.00"
-              type="number"
-              size="small"
+              variant="outlined"
+              fullWidth
+              disabled={transferring}
+              className={styles.formInput}
               InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    $
-                  </InputAdornment>
-                ),
-                sx: {
-                  borderRadius: '8px',
-                  fontSize: '0.9rem',
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'rgba(0, 0, 0, 0.1)'
-                  }
-                }
+                startAdornment: <InputAdornment position="start">$</InputAdornment>,
               }}
             />
           </FormControl>
         </Box>
       </DialogContent>
       
-      <DialogActions sx={{ px: 2, pb: 2, pt: 0.5, justifyContent: 'flex-end' }}>
+      <DialogActions className={styles.dialogActions}>
         <Button 
           onClick={handleClose}
-          variant="outlined"
+          disabled={transferring}
           className={styles.cancelButton}
-          size="small"
-          sx={{ mr: 1 }}
         >
-          Cancel
+          {t('common.cancel')}
         </Button>
-        <Button 
-          onClick={handleTransfer}
+        <Button
           variant="contained"
           color="primary"
-          disabled={!sourceWalletId || !selectedUser || !amount || transferring}
-          startIcon={transferring ? <CircularProgress size={16} /> : <SendIcon />}
-          className={`${styles.standardButton} ${styles.transferButton}`}
-          size="small"
+          className={styles.submitButton}
+          disabled={!selectedUser || !amount || transferring || !sourceWalletId || success}
+          startIcon={transferring ? <CircularProgress size={20} /> : <SendIcon />}
+          onClick={handleTransfer}
         >
-          {transferring ? 'Sending...' : 'Send Money'}
+          {transferring ? t('transactions.transferring') : t('transactions.transfer')}
         </Button>
       </DialogActions>
     </Dialog>

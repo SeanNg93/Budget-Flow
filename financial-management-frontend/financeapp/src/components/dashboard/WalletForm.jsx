@@ -37,7 +37,8 @@ import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import ShowChartIcon from '@mui/icons-material/ShowChart';
 import SavingsOutlinedIcon from '@mui/icons-material/SavingsOutlined';
-import { formatCurrency } from '../../utils/moneyFormatter';
+import { formatCurrency } from '../../utils/formatters';
+import { useTranslation } from 'react-i18next';
 
 // Map of icon names to components
 const iconComponents = {
@@ -56,6 +57,7 @@ const SlideTransition = React.forwardRef(function Transition(props, ref) {
 });
 
 const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compact = false, wallet = null }) => {
+  const { t, i18n } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     accountName: '',
@@ -140,7 +142,7 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
       setAvailableBalance(availableBalance);
     } catch (err) {
       console.error('Error fetching balance data:', err);
-      setError('Failed to load balance data. Please try again.');
+      setError(t('wallets.errorLoadingBalanceData'));
     } finally {
       setLoading(false);
     }
@@ -182,23 +184,27 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
     const newErrors = {};
     
     if (!formData.accountName) {
-      newErrors.accountName = 'Wallet name is required';
+      newErrors.accountName = t('validation.required');
     }
     
     if (!formData.balance || isNaN(formData.balance) || parseFloat(formData.balance) < 0) {
-      newErrors.balance = 'Valid balance is required';
+      newErrors.balance = t('validation.invalidAmount');
     } else {
       const balanceValue = parseFloat(formData.balance);
       if (isEditMode) {
         // In edit mode, check against available + original balance
         const maxAllowed = availableBalance;
         if (balanceValue > maxAllowed) {
-          newErrors.balance = `Balance exceeds available amount (${maxAllowed.toFixed(2)})`;
+          newErrors.balance = t('wallets.balanceExceedsAvailable', { 
+            amount: formatCurrency(maxAllowed, i18n.language) 
+          });
         }
       } else {
         // In create mode, just check against available balance
         if (balanceValue > availableBalance) {
-          newErrors.balance = `Balance exceeds available amount (${availableBalance.toFixed(2)})`;
+          newErrors.balance = t('wallets.balanceExceedsAvailable', { 
+            amount: formatCurrency(availableBalance, i18n.language) 
+          });
         }
       }
     }
@@ -208,6 +214,7 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
   };
 
   const handleSubmit = async () => {
+    // Validate form
     if (!validateForm()) {
       return;
     }
@@ -215,61 +222,50 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
     setSubmitting(true);
     setError('');
     
+    const walletData = {
+      accountName: formData.accountName,
+      balance: parseFloat(formData.balance),
+      currency: formData.currency
+    };
+    
     try {
-      const accountData = {
-        ...formData,
-        balance: parseFloat(formData.balance)
-      };
-      
       let response;
       
       if (isEditMode && wallet) {
-        // Update the wallet
-        response = await FinanceService.updateAccount(
-          wallet.id, 
-          { ...wallet, ...accountData }
-        );
+        // Update existing wallet
+        response = await FinanceService.updateAccount(wallet.id, walletData);
+        
+        // Update icon and color
+        saveWalletIcon(wallet.id, formData.iconName);
+        saveWalletColor(wallet.id, formData.colorIndex);
       } else {
         // Create new wallet
-        response = await FinanceService.createAccount(accountData);
+        response = await FinanceService.createAccount(walletData);
+        
+        // Save icon and color preferences
+        if (response.data && response.data.id) {
+          saveWalletIcon(response.data.id, formData.iconName);
+          saveWalletColor(response.data.id, formData.colorIndex);
+        }
       }
       
-      // Get the wallet ID
-      const walletId = isEditMode ? wallet.id : (response.data && response.data.id);
+      // Reset form after successful submission
+      resetForm();
       
-      if (walletId) {
-        // Save color selection
-        saveWalletColor(walletId, formData.colorIndex);
-        
-        // Save icon selection
-        saveWalletIcon(walletId, formData.iconName);
-        
-        // Create an updated wallet object to pass back to the parent
-        const updatedWallet = {
-          ...(isEditMode ? wallet : response.data),
-          accountName: formData.accountName,
-          balance: parseFloat(formData.balance),
-          // Add custom properties for immediate UI updates
-          _icon: formData.iconName,
-          _colorClass: `walletColor${formData.colorIndex}`,
-          _forceIconRefresh: Date.now()
-        };
-        
-        // Reset form
-        resetForm();
-        
-        // Close dialog and notify parent with the updated wallet data
-        if (onWalletAdded) {
-          onWalletAdded(updatedWallet);
-        }
-        
-        if (!embedded) {
-          handleClose();
-        }
+      // Notify parent component about the wallet addition/update
+      if (onWalletAdded) {
+        onWalletAdded(isEditMode, response.data);
+      }
+      
+      // Close dialog if not embedded
+      if (!embedded) {
+        handleClose();
       }
     } catch (err) {
-      console.error('Error with wallet operation:', err);
-      setError(err.response?.data?.message || `Failed to ${isEditMode ? 'update' : 'create'} wallet. Please try again.`);
+      console.error('Error submitting wallet:', err);
+      setError(isEditMode 
+        ? t('wallets.errorUpdatingWallet') 
+        : t('wallets.errorCreatingWallet'));
     } finally {
       setSubmitting(false);
     }
@@ -286,27 +282,31 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
     setErrors({});
     setError('');
   };
-
-  // Form content that will be used in both embedded and non-embedded modes
+  
+  // Create the form content
   const formContent = (
     <Box className={styles.formContainer}>
       {error && (
         <Fade in={!!error} timeout={300} nodeRef={errorAlertRef}>
-          <Alert severity="error" sx={{ mb: 2 }} ref={errorAlertRef}>{error}</Alert>
+          <Alert severity="error" className={styles.errorAlert} ref={errorAlertRef}>
+            {error}
+          </Alert>
         </Fade>
       )}
       
-      <Fade in={open} timeout={300} nodeRef={infoAlertRef}>
-        <Box sx={{ mb: 2 }} ref={infoAlertRef}>
-          <Alert severity="info">
-            Total Balance: ${totalBalance.toFixed(2)}
-            <br />
-            Used: ${usedBalance.toFixed(2)}
-            <br />
-            Available: ${availableBalance.toFixed(2)}
-          </Alert>
-        </Box>
-      </Fade>
+      {!compact && !isEditMode && !embedded && (
+        <Fade in={true} timeout={600} nodeRef={infoAlertRef}>
+          <Box sx={{ mb: 2 }} ref={infoAlertRef}>
+            <Alert severity="info">
+              {t('wallets.totalBalance')}: {formatCurrency(totalBalance, i18n.language)}
+              <br />
+              {t('wallets.usedAmount')}: {formatCurrency(usedBalance, i18n.language)}
+              <br />
+              {t('wallets.availableAmount')}: {formatCurrency(availableBalance, i18n.language)}
+            </Alert>
+          </Box>
+        </Fade>
+      )}
       
       <Grid container spacing={compact ? 1 : 2} sx={{ mt: compact ? 0 : 0.5 }}>
         {compact ? (
@@ -315,13 +315,13 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
             <Grid item xs={12}>
               <FormControl fullWidth error={!!errors.accountName} size="small" className={styles.formControl}>
                 <Typography variant="caption" className={styles.fieldLabel}>
-                  Wallet Name
+                  {t('wallets.walletName')}
                 </Typography>
                 <TextField
                   name="accountName"
                   value={formData.accountName}
                   onChange={handleChange}
-                  placeholder="My Wallet"
+                  placeholder={t('wallets.walletNamePlaceholder')}
                   error={!!errors.accountName}
                   helperText={errors.accountName}
                   disabled={loading}
@@ -334,7 +334,9 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
             <Grid item xs={12}>
               <FormControl fullWidth error={!!errors.balance} size="small" className={styles.formControl}>
                 <Typography variant="caption" className={styles.fieldLabel}>
-                  Initial Balance (Max: {formatCurrency(availableBalance)})
+                  {isEditMode 
+                    ? t('wallets.balance') 
+                    : t('wallets.initialBalanceMax', { amount: formatCurrency(availableBalance, i18n.language) })}
                 </Typography>
                 <MoneyInput
                   name="balance"
@@ -354,43 +356,59 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
             <Grid item xs={12}>
               <FormControl fullWidth size="small" className={styles.formControl}>
                 <Typography variant="caption" className={styles.fieldLabel}>
-                  Wallet Icon
+                  {t('wallets.iconAndColor')}
                 </Typography>
-                <Box className={styles.iconSelection}>
-                  {WALLET_ICONS.map(icon => (
-                    <Tooltip key={icon.id} title={icon.label}>
-                      <Box 
-                        className={`${styles.iconOption} ${formData.iconName === icon.value ? styles.selectedIcon : ''}`}
-                        onClick={() => handleChange({ target: { name: 'iconName', value: icon.value } })}
-                      >
-                        {icon.type === 'emoji' ? (
-                          <span style={{ fontSize: '20px' }}>{icon.value}</span>
-                        ) : (
-                          iconComponents[icon.value]
-                        )}
-                      </Box>
-                    </Tooltip>
-                  ))}
-                </Box>
-              </FormControl>
-            </Grid>
-            
-            {/* Color Selection - Compact */}
-            <Grid item xs={12}>
-              <FormControl fullWidth size="small" className={styles.formControl}>
-                <Typography variant="caption" className={styles.fieldLabel}>
-                  Wallet Color
-                </Typography>
-                <Box className={styles.colorSelection}>
-                  {WALLET_COLORS.map(color => (
-                    <Tooltip key={color.id} title={color.label}>
-                      <Box 
-                        className={`${styles.colorOption} ${formData.colorIndex === color.value ? styles.selectedColor : ''}`}
-                        sx={{ backgroundColor: color.hex }}
-                        onClick={() => handleChange({ target: { name: 'colorIndex', value: color.value } })}
-                      />
-                    </Tooltip>
-                  ))}
+                <Box className={styles.compactIconSelector}>
+                  {/* Icon Selector */}
+                  <FormControl className={styles.iconSelectorCompact}>
+                    <RadioGroup 
+                      row 
+                      value={formData.iconName}
+                      onChange={(e) => handleChange({
+                        target: { name: 'iconName', value: e.target.value }
+                      })}
+                      className={styles.iconRadioGroup}
+                    >
+                      {WALLET_ICONS.map((icon, index) => (
+                        <Tooltip key={index} title={icon.label || ''} placement="top">
+                          <FormControlLabel
+                            value={icon.value}
+                            control={<Radio className={styles.iconRadio} />}
+                            label={icon.type === 'emoji' ? (
+                              <span className={styles.emojiIcon}>{icon.value}</span>
+                            ) : (
+                              <Box className={styles.iconWrapper}>
+                                {iconComponents[icon.value] || <AccountBalanceWalletIcon />}
+                              </Box>
+                            )}
+                            className={styles.iconRadioLabel}
+                          />
+                        </Tooltip>
+                      ))}
+                    </RadioGroup>
+                  </FormControl>
+                  
+                  {/* Color Selector */}
+                  <FormControl className={styles.colorSelectorCompact}>
+                    <RadioGroup 
+                      row 
+                      value={formData.colorIndex}
+                      onChange={(e) => handleChange({
+                        target: { name: 'colorIndex', value: parseInt(e.target.value, 10) }
+                      })}
+                      className={styles.colorRadioGroup}
+                    >
+                      {WALLET_COLORS.map((color, index) => (
+                        <FormControlLabel
+                          key={index}
+                          value={color.index}
+                          control={<Radio className={styles.colorRadio} />}
+                          label={<Box className={`${styles.colorSwatch} ${styles[`color${color.index}`]}`} />}
+                          className={styles.colorRadioLabel}
+                        />
+                      ))}
+                    </RadioGroup>
+                  </FormControl>
                 </Box>
               </FormControl>
             </Grid>
@@ -401,13 +419,13 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
             <Grid item xs={12}>
               <FormControl fullWidth error={!!errors.accountName} size="small" className={styles.formControl}>
                 <Typography variant="caption" className={styles.fieldLabel}>
-                  Wallet Name
+                  {t('wallets.walletName')}
                 </Typography>
                 <TextField
                   name="accountName"
                   value={formData.accountName}
                   onChange={handleChange}
-                  placeholder="My Wallet"
+                  placeholder={t('wallets.walletNamePlaceholder')}
                   error={!!errors.accountName}
                   helperText={errors.accountName}
                   disabled={loading}
@@ -420,7 +438,7 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
             <Grid item xs={12}>
               <FormControl fullWidth error={!!errors.balance} size="small" className={styles.formControl}>
                 <Typography variant="caption" className={styles.fieldLabel}>
-                  {isEditMode ? 'Balance' : 'Initial Balance'}
+                  {isEditMode ? t('wallets.balance') : t('wallets.initialBalance')}
                 </Typography>
                 <MoneyInput
                   name="balance"
@@ -434,85 +452,97 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
                   label=""
                 />
                 {!errors.balance && (
-                  <FormHelperText>Max: {formatCurrency(availableBalance)}</FormHelperText>
+                  <FormHelperText>{t('wallets.maxAmount', { amount: formatCurrency(availableBalance, i18n.language) })}</FormHelperText>
                 )}
               </FormControl>
             </Grid>
             
             {/* Icon Selection - Full Layout */}
             <Grid item xs={12}>
-              <FormControl fullWidth size="small" className={styles.formControl}>
+              <FormControl fullWidth className={styles.formControl}>
                 <Typography variant="caption" className={styles.fieldLabel}>
-                  Wallet Icon
+                  {t('wallets.selectIcon')}
                 </Typography>
-                <Box className={styles.iconSelection}>
-                  {WALLET_ICONS.map(icon => (
-                    <Tooltip key={icon.id} title={icon.label}>
-                      <Box 
-                        className={`${styles.iconOption} ${formData.iconName === icon.value ? styles.selectedIcon : ''}`}
-                        onClick={() => handleChange({ target: { name: 'iconName', value: icon.value } })}
-                      >
-                        {icon.type === 'emoji' ? (
-                          <span style={{ fontSize: '20px' }}>{icon.value}</span>
+                <RadioGroup 
+                  row 
+                  value={formData.iconName}
+                  onChange={(e) => handleChange({
+                    target: { name: 'iconName', value: e.target.value }
+                  })}
+                  className={styles.iconRadioGroup}
+                >
+                  {WALLET_ICONS.map((icon, index) => (
+                    <Tooltip key={index} title={t(`wallets.iconNames.${icon.value}`) || ''} placement="top">
+                      <FormControlLabel
+                        value={icon.value}
+                        control={<Radio className={styles.iconRadio} />}
+                        label={icon.type === 'emoji' ? (
+                          <span className={styles.emojiIcon}>{icon.value}</span>
                         ) : (
-                          iconComponents[icon.value]
+                          <Box className={styles.iconWrapper}>
+                            {iconComponents[icon.value] || <AccountBalanceWalletIcon />}
+                          </Box>
                         )}
-                      </Box>
+                        className={styles.iconRadioLabel}
+                      />
                     </Tooltip>
                   ))}
-                </Box>
+                </RadioGroup>
               </FormControl>
             </Grid>
             
-            {/* Only show color selection for standard icons, not emoji */}
-            {(WALLET_ICONS.find(icon => icon.value === formData.iconName)?.type !== 'emoji') && (
-              <Grid item xs={12}>
-                <FormControl fullWidth size="small" className={styles.formControl}>
-                  <Typography variant="caption" className={styles.fieldLabel}>
-                    Wallet Color
-                  </Typography>
-                  <Box className={styles.colorSelection}>
-                    {WALLET_COLORS.map(color => (
-                      <Tooltip key={color.id} title={color.label}>
-                        <Box 
-                          className={`${styles.colorOption} ${formData.colorIndex === color.value ? styles.selectedColor : ''}`}
-                          sx={{ backgroundColor: color.hex }}
-                          onClick={() => handleChange({ target: { name: 'colorIndex', value: color.value } })}
-                        />
-                      </Tooltip>
-                    ))}
-                  </Box>
-                </FormControl>
-              </Grid>
-            )}
+            <Grid item xs={12}>
+              <FormControl fullWidth className={styles.formControl}>
+                <Typography variant="caption" className={styles.fieldLabel}>
+                  {t('wallets.selectColor')}
+                </Typography>
+                <RadioGroup 
+                  row 
+                  value={formData.colorIndex}
+                  onChange={(e) => handleChange({
+                    target: { name: 'colorIndex', value: parseInt(e.target.value, 10) }
+                  })}
+                  className={styles.colorRadioGroup}
+                >
+                  {WALLET_COLORS.map((color, index) => (
+                    <FormControlLabel
+                      key={index}
+                      value={color.index}
+                      control={<Radio className={styles.colorRadio} />}
+                      label={<Box className={`${styles.colorSwatch} ${styles[`color${color.index}`]}`} />}
+                      className={styles.colorRadioLabel}
+                    />
+                  ))}
+                </RadioGroup>
+              </FormControl>
+            </Grid>
           </>
         )}
       </Grid>
-      
-      {/* Only show these buttons when embedded */}
+
+      {/* Only show submit button if embedded */}
       {embedded && (
-        <Box className={compact ? `${styles.buttonContainer} ${styles.buttonContainerCompact}` : styles.buttonContainer}>
-          <Button 
-            variant="contained" 
-            color="primary" 
+        <Box className={styles.actionButtons}>
+          <Button
             onClick={handleSubmit}
-            disabled={submitting || loading || availableBalance <= 0}
-            startIcon={submitting ? <CircularProgress size={20} /> : null}
-            size={compact ? "small" : "medium"}
-            className={`${styles.saveButton} ${compact ? styles.saveButtonSmall : ''}`}
+            variant="contained"
+            color="primary"
+            disabled={submitting}
+            className={styles.submitButton}
           >
-            {submitting ? 'Saving...' : isEditMode ? 'Update Wallet' : 'Save Wallet'}
+            {submitting ? <CircularProgress size={24} /> : 
+              isEditMode ? t('wallets.updateWallet') : t('wallets.createWallet')}
           </Button>
         </Box>
       )}
     </Box>
   );
-
+  
   // If embedded, just return the form content
   if (embedded) {
     return formContent;
   }
-
+  
   // Otherwise, wrap in a Dialog
   return (
     <Dialog 
@@ -529,19 +559,20 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
       }}
       ref={dialogRef}
     >
-      <DialogTitle>{wallet ? 'Edit Wallet' : 'New Wallet'}</DialogTitle>
+      <DialogTitle>{wallet ? t('wallets.editWallet') : t('wallets.createWallet')}</DialogTitle>
       <DialogContent>
         {formContent}
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose} disabled={submitting}>Cancel</Button>
+        <Button onClick={handleClose} disabled={submitting}>{t('common.cancel')}</Button>
         <Button 
           onClick={handleSubmit}
           variant="contained" 
           color="primary" 
           disabled={submitting}
         >
-          {submitting ? <CircularProgress size={24} /> : isEditMode ? 'Update Wallet' : 'Create Wallet'}
+          {submitting ? <CircularProgress size={24} /> : 
+           isEditMode ? t('wallets.updateWallet') : t('wallets.createWallet')}
         </Button>
       </DialogActions>
     </Dialog>

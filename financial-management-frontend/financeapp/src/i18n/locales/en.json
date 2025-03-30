@@ -32,7 +32,9 @@
     "language": "Change Language",
     "retry": "Try Again",
     "menu": "MENU",
-    "closeMenu": "Close menu"
+    "closeMenu": "Close menu",
+    "close": "Close",
+    "back": "Back"
   },
   "app": {
     "name": "Budget Flow"
@@ -100,7 +102,15 @@
     "welcomeGreeting": "Welcome, {{name}}! 👋",
     "welcomeImageAlt": "Welcome image {{number}}",
     "viewImage": "View image {{number}}",
-    "openNavigationMenu": "Open quick navigation menu"
+    "openNavigationMenu": "Open quick navigation menu",
+    "addBalance": "Add balance",
+    "balanceOptions": "Balance options",
+    "editBalance": "Edit Balance",
+    "loadingFinancialData": "Loading financial data",
+    "loadingBalance": "Loading balance data",
+    "loadingIncome": "Loading income data",
+    "loadingExpenses": "Loading expenses data",
+    "loadingSavings": "Loading savings data"
   },
   "wallets": {
     "createWallet": "Create Wallet",
@@ -109,6 +119,7 @@
     "walletCurrency": "Currency",
     "balance": "Balance",
     "initialBalance": "Initial Balance",
+    "initialBalanceMax": "Initial Balance (Max: {{amount}})",
     "accountName": "Account Name",
     "accountType": "Account Type",
     "shareWallet": "Share Wallet",
@@ -128,7 +139,41 @@
     "sharedWithUser": "Shared with: {{username}}",
     "ownedByUser": "Owner: {{username}}",
     "fetchError": "Failed to load wallets. Please try again.",
-    "manageWallets": "Manage Wallets"
+    "manageWallets": "Manage Wallets",
+    "shareWalletTitle": "Share Wallet: {{name}}",
+    "shareWalletDescription": "Share your wallet with another user. They will be able to view and manage this wallet.",
+    "searchUsersLabel": "Search users by username",
+    "searchUsersPlaceholder": "Enter username",
+    "shareWith": "Share with",
+    "sharing": "Sharing...",
+    "sharedSuccessfully": "Wallet shared successfully with {{username}}",
+    "errorSearchingUsers": "Failed to search users. Please try again.",
+    "errorSharingWallet": "Failed to share wallet. Please try again.",
+    "selectUserToShare": "Please select a user to share with",
+    "errorLoadingWallets": "Failed to load wallets. Please try again.",
+    "errorLoadingBalanceData": "Failed to load balance data. Please try again.",
+    "balanceExceedsAvailable": "Balance exceeds available amount ({{amount}})",
+    "walletNamePlaceholder": "My Wallet",
+    "updateWallet": "Update Wallet",
+    "errorUpdatingWallet": "Failed to update wallet. Please try again.",
+    "errorCreatingWallet": "Failed to create wallet. Please try again.",
+    "totalBalance": "Total Balance",
+    "usedAmount": "Used",
+    "availableAmount": "Available",
+    "iconAndColor": "Wallet Icon & Color",
+    "selectIcon": "Select Icon",
+    "selectColor": "Select Color",
+    "maxAmount": "Max: {{amount}}",
+    "iconNames": {
+      "wallet": "Wallet",
+      "creditCard": "Credit Card",
+      "savings": "Savings",
+      "cash": "Cash",
+      "investment": "Investment",
+      "piggyBank": "Piggy Bank", 
+      "bank": "Bank",
+      "shopping": "Shopping"
+    }
   },
   "transactions": {
     "addTransaction": "Add Transaction",
@@ -151,7 +196,15 @@
     "cancelled": "Cancelled",
     "noTransactions": "No transactions found.",
     "id": "ID",
-    "actions": "Actions"
+    "actions": "Actions",
+    "transferMoney": "Transfer Money",
+    "selectSourceWallet": "Please select a source wallet",
+    "selectRecipient": "Please select a recipient",
+    "insufficientFunds": "Insufficient funds in {{wallet}}. Available: {{balance}}",
+    "errorTransferringFunds": "Failed to transfer funds. Please try again.",
+    "transferSuccess": "Transfer completed successfully to {{recipient}}!",
+    "transferring": "Transferring...",
+    "selectWallet": "Select Wallet"
   },
   "categories": {
     "title": "Categories",
@@ -164,6 +217,44 @@
     "spendingLimit": "Spending Limit",
     "warningThreshold": "Warning Threshold",
     "noCategories": "No categories found."
+  },
+  "settings": {
+    "title": "Settings",
+    "passwordManagement": "Password Management",
+    "dataManagement": "Data Management",
+    "accountManagement": "Account Management",
+    "changePassword": "Change Password",
+    "changePasswordDesc": "Update your account password",
+    "resetToDefault": "Reset to Default",
+    "resetToDefaultDesc": "Reset all financial data including transactions, wallets, categories, and settings to default values.",
+    "deleteAccount": "Delete Account",
+    "deleteAccountDesc": "Permanently delete your account and all associated data",
+    "resetSuccess": "All financial data has been reset to default. The page will reload shortly.",
+    "confirmReset": "Reset All Financial Data",
+    "resetConfirmMessage": "You are about to reset all financial data including:",
+    "resetWarning1": "All transactions",
+    "resetWarning2": "All wallets and accounts",
+    "resetWarning3": "All categories",
+    "resetWarning4": "All budget settings",
+    "resetWarningAlert": "This action cannot be undone. All your data will be permanently deleted.",
+    "resetting": "Resetting...",
+    "resetData": "Reset All Data",
+    "resetDataSuccess": "All financial data has been reset to default",
+    "resetDataError": "Failed to reset data. Please try again later.",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password",
+    "changing": "Changing...",
+    "passwordChangedSuccess": "Password changed successfully",
+    "passwordChangeError": "Failed to change password. Please try again later.",
+    "currentPasswordIncorrect": "Current password is incorrect",
+    "deleteAccountWarning": "This action cannot be undone. All your data will be permanently deleted.",
+    "deleteAccountConfirmMessage": "To confirm that you want to delete your account and ALL of your data, please type DELETE in the field below.",
+    "typeToConfirm": "Please type {{text}} to confirm",
+    "deleting": "Deleting...",
+    "deleteConfirmRequired": "Please type DELETE to confirm account deletion",
+    "deleteAccountSuccess": "Your account has been deleted",
+    "deleteAccountError": "Failed to delete account. Please try again later."
   },
   "financialTips": {
     "title": "Financial Tips",
@@ -210,14 +301,19 @@
     "month": "Month",
     "year": "Year",
     "all": "All Time",
-    "custom": "Custom"
+    "custom": "Custom",
+    "last24Hours": "Last 24 hours",
+    "last7Days": "Last 7 days",
+    "last30Days": "Last 30 days",
+    "last3Months": "Last 3 months",
+    "lastYear": "Last year",
+    "allTime": "All time",
+    "selectPeriod": "Select Time Period"
   },
   "validation": {
-    "required": "This field is required",
-    "invalidEmail": "Invalid email address",
-    "passwordLength": "Password must be at least 6 characters",
-    "passwordMismatch": "Passwords do not match",
+    "required": "{{field}} is required",
+    "minLength": "{{field}} must be at least {{length}} characters",
     "invalidAmount": "Please enter a valid amount",
-    "greaterThanZero": "Value must be greater than zero"
+    "passwordMatch": "Passwords do not match"
   }
 } 

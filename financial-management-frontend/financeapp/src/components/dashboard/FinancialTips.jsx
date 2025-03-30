@@ -114,26 +114,28 @@ const FinancialTips = ({ maxTips = 1, inWelcomeSection = false }) => {
         )}
       </Typography>
       
-      {tipsToShow.map((tip, index) => (
-        <Fade key={`${currentTipIndex + index}`} in={fadeIn} timeout={{ enter: 800, exit: 500 }}>
-          <Paper 
-            elevation={inWelcomeSection ? 1 : 0} 
-            className={`${styles.tipCard} ${inWelcomeSection ? styles.welcomeTipCard : ''}`}
-          >
-            <Box className={styles.iconContainer}>
-              {tip.icon}
-            </Box>
-            <Box className={styles.tipContent}>
-              <Typography variant="subtitle1" className={styles.tipTitle}>
-                {tip.title}
-              </Typography>
-              <Typography variant="body2" className={styles.tipText}>
-                {tip.content}
-              </Typography>
-            </Box>
-          </Paper>
-        </Fade>
-      ))}
+      <Box className={styles.tipsContent}>
+        {tipsToShow.map((tip, index) => (
+          <Fade key={`${currentTipIndex + index}`} in={fadeIn} timeout={{ enter: 800, exit: 500 }}>
+            <Paper 
+              elevation={inWelcomeSection ? 1 : 0} 
+              className={`${styles.tipCard} ${inWelcomeSection ? styles.welcomeTipCard : ''}`}
+            >
+              <Box className={styles.iconContainer}>
+                {tip.icon}
+              </Box>
+              <Box className={styles.tipContent}>
+                <Typography variant="subtitle1" className={styles.tipTitle}>
+                  {tip.title}
+                </Typography>
+                <Typography variant="body2" className={styles.tipText}>
+                  {tip.content}
+                </Typography>
+              </Box>
+            </Paper>
+          </Fade>
+        ))}
+      </Box>
       
       {/* Navigation controls - only show in welcome section */}
       {inWelcomeSection && (

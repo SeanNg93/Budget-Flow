@@ -32,7 +32,9 @@
     "language": "Đổi Ngôn Ngữ",
     "retry": "Thử Lại",
     "menu": "MENU",
-    "closeMenu": "Đóng menu"
+    "closeMenu": "Đóng menu",
+    "close": "Đóng",
+    "back": "Quay lại"
   },
   "app": {
     "name": "Budget Flow"
@@ -64,7 +66,7 @@
       },
       "newTransaction": {
         "title": "Giao dịch mới",
-        "description": "Thêm thu nhập hoặc chi phí mới"
+        "description": "Thêm khoản thu nhập hoặc chi tiêu mới"
       },
       "manageCategories": {
         "title": "Quản lý danh mục",
@@ -73,7 +75,7 @@
     }
   },
   "auth": {
-    "username": "Tên đăng nhập",
+    "username": "Tên người dùng",
     "password": "Mật khẩu",
     "email": "Email",
     "forgotPassword": "Quên mật khẩu",
@@ -100,7 +102,15 @@
     "welcomeGreeting": "Chào mừng, {{name}}! 👋",
     "welcomeImageAlt": "Hình ảnh chào mừng {{number}}",
     "viewImage": "Xem hình ảnh {{number}}",
-    "openNavigationMenu": "Mở menu điều hướng nhanh"
+    "openNavigationMenu": "Mở menu điều hướng nhanh",
+    "addBalance": "Thêm số dư",
+    "balanceOptions": "Tùy chọn số dư",
+    "editBalance": "Chỉnh sửa số dư",
+    "loadingFinancialData": "Đang tải dữ liệu tài chính",
+    "loadingBalance": "Đang tải dữ liệu số dư",
+    "loadingIncome": "Đang tải dữ liệu thu nhập",
+    "loadingExpenses": "Đang tải dữ liệu chi phí",
+    "loadingSavings": "Đang tải dữ liệu tiết kiệm"
   },
   "wallets": {
     "createWallet": "Tạo ví",
@@ -109,6 +119,7 @@
     "walletCurrency": "Tiền tệ",
     "balance": "Số dư",
     "initialBalance": "Số dư ban đầu",
+    "initialBalanceMax": "Số dư ban đầu (Tối đa: {{amount}})",
     "accountName": "Tên tài khoản",
     "accountType": "Loại tài khoản",
     "shareWallet": "Chia sẻ ví",
@@ -121,14 +132,48 @@
     "noWallets": "Bạn chưa có ví nào. Hãy tạo một ví để bắt đầu!",
     "options": "Tùy chọn ví",
     "generalAccount": "Tài khoản chung",
-    "previousWallets": "Ví trước đó",
+    "previousWallets": "Ví trước",
     "nextWallets": "Ví tiếp theo",
     "walletPages": "Trang ví",
-    "goToPage": "Đến trang {{number}}",
+    "goToPage": "Đi đến trang {{number}}",
     "sharedWithUser": "Đã chia sẻ với: {{username}}",
     "ownedByUser": "Chủ sở hữu: {{username}}",
     "fetchError": "Không thể tải ví. Vui lòng thử lại.",
-    "manageWallets": "Quản lý ví"
+    "manageWallets": "Quản lý ví",
+    "shareWalletTitle": "Chia sẻ ví: {{name}}",
+    "shareWalletDescription": "Chia sẻ ví của bạn với người dùng khác. Họ sẽ có thể xem và quản lý ví này.",
+    "searchUsersLabel": "Tìm người dùng theo tên",
+    "searchUsersPlaceholder": "Nhập tên người dùng",
+    "shareWith": "Chia sẻ với",
+    "sharing": "Đang chia sẻ...",
+    "sharedSuccessfully": "Đã chia sẻ ví thành công với {{username}}",
+    "errorSearchingUsers": "Không thể tìm kiếm người dùng. Vui lòng thử lại.",
+    "errorSharingWallet": "Không thể chia sẻ ví. Vui lòng thử lại.",
+    "selectUserToShare": "Vui lòng chọn người dùng để chia sẻ",
+    "errorLoadingWallets": "Không thể tải ví. Vui lòng thử lại.",
+    "errorLoadingBalanceData": "Không thể tải dữ liệu số dư. Vui lòng thử lại.",
+    "balanceExceedsAvailable": "Số dư vượt quá số tiền khả dụng ({{amount}})",
+    "walletNamePlaceholder": "Ví của tôi",
+    "updateWallet": "Cập nhật ví",
+    "errorUpdatingWallet": "Không thể cập nhật ví. Vui lòng thử lại.",
+    "errorCreatingWallet": "Không thể tạo ví. Vui lòng thử lại.",
+    "totalBalance": "Tổng số dư",
+    "usedAmount": "Đã sử dụng",
+    "availableAmount": "Khả dụng",
+    "iconAndColor": "Biểu tượng & Màu sắc ví",
+    "selectIcon": "Chọn biểu tượng",
+    "selectColor": "Chọn màu sắc",
+    "maxAmount": "Tối đa: {{amount}}",
+    "iconNames": {
+      "wallet": "Ví",
+      "creditCard": "Thẻ tín dụng",
+      "savings": "Tiết kiệm",
+      "cash": "Tiền mặt",
+      "investment": "Đầu tư",
+      "piggyBank": "Heo tiết kiệm",
+      "bank": "Ngân hàng",
+      "shopping": "Mua sắm"
+    }
   },
   "transactions": {
     "addTransaction": "Thêm giao dịch",
@@ -151,7 +196,15 @@
     "cancelled": "Đã hủy",
     "noTransactions": "Không tìm thấy giao dịch nào.",
     "id": "ID",
-    "actions": "Thao tác"
+    "actions": "Thao tác",
+    "transferMoney": "Chuyển tiền",
+    "selectSourceWallet": "Vui lòng chọn ví nguồn",
+    "selectRecipient": "Vui lòng chọn người nhận",
+    "insufficientFunds": "Không đủ tiền trong {{wallet}}. Số dư khả dụng: {{balance}}",
+    "errorTransferringFunds": "Không thể chuyển tiền. Vui lòng thử lại.",
+    "transferSuccess": "Đã chuyển tiền thành công cho {{recipient}}!",
+    "transferring": "Đang chuyển tiền...",
+    "selectWallet": "Chọn ví"
   },
   "categories": {
     "title": "Danh mục",
@@ -165,43 +218,81 @@
     "warningThreshold": "Ngưỡng cảnh báo",
     "noCategories": "Không tìm thấy danh mục nào."
   },
+  "settings": {
+    "title": "Cài đặt",
+    "passwordManagement": "Quản lý mật khẩu",
+    "dataManagement": "Quản lý dữ liệu",
+    "accountManagement": "Quản lý tài khoản",
+    "changePassword": "Đổi mật khẩu",
+    "changePasswordDesc": "Cập nhật mật khẩu tài khoản của bạn",
+    "resetToDefault": "Khôi phục mặc định",
+    "resetToDefaultDesc": "Đặt lại tất cả dữ liệu tài chính bao gồm giao dịch, ví, danh mục và cài đặt về giá trị mặc định.",
+    "deleteAccount": "Xóa tài khoản",
+    "deleteAccountDesc": "Xóa vĩnh viễn tài khoản của bạn và tất cả dữ liệu liên quan",
+    "resetSuccess": "Tất cả dữ liệu tài chính đã được đặt lại về mặc định. Trang sẽ tải lại trong giây lát.",
+    "confirmReset": "Đặt lại tất cả dữ liệu tài chính",
+    "resetConfirmMessage": "Bạn sắp đặt lại tất cả dữ liệu tài chính bao gồm:",
+    "resetWarning1": "Tất cả giao dịch",
+    "resetWarning2": "Tất cả ví và tài khoản",
+    "resetWarning3": "Tất cả danh mục",
+    "resetWarning4": "Tất cả cài đặt ngân sách",
+    "resetWarningAlert": "Hành động này không thể hoàn tác. Tất cả dữ liệu của bạn sẽ bị xóa vĩnh viễn.",
+    "resetting": "Đang đặt lại...",
+    "resetData": "Đặt lại tất cả dữ liệu",
+    "resetDataSuccess": "Tất cả dữ liệu tài chính đã được đặt lại về mặc định",
+    "resetDataError": "Không thể đặt lại dữ liệu. Vui lòng thử lại sau.",
+    "currentPassword": "Mật khẩu hiện tại",
+    "newPassword": "Mật khẩu mới",
+    "confirmPassword": "Xác nhận mật khẩu",
+    "changing": "Đang thay đổi...",
+    "passwordChangedSuccess": "Đã thay đổi mật khẩu thành công",
+    "passwordChangeError": "Không thể thay đổi mật khẩu. Vui lòng thử lại sau.",
+    "currentPasswordIncorrect": "Mật khẩu hiện tại không chính xác",
+    "deleteAccountWarning": "Hành động này không thể hoàn tác. Tất cả dữ liệu của bạn sẽ bị xóa vĩnh viễn.",
+    "deleteAccountConfirmMessage": "Để xác nhận rằng bạn muốn xóa tài khoản và TẤT CẢ dữ liệu của bạn, vui lòng nhập DELETE vào ô dưới đây.",
+    "typeToConfirm": "Vui lòng nhập {{text}} để xác nhận",
+    "deleting": "Đang xóa...",
+    "deleteConfirmRequired": "Vui lòng nhập DELETE để xác nhận xóa tài khoản",
+    "deleteAccountSuccess": "Tài khoản của bạn đã được xóa",
+    "deleteAccountError": "Không thể xóa tài khoản. Vui lòng thử lại sau."
+  },
   "financialTips": {
     "title": "Mẹo tài chính",
     "tipCounter": "Mẹo {{current}} / {{total}}",
     "previousTip": "Mẹo trước",
     "nextTip": "Mẹo tiếp theo",
-    "goToTip": "Đến mẹo {{number}}",
+    "goToTip": "Đi đến mẹo {{number}}",
     "emergencyFund": {
       "title": "Tạo quỹ khẩn cấp",
-      "content": "Cố gắng tiết kiệm 3-6 tháng chi tiêu cho các sự kiện bất ngờ."
+      "content": "Cố gắng tiết kiệm chi phí trong 3-6 tháng cho các sự kiện bất ngờ."
     },
     "fiftyThirtyTwenty": {
       "title": "Quy tắc 50/30/20",
-      "content": "Cố gắng phân bổ 50% thu nhập cho nhu cầu, 30% cho mong muốn và 20% để tiết kiệm."
+      "content": "Hãy cố gắng phân bổ 50% thu nhập cho nhu cầu, 30% cho mong muốn và 20% để tiết kiệm."
     },
     "payYourselfFirst": {
-      "title": "Trả tiền cho bản thân trước",
-      "content": "Để dành tiền tiết kiệm ngay khi nhận được thu nhập, trước khi chi tiêu cho các khoản khác."
+      "title": "Trả tiền cho chính mình trước",
+      "content": "Dành một khoản tiết kiệm ngay khi bạn nhận được thu nhập, trước khi chi tiêu cho những thứ khác."
     },
     "trackSpending": {
-      "title": "Theo dõi chi tiêu",
-      "content": "Thường xuyên xem xét chi phí của bạn để xác định các khoản có thể cắt giảm."
+      "title": "Theo dõi chi tiêu của bạn",
+      "content": "Thường xuyên xem xét các khoản chi tiêu của bạn để xác định các lĩnh vực mà bạn có thể cắt giảm."
     },
     "automateFinances": {
-      "title": "Tự động hóa tài chính",
-      "content": "Thiết lập chuyển khoản tự động vào tài khoản tiết kiệm và thanh toán hóa đơn tự động."
+      "title": "Tự động hóa tài chính của bạn",
+      "content": "Thiết lập chuyển khoản tự động đến tài khoản tiết kiệm và thanh toán hóa đơn tự động."
     },
     "diversifyInvestments": {
-      "title": "Đa dạng hóa đầu tư",
+      "title": "Đa dạng hóa đầu tư của bạn",
       "content": "Đừng đặt tất cả trứng vào một giỏ. Phân bổ đầu tư trên các loại tài sản khác nhau."
     },
     "reviewGoals": {
       "title": "Xem xét mục tiêu tài chính thường xuyên",
-      "content": "Điều chỉnh kế hoạch tài chính khi hoàn cảnh cuộc sống thay đổi."
+      "content": "Điều chỉnh kế hoạch tài chính của bạn khi hoàn cảnh cuộc sống thay đổi."
     },
     "minimizeDebt": {
       "title": "Giảm thiểu nợ",
-      "content": "Thanh toán nợ lãi suất cao trước và tránh vay mượn không cần thiết."
+      "content": "Trả nợ lãi suất cao trước và tránh vay mượn không cần thiết."
     }
   },
   "timeRanges": {
@@ -209,15 +300,20 @@
     "week": "Tuần",
     "month": "Tháng",
     "year": "Năm",
-    "all": "Tất cả",
-    "custom": "Tùy chỉnh"
+    "all": "Tất cả thời gian",
+    "custom": "Tùy chỉnh",
+    "last24Hours": "24 giờ qua",
+    "last7Days": "7 ngày qua",
+    "last30Days": "30 ngày qua",
+    "last3Months": "3 tháng qua",
+    "lastYear": "Năm trước",
+    "allTime": "Tất cả thời gian",
+    "selectPeriod": "Chọn khoảng thời gian"
   },
   "validation": {
-    "required": "Trường này là bắt buộc",
-    "invalidEmail": "Địa chỉ email không hợp lệ",
-    "passwordLength": "Mật khẩu phải có ít nhất 6 ký tự",
-    "passwordMismatch": "Mật khẩu không khớp",
+    "required": "{{field}} là bắt buộc",
+    "minLength": "{{field}} phải có ít nhất {{length}} ký tự",
     "invalidAmount": "Vui lòng nhập số tiền hợp lệ",
-    "greaterThanZero": "Giá trị phải lớn hơn 0"
+    "passwordMatch": "Mật khẩu không khớp"
   }
 } 
