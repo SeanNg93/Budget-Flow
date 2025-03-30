@@ -34,7 +34,8 @@
     "menu": "MENU",
     "closeMenu": "Đóng menu",
     "close": "Đóng",
-    "back": "Quay lại"
+    "back": "Quay lại",
+    "saving": "Đang lưu..."
   },
   "app": {
     "name": "Budget Flow"
@@ -172,7 +173,27 @@
       "investment": "Đầu tư",
       "piggyBank": "Heo tiết kiệm",
       "bank": "Ngân hàng",
-      "shopping": "Mua sắm"
+      "shopping": "Mua sắm",
+      "💰": "Túi tiền",
+      "💵": "Tiền đô la",
+      "💳": "Thẻ tín dụng",
+      "🐷": "Heo tiết kiệm",
+      "📈": "Biểu đồ",
+      "🍕": "Bánh pizza",
+      "🍔": "Hamburger",
+      "☕": "Cà phê",
+      "🍰": "Bánh ngọt",
+      "🐱": "Mèo",
+      "🐶": "Chó",
+      "🦊": "Cáo",
+      "🐼": "Gấu trúc",
+      "🏠": "Nhà",
+      "🚗": "Xe hơi",
+      "🎁": "Quà tặng",
+      "👶": "Em bé",
+      "✈️": "Máy bay",
+      "🏖️": "Bãi biển",
+      "⛰️": "Núi"
     }
   },
   "transactions": {
@@ -204,7 +225,68 @@
     "errorTransferringFunds": "Không thể chuyển tiền. Vui lòng thử lại.",
     "transferSuccess": "Đã chuyển tiền thành công cho {{recipient}}!",
     "transferring": "Đang chuyển tiền...",
-    "selectWallet": "Chọn ví"
+    "selectWallet": "Chọn ví",
+    "title": "Giao dịch",
+    "recentTransactions": "Giao dịch gần đây",
+    "filter": "Lọc",
+    "addNew": "Thêm mới",
+    "export": "Xuất",
+    "exportFiltered": "Xuất ({{count}})",
+    "exportTooltip": "Xuất các giao dịch đã lọc sang Excel",
+    "noMatches": "0 giao dịch phù hợp với tiêu chí hiện tại",
+    "searchResults": "Tìm thấy {{count}} giao dịch phù hợp với \"{{term}}\"",
+    "limitedView": "Chỉ hiển thị 8 giao dịch gần đây nhất. Xem tất cả tại",
+    "viewAllLink": "trang giao dịch",
+    "uncategorized": "Chưa phân loại",
+    "addSuccess": "Đã thêm giao dịch thành công",
+    "updateSuccess": "Đã cập nhật giao dịch thành công",
+    "deleteSuccess": "Đã xóa giao dịch thành công",
+    "deleteError": "Lỗi khi xóa giao dịch",
+    "loadError": "Không thể tải giao dịch. Vui lòng thử lại sau.",
+    "searchPlaceholder": "Tìm kiếm giao dịch...",
+    "more": "xem thêm",
+    "shared": "được chia sẻ",
+    "deleted": "đã xóa",
+    "deletedWallet": "ví đã xóa",
+    "emptyStateMessages": {
+      "noMatchingSearch": "Không tìm thấy giao dịch nào phù hợp với \"{{term}}\"",
+      "noMatchingFilters": "Không có giao dịch nào phù hợp với bộ lọc của bạn. Hãy điều chỉnh bộ lọc.",
+      "selectFilters": "Chọn tiêu chí lọc và nhấp \"Áp dụng lọc\" để tìm giao dịch cụ thể.",
+      "noTransactions": "Không có giao dịch nào để hiển thị. Bắt đầu thêm dữ liệu tài chính của bạn để xem ở đây."
+    },
+    "headers": {
+      "id": "ID",
+      "date": "Ngày",
+      "description": "Mô tả",
+      "category": "Danh mục",
+      "wallet": "Ví",
+      "type": "Loại",
+      "amount": "Số tiền",
+      "actions": "Thao tác"
+    },
+    "filters": {
+      "timePeriod": "Khoảng thời gian",
+      "startDate": "Ngày bắt đầu",
+      "endDate": "Ngày kết thúc",
+      "startDateAriaLabel": "Lọc theo ngày bắt đầu",
+      "endDateAriaLabel": "Lọc theo ngày kết thúc",
+      "resetAriaLabel": "Đặt lại tất cả bộ lọc",
+      "applyAriaLabel": "Áp dụng bộ lọc đã chọn",
+      "reset": "Đặt lại",
+      "apply": "Áp dụng lọc",
+      "loading": "Đang tải...",
+      "allCategories": "Tất cả danh mục",
+      "allTypes": "Tất cả các loại",
+      "allUsers": "Tất cả người dùng",
+      "allWallets": "Tất cả ví",
+      "minAmount": "Số tiền tối thiểu",
+      "maxAmount": "Số tiền tối đa"
+    },
+    "deleteDialog": {
+      "title": "Xác nhận xóa giao dịch",
+      "message": "Bạn có chắc chắn muốn xóa giao dịch này? Hành động này không thể hoàn tác.",
+      "confirmAriaLabel": "Xác nhận xóa giao dịch"
+    }
   },
   "categories": {
     "title": "Danh mục",
@@ -212,11 +294,36 @@
     "editCategory": "Sửa danh mục",
     "deleteCategory": "Xóa danh mục",
     "categoryName": "Tên danh mục",
+    "categoryNamePlaceholder": "Tên danh mục",
     "categoryType": "Loại danh mục",
     "categoryIcon": "Biểu tượng",
     "spendingLimit": "Hạn mức chi tiêu",
+    "spendingLimitPlaceholder": "Thiết lập hạn mức chi tiêu",
+    "incomeGoal": "Mục tiêu thu nhập",
+    "incomeGoalPlaceholder": "Thiết lập mục tiêu thu nhập",
     "warningThreshold": "Ngưỡng cảnh báo",
-    "noCategories": "Không tìm thấy danh mục nào."
+    "warningAtPercentage": "Cảnh báo ở phần trăm",
+    "warningAt": "Cảnh báo tại",
+    "warnAt": "Cảnh báo tại",
+    "warning": "Cảnh báo",
+    "limit": "Hạn mức",
+    "goal": "Mục tiêu",
+    "noCategories": "Không tìm thấy danh mục nào. Hãy tạo một danh mục để bắt đầu.",
+    "noSearchMatch": "Không có danh mục nào khớp với tìm kiếm của bạn.",
+    "noSpendingLimit": "Chưa thiết lập hạn mức chi tiêu",
+    "noIncomeGoal": "Chưa thiết lập mục tiêu thu nhập",
+    "confirmDeletion": "Xác nhận xóa",
+    "deleteConfirmMessage": "Bạn có chắc chắn muốn xóa danh mục \"{{categoryName}}\"? Hành động này không thể hoàn tác.",
+    "deleting": "Đang xóa...",
+    "manageCategories": "Quản lý danh mục",
+    "total": "Tổng",
+    "errors": {
+      "nameRequired": "Tên danh mục là bắt buộc",
+      "createFailed": "Không thể tạo danh mục. Vui lòng thử lại.",
+      "fetchFailed": "Không thể tải danh mục. Vui lòng thử lại.",
+      "updateFailed": "Không thể cập nhật danh mục. Vui lòng thử lại.",
+      "deleteFailed": "Không thể xóa danh mục. Vui lòng thử lại."
+    }
   },
   "settings": {
     "title": "Cài đặt",
@@ -302,6 +409,7 @@
     "year": "Năm",
     "all": "Tất cả thời gian",
     "custom": "Tùy chỉnh",
+    "customRange": "Khoảng thời gian tùy chỉnh",
     "last24Hours": "24 giờ qua",
     "last7Days": "7 ngày qua",
     "last30Days": "30 ngày qua",
@@ -315,5 +423,49 @@
     "minLength": "{{field}} phải có ít nhất {{length}} ký tự",
     "invalidAmount": "Vui lòng nhập số tiền hợp lệ",
     "passwordMatch": "Mật khẩu không khớp"
+  },
+  "connection": {
+    "successful": "Kết nối thành công!",
+    "failed": "Kết nối thất bại",
+    "backendTest": "Kiểm tra kết nối máy chủ",
+    "testAgain": "Kiểm tra lại kết nối"
+  },
+  "category": {
+    "name": "Tên danh mục",
+    "addCategory": "Thêm danh mục",
+    "saveCategory": "Lưu danh mục",
+    "placeholders": {
+      "income": "vd: Lương, Thưởng, Đầu tư",
+      "expense": "vd: Thực phẩm, Tiền nhà, Hóa đơn"
+    },
+    "errors": {
+      "nameRequired": "Tên danh mục là bắt buộc",
+      "createFailed": "Không thể tạo danh mục. Vui lòng thử lại."
+    }
+  },
+  "pagination": {
+    "rowsPerPage": "Số dòng mỗi trang"
+  },
+  "password": {
+    "changePassword": "Đổi mật khẩu",
+    "instructions": "Để đổi mật khẩu, vui lòng nhập mật khẩu hiện tại và sau đó nhập mật khẩu mới.",
+    "current": "Mật khẩu hiện tại",
+    "new": "Mật khẩu mới",
+    "confirm": "Xác nhận mật khẩu mới",
+    "toggleVisibility": "Hiện/ẩn mật khẩu",
+    "changing": "Đang thay đổi...",
+    "changeSuccess": "Đổi mật khẩu thành công!",
+    "changeFailed": "Không thể đổi mật khẩu. Vui lòng thử lại.",
+    "errors": {
+      "currentRequired": "Mật khẩu hiện tại là bắt buộc",
+      "minLength": "Mật khẩu phải có ít nhất 6 ký tự",
+      "newRequired": "Mật khẩu mới là bắt buộc",
+      "mustMatch": "Mật khẩu không khớp",
+      "confirmRequired": "Xác nhận mật khẩu là bắt buộc"
+    }
+  },
+  "alerts": {
+    "dismiss": "Đóng",
+    "deletionCancelled": "Việc xóa tài khoản của bạn đã bị hủy vì bạn đã đăng nhập lại."
   }
 } 

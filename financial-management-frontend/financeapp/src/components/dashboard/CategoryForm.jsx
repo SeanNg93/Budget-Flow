@@ -18,8 +18,10 @@ import {
   Typography
 } from '@mui/material';
 import FinanceService from '../../services/FinanceService';
+import { useTranslation } from 'react-i18next';
 
 const CategoryForm = ({ open, handleClose, onCategoryAdded, embedded = false, compact = false, defaultType = 'EXPENSE' }) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     categoryName: '',
@@ -57,7 +59,7 @@ const CategoryForm = ({ open, handleClose, onCategoryAdded, embedded = false, co
     const newErrors = {};
     
     if (!formData.categoryName) {
-      newErrors.categoryName = 'Category name is required';
+      newErrors.categoryName = t('category.errors.nameRequired');
     }
     
     setErrors(newErrors);
@@ -88,7 +90,7 @@ const CategoryForm = ({ open, handleClose, onCategoryAdded, embedded = false, co
       }
     } catch (err) {
       console.error('Error creating category:', err);
-      setError(err.response?.data?.message || 'Failed to create category. Please try again.');
+      setError(err.response?.data?.message || t('category.errors.createFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -112,13 +114,13 @@ const CategoryForm = ({ open, handleClose, onCategoryAdded, embedded = false, co
         <Grid item xs={12}>
           <FormControl fullWidth error={!!errors.categoryName} size="small" sx={{ mb: 0 }}>
             <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 500, color: 'text.secondary' }}>
-              Category Name
+              {t('category.name')}
             </Typography>
             <TextField
               name="categoryName"
               value={formData.categoryName}
               onChange={handleChange}
-              placeholder={formData.type === 'INCOME' ? 'e.g., Salary, Bonus, Investments' : 'e.g., Groceries, Rent, Utilities'}
+              placeholder={formData.type === 'INCOME' ? t('category.placeholders.income') : t('category.placeholders.expense')}
               error={!!errors.categoryName}
               helperText={errors.categoryName}
               disabled={loading}
@@ -145,7 +147,7 @@ const CategoryForm = ({ open, handleClose, onCategoryAdded, embedded = false, co
               fontWeight: 500
             }}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
         )}
         <Button 
@@ -162,7 +164,7 @@ const CategoryForm = ({ open, handleClose, onCategoryAdded, embedded = false, co
             boxShadow: 'none'
           }}
         >
-          {submitting ? 'Saving...' : 'Save Category'}
+          {submitting ? t('common.saving') : t('category.saveCategory')}
         </Button>
       </Box>
     </>
@@ -190,7 +192,7 @@ const CategoryForm = ({ open, handleClose, onCategoryAdded, embedded = false, co
         }
       }}
     >
-      <DialogTitle sx={{ pb: 1, pt: 1.5, fontWeight: 600 }}>Add Category</DialogTitle>
+      <DialogTitle sx={{ pb: 1, pt: 1.5, fontWeight: 600 }}>{t('category.addCategory')}</DialogTitle>
       <DialogContent sx={{ pt: 0, pb: 1.5, px: 2 }}>
         {formContent}
       </DialogContent>

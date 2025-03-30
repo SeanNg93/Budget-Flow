@@ -40,16 +40,17 @@ import styles from '../../styles/dashboard.module.css';
 import { exportTransactionsToExcel } from '../../utils/excelExport';
 import FinanceService from '../../services/FinanceService';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
-// Constants
-const TIME_PERIODS = [
-  { value: 'day', label: 'Last 24 Hours', days: 1 },
-  { value: 'week', label: 'Last 7 Days', days: 7 },
-  { value: 'month', label: 'Last 30 Days', days: 30 },
-  { value: 'quarter', label: 'Last 3 Months', days: 90 },
-  { value: 'year', label: 'Last Year', days: 365 },
-  { value: 'all', label: 'All Time', days: null },
-  { value: 'custom', label: 'Custom Range', days: null }
+// Constants with translation
+const getTimePeriods = (t) => [
+  { value: 'day', label: t('timeRanges.last24Hours'), days: 1 },
+  { value: 'week', label: t('timeRanges.last7Days'), days: 7 },
+  { value: 'month', label: t('timeRanges.last30Days'), days: 30 },
+  { value: 'quarter', label: t('timeRanges.last3Months'), days: 90 },
+  { value: 'year', label: t('timeRanges.lastYear'), days: 365 },
+  { value: 'all', label: t('timeRanges.allTime'), days: null },
+  { value: 'custom', label: t('timeRanges.customRange'), days: null }
 ];
 
 // Format date helper
@@ -63,11 +64,11 @@ const formatDate = (dateString) => {
 };
 
 // Date Picker components for custom date range
-const DateRangePickers = ({ customStartDate, customEndDate, handleStartDateChange, handleEndDateChange }) => (
+const DateRangePickers = ({ customStartDate, customEndDate, handleStartDateChange, handleEndDateChange, t }) => (
   <>
     <Box sx={{ flex: 1 }}>
       <DatePicker 
-        label="Start Date" 
+        label={t('transactions.filters.startDate')}
         value={customStartDate}
         onChange={handleStartDateChange}
         className={styles.filterDateField}
@@ -76,14 +77,14 @@ const DateRangePickers = ({ customStartDate, customEndDate, handleStartDateChang
           textField: {
             fullWidth: true,
             size: "small",
-            inputProps: { 'aria-label': 'Filter start date' }
+            inputProps: { 'aria-label': t('transactions.filters.startDateAriaLabel') }
           }
         }}
       />
     </Box>
     <Box sx={{ flex: 1 }}>
       <DatePicker 
-        label="End Date" 
+        label={t('transactions.filters.endDate')}
         value={customEndDate}
         onChange={handleEndDateChange}
         className={styles.filterDateField}
@@ -92,7 +93,7 @@ const DateRangePickers = ({ customStartDate, customEndDate, handleStartDateChang
           textField: {
             fullWidth: true,
             size: "small",
-            inputProps: { 'aria-label': 'Filter end date' }
+            inputProps: { 'aria-label': t('transactions.filters.endDateAriaLabel') }
           }
         }}
       />
@@ -101,7 +102,7 @@ const DateRangePickers = ({ customStartDate, customEndDate, handleStartDateChang
 );
 
 // Filter action buttons
-const FilterActionButtons = ({ resetTransactionFilters, applyTransactionFilters, isFiltering }) => (
+const FilterActionButtons = ({ resetTransactionFilters, applyTransactionFilters, isFiltering, t }) => (
   <Box sx={{ 
     display: 'flex', 
     justifyContent: 'flex-end', 
@@ -115,7 +116,7 @@ const FilterActionButtons = ({ resetTransactionFilters, applyTransactionFilters,
       onClick={resetTransactionFilters}
       className={styles.resetFilterButton}
       disabled={isFiltering}
-      aria-label="Reset all filters"
+      aria-label={t('transactions.filters.resetAriaLabel')}
       sx={{ 
         minWidth: '80px',
         height: '36px',
@@ -124,7 +125,7 @@ const FilterActionButtons = ({ resetTransactionFilters, applyTransactionFilters,
         justifyContent: 'center'
       }}
     >
-      Reset
+      {t('transactions.filters.reset')}
     </Button>
     <Button
       variant="contained"
@@ -132,7 +133,7 @@ const FilterActionButtons = ({ resetTransactionFilters, applyTransactionFilters,
       onClick={applyTransactionFilters}
       className={styles.applyFilterButton}
       disabled={isFiltering}
-      aria-label="Apply selected filters"
+      aria-label={t('transactions.filters.applyAriaLabel')}
       sx={{ 
         minWidth: '120px',
         height: '36px',
@@ -141,7 +142,7 @@ const FilterActionButtons = ({ resetTransactionFilters, applyTransactionFilters,
         justifyContent: 'center'
       }}
     >
-      {isFiltering ? 'Loading...' : 'Apply Filters'}
+      {isFiltering ? t('transactions.filters.loading') : t('transactions.filters.apply')}
     </Button>
   </Box>
 );
@@ -168,7 +169,8 @@ const TransactionRow = React.memo(({
   sharedWallets, 
   sharedWalletsInfo,
   onEditTransaction, 
-  onDeleteTransaction 
+  onDeleteTransaction,
+  t
 }) => {
   // Local state to track expanded description
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
@@ -332,7 +334,7 @@ const TransactionRow = React.memo(({
                     flexShrink: 0
                   }}
                 >
-                  more
+                  {t('transactions.more')}
                 </Typography>
               )}
             </Box>
@@ -340,7 +342,7 @@ const TransactionRow = React.memo(({
           
     <TableCell className={styles.tableCell}>
       {transaction.category ? transaction.category.categoryName : 
-       (transaction.categoryId ? `Category #${transaction.categoryId}` : 'Uncategorized')}
+       (transaction.categoryId ? `${t('transactions.category')} #${transaction.categoryId}` : t('transactions.uncategorized'))}
     </TableCell>
           
     <TableCell className={styles.tableCell}>
@@ -348,17 +350,17 @@ const TransactionRow = React.memo(({
         // Wallet exists, display normally
         <>
           {transaction.wallet.accountName}
-          {sharedWallets[transaction.wallet.id] && " (shared)"}
+          {sharedWallets[transaction.wallet.id] && ` (${t('transactions.shared')})`}
         </>
       ) : transaction.originalWalletName ? (
         // Wallet is null, but we have the original name
         <Typography variant="body2" component="span" sx={{ fontStyle: 'italic', color: 'text.secondary' }}>
-          {transaction.originalWalletName} (deleted)
+          {transaction.originalWalletName} ({t('transactions.deleted')})
         </Typography>
       ) : (
         // Wallet is null and no original name (fallback)
         <Typography variant="body2" component="span" sx={{ fontStyle: 'italic', color: 'text.secondary' }}>
-          (deleted wallet)
+          ({t('transactions.deletedWallet')})
         </Typography>
       )}
     </TableCell>
@@ -468,13 +470,14 @@ const SearchInput = React.memo(({
   handleSearchChange, 
   searchInputRef, 
   resetSearch, 
-  toggleSearch 
+  toggleSearch,
+  t 
 }) => (
   <Box className={styles.searchContainer}>
     <Fade in={searchOpen} timeout={300}>
       <Box className={`${styles.searchInputContainer} ${searchOpen ? styles.searchOpen : ''}`}>
         <InputBase
-          placeholder="Search transactions..."
+          placeholder={t('transactions.searchPlaceholder')}
           className={styles.searchInput}
           value={searchTerm}
           onChange={handleSearchChange}
@@ -522,6 +525,9 @@ const TransactionsSection = ({
   onResetFilters,
   formatCurrency
 }) => {
+  const { t } = useTranslation();
+  const TIME_PERIODS = getTimePeriods(t);
+  
   // Filter state
   const [filterState, setFilterState] = useState({
     open: false,
@@ -831,7 +837,7 @@ const TransactionsSection = ({
   // Generate empty state message based on current state
   const getEmptyStateMessage = useMemo(() => {
     if (searchState.term) {
-      return `No transactions found matching "${searchState.term}"`;
+      return t('transactions.emptyStateMessages.noMatchingSearch', { term: searchState.term });
     }
     
     // Check if filters have been applied
@@ -845,15 +851,15 @@ const TransactionsSection = ({
       filterState.timeframe !== 'week';
     
     if (filtersApplied) {
-      return 'No transactions match your filter criteria. Try adjusting your filters.';
+      return t('transactions.emptyStateMessages.noMatchingFilters');
     }
     
     if (filterState.open) {
-      return 'Select filter criteria and click "Apply Filters" to find specific transactions.';
+      return t('transactions.emptyStateMessages.selectFilters');
     }
     
-    return 'No transactions to display. Start adding your financial data to see it here.';
-  }, [searchState.term, filterState, filteredTransactions]);
+    return t('transactions.emptyStateMessages.noTransactions');
+  }, [searchState.term, filterState, t]);
 
   // Handle amount input
   const handleAmountChange = useCallback((field, event) => {
@@ -872,12 +878,12 @@ const TransactionsSection = ({
           {/* Time Period */}
           <Grid item xs={12} sm={6} md={3}>
             <FormControl fullWidth variant="outlined" size="small" className={styles.filterTextField}>
-              <InputLabel id="time-period-label">Time Period</InputLabel>
+              <InputLabel id="time-period-label">{t('transactions.filters.timePeriod')}</InputLabel>
               <Select
                 labelId="time-period-label"
                 value={filterState.timeframe}
                 onChange={(e) => handleTimeframeChange(e)}
-                label="Time Period"
+                label={t('transactions.filters.timePeriod')}
                 disabled={filterState.isLoading}
               >
                 {TIME_PERIODS.map((period) => (
@@ -892,15 +898,15 @@ const TransactionsSection = ({
           {/* Wallet */}
           <Grid item xs={12} sm={6} md={3}>
             <FormControl fullWidth variant="outlined" size="small" className={styles.filterTextField}>
-              <InputLabel id="wallet-label">Wallet</InputLabel>
+              <InputLabel id="wallet-label">{t('transactions.wallet')}</InputLabel>
               <Select
                 labelId="wallet-label"
                 value={filterState.walletId}
                 onChange={(e) => updateFilterState({ walletId: e.target.value })}
-                label="Wallet"
+                label={t('transactions.wallet')}
                 disabled={filterState.isLoading}
               >
-                <MenuItem value="all">All Wallets</MenuItem>
+                <MenuItem value="all">{t('transactions.filters.allWallets')}</MenuItem>
                 {wallets.map((wallet) => (
                   <MenuItem key={wallet.id} value={wallet.id.toString()}>
                     {wallet.accountName}
@@ -913,15 +919,15 @@ const TransactionsSection = ({
           {/* Category */}
           <Grid item xs={12} sm={6} md={3}>
             <FormControl fullWidth variant="outlined" size="small" className={styles.filterTextField}>
-              <InputLabel id="category-label">Category</InputLabel>
+              <InputLabel id="category-label">{t('transactions.category')}</InputLabel>
               <Select
                 labelId="category-label"
                 value={filterState.categoryId}
                 onChange={(e) => updateFilterState({ categoryId: e.target.value })}
-                label="Category"
+                label={t('transactions.category')}
                 disabled={filterState.isLoading}
               >
-                <MenuItem value="all">All Categories</MenuItem>
+                <MenuItem value="all">{t('transactions.filters.allCategories')}</MenuItem>
                 {categories.map((category) => (
                   <MenuItem key={category.id} value={category.id.toString()}>
                     {category.categoryName}
@@ -934,17 +940,17 @@ const TransactionsSection = ({
           {/* Transaction Type - New filter */}
           <Grid item xs={12} sm={6} md={3}>
             <FormControl fullWidth variant="outlined" size="small" className={styles.filterTextField}>
-              <InputLabel id="transaction-type-label">Transaction Type</InputLabel>
+              <InputLabel id="transaction-type-label">{t('transactions.transactionType')}</InputLabel>
               <Select
                 labelId="transaction-type-label"
                 value={filterState.transactionType}
                 onChange={(e) => updateFilterState({ transactionType: e.target.value })}
-                label="Transaction Type"
+                label={t('transactions.transactionType')}
                 disabled={filterState.isLoading}
               >
-                <MenuItem value="all">All Types</MenuItem>
-                <MenuItem value="INCOME">Income</MenuItem>
-                <MenuItem value="EXPENSE">Expense</MenuItem>
+                <MenuItem value="all">{t('transactions.filters.allTypes')}</MenuItem>
+                <MenuItem value="INCOME">{t('transactions.income')}</MenuItem>
+                <MenuItem value="EXPENSE">{t('transactions.expense')}</MenuItem>
               </Select>
             </FormControl>
           </Grid>
@@ -953,7 +959,7 @@ const TransactionsSection = ({
           <Grid item xs={12} sm={6} md={3}>
             <TextField
               fullWidth
-              label="Min Amount"
+              label={t('transactions.filters.minAmount')}
               variant="outlined"
               size="small"
               value={filterState.minAmount || ''}
@@ -969,7 +975,7 @@ const TransactionsSection = ({
           <Grid item xs={12} sm={6} md={3}>
             <TextField
               fullWidth
-              label="Max Amount"
+              label={t('transactions.filters.maxAmount')}
               variant="outlined"
               size="small"
               value={filterState.maxAmount || ''}
@@ -986,15 +992,15 @@ const TransactionsSection = ({
           {(sharedWallets && Object.keys(sharedWallets).length > 0) && (
             <Grid item xs={12} sm={6} md={3}>
               <FormControl fullWidth variant="outlined" size="small" className={styles.filterTextField}>
-                <InputLabel id="user-filter-label">User</InputLabel>
+                <InputLabel id="user-filter-label">{t('common.user')}</InputLabel>
                 <Select
                   labelId="user-filter-label"
                   value={filterState.userId}
                   onChange={(e) => updateFilterState({ userId: e.target.value })}
-                  label="User"
+                  label={t('common.user')}
                   disabled={filterState.isLoading}
                 >
-                  <MenuItem value="all">All Users</MenuItem>
+                  <MenuItem value="all">{t('transactions.filters.allUsers')}</MenuItem>
                   {/* Get unique users from shared wallet transactions */}
                   {Array.from(new Set(
                     filteredTransactions
@@ -1018,7 +1024,7 @@ const TransactionsSection = ({
             <>
               <Grid item xs={12} sm={6} md={3}>
                 <DatePicker
-                  label="Start Date"
+                  label={t('transactions.filters.startDate')}
                   value={filterState.customStartDate}
                   onChange={handleStartDateChange}
                   format="dd/MM/yyyy"
@@ -1034,7 +1040,7 @@ const TransactionsSection = ({
               </Grid>
               <Grid item xs={12} sm={6} md={3}>
                 <DatePicker
-                  label="End Date"
+                  label={t('transactions.filters.endDate')}
                   value={filterState.customEndDate}
                   onChange={handleEndDateChange}
                   format="dd/MM/yyyy"
@@ -1057,6 +1063,7 @@ const TransactionsSection = ({
               resetTransactionFilters={resetTransactionFilters}
               applyTransactionFilters={applyTransactionFilters}
               isFiltering={filterState.isLoading}
+              t={t}
             />
           </Grid>
         </Grid>
@@ -1076,17 +1083,17 @@ const TransactionsSection = ({
     filteredTransactions
   ]);
 
-  // Table headers definition
+  // Table headers now with translations
   const tableHeaders = useMemo(() => [
-    { id: 'transaction_id', label: 'ID' },
-    { id: 'date', label: 'Date' },
-    { id: 'description', label: 'Description' },
-    { id: 'category', label: 'Category' },
-    { id: 'wallet', label: 'Wallet' },
-    { id: 'type', label: 'Type' },
-    { id: 'amount', label: 'Amount' },
-    { id: 'actions', label: 'Actions', align: 'center' }
-  ], []);
+    { id: 'transaction_id', label: t('transactions.headers.id') },
+    { id: 'date', label: t('transactions.headers.date') },
+    { id: 'description', label: t('transactions.headers.description') },
+    { id: 'category', label: t('transactions.headers.category') },
+    { id: 'wallet', label: t('transactions.headers.wallet') },
+    { id: 'type', label: t('transactions.headers.type') },
+    { id: 'amount', label: t('transactions.headers.amount') },
+    { id: 'actions', label: t('transactions.headers.actions'), align: 'center' }
+  ], [t]);
 
   // Render transactions table
   const renderTransactionsTable = () => {
@@ -1109,7 +1116,7 @@ const TransactionsSection = ({
               color="text.secondary" 
               sx={{ mt: 1, fontStyle: 'italic' }}
             >
-              0 transactions match your current criteria
+              {t('transactions.noMatches')}
             </Typography>
           )}
         </Box>
@@ -1151,6 +1158,7 @@ const TransactionsSection = ({
                 sharedWalletsInfo={sharedWalletsInfo}
                 onEditTransaction={onEditTransaction}
                 onDeleteTransaction={onDeleteTransaction}
+                t={t}
               />
             ))}
           </TableBody>
@@ -1160,8 +1168,10 @@ const TransactionsSection = ({
         {searchState.term && (
           <Box className={styles.searchResultsInfo}>
             <Typography variant="body2" color="textSecondary">
-              Found {searchState.results.length} {searchState.results.length === 1 ? 'transaction' : 'transactions'} 
-              matching "{searchState.term}"
+              {t('transactions.searchResults', {
+                count: searchState.results.length,
+                term: searchState.term
+              })}
             </Typography>
           </Box>
         )}
@@ -1180,6 +1190,7 @@ const TransactionsSection = ({
         searchInputRef={searchInputRef}
         resetSearch={resetSearch}
         toggleSearch={toggleSearch}
+        t={t}
       />
       
       <Button
@@ -1191,7 +1202,7 @@ const TransactionsSection = ({
         aria-expanded={filterState.open}
         aria-controls="filter-controls"
       >
-        Filter
+        {t('transactions.filter')}
       </Button>
       
       <Button 
@@ -1203,7 +1214,7 @@ const TransactionsSection = ({
         elevation={3}
         size="small"
       >
-        Add New
+        {t('transactions.addNew')}
       </Button>
     </Box>
   ), [
@@ -1214,7 +1225,8 @@ const TransactionsSection = ({
     toggleSearch, 
     filterState.open, 
     updateFilterState, 
-    onAddTransaction
+    onAddTransaction,
+    t
   ]);
 
   return (
@@ -1227,11 +1239,11 @@ const TransactionsSection = ({
               variant="h5" 
               className={styles.sectionTitle}
             >
-              Recent Transactions
+              {t('transactions.recentTransactions')}
             </Typography>
             
             {/* Export to Excel button - now positioned next to the title */}
-            <Tooltip title="Export currently filtered transactions to Excel" arrow placement="top">
+            <Tooltip title={t('transactions.exportTooltip')} arrow placement="top">
               <span>
                 <Button
                   variant="outlined"
@@ -1316,8 +1328,8 @@ const TransactionsSection = ({
                   }}
                 >
                   {filteredTransactions.length !== allTransactions.length 
-                    ? `Export (${filteredTransactions.length})` 
-                    : 'Export'
+                    ? t('transactions.exportFiltered', { count: filteredTransactions.length })
+                    : t('transactions.export')
                   }
                 </Button>
               </span>
@@ -1336,12 +1348,12 @@ const TransactionsSection = ({
         {displayTransactions.length > 0 && allTransactions.length > displayTransactions.length && (
           <Box sx={{ mt: 2, textAlign: 'center' }}>
             <Typography variant="body2" className={styles.transactionsNote}>
-              Showing only 8 most recent transactions. View all on the{' '}
+              {t('transactions.limitedView')}{' '}
               <Link 
                 to="/transactions" 
                 style={{ color: 'inherit', fontWeight: 'bold', textDecoration: 'underline' }}
               >
-                transactions page
+                {t('transactions.viewAllLink')}
               </Link>.
             </Typography>
           </Box>

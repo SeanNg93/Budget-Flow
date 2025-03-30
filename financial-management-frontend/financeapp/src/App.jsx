@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { initEmailJS } from './config/emailjs';
 import { UserProvider } from './context/UserContext';
 
@@ -25,6 +25,7 @@ import DeleteAccount from './pages/delete-account.jsx';
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
 import TestConnection from './components/TestConnection';
+import RedirectRoute from './components/RedirectRoute';
 
 function App() {
   useEffect(() => {
@@ -37,7 +38,7 @@ function App() {
       <Router>
         <Routes>
           {/* Public Routes */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/" element={<RedirectRoute to="/login" />} />
           {/* Removed /index route as it's redundant */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
@@ -81,7 +82,7 @@ function App() {
             </ProtectedRoute>
           } />
           
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          <Route path="*" element={<RedirectRoute to="/login" />} />
         </Routes>
       </Router>
     </UserProvider>

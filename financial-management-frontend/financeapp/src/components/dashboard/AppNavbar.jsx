@@ -153,7 +153,7 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
     
     // Search in wallets
     const matchingWallets = wallets.filter(wallet => 
-      wallet.accountName.toLowerCase().includes(lowerCaseQuery)
+      wallet.accountName && wallet.accountName.toLowerCase().includes(lowerCaseQuery)
     );
     results.push(...matchingWallets.map(wallet => ({
       type: 'wallet',
@@ -163,7 +163,7 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
     // Search in transactions
     const matchingTransactions = transactions.filter(transaction => 
       (transaction.description && transaction.description.toLowerCase().includes(lowerCaseQuery)) ||
-      (transaction.category && transaction.category.name.toLowerCase().includes(lowerCaseQuery))
+      (transaction.category && transaction.category.name && transaction.category.name.toLowerCase().includes(lowerCaseQuery))
     );
     results.push(...matchingTransactions.map(transaction => ({
       type: 'transaction',

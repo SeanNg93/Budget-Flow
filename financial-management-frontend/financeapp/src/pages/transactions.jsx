@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import CssBaseline from '@mui/material/CssBaseline';
 import { styled } from '@mui/material/styles';
 import { toast } from 'react-toastify';
+import { useTranslation } from 'react-i18next';
 
 // Import components
 import SideMenu from '../components/dashboard/SideMenu';
@@ -76,6 +77,7 @@ const themeComponents = {
 
 const TransactionsPage = () => {
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
   const [open, setOpen] = useState(true);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -269,7 +271,7 @@ const TransactionsPage = () => {
       setTotalPages(Math.ceil(processedTransactions.length / pageSize));
     } catch (error) {
       console.error('Failed to load data:', error);
-      setError('Failed to load transactions. Please try again later.');
+      setError(t('transactions.loadError'));
     } finally {
       setLoading(false);
     }
@@ -412,7 +414,7 @@ const TransactionsPage = () => {
     fetchData();
     
     // Show success toast
-    toast.success(isUpdate ? 'Transaction updated successfully' : 'Transaction added successfully', {
+    toast.success(isUpdate ? t('transactions.updateSuccess') : t('transactions.addSuccess'), {
       position: "top-right",
       autoClose: 2000,
       hideProgressBar: false,
@@ -443,7 +445,7 @@ const TransactionsPage = () => {
       updateDialogState('deleteConfirmOpen', false);
       
       // Show success toast
-      toast.success('Transaction deleted successfully', {
+      toast.success(t('transactions.deleteSuccess'), {
         position: "top-right",
         autoClose: 2000,
         hideProgressBar: false,
@@ -453,7 +455,7 @@ const TransactionsPage = () => {
       });
     } catch (error) {
       console.error('Error deleting transaction:', error);
-      toast.error('Error deleting transaction', {
+      toast.error(t('transactions.deleteError'), {
         position: "top-right",
         autoClose: 2000,
         hideProgressBar: false,
@@ -470,7 +472,8 @@ const TransactionsPage = () => {
 
   // Format currency helper
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
+    const locale = i18n.language === 'vi' ? 'vi-VN' : 'en-US';
+    return new Intl.NumberFormat(locale, {
       style: 'currency',
       currency: 'USD'
     }).format(amount);
@@ -501,14 +504,9 @@ const TransactionsPage = () => {
   }
 
   return (
-    <AppTheme themeComponents={themeComponents}>
-      <Box sx={{ 
-        display: 'flex',
-        width: '100%',
-        position: 'relative',
-        overflow: 'hidden'
-      }}>
-        <CssBaseline />
+    <Box sx={{ display: 'flex' }}>
+      <CssBaseline />
+      <AppTheme components={themeComponents}>
         <AppNavbar open={open} handleDrawerOpen={handleDrawerOpen} />
         <SideMenu 
           open={open} 
@@ -518,24 +516,10 @@ const TransactionsPage = () => {
         />
         <Main open={open}>
           <DrawerHeader />
-          <Container 
-            maxWidth="lg" 
-            sx={{ 
-              p: 2,
-              maxWidth: '100%', // Prevent container from exceeding available space
-              boxSizing: 'border-box'
-            }}
-          >
-            <Paper sx={{ 
-              p: 3, 
-              borderRadius: '12px', 
-              mb: 3,
-              overflowX: 'hidden', // Prevent horizontal scrollbar
-              boxSizing: 'border-box',
-              width: '100%'
-            }}>
-              <Typography variant="h4" component="h1" sx={{ mb: 2 }}>
-                Transactions
+          <Container maxWidth="xl" sx={{ mt: 2 }}>
+            <Paper sx={{ p: 3, borderRadius: '12px' }}>
+              <Typography variant="h4" component="h1" gutterBottom>
+                {t('transactions.title')}
               </Typography>
               <Divider sx={{ mb: 3 }} />
               
@@ -551,7 +535,7 @@ const TransactionsPage = () => {
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                   <Typography variant="body1" sx={{ mr: 2 }}>
-                    Rows per page:
+                    {t('pagination.rowsPerPage')}:
                   </Typography>
                   <FormControl size="small" sx={{ minWidth: 65, maxWidth: 65 }}>
                     <Select
@@ -619,7 +603,7 @@ const TransactionsPage = () => {
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
                   <Typography variant="body2" sx={{ mr: 1.5 }}>
-                    Rows per page:
+                    {t('pagination.rowsPerPage')}:
                   </Typography>
                   <FormControl size="small" sx={{ minWidth: 65, maxWidth: 65 }}>
                     <Select
@@ -668,7 +652,7 @@ const TransactionsPage = () => {
             </Paper>
           </Container>
         </Main>
-      </Box>
+      </AppTheme>
       
       {/* Dialog Manager for Delete Confirmation */}
       <Dialog
@@ -687,11 +671,11 @@ const TransactionsPage = () => {
         }}
       >
         <DialogTitle id="delete-dialog-title">
-          Confirm Transaction Deletion
+          {t('transactions.deleteDialog.title')}
         </DialogTitle>
         <DialogContent>
           <DialogContentText id="delete-dialog-description">
-            Are you sure you want to delete this transaction? This action cannot be undone.
+            {t('transactions.deleteDialog.message')}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
@@ -699,16 +683,16 @@ const TransactionsPage = () => {
             setSelectedTransaction(null);
             updateDialogState('deleteConfirmOpen', false);
           }} color="primary">
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button 
             onClick={handleDeleteConfirm} 
             color="error" 
             variant="contained" 
             autoFocus
-            aria-label="Confirm delete transaction"
+            aria-label={t('transactions.deleteDialog.confirmAriaLabel')}
           >
-            Delete
+            {t('common.delete')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -738,20 +722,14 @@ const TransactionsPage = () => {
       <CategoryManageForm 
         open={dialogStates.categoryManageForm}
         handleClose={() => updateDialogState('categoryManageForm', false)}
-        onCategoryUpdated={() => {
-          // Refresh categories data
-          FinanceService.getCategories().then(response => {
-            setCategories(response.data || []);
-          });
-        }}
       />
       
       {/* Profile Dialog */}
       <ProfileDialog 
-        open={dialogStates.profileDialog}
-        onClose={() => updateDialogState('profileDialog', false)}
+        open={dialogStates.profileDialog} 
+        onClose={() => updateDialogState('profileDialog', false)} 
       />
-    </AppTheme>
+    </Box>
   );
 };
 

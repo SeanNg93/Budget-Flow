@@ -34,7 +34,8 @@
     "menu": "MENU",
     "closeMenu": "Close menu",
     "close": "Close",
-    "back": "Back"
+    "back": "Back",
+    "saving": "Saving..."
   },
   "app": {
     "name": "Budget Flow"
@@ -172,7 +173,27 @@
       "investment": "Investment",
       "piggyBank": "Piggy Bank", 
       "bank": "Bank",
-      "shopping": "Shopping"
+      "shopping": "Shopping",
+      "💰": "Money Bag",
+      "💵": "Dollar Bill",
+      "💳": "Credit Card",
+      "🐷": "Piggy Bank",
+      "📈": "Chart",
+      "🍕": "Pizza",
+      "🍔": "Hamburger",
+      "☕": "Coffee",
+      "🍰": "Cake",
+      "🐱": "Cat",
+      "🐶": "Dog",
+      "🦊": "Fox",
+      "🐼": "Panda",
+      "🏠": "House",
+      "🚗": "Car",
+      "🎁": "Gift",
+      "👶": "Baby",
+      "✈️": "Airplane",
+      "🏖️": "Beach",
+      "⛰️": "Mountain"
     }
   },
   "transactions": {
@@ -204,7 +225,68 @@
     "errorTransferringFunds": "Failed to transfer funds. Please try again.",
     "transferSuccess": "Transfer completed successfully to {{recipient}}!",
     "transferring": "Transferring...",
-    "selectWallet": "Select Wallet"
+    "selectWallet": "Select Wallet",
+    "title": "Transactions",
+    "recentTransactions": "Recent Transactions",
+    "filter": "Filter",
+    "addNew": "Add New",
+    "export": "Export",
+    "exportFiltered": "Export ({{count}})",
+    "exportTooltip": "Export currently filtered transactions to Excel",
+    "noMatches": "0 transactions match your current criteria",
+    "searchResults": "Found {{count}} {{count, plural, =1 {transaction} other {transactions}}} matching \"{{term}}\"",
+    "limitedView": "Showing only 8 most recent transactions. View all on the",
+    "viewAllLink": "transactions page",
+    "uncategorized": "Uncategorized",
+    "addSuccess": "Transaction added successfully",
+    "updateSuccess": "Transaction updated successfully",
+    "deleteSuccess": "Transaction deleted successfully",
+    "deleteError": "Error deleting transaction",
+    "loadError": "Failed to load transactions. Please try again later.",
+    "searchPlaceholder": "Search transactions...",
+    "more": "more",
+    "shared": "shared",
+    "deleted": "deleted",
+    "deletedWallet": "deleted wallet",
+    "emptyStateMessages": {
+      "noMatchingSearch": "No transactions found matching \"{{term}}\"",
+      "noMatchingFilters": "No transactions match your filter criteria. Try adjusting your filters.",
+      "selectFilters": "Select filter criteria and click \"Apply Filters\" to find specific transactions.",
+      "noTransactions": "No transactions to display. Start adding your financial data to see it here."
+    },
+    "headers": {
+      "id": "ID",
+      "date": "Date",
+      "description": "Description",
+      "category": "Category",
+      "wallet": "Wallet",
+      "type": "Type",
+      "amount": "Amount",
+      "actions": "Actions"
+    },
+    "filters": {
+      "timePeriod": "Time Period",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "startDateAriaLabel": "Filter start date",
+      "endDateAriaLabel": "Filter end date",
+      "resetAriaLabel": "Reset all filters",
+      "applyAriaLabel": "Apply selected filters",
+      "reset": "Reset",
+      "apply": "Apply Filters",
+      "loading": "Loading...",
+      "allCategories": "All Categories",
+      "allTypes": "All Types",
+      "allUsers": "All Users",
+      "allWallets": "All Wallets",
+      "minAmount": "Min Amount",
+      "maxAmount": "Max Amount"
+    },
+    "deleteDialog": {
+      "title": "Confirm Transaction Deletion",
+      "message": "Are you sure you want to delete this transaction? This action cannot be undone.",
+      "confirmAriaLabel": "Confirm delete transaction"
+    }
   },
   "categories": {
     "title": "Categories",
@@ -212,11 +294,36 @@
     "editCategory": "Edit Category",
     "deleteCategory": "Delete Category",
     "categoryName": "Category Name",
+    "categoryNamePlaceholder": "Category name",
     "categoryType": "Category Type",
     "categoryIcon": "Icon",
     "spendingLimit": "Spending Limit",
+    "spendingLimitPlaceholder": "Set a spending limit",
+    "incomeGoal": "Income Goal",
+    "incomeGoalPlaceholder": "Set an income goal",
     "warningThreshold": "Warning Threshold",
-    "noCategories": "No categories found."
+    "warningAtPercentage": "Warning at percentage",
+    "warningAt": "Warning at",
+    "warnAt": "Warn at",
+    "warning": "Warning",
+    "limit": "Limit",
+    "goal": "Goal",
+    "noCategories": "No categories found. Create a category to get started.",
+    "noSearchMatch": "No categories match your search.",
+    "noSpendingLimit": "No spending limit set",
+    "noIncomeGoal": "No income goal set",
+    "confirmDeletion": "Confirm Deletion",
+    "deleteConfirmMessage": "Are you sure you want to delete the category \"{{categoryName}}\"? This action cannot be undone.",
+    "deleting": "Deleting...",
+    "manageCategories": "Manage Categories",
+    "total": "Total",
+    "errors": {
+      "nameRequired": "Category name is required",
+      "createFailed": "Failed to create category. Please try again.",
+      "fetchFailed": "Failed to load categories. Please try again.",
+      "updateFailed": "Failed to update category. Please try again.",
+      "deleteFailed": "Failed to delete category. Please try again."
+    }
   },
   "settings": {
     "title": "Settings",
@@ -302,6 +409,7 @@
     "year": "Year",
     "all": "All Time",
     "custom": "Custom",
+    "customRange": "Custom Range",
     "last24Hours": "Last 24 hours",
     "last7Days": "Last 7 days",
     "last30Days": "Last 30 days",
@@ -315,5 +423,49 @@
     "minLength": "{{field}} must be at least {{length}} characters",
     "invalidAmount": "Please enter a valid amount",
     "passwordMatch": "Passwords do not match"
+  },
+  "connection": {
+    "successful": "Connection successful!",
+    "failed": "Connection failed",
+    "backendTest": "Backend Connection Test",
+    "testAgain": "Test Connection Again"
+  },
+  "category": {
+    "name": "Category Name",
+    "addCategory": "Add Category",
+    "saveCategory": "Save Category",
+    "placeholders": {
+      "income": "e.g., Salary, Bonus, Investments",
+      "expense": "e.g., Groceries, Rent, Utilities"
+    },
+    "errors": {
+      "nameRequired": "Category name is required",
+      "createFailed": "Failed to create category. Please try again."
+    }
+  },
+  "pagination": {
+    "rowsPerPage": "Rows per page"
+  },
+  "password": {
+    "changePassword": "Change Password",
+    "instructions": "To change your password, please enter your current password and then your new password.",
+    "current": "Current Password",
+    "new": "New Password",
+    "confirm": "Confirm New Password",
+    "toggleVisibility": "Toggle password visibility",
+    "changing": "Changing...",
+    "changeSuccess": "Password changed successfully!",
+    "changeFailed": "Failed to change password. Please try again.",
+    "errors": {
+      "currentRequired": "Current password is required",
+      "minLength": "Password must be at least 6 characters",
+      "newRequired": "New password is required",
+      "mustMatch": "Passwords must match",
+      "confirmRequired": "Confirm password is required"
+    }
+  },
+  "alerts": {
+    "dismiss": "Dismiss",
+    "deletionCancelled": "Your account deletion has been cancelled because you logged back in."
   }
 } 

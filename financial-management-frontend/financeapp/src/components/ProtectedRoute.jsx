@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import AuthService from '../services/auth.service';
 import { CircularProgress, Box } from '@mui/material';
 
@@ -17,6 +17,7 @@ const ProtectedRoute = ({ children }) => {
         if (!authenticated) {
           // If not authenticated, redirect to login
           setIsAuthenticated(false);
+          navigate('/login', { replace: true });
         } else {
           // If authenticated, try to get current user data
           const userData = await AuthService.getCurrentUser();
@@ -25,6 +26,7 @@ const ProtectedRoute = ({ children }) => {
             // If no user data, token might be invalid
             AuthService.logout();
             setIsAuthenticated(false);
+            navigate('/login', { replace: true });
           } else {
             setIsAuthenticated(true);
           }
@@ -32,6 +34,7 @@ const ProtectedRoute = ({ children }) => {
       } catch (error) {
         AuthService.logout();
         setIsAuthenticated(false);
+        navigate('/login', { replace: true });
       } finally {
         setIsLoading(false);
       }
@@ -49,8 +52,9 @@ const ProtectedRoute = ({ children }) => {
   }
   
   if (!isAuthenticated) {
-    // Redirect to login if not authenticated
-    return <Navigate to="/login" replace />;
+    // We already redirected in the useEffect, but this is a safety net
+    // Return null instead of the Navigate component
+    return null;
   }
   
   return children;

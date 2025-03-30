@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Box, Typography, Button, CircularProgress, Alert } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 
 const TestConnection = () => {
+  const { t } = useTranslation();
   const [status, setStatus] = useState('idle');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -15,10 +17,10 @@ const TestConnection = () => {
     try {
       // Test the public endpoint
       const response = await axios.get('http://localhost:8080/api/test/public');
-      setMessage(response.data.message || 'Connection successful!');
+      setMessage(response.data.message || t('connection.successful'));
       setStatus('success');
     } catch (error) {
-      setError(error.message || 'Connection failed');
+      setError(error.message || t('connection.failed'));
       setStatus('error');
     }
   };
@@ -31,7 +33,7 @@ const TestConnection = () => {
   return (
     <Box sx={{ p: 3, maxWidth: 500, mx: 'auto' }}>
       <Typography variant="h5" gutterBottom>
-        Backend Connection Test
+        {t('connection.backendTest')}
       </Typography>
 
       {status === 'loading' && (
@@ -58,7 +60,7 @@ const TestConnection = () => {
         disabled={status === 'loading'}
         sx={{ mt: 2 }}
       >
-        Test Connection Again
+        {t('connection.testAgain')}
       </Button>
     </Box>
   );

@@ -5,8 +5,11 @@ import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import ToggleButton from '@mui/material/ToggleButton';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import ShowChartIcon from '@mui/icons-material/ShowChart';
+import { Grid, Box } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 
 const Dashboard = () => {
+  const { t } = useTranslation();
   const [chartType, setChartType] = useState('advanced'); // 'advanced' or 'simple'
   
   const handleChartTypeChange = (event, newChartType) => {
@@ -24,13 +27,13 @@ const Dashboard = () => {
             value={chartType}
             exclusive
             onChange={handleChartTypeChange}
-            aria-label="chart type"
+            aria-label={t('dashboard.chartType')}
             size="small"
           >
-            <ToggleButton value="advanced" aria-label="advanced chart">
+            <ToggleButton value="advanced" aria-label={t('dashboard.advancedChart')}>
               <BarChartIcon />
             </ToggleButton>
-            <ToggleButton value="simple" aria-label="simple chart">
+            <ToggleButton value="simple" aria-label={t('dashboard.simpleChart')}>
               <ShowChartIcon />
             </ToggleButton>
           </ToggleButtonGroup>
