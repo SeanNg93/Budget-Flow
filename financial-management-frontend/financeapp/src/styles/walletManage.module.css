@@ -700,4 +700,27 @@
 
 .incomeTabAddButton:hover {
   background-color: rgba(52, 199, 89, 0.1);
+}
+
+/* Prevent layout shifts with scrollbars in dialogs */
+.dialogScrollableContent {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-gutter: stable;
+  max-height: calc(85vh - 80px); /* Account for dialog title and padding */
+  padding-right: 2px; /* Add a little padding to prevent scrollbar from touching content */
+}
+
+.dialogScrollableContent::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.dialogScrollableContent::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+}
+
+.dialogScrollableContent::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.02);
 } 

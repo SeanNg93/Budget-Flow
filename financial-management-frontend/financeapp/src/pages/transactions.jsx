@@ -31,29 +31,31 @@ import {
 // Define the backend API base URL
 const API_BASE_URL = "http://localhost:8080";
 
-const drawerWidth = 225;
+const drawerWidth = 280;
 
 const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(
   ({ theme, open }) => ({
     flexGrow: 1,
-    padding: theme.spacing(2.8),
-    transition: theme.transitions.create('margin', {
+    padding: theme.spacing(3),
+    paddingLeft: open ? theme.spacing(3) : theme.spacing(2.5),
+    paddingRight: theme.spacing(3),
+    transition: theme.transitions.create(['margin', 'width', 'padding'], {
       easing: theme.transitions.easing.sharp,
       duration: theme.transitions.duration.leavingScreen,
     }),
-    marginLeft: `-${drawerWidth}px`,
+    marginLeft: 0,
+    width: open ? `calc(100% - ${drawerWidth}px)` : '100%',
     backgroundColor: theme.palette.mode === 'light' ? '#f8f9fa' : theme.palette.background.default,
     minHeight: '100vh',
     position: 'relative',
-    overflowX: 'hidden', // Prevent horizontal scrollbar
-    width: '100%', // Ensure it takes full width
-    boxSizing: 'border-box', // Include padding in width calculation
+    overflowX: 'hidden',
+    boxSizing: 'border-box',
     ...(open && {
-      transition: theme.transitions.create('margin', {
+      transition: theme.transitions.create(['margin', 'width', 'padding'], {
         easing: theme.transitions.easing.easeOut,
         duration: theme.transitions.duration.enteringScreen,
       }),
-      marginLeft: 0,
+      marginLeft: 0
     }),
   }),
 );
@@ -504,7 +506,7 @@ const TransactionsPage = () => {
   }
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box sx={{ display: 'flex', margin: 0, padding: 0, width: '100%', maxWidth: '100%' }}>
       <CssBaseline />
       <AppTheme components={themeComponents}>
         <AppNavbar open={open} handleDrawerOpen={handleDrawerOpen} />
@@ -516,7 +518,7 @@ const TransactionsPage = () => {
         />
         <Main open={open}>
           <DrawerHeader />
-          <Container maxWidth="xl" sx={{ mt: 2 }}>
+          <Container maxWidth="xl" disableGutters sx={{ mt: 2 }}>
             <Paper sx={{ p: 3, borderRadius: '12px' }}>
               <Typography variant="h4" component="h1" gutterBottom>
                 {t('transactions.title')}

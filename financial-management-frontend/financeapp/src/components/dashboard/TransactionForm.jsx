@@ -1441,7 +1441,10 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
         fullWidth={true}
         PaperProps={{
           className: styles.dialogPaper,
-          style: { width: '500px', maxWidth: '90vw' }
+          style: { 
+            width: '500px', 
+            maxWidth: '90vw'
+          }
         }}
       >
         <DialogContent sx={{ p: 2 }}>

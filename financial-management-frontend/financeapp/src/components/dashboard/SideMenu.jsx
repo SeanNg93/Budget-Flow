@@ -120,6 +120,7 @@ const SideMenu = ({ open, handleDrawerClose, setProfileDialogOpen, setCategoryMa
             boxSizing: 'border-box',
             border: 'none',
             boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.05)',
+            position: 'fixed'
           },
         }}
         variant="persistent"

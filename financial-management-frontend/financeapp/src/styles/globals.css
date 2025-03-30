@@ -9,8 +9,9 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
     Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   position: relative;
-  overflow-y: scroll !important;
-  scrollbar-gutter: stable both-edges !important;
+  overflow-y: visible !important;
+  scrollbar-gutter: stable !important;
+  padding-right: 0 !important;
 }
 
 .container {
@@ -78,11 +79,11 @@ body {
 /* Ensure scrollbar is always present to prevent layout shifts */
 html {
   overflow-y: scroll;
-  scrollbar-gutter: stable both-edges;
+  scrollbar-gutter: stable;
   /* Prevent page from jumping when modals open */
-  /* margin-right: 0 !important; */
-  /* Prevent body from being affected by modal or menu openings */
-  /* padding-right: 0 !important; */ /* Remove any automatic padding */
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
 }
 
 /* Additional scrollbar styling for a cleaner look */
@@ -109,8 +110,10 @@ html {
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 0, 0, 0.15) rgba(0, 0, 0, 0.02);
 }
-/* Additional class to apply to MUI Dialog Paper component */
+
+/* Dialog specific styles */
 .MuiDialog-paper {
   margin-right: 0 !important;
+  overflow-y: auto !important;
 }
 

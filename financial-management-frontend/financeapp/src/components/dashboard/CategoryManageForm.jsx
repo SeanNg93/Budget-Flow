@@ -747,7 +747,10 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
       maxWidth="sm"
       PaperProps={{
         className: styles.dialogPaper,
-        style: { width: '500px', maxWidth: '90vw' }
+        style: { 
+          width: '500px', 
+          maxWidth: '90vw'
+        }
       }}
       TransitionComponent={FadeTransition}
       TransitionProps={{
