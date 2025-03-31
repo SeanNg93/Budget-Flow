@@ -2,11 +2,17 @@ package com.financeapp.service;
 
 import com.financeapp.dto.SharedWalletDto;
 import com.financeapp.model.SharedWallet;
+import com.financeapp.model.Transaction;
 import com.financeapp.model.User;
 import com.financeapp.model.Wallet;
 import com.financeapp.repository.SharedWalletRepository;
+import com.financeapp.repository.TransactionRepository;
 import com.financeapp.repository.UserRepository;
 import com.financeapp.repository.WalletRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,23 +25,31 @@ import java.util.stream.Collectors;
 @Service
 public class SharedWalletService {
 
+    private static final Logger logger = LoggerFactory.getLogger(SharedWalletService.class);
+
     private final SharedWalletRepository sharedWalletRepository;
     private final WalletRepository walletRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
     private final UserProfileService userProfileService;
+    private final TransactionRepository transactionRepository;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Autowired
     public SharedWalletService(SharedWalletRepository sharedWalletRepository, 
                                WalletRepository walletRepository, 
                                UserRepository userRepository,
                                NotificationService notificationService,
-                               UserProfileService userProfileService) {
+                               UserProfileService userProfileService,
+                               TransactionRepository transactionRepository) {
         this.sharedWalletRepository = sharedWalletRepository;
         this.walletRepository = walletRepository;
         this.userRepository = userRepository;
         this.notificationService = notificationService;
         this.userProfileService = userProfileService;
+        this.transactionRepository = transactionRepository;
     }
 
     /**
@@ -48,15 +62,19 @@ public class SharedWalletService {
      */
     @Transactional
     public SharedWalletDto shareWallet(Long walletId, Long ownerId, Long targetUserId) {
+        logger.info("User {} is sharing wallet {} with user {}", ownerId, walletId, targetUserId);
+        
         // Validate that wallet exists and belongs to owner
         Wallet wallet = walletRepository.findById(walletId)
                 .orElseThrow(() -> new RuntimeException("Wallet not found with id: " + walletId));
         
         if (!wallet.getUser().getId().equals(ownerId)) {
+            logger.warn("User {} attempted to share wallet {} which they don't own", ownerId, walletId);
             throw new IllegalArgumentException("You can only share wallets that you own");
         }
         
         if (ownerId.equals(targetUserId)) {
+            logger.warn("User {} attempted to share wallet {} with themselves", ownerId, walletId);
             throw new IllegalArgumentException("You cannot share a wallet with yourself");
         }
         
@@ -69,8 +87,12 @@ public class SharedWalletService {
         
         List<SharedWallet> existingShares = sharedWalletRepository.findByWalletAndSharedWith(wallet, targetUser);
         if (!existingShares.isEmpty()) {
+            logger.warn("Wallet {} is already shared with user {}", walletId, targetUserId);
             throw new IllegalArgumentException("This wallet is already shared with this user");
         }
+        
+        logger.info("Creating shared wallet record for wallet {} between owner {} and user {}", 
+                walletId, ownerId, targetUserId);
         
         // Create new shared wallet record
         SharedWallet sharedWallet = SharedWallet.builder()
@@ -82,13 +104,64 @@ public class SharedWalletService {
         
         sharedWallet = sharedWalletRepository.save(sharedWallet);
         
+        // Pre-grant transaction visibility to all transactions in the wallet
+        // This will ensure that when the user accepts the wallet, they already have visibility
+        // to all historical transactions
+        logger.info("Pre-granting transaction visibility for all transactions in wallet {} to user {}", 
+                walletId, targetUserId);
+        grantVisibilityToWalletTransactions(walletId, targetUserId);
+        
         // Create notification
+        logger.info("Creating wallet sharing notification from user {} to user {}", 
+                ownerId, targetUserId);
         notificationService.createWalletSharingNotification(ownerId, targetUserId, wallet.getAccountName());
         
         // Convert to DTO and return
         return mapToDto(sharedWallet);
     }
     
+    /**
+     * Add transaction visibility for all transactions in a wallet
+     * This gives a user access to all existing transactions in a shared wallet
+     */
+    @Transactional
+    public void grantVisibilityToWalletTransactions(Long walletId, Long userId) {
+        logger.info("Granting transaction visibility for wallet ID {} to user ID {}", walletId, userId);
+        
+        // Check how many transactions exist for this wallet
+        int transactionCount = transactionRepository.countByWalletId(walletId);
+        logger.info("Found {} existing transactions in wallet {}", transactionCount, walletId);
+        
+        // Execute a native SQL query to add visibility records
+        // This is more efficient than fetching all transactions and adding visibility one by one
+        int insertCount = entityManager.createNativeQuery(
+            "INSERT IGNORE INTO transaction_visibility (transaction_id, user_id, is_creator, created_at) " +
+            "SELECT t.id, :userId, FALSE, NOW() " +
+            "FROM transactions t " +
+            "WHERE t.account_id = :walletId " +
+            "AND NOT EXISTS (" +
+            "   SELECT 1 FROM transaction_visibility tv " +
+            "   WHERE tv.transaction_id = t.id AND tv.user_id = :userId" +
+            ")"
+        )
+        .setParameter("walletId", walletId)
+        .setParameter("userId", userId)
+        .executeUpdate();
+        
+        logger.info("Added visibility for {} transactions to user {}", insertCount, userId);
+        
+        // For debugging purposes, verify the transaction visibility was granted correctly
+        List<Long> visibleTransactionIds = entityManager.createQuery(
+            "SELECT t.id FROM Transaction t JOIN TransactionVisibility tv ON t.id = tv.transaction.id " +
+            "WHERE t.wallet.id = :walletId AND tv.user.id = :userId", Long.class)
+            .setParameter("walletId", walletId)
+            .setParameter("userId", userId)
+            .getResultList();
+            
+        logger.info("After granting visibility, user {} can see {} transactions in wallet {}: {}",
+            userId, visibleTransactionIds.size(), walletId, visibleTransactionIds);
+    }
+
     /**
      * Accept a shared wallet
      * 
@@ -98,17 +171,35 @@ public class SharedWalletService {
      */
     @Transactional
     public SharedWalletDto acceptSharedWallet(Long sharedWalletId, Long userId) {
+        logger.info("User {} is accepting shared wallet {}", userId, sharedWalletId);
+        
         SharedWallet sharedWallet = sharedWalletRepository.findById(sharedWalletId)
                 .orElseThrow(() -> new RuntimeException("Shared wallet not found with id: " + sharedWalletId));
         
         if (!sharedWallet.getSharedWith().getId().equals(userId)) {
+            logger.warn("User {} attempted to accept wallet {} that was not shared with them", userId, sharedWalletId);
             throw new IllegalArgumentException("You can only accept wallets shared with you");
         }
         
+        // Check if already accepted
+        if (sharedWallet.isAccepted()) {
+            logger.info("Wallet {} was already accepted by user {}", sharedWalletId, userId);
+            return mapToDto(sharedWallet);
+        }
+        
+        logger.info("Setting wallet {} as accepted by user {}", sharedWalletId, userId);
         sharedWallet.setAccepted(true);
         sharedWallet = sharedWalletRepository.save(sharedWallet);
         
+        Long walletId = sharedWallet.getWallet().getId();
+        logger.info("Granting historical transaction access for wallet {} to user {}", walletId, userId);
+        
+        // Grant visibility to all existing transactions in the wallet
+        grantVisibilityToWalletTransactions(walletId, userId);
+        
         // Create notification
+        logger.info("Creating wallet accepted notification from user {} to user {}", 
+                userId, sharedWallet.getOwner().getId());
         notificationService.createWalletAcceptedNotification(
             sharedWallet.getOwner().getId(), 
             userId, 

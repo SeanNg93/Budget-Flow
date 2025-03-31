@@ -396,60 +396,36 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
     setWalletToEdit(null);
   }, [updateDialogState]);
   
-  const handleWalletUpdated = useCallback((updatedWallet = null) => {
-    // If we received the updated wallet object directly from the form
-    if (updatedWallet) {
-      // Immediately update the local state with the direct updated wallet
-      const updatedWallets = wallets.map(w => {
-        if (w.id === updatedWallet.id) {
-          // Return the updated wallet with all changes
-          return updatedWallet;
-        }
-        return w;
-      });
-      
-      setWallets(updatedWallets);
-    }
-    // If no updated wallet was provided but we have walletToEdit
-    else if (walletToEdit) {
-      // Force a UI refresh by triggering a rerender
-      const forceRefresh = Date.now();
-      
-      // Clear any local caches to ensure fresh data
-      localStorage.removeItem('walletIconsCache');
-      
-      // Immediately make the edited wallet and its changes visible
-      const updatedWallets = wallets.map(w => {
-        if (w.id === walletToEdit.id) {
-          // Get the freshly saved icon and color from localStorage
-          const savedIcon = getWalletIcon(walletToEdit.id);
-          const colorClass = getWalletColorClass(walletToEdit.id);
-          
-          // Return a copy with potentially updated values
-          const updatedWallet = {
-            ...w,
-            accountName: walletToEdit.accountName, // Update name from the edited wallet
-            _forceIconRefresh: forceRefresh, // Add a timestamp to force icon refresh
-            _icon: savedIcon, // Add the icon directly to the wallet object
-            _colorClass: colorClass // Add the color class directly to the wallet object
+  const handleWalletUpdated = useCallback((updatedWallet) => {
+    setLoading(false);
+
+    // Update the wallets state with the changed wallet
+    setWallets(currentWallets => {
+      return currentWallets.map(wallet => {
+        if (wallet.id === updatedWallet.id) {
+          // Preserve custom properties from the updated wallet
+          return {
+            ...updatedWallet,
+            _colorClass: updatedWallet._colorClass || getWalletColorClass(updatedWallet.id),
+            _icon: updatedWallet._icon || getWalletIcon(updatedWallet.id),
+            _forceIconRefresh: Date.now() // Force icon refresh
           };
-          
-          return updatedWallet;
         }
-        return w;
+        return wallet;
       });
-      
-      setWallets(updatedWallets);
+    });
+
+    // Close the wallet form dialog
+    setDialogStates(prev => ({
+      ...prev,
+      editWalletDialog: false
+    }));
+
+    // Update the selected wallet if it was the one that got updated
+    if (selectedWalletForMenu && selectedWalletForMenu.id === updatedWallet.id) {
+      setSelectedWalletForMenu(updatedWallet);
     }
-    
-    // Then fetch fresh data from the server with a slight delay
-    // to ensure localStorage updates are complete
-    setTimeout(() => {
-      fetchWallets();
-    }, 100);
-    
-    handleEditWalletClose();
-  }, [fetchWallets, handleEditWalletClose, walletToEdit, wallets]);
+  }, [setWallets, selectedWalletForMenu, setDialogStates]);
   
   const handleWalletShared = useCallback(() => {
     fetchWallets();

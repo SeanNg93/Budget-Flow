@@ -1123,6 +1123,13 @@ const TransactionsSection = ({
       );
     }
     
+    // Sort transactions by date in descending order (most recent first)
+    const sortedTransactions = [...displayTransactions].sort((a, b) => {
+      const dateA = new Date(a.transactionDate);
+      const dateB = new Date(b.transactionDate);
+      return dateB - dateA; // Descending order
+    });
+    
     return (
       <TableContainer 
         className={styles.tableContainer}
@@ -1149,7 +1156,7 @@ const TransactionsSection = ({
             </TableRow>
           </TableHead>
           <TableBody>
-            {displayTransactions.map((transaction) => (
+            {sortedTransactions.map((transaction) => (
               <TransactionRow 
                 key={transaction.id}
                 transaction={transaction}

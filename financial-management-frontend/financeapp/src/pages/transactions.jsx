@@ -251,29 +251,47 @@ const TransactionsPage = () => {
         });
       };
       
-      processSharedWallets(sharedWithMeResponse.data || [], false);
-      processSharedWallets(sharedByMeResponse.data || [], true);
+      // Process shared wallets data
+      processSharedWallets(sharedWithMeResponse.data, false);
+      processSharedWallets(sharedByMeResponse.data, true);
       
-      // Update state with fetched data
+      // Save shared wallets data
       setSharedWallets(sharedWalletsMap);
       setSharedWalletsInfo(sharedInfo);
-      setWallets(walletsResponse.data || []);
-      setCategories(categoriesResponse.data || []);
       
-      // Process and set transactions
-      const processedTransactions = processTransactions(transactionsResponse.data || []);
-      setAllTransactions(processedTransactions);
-      setFilteredTransactions(processedTransactions);
-      updateDisplayedTransactions(processedTransactions);
+      // Get transactions data
+      let transactionsData = transactionsResponse.data || [];
       
-      // Calculate financial summary
-      calculateFinancialSummary(processedTransactions);
+      // Sort transactions by date in descending order (most recent first)
+      transactionsData = transactionsData.sort((a, b) => {
+        const dateA = new Date(a.transactionDate);
+        const dateB = new Date(b.transactionDate);
+        return dateB - dateA; // Descending order
+      });
+      
+      // Process transactions to add profile pictures where needed
+      transactionsData = processTransactions(transactionsData);
+      
+      // Set all states
+      setAllTransactions(transactionsData);
+      setFilteredTransactions(transactionsData);
+      setTransactions(transactionsData.slice(0, pageSize));
       
       // Calculate total pages
-      setTotalPages(Math.ceil(processedTransactions.length / pageSize));
-    } catch (error) {
-      console.error('Failed to load data:', error);
-      setError(t('transactions.loadError'));
+      setTotalPages(Math.ceil(transactionsData.length / pageSize));
+      
+      // Set categories
+      setCategories(categoriesResponse.data || []);
+      
+      // Set wallets
+      setWallets(walletsResponse.data || []);
+      
+      // Calculate financial summary
+      calculateFinancialSummary(transactionsData);
+    } catch (err) {
+      console.error('Error fetching data:', err);
+      setError(err.message);
+      toast.error(t('transactions.loadError'));
     } finally {
       setLoading(false);
     }
