@@ -1255,6 +1255,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
       open={open}
       onClose={embedded ? null : handleClose}
       maxWidth="sm"
+      disableScrollLock={true}
       PaperProps={{
         className: styles.dialogPaper,
         style: { width: '65%', maxWidth: '650px' }

@@ -12,6 +12,11 @@ body {
   overflow-y: visible !important;
   scrollbar-gutter: stable !important;
   padding-right: 0 !important;
+  padding-left: 0 !important;
+  margin: 0 !important;
+  /* Ensure consistent width even when scrollbar appears or disappears */
+  width: 100vw !important;
+  box-sizing: border-box !important;
 }
 
 .container {

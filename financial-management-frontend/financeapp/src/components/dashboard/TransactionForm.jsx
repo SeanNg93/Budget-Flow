@@ -1596,9 +1596,10 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
   return (
     <Dialog 
       open={open} 
-      onClose={handleDialogClose} 
-      maxWidth="sm" 
-      fullWidth={!embedded}
+      onClose={handleDialogClose}
+      fullWidth
+      maxWidth="sm"
+      disableScrollLock={true}
       PaperProps={{
         className: styles.dialogPaper
       }}
