@@ -105,6 +105,7 @@ const FinanceActionPanel = ({
       onClose={handleClose}
       fullWidth
       maxWidth="sm"
+      disableScrollLock={true}
       PaperProps={{
         className: styles.dialogPaper,
         sx: {

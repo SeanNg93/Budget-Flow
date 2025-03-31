@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
@@ -7,6 +7,7 @@ import Container from '@mui/material/Container';
 import Grid from '@mui/material/Grid';
 import CircularProgress from '@mui/material/CircularProgress';
 import { toast } from 'react-toastify';
+import { useTranslation } from 'react-i18next';
 
 // Import dashboard components
 import SideMenu from '../components/dashboard/SideMenu';
@@ -92,6 +93,7 @@ const themeComponents = {
 export default function Dashboard() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t, i18n } = useTranslation();
   const [open, setOpen] = useState(true);
   const [user, setUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
@@ -137,6 +139,14 @@ export default function Dashboard() {
 
   const [timeRange, setTimeRange] = useState('all'); // Default to 'all' time
   const [timeRangeLoading, setTimeRangeLoading] = useState(false);
+
+  // Timeout reference for debounced operations
+  const timeout = useRef(null);
+
+  // Reference to DialogManager methods
+  const dialogManagerRef = useRef({
+    openEditBalanceForm: null
+  });
 
   // Helper to update dialog states
   const updateDialogState = (dialogName, isOpen) => {
@@ -403,11 +413,38 @@ export default function Dashboard() {
       });
       setWallets(accountsResponse.data || []);
 
-      // Process and set transactions
-      const processedTransactions = processTransactions(transactionsResponse.data || []);
+      // Process and sort transactions consistently
+      let processedTransactions = processTransactions(transactionsResponse.data || []);
+      
+      // Sort transactions by ID (highest/latest first) - using the same sorting logic as in transactions page
+      processedTransactions = processedTransactions.sort((a, b) => {
+        // Parse IDs to ensure proper numeric comparison
+        const parseId = (id) => {
+          if (typeof id === 'number') return id;
+          if (typeof id === 'string') {
+            if (id.includes(':')) return parseInt(id.split(':')[0], 10);
+            return parseInt(id, 10);
+          }
+          return 0;
+        };
+        
+        const idA = parseId(a.id);
+        const idB = parseId(b.id);
+        
+        // Higher ID values are typically newer transactions
+        if (idA !== idB) {
+          return idB - idA;
+        }
+        
+        // If IDs are the same (unlikely), use date as a tiebreaker
+        const dateA = new Date(a.transactionDate);
+        const dateB = new Date(b.transactionDate);
+        return dateB - dateA;
+      });
+      
       setTransactions(processedTransactions.slice(0, 8));
       setFilteredTransactions(processedTransactions.slice(0, 8));
-      setAllTransactions(processedTransactions || []);
+      setAllTransactions(processedTransactions);
 
       // If a time range other than 'all' is selected, apply the filter after setting initial data
       if (timeRange !== 'all') {
@@ -428,18 +465,79 @@ export default function Dashboard() {
     }
   };
 
-  const fetchTransactions = async (applyFilters = false, filterParams = {}) => {
+  const fetchTransactions = async (applyFilters = false, filterParams = {}, updateFiltered = true) => {
     try {
       const response = applyFilters
         ? await FinanceService.getFilteredTransactions(filterParams)
         : await FinanceService.getTransactions();
 
-      const processedTransactions = processTransactions(response.data || []);
-      setFilteredTransactions(processedTransactions);
+      // Before processing, ensure any existing shared wallet transactions maintain their ID format
+      const updatedTransactions = response.data.map(transaction => {
+        // Check if we have this transaction in allTransactions with a different ID format
+        const existingTransaction = allTransactions.find(t => {
+          // For normal transactions, simple equality check
+          if (t.id === transaction.id) return true;
+          
+          // For shared wallet transactions, check numeric part of ID if formatted as "number:string"
+          if (typeof t.id === 'string' && t.id.includes(':') && 
+              typeof transaction.id === 'number' || typeof transaction.id === 'string') {
+            const existingIdParts = t.id.toString().split(':');
+            return existingIdParts[0] === transaction.id.toString();
+          }
+          
+          return false;
+        });
+        
+        // If we found a match with a different format, preserve the original format
+        if (existingTransaction && existingTransaction.id !== transaction.id) {
+          return {
+            ...transaction,
+            id: existingTransaction.id
+          };
+        }
+        
+        return transaction;
+      });
+      
+      // Process and sort transactions consistently
+      let processedTransactions = processTransactions(updatedTransactions || []);
+      
+      // Sort transactions by ID (highest/latest first) - using the same sorting logic as in transactions page
+      processedTransactions = processedTransactions.sort((a, b) => {
+        // Parse IDs to ensure proper numeric comparison
+        const parseId = (id) => {
+          if (typeof id === 'number') return id;
+          if (typeof id === 'string') {
+            if (id.includes(':')) return parseInt(id.split(':')[0], 10);
+            return parseInt(id, 10);
+          }
+          return 0;
+        };
+        
+        const idA = parseId(a.id);
+        const idB = parseId(b.id);
+        
+        // Higher ID values are typically newer transactions
+        if (idA !== idB) {
+          return idB - idA;
+        }
+        
+        // If IDs are the same (unlikely), use date as a tiebreaker
+        const dateA = new Date(a.transactionDate);
+        const dateB = new Date(b.transactionDate);
+        return dateB - dateA;
+      });
+      
+      // Only update filteredTransactions if we're not in a reset operation
+      if (updateFiltered) {
+        setFilteredTransactions(processedTransactions);
+      }
+      
       setAllTransactions(processedTransactions);
       setTransactions(processedTransactions.slice(0, 8));
-    } catch (err) {
-      console.error('Error fetching transactions:', err);
+    } catch (error) {
+      console.error('Error fetching transactions:', error);
+      toast.error('Failed to load transactions');
     }
   };
 
@@ -485,11 +583,17 @@ export default function Dashboard() {
   const handleDrawerClose = () => setOpen(false);
 
   const handleTransactionAdded = (isUpdate = false) => {
-    // Update only what's needed
-    updateFinancialSummary();
-    fetchTransactions();
-    updateWallets();
-    setChartRefreshKey(prevKey => prevKey + 1); // Trigger chart refresh
+    // For updates, do a more thorough refresh to ensure sorting is consistent
+    if (isUpdate) {
+      // Complete refresh of financial data and transactions
+      fetchFinancialData();
+    } else {
+      // For new transactions, lighter update
+      updateFinancialSummary();
+      fetchTransactions();
+      updateWallets();
+      setChartRefreshKey(prevKey => prevKey + 1); // Trigger chart refresh
+    }
 
     // Show success toast
     toast.success(isUpdate ? 'Transaction updated successfully' : 'Transaction added successfully', {
@@ -669,16 +773,76 @@ export default function Dashboard() {
       if (filterParams.clientFiltered) {
         // If we have client-filtered data, use it directly
         const processedTransactions = processTransactions(filterParams.clientFiltered);
-        setFilteredTransactions(processedTransactions);
-        setTransactions(processedTransactions.slice(0, 8));
+        
+        // Before setting the filtered transactions, ensure any IDs from shared wallets are preserved
+        const updatedTransactions = processedTransactions.map(transaction => {
+          // Check if we have this transaction in allTransactions with a different ID format
+          const existingTransaction = allTransactions.find(t => {
+            // For normal transactions, simple equality check
+            if (t.id === transaction.id) return true;
+            
+            // For shared wallet transactions, check numeric part of ID if formatted as "number:string"
+            if (typeof t.id === 'string' && t.id.includes(':') && 
+                (typeof transaction.id === 'number' || typeof transaction.id === 'string')) {
+              const existingIdParts = t.id.toString().split(':');
+              return existingIdParts[0] === transaction.id.toString();
+            }
+            
+            return false;
+          });
+          
+          // If we found a match with a different format, preserve the original format
+          if (existingTransaction && existingTransaction.id !== transaction.id) {
+            return {
+              ...transaction,
+              id: existingTransaction.id
+            };
+          }
+          
+          return transaction;
+        });
+        
+        setFilteredTransactions(updatedTransactions);
+        setTransactions(updatedTransactions.slice(0, 8));
         setFilterLoading(false);
         return;
       }
 
       // Otherwise, make API call for server filtering
       const response = await FinanceService.getFilteredTransactions(filterParams);
-      const processedTransactions = processTransactions(response.data || []);
-
+      
+      // Process the transactions to ensure proper ID formats
+      const rawTransactions = response.data || [];
+      
+      // Map through the transactions and preserve ID formats from existing transactions
+      const updatedTransactions = rawTransactions.map(transaction => {
+        // Check if we have this transaction in allTransactions with a different ID format
+        const existingTransaction = allTransactions.find(t => {
+          // For normal transactions, simple equality check
+          if (t.id === transaction.id) return true;
+          
+          // For shared wallet transactions, check numeric part of ID if formatted as "number:string"
+          if (typeof t.id === 'string' && t.id.includes(':') && 
+              (typeof transaction.id === 'number' || typeof transaction.id === 'string')) {
+            const existingIdParts = t.id.toString().split(':');
+            return existingIdParts[0] === transaction.id.toString();
+          }
+          
+          return false;
+        });
+        
+        // If we found a match with a different format, preserve the original format
+        if (existingTransaction && existingTransaction.id !== transaction.id) {
+          return {
+            ...transaction,
+            id: existingTransaction.id
+          };
+        }
+        
+        return transaction;
+      });
+      
+      const processedTransactions = processTransactions(updatedTransactions);
       setFilteredTransactions(processedTransactions);
       setTransactions(processedTransactions.slice(0, 8));
 
@@ -737,6 +901,81 @@ export default function Dashboard() {
     }
   };
 
+  // Listen for wallet balance updates
+  useEffect(() => {
+    // Define the handler for the custom event
+    const handleWalletUpdate = (event) => {
+      const { walletId, newBalance } = event.detail;
+      
+      if (walletId && typeof newBalance === 'number') {
+        // Update the wallet in our local state
+        setWallets(currentWallets => {
+          return currentWallets.map(wallet => {
+            if (wallet.id.toString() === walletId.toString()) {
+              return {
+                ...wallet,
+                balance: newBalance
+              };
+            }
+            return wallet;
+          });
+        });
+        
+        // Update the financial summary to reflect the new balance
+        updateFinancialSummary();
+      }
+    };
+    
+    // Add the event listener
+    window.addEventListener('wallet-balance-updated', handleWalletUpdate);
+    
+    // Remove the event listener on cleanup
+    return () => {
+      window.removeEventListener('wallet-balance-updated', handleWalletUpdate);
+    };
+  }, []);
+
+  // Component cleanup
+  useEffect(() => {
+    // No cleanup needed for now
+    return () => {
+      // Removed references to undefined variables
+    };
+  }, []);
+
+  // Set up the theme components with scroll lock mitigation
+  const themeComponents = useMemo(() => ({
+    MuiDialog: {
+      defaultProps: {
+        disableScrollLock: true
+      }
+    },
+    MuiModal: {
+      defaultProps: {
+        disableScrollLock: true
+      }
+    }
+  }), []);
+
+  // Store references to DialogManager methods
+  const setDialogManagerMethods = useCallback((methods) => {
+    if (methods && methods.openEditBalanceForm) {
+      dialogManagerRef.current.openEditBalanceForm = methods.openEditBalanceForm;
+    }
+  }, []);
+
+  // Handle filter reset specifically for dashboard
+  const handleResetFilters = () => {
+    // First, clear filtered transactions
+    setFilteredTransactions([]);
+    
+    // Fetch all transactions and update them with the limit of 8
+    // Pass false for updateFiltered to prevent overwriting empty filteredTransactions
+    fetchTransactions(false, {}, false);
+    
+    // No need for additional sorting since fetchTransactions now sorts consistently
+  };
+
   // Loading state
   if (loading) {
     return (
@@ -785,7 +1024,13 @@ export default function Dashboard() {
               <SummaryCards
                 financialData={financialData}
                 loading={loading || timeRangeLoading}
-                handleEditBalance={() => updateDialogState('editBalanceForm', true)}
+                handleEditBalance={(walletId) => {
+                  if (dialogManagerRef.current.openEditBalanceForm) {
+                    dialogManagerRef.current.openEditBalanceForm(walletId);
+                  } else {
+                    updateDialogState('editBalanceForm', true);
+                  }
+                }}
                 handleManageWallets={() => updateDialogState('walletManageForm', true)}
                 handleAddBalance={() => updateDialogState('addBalanceForm', true)}
                 timeRange={timeRange}
@@ -825,7 +1070,7 @@ export default function Dashboard() {
                 onEditTransaction={handleEditTransaction}
                 onDeleteTransaction={handleDeleteTransaction}
                 onApplyFilters={handleApplyFilters}
-                onResetFilters={() => fetchTransactions(false)}
+                onResetFilters={handleResetFilters}
                 formatCurrency={(amount) => new Intl.NumberFormat('en-US', {
                   style: 'currency',
                   currency: 'USD'
@@ -856,6 +1101,7 @@ export default function Dashboard() {
         setSelectedWallet={setSelectedWallet}
         fetchFinancialData={fetchFinancialData} // Pass fetchFinancialData if needed by DialogManager
         onWalletDeleted={handleWalletDeleted} // Pass the handler down
+        ref={setDialogManagerMethods} // Pass a callback to get references to methods
       />
     </AppTheme>
   );

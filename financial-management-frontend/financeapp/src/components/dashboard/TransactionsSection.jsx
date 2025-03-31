@@ -580,7 +580,8 @@ const TransactionsSection = ({
   onDeleteTransaction,
   onApplyFilters,
   onResetFilters,
-  formatCurrency
+  formatCurrency,
+  isDashboard = true // New prop to indicate if this is the dashboard view (defaults to true for backward compatibility)
 }) => {
   const { t } = useTranslation();
   const TIME_PERIODS = getTimePeriods(t);
@@ -635,40 +636,66 @@ const TransactionsSection = ({
     const filterParams = {};
     
     // Calculate date range
-    if (showCustomDateRange) {
-      filterParams.startDate = customStartDate.toISOString();
-      filterParams.endDate = customEndDate.toISOString();
+    if (showCustomDateRange && customStartDate && customEndDate) {
+      // For custom date range, use the exact dates selected
+      filterParams.startDate = new Date(customStartDate);
+      filterParams.startDate.setHours(0, 0, 0, 0); // Start of day
+      
+      filterParams.endDate = new Date(customEndDate);
+      filterParams.endDate.setHours(23, 59, 59, 999); // End of day
+      
+      // Convert to ISO string for API
+      filterParams.startDate = filterParams.startDate.toISOString();
+      filterParams.endDate = filterParams.endDate.toISOString();
     } else if (timeframe !== 'all') {
       // Find the time period configuration
       const period = TIME_PERIODS.find(p => p.value === timeframe);
       
       if (period && period.days) {
+        // Calculate proper date range from now
         const now = new Date();
-        filterParams.startDate = subDays(now, period.days).toISOString();
+        now.setHours(23, 59, 59, 999); // End of today
+        
+        const startDate = new Date(now);
+        startDate.setDate(now.getDate() - period.days);
+        startDate.setHours(0, 0, 0, 0); // Start of the day
+        
+        filterParams.startDate = startDate.toISOString();
         filterParams.endDate = now.toISOString();
       }
     }
     
-    // Add wallet and category filters if not "all"
-    if (walletId !== 'all') filterParams.walletId = walletId;
-    if (categoryId !== 'all') filterParams.categoryId = categoryId;
+    // Add wallet filter if not "all"
+    if (walletId !== 'all') {
+      filterParams.walletId = walletId;
+    }
+    
+    // Add category filter if not "all"
+    if (categoryId !== 'all') {
+      filterParams.categoryId = categoryId;
+    }
     
     // Add transaction type filter if not "all"
-    if (transactionType !== 'all') filterParams.transactionType = transactionType;
+    if (transactionType !== 'all') {
+      filterParams.transactionType = transactionType;
+    }
     
     // Add user filter if not "all"
-    if (userId !== 'all') filterParams.userId = userId;
+    if (userId !== 'all') {
+      filterParams.userId = userId;
+    }
     
-    // Add amount range filters if provided
+    // Add amount range filters if provided and valid
     if (minAmount && !isNaN(parseFloat(minAmount))) {
       filterParams.minAmount = parseFloat(minAmount);
     }
+    
     if (maxAmount && !isNaN(parseFloat(maxAmount))) {
       filterParams.maxAmount = parseFloat(maxAmount);
     }
     
     return filterParams;
-  }, [filterState]);
+  }, [filterState, TIME_PERIODS]);
 
   // Function to apply filters
   const applyTransactionFilters = useCallback(() => {
@@ -677,99 +704,162 @@ const TransactionsSection = ({
     // Get filter parameters
     const filterParams = calculateFilterParams();
     
-    // Check if we need to apply client-side filtering
-    const needsClientFilter = filterState.transactionType !== 'all' || 
-                             filterState.userId !== 'all' ||
-                             (filterState.minAmount && !isNaN(parseFloat(filterState.minAmount))) || 
-                             (filterState.maxAmount && !isNaN(parseFloat(filterState.maxAmount)));
-    
-    // If we need client-side filtering, handle it directly
-    if (needsClientFilter) {
-      // Get all transactions first to ensure we have a complete dataset
-      FinanceService.getTransactions()
-        .then(response => {
-          let transactions = response.data || [];
+    // We'll use client-side filtering for all filters to ensure consistent behavior
+    // Get all transactions first to ensure we have a complete dataset
+    FinanceService.getTransactions()
+      .then(response => {
+        let transactions = response.data || [];
+        
+        // Apply date range filter
+        if (filterParams.startDate && filterParams.endDate) {
+          const startDate = new Date(filterParams.startDate);
+          const endDate = new Date(filterParams.endDate);
           
-          // Apply all server-side filters first
-          if (filterParams.startDate && filterParams.endDate) {
-            transactions = transactions.filter(t => {
-              const tDate = new Date(t.transactionDate);
-              return tDate >= new Date(filterParams.startDate) && 
-                     tDate <= new Date(filterParams.endDate);
-            });
-          }
+          // Set hours to ensure full day coverage
+          startDate.setHours(0, 0, 0, 0);
+          endDate.setHours(23, 59, 59, 999);
           
-          if (filterParams.walletId) {
-            transactions = transactions.filter(t => 
-              (t.wallet && t.wallet.id.toString() === filterParams.walletId) ||
-              (t.account && t.account.id.toString() === filterParams.walletId)
-            );
-          }
-          
-          if (filterParams.categoryId) {
-            transactions = transactions.filter(t => 
-              (t.category && t.category.id.toString() === filterParams.categoryId) ||
-              (t.categoryId && t.categoryId.toString() === filterParams.categoryId)
-            );
-          }
-          
-          // Apply client-side filters
-          
-          // Transaction type filter
-          if (filterState.transactionType !== 'all') {
-            transactions = transactions.filter(t => t.transactionType === filterState.transactionType);
-          }
-          
-          // User filter
-          if (filterState.userId !== 'all') {
-            transactions = transactions.filter(t => t.user && t.user.id.toString() === filterState.userId);
-          }
-          
-          // Apply amount range filters - FIXED LOGIC HERE
-          const minAmount = filterState.minAmount ? parseFloat(filterState.minAmount) : null;
-          const maxAmount = filterState.maxAmount ? parseFloat(filterState.maxAmount) : null;
-          
-          if (minAmount !== null || maxAmount !== null) {
-            transactions = transactions.filter(transaction => {
-              // Get the actual amount value 
-              const transactionAmount = parseFloat(transaction.amount);
-              
-              // Use absolute value for comparison to handle both income and expenses
-              const absAmount = Math.abs(transactionAmount);
-              
-              // Check min boundary if specified
-              if (minAmount !== null && absAmount < minAmount) {
-                return false;
-              }
-              
-              // Check max boundary if specified
-              if (maxAmount !== null && absAmount > maxAmount) {
-                return false;
-              }
-              
-              return true;
-            });
-          }
-          
-          // Send the client-filtered results to the parent component
-          onApplyFilters({
-            clientFiltered: transactions
+          transactions = transactions.filter(t => {
+            const tDate = new Date(t.transactionDate);
+            return tDate >= startDate && tDate <= endDate;
           });
-        })
-        .finally(() => {
-          updateFilterState({ isLoading: false });
+        }
+        
+        // Apply wallet filter - Fix for wallet filter not working
+        if (filterParams.walletId && filterParams.walletId !== 'all') {
+          const targetWalletId = filterParams.walletId.toString();
+          transactions = transactions.filter(t => {
+            // Check both possible wallet ID storage locations
+            if (t.wallet && t.wallet.id) {
+              return t.wallet.id.toString() === targetWalletId;
+            }
+            if (t.account && t.account.id) {
+              return t.account.id.toString() === targetWalletId;
+            }
+            // If using just walletId property
+            if (t.walletId) {
+              return t.walletId.toString() === targetWalletId;
+            }
+            return false;
+          });
+        }
+        
+        // Apply category filter - Fix for category filter not working
+        if (filterParams.categoryId && filterParams.categoryId !== 'all') {
+          const targetCategoryId = filterParams.categoryId.toString();
+          transactions = transactions.filter(t => {
+            // Check both possible category ID storage locations
+            if (t.category && t.category.id) {
+              return t.category.id.toString() === targetCategoryId;
+            }
+            if (t.categoryId) {
+              return t.categoryId.toString() === targetCategoryId;
+            }
+            return false;
+          });
+        }
+        
+        // Apply transaction type filter
+        if (filterState.transactionType !== 'all') {
+          transactions = transactions.filter(t => t.transactionType === filterState.transactionType);
+        }
+        
+        // Apply user filter
+        if (filterState.userId !== 'all') {
+          transactions = transactions.filter(t => {
+            // Handle both normal user IDs and potentially shared wallet transactions
+            if (!t.user) return false;
+            
+            // Check numeric part of ID for shared wallet transactions
+            const userId = t.user.id.toString();
+            const targetId = filterState.userId.toString();
+            
+            if (userId === targetId) return true;
+            
+            // For special ID formats like "123:string", compare just the numeric part
+            if (userId.includes(':')) {
+              const numericPart = userId.split(':')[0];
+              return numericPart === targetId;
+            }
+            
+            return false;
+          });
+        }
+        
+        // Apply amount range filters - Fix for min/max amount filtering
+        const minAmount = filterState.minAmount ? parseFloat(filterState.minAmount) : null;
+        const maxAmount = filterState.maxAmount ? parseFloat(filterState.maxAmount) : null;
+        
+        if (minAmount !== null || maxAmount !== null) {
+          transactions = transactions.filter(transaction => {
+            // Get the actual amount value (always positive for proper comparison)
+            const transactionAmount = parseFloat(transaction.amount);
+            const isExpense = transaction.transactionType === 'EXPENSE';
+            
+            // For display purposes, expenses show as negative values and income as positive
+            // Calculate the display amount as it appears to the user
+            const displayAmount = isExpense ? -Math.abs(transactionAmount) : transactionAmount;
+            
+            // Check if the display amount is within the min-max range
+            if (minAmount !== null && displayAmount < minAmount) {
+              return false; // Exclude transactions below min amount
+            }
+            
+            if (maxAmount !== null && displayAmount > maxAmount) {
+              return false; // Exclude transactions above max amount
+            }
+            
+            return true;
+          });
+        }
+        
+        // Ensure any transactions with special ID formats are preserved
+        const processedTransactions = transactions.map(transaction => {
+          // Check if we have this transaction in allTransactions with a different ID format
+          const existingTransaction = allTransactions.find(t => {
+            // For normal transactions, simple equality check
+            if (t.id === transaction.id) return true;
+            
+            // For shared wallet transactions, check numeric part of ID if formatted as "number:string"
+            if (typeof t.id === 'string' && t.id.includes(':') && 
+                (typeof transaction.id === 'number' || typeof transaction.id === 'string')) {
+              const existingIdParts = t.id.toString().split(':');
+              return existingIdParts[0] === transaction.id.toString();
+            }
+            
+            return false;
+          });
+          
+          // If we found a match with a different format, preserve the original format
+          if (existingTransaction && existingTransaction.id !== transaction.id) {
+            return {
+              ...transaction,
+              id: existingTransaction.id
+            };
+          }
+          
+          return transaction;
         });
-    } else {
-      // Use the normal server-side approach for other types of filtering
-      onApplyFilters(filterParams)
-        .finally(() => {
-          updateFilterState({ isLoading: false });
+        
+        // Send the client-filtered results to the parent component
+        onApplyFilters({
+          clientFiltered: processedTransactions
         });
-    }
-  }, [calculateFilterParams, onApplyFilters, updateFilterState, filterState]);
+      })
+      .catch(error => {
+        console.error('Error fetching transactions for filtering:', error);
+        // Show error message to user
+        // In case of error, try server-side filtering as fallback
+        onApplyFilters(filterParams);
+      })
+      .finally(() => {
+        updateFilterState({ isLoading: false });
+      });
+  }, [calculateFilterParams, onApplyFilters, updateFilterState, filterState, allTransactions]);
   
   // Function to reset filters
   const resetTransactionFilters = useCallback(() => {
+    // Reset all filter state values to defaults
     updateFilterState({
       timeframe: 'week',
       walletId: 'all',
@@ -780,9 +870,16 @@ const TransactionsSection = ({
       userId: 'all',
       showCustomDateRange: false,
       customStartDate: subDays(new Date(), 7),
-      customEndDate: new Date()
+      customEndDate: new Date(),
+      // Don't set isLoading here as we don't want the loading state
     });
-    onResetFilters();
+    
+    try {
+      // Call the parent's reset function immediately
+      onResetFilters();
+    } catch (error) {
+      console.error('Error resetting filters:', error);
+    }
   }, [updateFilterState, onResetFilters]);
 
   // Date picker handlers
@@ -880,9 +977,35 @@ const TransactionsSection = ({
 
   // Determine which transactions to display based on search or filters
   const displayTransactions = useMemo(() => {
-    const { term, results } = searchState;
-    return (term && results.length > 0) ? results : transactions;
-  }, [searchState.term, searchState.results, transactions]);
+    // If we have a search term and results, show search results
+    if (searchState.term && searchState.results.length > 0) {
+      return searchState.results;
+    }
+    
+    // If we have filtered transactions and they're not empty, show the filtered transactions
+    if (filteredTransactions && filteredTransactions.length > 0) {
+      // In non-dashboard mode, the parent component is already handling pagination,
+      // so we should use the transactions array directly as it's already sliced
+      if (!isDashboard) {
+        return transactions || [];
+      }
+      
+      // In dashboard mode, limit to 8 transactions
+      return filteredTransactions.length > 8 
+        ? filteredTransactions.slice(0, 8) 
+        : filteredTransactions;
+    }
+    
+    // When in dashboard mode, limit to 8 transactions, otherwise use the transactions array
+    // which is already paginated by the parent component
+    if (!isDashboard) {
+      return transactions || [];
+    }
+    
+    return transactions?.length > 8 
+      ? transactions.slice(0, 8) 
+      : transactions || [];
+  }, [searchState.term, searchState.results, filteredTransactions, transactions, isDashboard]);
 
   // Focus the search input when it becomes visible
   useEffect(() => {
@@ -1152,26 +1275,41 @@ const TransactionsSection = ({
     { id: 'actions', label: t('transactions.headers.actions'), align: 'center' }
   ], [t]);
 
-  // Render transactions table
-  // Sort transactions by date in descending order (most recent first)
+  // Sort transactions by ID in descending order (most recent first)
   // We'll only sort the displayTransactions array if it's not already sorted
   const sortedTransactions = useMemo(() => {
     // Create a copy of the display transactions for sorting
     return [...displayTransactions].sort((a, b) => {
-      // First sort by date in descending order
-      const dateA = new Date(a.transactionDate);
-      const dateB = new Date(b.transactionDate);
-      const dateDiff = dateB - dateA; // Descending order
+      // More robust parsing of transaction IDs
+      const parseId = (id) => {
+        if (typeof id === 'number') return id;
+        
+        // Handle string IDs (including those with ':' format for shared wallets)
+        if (typeof id === 'string') {
+          if (id.includes(':')) {
+            return parseInt(id.split(':')[0], 10);
+          }
+          return parseInt(id, 10);
+        }
+        
+        return 0; // Fallback
+      };
       
-      // If dates are equal (same day), preserve the original order
-      // This helps prevent edited transactions from moving to the bottom
-      if (dateDiff === 0) {
-        // Use the transaction ID to maintain stable sorting
-        // Ensure we're using numeric comparison
-        return parseInt(b.id) - parseInt(a.id);
+      // Primary sort: Sort by ID in descending order (highest/latest ID first)
+      const idA = parseId(a.id);
+      const idB = parseId(b.id);
+      
+      if (idA !== idB) {
+        // Higher ID values are typically newer transactions
+        return idB - idA;
       }
       
-      return dateDiff;
+      // Secondary sort: If same ID (unlikely but possible), use date as tiebreaker
+      const dateA = new Date(a.transactionDate);
+      const dateB = new Date(b.transactionDate);
+      
+      // Sort by date in descending order (newest first)
+      return dateB - dateA;
     });
   }, [displayTransactions]);
 
@@ -1423,8 +1561,8 @@ const TransactionsSection = ({
         {/* Transactions Table */}
         {renderTransactionsTable()}
         
-        {/* Note explaining limited transactions shown */}
-        {displayTransactions.length > 0 && allTransactions.length > displayTransactions.length && (
+        {/* Note explaining limited transactions shown - only display on dashboard */}
+        {isDashboard && displayTransactions.length > 0 && allTransactions.length > displayTransactions.length && (
           <Box sx={{ mt: 2, textAlign: 'center' }}>
             <Typography variant="body2" className={styles.transactionsNote}>
               {t('transactions.limitedView')}{' '}

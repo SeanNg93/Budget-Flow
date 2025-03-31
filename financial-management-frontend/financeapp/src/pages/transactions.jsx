@@ -96,7 +96,16 @@ const TransactionsPage = () => {
     editTransactionOpen: false,
     deleteConfirmOpen: false,
     profileDialog: false,
-    categoryManageForm: false
+    categoryManageForm: false,
+    accountForm: false,
+    categoryForm: false,
+    addBalanceForm: false,
+    editBalanceForm: false,
+    walletManageForm: false,
+    financeActionPanel: false,
+    userTransferDialog: false,
+    shareWalletDialog: false,
+    transferDialog: false
   });
 
   // Pagination state
@@ -104,6 +113,8 @@ const TransactionsPage = () => {
   const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
+  // Add selectedWallet state for DialogManager to use
+  const [selectedWallet, setSelectedWallet] = useState(null);
 
   // Financial summary state
   const [financialSummary, setFinancialSummary] = useState({
@@ -262,19 +273,25 @@ const TransactionsPage = () => {
       // Get transactions data
       let transactionsData = transactionsResponse.data || [];
       
-      // Sort transactions by date in descending order (most recent first)
+      // Sort transactions by ID in descending order (highest/latest ID first)
       transactionsData = transactionsData.sort((a, b) => {
-        const dateA = new Date(a.transactionDate);
-        const dateB = new Date(b.transactionDate);
-        const dateDiff = dateB - dateA; // Descending order
+        // Parse IDs to handle different ID formats
+        const parseId = (id) => {
+          if (typeof id === 'number') return id;
+          if (typeof id === 'string') {
+            if (id.includes(':')) {
+              return parseInt(id.split(':')[0], 10);
+            }
+            return parseInt(id, 10);
+          }
+          return 0; // Fallback
+        };
         
-        // If dates are the same, use ID to maintain a stable order
-        if (dateDiff === 0) {
-          // Ensure we're using numeric comparison for IDs
-          return parseInt(b.id) - parseInt(a.id);
-        }
+        const idA = parseId(a.id);
+        const idB = parseId(b.id);
         
-        return dateDiff;
+        // Higher ID values are typically newer transactions
+        return idB - idA;
       });
       
       // Process transactions to add profile pictures where needed
@@ -315,13 +332,25 @@ const TransactionsPage = () => {
   // Handle page change
   const handlePageChange = (event, newPage) => {
     setPage(newPage);
+    // Force update of displayed transactions immediately
+    const start = (newPage - 1) * pageSize;
+    const end = start + pageSize;
+    setTransactions(filteredTransactions.slice(start, end));
   };
 
   // Handle rows per page change
   const handleRowsPerPageChange = (event) => {
-    setPageSize(parseInt(event.target.value, 10));
+    const newPageSize = parseInt(event.target.value, 10);
+    setPageSize(newPageSize);
     setPage(1); // Reset to first page when changing page size
-    setTotalPages(Math.ceil(filteredTransactions.length / parseInt(event.target.value, 10)));
+    
+    // Update total pages based on new page size
+    setTotalPages(Math.ceil(filteredTransactions.length / newPageSize));
+    
+    // Immediately update displayed transactions
+    const start = 0; // Start at first page
+    const end = newPageSize;
+    setTransactions(filteredTransactions.slice(start, end));
   };
 
   // Apply filters from transaction section
@@ -399,6 +428,11 @@ const TransactionsPage = () => {
       setFilteredTransactions(processedTransactions);
       setTotalPages(Math.ceil(processedTransactions.length / pageSize));
       setPage(1); // Reset to first page when applying filters
+      
+      // Update the displayed transactions based on page size
+      const start = 0; // Start at first page
+      const end = pageSize;
+      setTransactions(processedTransactions.slice(start, end));
 
       // Update financial summary based on filtered transactions
       calculateFinancialSummary(processedTransactions);
@@ -416,6 +450,11 @@ const TransactionsPage = () => {
       setAllTransactions(processedTransactions);
       setTotalPages(Math.ceil(processedTransactions.length / pageSize));
       setPage(1); // Reset to first page when clearing filters
+      
+      // Update the displayed transactions based on page size
+      const start = 0; // Start at first page
+      const end = pageSize;
+      setTransactions(processedTransactions.slice(start, end));
       
       // Update financial summary based on all transactions
       calculateFinancialSummary(processedTransactions);
@@ -532,6 +571,34 @@ const TransactionsPage = () => {
     setFinancialSummary(summary);
   };
 
+  // Wrap the DialogManager to ensure consistent dialog rendering across pages
+  const handleDialogTransactionAdded = (isUpdate = false) => {
+    handleTransactionAdded(isUpdate);
+  };
+
+  // Include the DialogManager that's used in the dashboard for consistent TransactionForm handling
+  const renderDialogManager = () => (
+    <DialogManager
+      dialogStates={dialogStates}
+      updateDialogState={updateDialogState}
+      userProfile={user}
+      selectedTransaction={selectedTransaction}
+      selectedWallet={selectedWallet}
+      setSelectedTransaction={setSelectedTransaction}
+      setSelectedWallet={setSelectedWallet}
+      wallets={wallets}
+      handleTransactionAdded={handleDialogTransactionAdded}
+      handleAccountAdded={() => fetchData()} 
+      handleCategoryAdded={() => fetchData()} 
+      handleBalanceAdded={() => fetchData()} 
+      handleProfileUpdated={() => fetchData()} 
+      handleCategoryUpdated={() => fetchData()} 
+      handleDeleteConfirm={handleDeleteConfirm}
+      onWalletDeleted={() => fetchData()} 
+      fetchFinancialData={() => fetchData()} 
+    />
+  );
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -634,6 +701,7 @@ const TransactionsPage = () => {
                 onApplyFilters={applyFilters}
                 onResetFilters={resetFilters}
                 formatCurrency={formatCurrency}
+                isDashboard={false}
               />
               
               {/* Pagination controls at bottom */}
@@ -691,7 +759,10 @@ const TransactionsPage = () => {
         </Main>
       </AppTheme>
       
-      {/* Dialog Manager for Delete Confirmation */}
+      {/* Use DialogManager for consistency with dashboard, replacing direct TransactionForm */}
+      {renderDialogManager()}
+      
+      {/* Delete Transaction Confirmation Dialog - keep this separate as it's already established */}
       <Dialog
         open={dialogStates.deleteConfirmOpen}
         onClose={() => {
@@ -733,39 +804,6 @@ const TransactionsPage = () => {
           </Button>
         </DialogActions>
       </Dialog>
-      
-      {/* Transaction Form Dialog */}
-      <TransactionForm 
-        open={dialogStates.transactionForm} 
-        handleClose={() => updateDialogState('transactionForm', false)}
-        onTransactionAdded={handleTransactionAdded}
-      />
-      
-      {/* Edit Transaction Form Dialog */}
-      {selectedTransaction && (
-        <TransactionForm 
-          key={`edit-transaction-${selectedTransaction.id}`}
-          open={dialogStates.editTransactionOpen} 
-          handleClose={() => {
-            updateDialogState('editTransactionOpen', false);
-            setSelectedTransaction(null);
-          }}
-          initialData={selectedTransaction}
-          onTransactionAdded={handleTransactionAdded}
-        />
-      )}
-
-      {/* Category Management Dialog */}
-      <CategoryManageForm 
-        open={dialogStates.categoryManageForm}
-        handleClose={() => updateDialogState('categoryManageForm', false)}
-      />
-      
-      {/* Profile Dialog */}
-      <ProfileDialog 
-        open={dialogStates.profileDialog} 
-        onClose={() => updateDialogState('profileDialog', false)} 
-      />
     </Box>
   );
 };

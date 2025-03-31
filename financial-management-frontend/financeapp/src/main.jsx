@@ -8,7 +8,6 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import App from './App';
 import './styles/globals.css';
-import {GoogleOAuthProvider} from "@react-oauth/google";
 import { datePickersCustomizations } from './theme/customizations/datePickers';
 
 // Import i18n config
@@ -48,24 +47,22 @@ const theme = createTheme({
 });
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-    <GoogleOAuthProvider clientId="266978972332-k0oi6ke433g6ei92nsuu3nav44utlpvn.apps.googleusercontent.com">
-    <ThemeProvider theme={theme}>
-      <LocalizationProvider dateAdapter={AdapterDateFns}>
-        <CssBaseline />
-        <App />
-        <ToastContainer 
-          position="top-right" 
-          autoClose={2000} 
-          hideProgressBar={false} 
-          newestOnTop 
-          closeOnClick 
-          rtl={false} 
-          pauseOnFocusLoss 
-          draggable 
-          pauseOnHover 
-          theme="colored"
-        />
-      </LocalizationProvider>
-    </ThemeProvider>
-    </GoogleOAuthProvider>
+  <ThemeProvider theme={theme}>
+    <LocalizationProvider dateAdapter={AdapterDateFns}>
+      <CssBaseline />
+      <App />
+      <ToastContainer 
+        position="top-right" 
+        autoClose={2000} 
+        hideProgressBar={false} 
+        newestOnTop 
+        closeOnClick 
+        rtl={false} 
+        pauseOnFocusLoss 
+        draggable 
+        pauseOnHover 
+        theme="colored"
+      />
+    </LocalizationProvider>
+  </ThemeProvider>
 );

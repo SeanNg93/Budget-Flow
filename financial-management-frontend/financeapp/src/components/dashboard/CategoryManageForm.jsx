@@ -327,7 +327,8 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
             boxShadow: 'none',
             whiteSpace: 'nowrap',
             fontSize: '0.85rem',
-            px: 1.5
+            px: 1.5,
+            height: '38px'
           }}
         >
           {t('category.addCategory')}
@@ -340,13 +341,15 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
         onChange={handleTabChange}
         aria-label="category-type-tabs"
         className={styles.categoryTabs}
+        variant="fullWidth"
         sx={{ 
           minHeight: '40px',
           '& .MuiTab-root': {
             fontSize: '0.85rem',
             minHeight: '40px',
             textTransform: 'none',
-            fontWeight: 500
+            fontWeight: 500,
+            width: '50%'
           }
         }}
       >
@@ -413,10 +416,10 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
                       }}
                     >
                       {editMode && editCategoryId === category.id ? (
-                        <Box sx={{ width: '100%', mt: 1 }}>
-                          <Grid container spacing={1.5}>
+                        <Box sx={{ width: '100%', mt: 0.5 }}>
+                          <Grid container spacing={1}>
                             <Grid item xs={12}>
-                              <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 500, display: 'block' }}>
+                              <Typography variant="caption" sx={{ mb: 0.3, fontWeight: 500, display: 'block' }}>
                                 {t('categories.categoryName')}
                               </Typography>
                               <TextField
@@ -428,7 +431,7 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
                                 error={!editCategoryName.trim()}
                                 helperText={!editCategoryName.trim() ? t('category.errors.nameRequired') : ''}
                                 sx={{ 
-                                  mb: 1.5,
+                                  mb: 0.75,
                                   '& .MuiOutlinedInput-root': {
                                     fontSize: '0.9rem'
                                   }
@@ -439,7 +442,7 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
                             {tabValue === 'EXPENSE' && (
                               <>
                                 <Grid item xs={7}>
-                                  <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 500, display: 'block' }}>
+                                  <Typography variant="caption" sx={{ mb: 0.3, fontWeight: 500, display: 'block' }}>
                                     {t('categories.spendingLimit')}
                                   </Typography>
                                   <TextField
@@ -462,7 +465,7 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
                                 </Grid>
                                 
                                 <Grid item xs={5}>
-                                  <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 500, display: 'block' }}>
+                                  <Typography variant="caption" sx={{ mb: 0.3, fontWeight: 500, display: 'block' }}>
                                     {t('categories.warnAt')}
                                   </Typography>
                                   <TextField
@@ -480,9 +483,14 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
                                       sx: { fontSize: '0.9rem' }
                                     }}
                                   />
+                                  {editSpendingLimit && parseFloat(editSpendingLimit) > 0 && (
+                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.3 }}>
+                                      Warn at: ${(parseFloat(editSpendingLimit) * (editWarningPercentage / 100)).toFixed(2)}
+                                    </Typography>
+                                  )}
                                 </Grid>
                                 
-                                <Grid item xs={12} sx={{ mt: 0.5 }}>
+                                <Grid item xs={12} sx={{ mt: 0 }}>
                                   <Slider
                                     value={editWarningPercentage}
                                     onChange={(e, newValue) => setEditWarningPercentage(newValue)}
@@ -492,7 +500,8 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
                                     valueLabelDisplay="auto"
                                     valueLabelFormat={(value) => `${value}%`}
                                     sx={{ 
-                                      mt: 1,
+                                      mt: 0.5,
+                                      mb: 0,
                                       '& .MuiSlider-valueLabel': {
                                         fontSize: '0.75rem'
                                       }
@@ -501,9 +510,36 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
                                 </Grid>
                               </>
                             )}
+                            
+                            {tabValue === 'INCOME' && (
+                              <>
+                                <Grid item xs={12}>
+                                  <Typography variant="caption" sx={{ mb: 0.3, fontWeight: 500, display: 'block' }}>
+                                    {t('categories.incomeGoal')}
+                                  </Typography>
+                                  <TextField
+                                    fullWidth
+                                    value={editSpendingLimit}
+                                    onChange={(e) => {
+                                      const value = e.target.value;
+                                      if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                                        setEditSpendingLimit(value);
+                                      }
+                                    }}
+                                    placeholder={t('categories.incomeGoalPlaceholder')}
+                                    variant="outlined"
+                                    size="small"
+                                    InputProps={{
+                                      startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                                      sx: { fontSize: '0.9rem' }
+                                    }}
+                                  />
+                                </Grid>
+                              </>
+                            )}
                           </Grid>
                           
-                          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2, mb: 1 }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1, mb: 0.5 }}>
                             <Button 
                               startIcon={<CancelIcon />}
                               onClick={handleEditCancel}

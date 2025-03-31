@@ -314,12 +314,12 @@ const AppTheme = ({ children, themeComponents = {} }) => {
       },
       MuiModal: {
         defaultProps: {
-          disableScrollLock: false
+          disableScrollLock: true
         }
       },
       MuiDialog: {
         defaultProps: {
-          disableScrollLock: false
+          disableScrollLock: true
         }
       },
       MuiSelect: {

@@ -43,9 +43,7 @@ const RegisterSchema = Yup.object().shape({
     .required('Password is required'),
   confirmPassword: Yup.string()
     .oneOf([Yup.ref('password'), null], 'Passwords must match')
-    .required('Confirm password is required'),
-  terms: Yup.boolean()
-    .oneOf([true], 'You must accept the terms and conditions')
+    .required('Confirm password is required')
 });
 
 const Register = () => {
@@ -286,15 +284,14 @@ const Register = () => {
                 username: '',
                 email: '',
                 password: '',
-                confirmPassword: '',
-                terms: false
+                confirmPassword: ''
               }}
               validationSchema={RegisterSchema}
               onSubmit={handleSubmit}
             >
               {({ errors, touched, isSubmitting, handleSubmit: formikSubmit, handleChange }) => (
                 <Form>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 1.5 }}>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 1 }}>
                     <FormControl className={styles.formField}>
                       <FormLabel htmlFor="username" className={styles.formLabel}>Username</FormLabel>
                       <Field name="username">
@@ -486,36 +483,6 @@ const Register = () => {
                           />
                         )}
                       </Field>
-                    </FormControl>
-
-                    <FormControl className={styles.formField}>
-                      <Field name="terms">
-                        {({ field, meta }) => (
-                          <FormControlLabel
-                            control={
-                              <Checkbox
-                                {...field}
-                                size="small"
-                                color="primary"
-                              />
-                            }
-                            label={
-                              <Typography variant="body2" sx={{ fontSize: '0.85rem' }}>
-                                I agree to the{' '}
-                                <Link component={RouterLink} to="/terms" className={styles.authLink}>
-                                  Terms and Conditions
-                                </Link>
-                              </Typography>
-                            }
-                            className={styles.checkboxLabel}
-                          />
-                        )}
-                      </Field>
-                      {errors.terms && touched.terms && (
-                        <Typography color="error" variant="caption" sx={{ mt: 0.5 }}>
-                          {errors.terms}
-                        </Typography>
-                      )}
                     </FormControl>
 
                     <Button

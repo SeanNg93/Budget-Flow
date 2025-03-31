@@ -484,6 +484,39 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
     }
   }, [externalWallets, fetchWallets, fetchSharedWalletsInfo]);
 
+  // Listen for wallet balance updates
+  useEffect(() => {
+    // Define the handler for the custom event
+    const handleWalletUpdate = (event) => {
+      const { walletId, newBalance } = event.detail;
+      
+      if (walletId && typeof newBalance === 'number') {
+        // Update the wallet balance in our local state
+        setWallets(currentWallets => {
+          return currentWallets.map(wallet => {
+            if (wallet.id.toString() === walletId.toString()) {
+              return {
+                ...wallet,
+                balance: newBalance,
+                // Add a flag to force the card to re-render
+                _forceIconRefresh: Date.now()
+              };
+            }
+            return wallet;
+          });
+        });
+      }
+    };
+    
+    // Add the event listener
+    window.addEventListener('wallet-balance-updated', handleWalletUpdate);
+    
+    // Remove the event listener on cleanup
+    return () => {
+      window.removeEventListener('wallet-balance-updated', handleWalletUpdate);
+    };
+  }, []);
+
   // Reset animation after it completes
   useEffect(() => {
     if (slideDirection) {

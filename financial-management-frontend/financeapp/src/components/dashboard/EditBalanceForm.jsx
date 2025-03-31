@@ -15,18 +15,22 @@ import {
 import MoneyInput from '../utils/MoneyInput';
 import FinanceService from '../../services/FinanceService';
 import { formatCurrency } from '../../utils/moneyFormatter';
+import { useTranslation } from 'react-i18next';
 
 // Create a SlideTransition component with forwardRef
 const SlideTransition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-const EditBalanceForm = ({ open, handleClose, onBalanceUpdated, currentBalance }) => {
+const EditBalanceForm = ({ open, handleClose, onBalanceUpdated, currentBalance, walletId }) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [amount, setAmount] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [totalWalletBalance, setTotalWalletBalance] = useState(0);
+  const [hasEditPermission, setHasEditPermission] = useState(true);
+  const [sharedWalletsInfo, setSharedWalletsInfo] = useState({});
 
   // Add refs for transition components
   const dialogRef = useRef(null);
@@ -37,12 +41,59 @@ const EditBalanceForm = ({ open, handleClose, onBalanceUpdated, currentBalance }
   useEffect(() => {
     if (open) {
       fetchWalletsTotalBalance();
+      fetchSharedWalletsInfo();
       // Initialize with current balance immediately
       if (currentBalance) {
         setAmount(currentBalance.toString());
       }
     }
   }, [open, currentBalance]);
+
+  const fetchSharedWalletsInfo = async () => {
+    try {
+      // If we have a wallet ID, check if it's shared and if the current user has edit permission
+      if (walletId) {
+        const [sharedWithMeResponse, sharedByMeResponse] = await Promise.all([
+          FinanceService.getSharedWalletsWithMe(),
+          FinanceService.getSharedWalletsByMe()
+        ]);
+        
+        // Process shared wallets data
+        const sharedInfo = {};
+        
+        // Helper function to process shared wallets
+        const processSharedWallets = (wallets, isOwner) => {
+          wallets.forEach(sharedWallet => {
+            if (sharedWallet.accepted) {
+              sharedInfo[sharedWallet.walletId] = {
+                isShared: true,
+                isOwner,
+                ownerUsername: sharedWallet.ownerUsername,
+                ownerId: sharedWallet.ownerId,
+                sharedWithId: sharedWallet.sharedWithId,
+                sharedWithUsername: sharedWallet.sharedWithUsername,
+                walletName: sharedWallet.walletName
+              };
+            }
+          });
+        };
+        
+        processSharedWallets(sharedWithMeResponse.data || [], false);
+        processSharedWallets(sharedByMeResponse.data || [], true);
+        
+        setSharedWalletsInfo(sharedInfo);
+        
+        // Check if the wallet is shared and the current user is not the owner
+        const isSharedWallet = sharedInfo[walletId];
+        const isNotOwner = isSharedWallet && !sharedInfo[walletId].isOwner;
+        
+        // Set edit permission based on ownership
+        setHasEditPermission(!isNotOwner);
+      }
+    } catch (err) {
+      console.error('Error fetching shared wallet info:', err);
+    }
+  };
 
   const fetchWalletsTotalBalance = async () => {
     setLoading(true);
@@ -65,6 +116,11 @@ const EditBalanceForm = ({ open, handleClose, onBalanceUpdated, currentBalance }
   };
 
   const validateForm = () => {
+    if (!hasEditPermission) {
+      setError(t('wallets.cannotEditSharedBalance'));
+      return false;
+    }
+
     if (!amount || isNaN(amount) || parseFloat(amount) < 0) {
       setError('Please enter a valid amount (0 or greater)');
       return false;
@@ -150,6 +206,12 @@ const EditBalanceForm = ({ open, handleClose, onBalanceUpdated, currentBalance }
             </Fade>
           )}
           
+          {!hasEditPermission && (
+            <Alert severity="info" sx={{ mb: 2 }}>
+              {t('wallets.cannotEditSharedBalance')}
+            </Alert>
+          )}
+          
           <Box sx={{ mb: 2 }}>
             <Fade in={open} timeout={400} nodeRef={alertInfoRef}>
               <Alert severity="info" ref={alertInfoRef}>
@@ -164,7 +226,7 @@ const EditBalanceForm = ({ open, handleClose, onBalanceUpdated, currentBalance }
             label="New Balance"
             value={amount}
             onChange={handleChange}
-            disabled={loading}
+            disabled={loading || !hasEditPermission}
             inputProps={{ 
               min: totalWalletBalance
             }}
@@ -182,7 +244,7 @@ const EditBalanceForm = ({ open, handleClose, onBalanceUpdated, currentBalance }
             type="submit" 
             variant="contained" 
             color="primary"
-            disabled={Boolean(loading || (amount && parseFloat(amount) < totalWalletBalance))}
+            disabled={Boolean(loading || !hasEditPermission || (amount && parseFloat(amount) < totalWalletBalance))}
           >
             {loading ? <CircularProgress size={24} /> : 'Update Balance'}
           </Button>

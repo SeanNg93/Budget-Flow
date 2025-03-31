@@ -198,6 +198,69 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
     }
   }, [formData.transactionType, formData.amount, categories, initialData]);
 
+  // Helper function to fetch income goal progress data - memoize with useCallback
+  const fetchIncomeGoalProgress = useCallback(async (catId) => {
+    if (!catId || catId === '' || formData.transactionType !== 'INCOME') {
+      setCategorySpendingData(null);
+      return;
+    }
+    
+    try {
+      const catIdNumber = parseInt(catId, 10);
+      
+      // First check if this category has a goal (spending limit for income)
+      const category = categories.find(c => c.id.toString() === catId.toString());
+      
+      // Skip API call if category doesn't exist or doesn't have a goal
+      if (!category || !category.spendingLimit) {
+        setCategorySpendingData(null);
+        return;
+      }
+      
+      // For income categories, we'll also use the spending progress API but interpret it differently
+      const response = await FinanceService.getCategorySpendingProgress(catIdNumber);
+      
+      // Handle case when editing an existing transaction
+      if (initialData && initialData.category && initialData.category.id.toString() === catId.toString() && initialData.transactionType === 'INCOME') {
+        // Subtract the original transaction amount from the total collected for goal calculation purposes
+        const originalAmount = parseFloat(initialData.amount) || 0;
+        const adjustedTotalCollected = Math.max(0, response.data.totalSpent - originalAmount);
+        
+        // Create adjusted response data
+        const adjustedData = {
+          ...response.data,
+          totalSpent: adjustedTotalCollected,
+          // Store the original total spent for display purposes
+          originalTotalSpent: response.data.totalSpent,
+          percentage: (adjustedTotalCollected / response.data.limit) * 100
+        };
+        
+        setCategorySpendingData(adjustedData);
+      } else {
+        // Normal case
+        setCategorySpendingData(response.data);
+      }
+    } catch (err) {
+      console.error('Error fetching income goal progress data:', err);
+      setCategorySpendingData(null);
+    }
+  }, [formData.transactionType, formData.amount, categories, initialData]);
+
+  // Update useEffect to call appropriate function based on transaction type
+  useEffect(() => {
+    // Call our helper function to fetch category data based on transaction type
+    if (formData.categoryId) {
+      if (formData.transactionType === 'EXPENSE') {
+        fetchCategorySpendingData(formData.categoryId);
+      } else if (formData.transactionType === 'INCOME') {
+        fetchIncomeGoalProgress(formData.categoryId);
+      }
+    } else {
+      setCategorySpendingData(null);
+      setCategoryExcessAmount(0);
+    }
+  }, [formData.categoryId, formData.transactionType, formData.amount, fetchCategorySpendingData, fetchIncomeGoalProgress]);
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -612,6 +675,8 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
         
         // Get the transaction ID, handling different possible formats
         let transactionId;
+        let originalIdFormat = initialData.id; // Store the original format
+        
         if (typeof initialData.id === 'number') {
           transactionId = initialData.id;
         } else if (typeof initialData.id === 'string' && initialData.id.includes(':')) {
@@ -626,7 +691,35 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
           throw new Error('Invalid transaction ID');
         }
         
+        // Store original transaction date string format if available
+        const originalDateFormat = initialData.transactionDate;
+        
         response = await FinanceService.updateTransaction(transactionId, transactionData);
+        
+        // For shared wallets, we need to preserve the original transaction ID format
+        // in the response to ensure proper sorting
+        if (response && response.data) {
+          // Preserve the original ID format if needed
+          if (response.data.id && typeof originalIdFormat === 'string' && originalIdFormat.includes(':')) {
+            // If the original was in format "123:string", ensure response keeps this format
+            // This is critical for sorting consistency with shared wallet transactions
+            response.data.id = originalIdFormat;
+          }
+          
+          // Ensure we preserve the exact original date format if possible
+          // This helps maintain consistent date sorting
+          if (response.data.transactionDate && originalDateFormat) {
+            // Keep the date part but update the time if needed
+            const newDate = new Date(response.data.transactionDate);
+            const oldDate = new Date(originalDateFormat);
+            
+            // If dates are the same day, preserve the original exact timestamp
+            if (newDate.toDateString() === oldDate.toDateString()) {
+              response.data.transactionDate = originalDateFormat;
+            }
+          }
+        }
+        
         isUpdate = true;
       } else {
         // Create new transaction
@@ -1103,8 +1196,38 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
                       `(${t('transactions.exceedingLimitBy')} ${formatCurrency(categoryExcessAmount)})` : 
                       initialData ?
                         `(${t('transactions.limit')}: ${formatCurrency(categorySpendingData.limit)}, ${t('transactions.current')}: ${formatCurrency(categorySpendingData.originalTotalSpent ? categorySpendingData.originalTotalSpent : categorySpendingData.totalSpent)})` :
-                        `(${t('transactions.limit')}: ${formatCurrency(categorySpendingData.limit)}, ${t('transactions.left')}: ${formatCurrency(Math.max(0, categorySpendingData.limit - categorySpendingData.totalSpent))})`
+                        `(${t('transactions.limit')}: ${formatCurrency(categorySpendingData.limit)}, ${t('transactions.left')}: ${formatCurrency(Math.max(0, categorySpendingData.limit - categorySpendingData.totalSpent))}, ${Math.round((1 - categorySpendingData.totalSpent / categorySpendingData.limit) * 100)}%)`
                     }
+                  </Typography>
+                )}
+                
+                {formData.transactionType === 'INCOME' && formData.categoryId && selectedCategory && selectedCategory.spendingLimit > 0 && (
+                  <Typography 
+                    component="span" 
+                    variant="caption" 
+                    className={`${styles.categoryInfoText} ${
+                      categorySpendingData && categorySpendingData.totalSpent > 0 ? 
+                        categorySpendingData.percentage >= 85 ? 
+                          styles.categoryHighAchievementText : 
+                          styles.categoryIncomeText 
+                        : ''
+                    }`}
+                  >
+                    {(() => {
+                      const goalAmount = parseFloat(selectedCategory.spendingLimit);
+                      
+                      if (categorySpendingData) {
+                        const collectedAmount = categorySpendingData.originalTotalSpent ? 
+                          categorySpendingData.originalTotalSpent : 
+                          categorySpendingData.totalSpent;
+                        
+                        const percentAchieved = Math.min(100, Math.round((collectedAmount / goalAmount) * 100)) || 0;
+                        
+                        return `(${t('categories.goal')}: ${formatCurrency(goalAmount)}, ${t('categories.collected')}: ${formatCurrency(collectedAmount)}, ${percentAchieved}%)`;
+                      }
+                      
+                      return `(${t('categories.goal')}: ${formatCurrency(goalAmount)})`;
+                    })()}
                   </Typography>
                 )}
               </Typography>
@@ -1596,9 +1719,10 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
   return (
     <Dialog 
       open={open} 
-      onClose={handleDialogClose} 
-      maxWidth="sm" 
-      fullWidth={!embedded}
+      onClose={handleDialogClose}
+      fullWidth
+      maxWidth="sm"
+      disableScrollLock={true}
       PaperProps={{
         className: styles.dialogPaper
       }}
