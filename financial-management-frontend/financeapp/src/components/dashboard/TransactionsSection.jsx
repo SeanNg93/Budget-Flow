@@ -1096,6 +1096,28 @@ const TransactionsSection = ({
   ], [t]);
 
   // Render transactions table
+  // Sort transactions by date in descending order (most recent first)
+  // We'll only sort the displayTransactions array if it's not already sorted
+  const sortedTransactions = useMemo(() => {
+    // Create a copy of the display transactions for sorting
+    return [...displayTransactions].sort((a, b) => {
+      // First sort by date in descending order
+      const dateA = new Date(a.transactionDate);
+      const dateB = new Date(b.transactionDate);
+      const dateDiff = dateB - dateA; // Descending order
+      
+      // If dates are equal (same day), preserve the original order
+      // This helps prevent edited transactions from moving to the bottom
+      if (dateDiff === 0) {
+        // Use the transaction ID to maintain stable sorting
+        // Ensure we're using numeric comparison
+        return parseInt(b.id) - parseInt(a.id);
+      }
+      
+      return dateDiff;
+    });
+  }, [displayTransactions]);
+
   const renderTransactionsTable = () => {
     if (filterState.isLoading) {
       return (
@@ -1122,13 +1144,6 @@ const TransactionsSection = ({
         </Box>
       );
     }
-    
-    // Sort transactions by date in descending order (most recent first)
-    const sortedTransactions = [...displayTransactions].sort((a, b) => {
-      const dateA = new Date(a.transactionDate);
-      const dateB = new Date(b.transactionDate);
-      return dateB - dateA; // Descending order
-    });
     
     return (
       <TableContainer 
