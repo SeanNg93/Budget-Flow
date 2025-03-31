@@ -100,10 +100,20 @@ const DialogManager = ({
     [updateDialogState]
   );
 
-  const handleTransferCompleted = useCallback(() => {
+  const handleTransferCompleted = useCallback((refreshFlag, walletData) => {
     closeDialog('userTransferDialog');
+    // Ensure we do a complete refresh of financial data
     fetchFinancialData();
-  }, [closeDialog, fetchFinancialData]);
+    
+    // Show success toast to indicate the transfer was completed
+    try {
+      const { toast } = require('react-toastify');
+      toast.success(t('transactions.transferSuccess', { recipient: '✓' }));
+    } catch (error) {
+      // If toast is not available, just continue silently
+      console.log('Transfer completed successfully');
+    }
+  }, [closeDialog, fetchFinancialData, t]);
 
   const handleShareWalletClose = useCallback(() => {
     closeDialog('shareWalletDialog');

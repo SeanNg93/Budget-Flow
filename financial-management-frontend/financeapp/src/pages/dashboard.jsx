@@ -737,6 +737,48 @@ export default function Dashboard() {
     }
   };
 
+  // Listen for wallet balance updates
+  useEffect(() => {
+    // Define the handler for the custom event
+    const handleWalletUpdate = (event) => {
+      const { walletId, newBalance } = event.detail;
+      
+      if (walletId && typeof newBalance === 'number') {
+        // Update the wallet in our local state
+        setWallets(currentWallets => {
+          return currentWallets.map(wallet => {
+            if (wallet.id.toString() === walletId.toString()) {
+              return {
+                ...wallet,
+                balance: newBalance
+              };
+            }
+            return wallet;
+          });
+        });
+        
+        // Update the financial summary to reflect the new balance
+        updateFinancialSummary();
+      }
+    };
+    
+    // Add the event listener
+    window.addEventListener('wallet-balance-updated', handleWalletUpdate);
+    
+    // Remove the event listener on cleanup
+    return () => {
+      window.removeEventListener('wallet-balance-updated', handleWalletUpdate);
+    };
+  }, []);
+
+  // Component cleanup
+  useEffect(() => {
+    // No cleanup needed for now
+    return () => {
+      // Removed references to undefined variables
+    };
+  }, []);
+
   // Loading state
   if (loading) {
     return (

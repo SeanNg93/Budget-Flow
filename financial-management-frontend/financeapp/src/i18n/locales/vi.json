@@ -368,7 +368,8 @@
     "selectWallet": "Chọn ví",
     "manageCategories": "Quản lý danh mục",
     "manageWallets": "Quản lý ví",
-    "descriptionPlaceholder": "Giao dịch này dùng để làm gì?"
+    "descriptionPlaceholder": "Giao dịch này dùng để làm gì?",
+    "availableBalance": "Số dư khả dụng"
   },
   "categories": {
     "title": "Danh mục",
@@ -390,6 +391,8 @@
     "warning": "Cảnh báo",
     "limit": "Hạn mức",
     "goal": "Mục tiêu",
+    "collected": "Đã thu",
+    "progress": "Tiến độ",
     "noCategories": "Không tìm thấy danh mục nào. Hãy tạo một danh mục để bắt đầu.",
     "noSearchMatch": "Không có danh mục nào khớp với tìm kiếm của bạn.",
     "noSpendingLimit": "Chưa thiết lập hạn mức chi tiêu",

@@ -364,7 +364,8 @@
     "selectWallet": "Select a wallet",
     "manageCategories": "Manage Categories",
     "manageWallets": "Manage Wallets",
-    "descriptionPlaceholder": "What's this transaction for?"
+    "descriptionPlaceholder": "What's this transaction for?",
+    "availableBalance": "Available Balance"
   },
   "categories": {
     "title": "Categories",
@@ -386,6 +387,8 @@
     "warning": "Warning",
     "limit": "Limit",
     "goal": "Goal",
+    "collected": "Collected",
+    "progress": "Progress",
     "noCategories": "No categories found. Create a category to get started.",
     "noSearchMatch": "No categories match your search.",
     "noSpendingLimit": "No spending limit set",
