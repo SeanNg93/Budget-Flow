@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
@@ -7,6 +7,7 @@ import Container from '@mui/material/Container';
 import Grid from '@mui/material/Grid';
 import CircularProgress from '@mui/material/CircularProgress';
 import { toast } from 'react-toastify';
+import { useTranslation } from 'react-i18next';
 
 // Import dashboard components
 import SideMenu from '../components/dashboard/SideMenu';
@@ -92,6 +93,7 @@ const themeComponents = {
 export default function Dashboard() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t, i18n } = useTranslation();
   const [open, setOpen] = useState(true);
   const [user, setUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
@@ -137,6 +139,14 @@ export default function Dashboard() {
 
   const [timeRange, setTimeRange] = useState('all'); // Default to 'all' time
   const [timeRangeLoading, setTimeRangeLoading] = useState(false);
+
+  // Timeout reference for debounced operations
+  const timeout = useRef(null);
+
+  // Reference to DialogManager methods
+  const dialogManagerRef = useRef({
+    openEditBalanceForm: null
+  });
 
   // Helper to update dialog states
   const updateDialogState = (dialogName, isOpen) => {
@@ -779,6 +789,27 @@ export default function Dashboard() {
     };
   }, []);
 
+  // Set up the theme components with scroll lock mitigation
+  const themeComponents = useMemo(() => ({
+    MuiDialog: {
+      defaultProps: {
+        disableScrollLock: true
+      }
+    },
+    MuiModal: {
+      defaultProps: {
+        disableScrollLock: true
+      }
+    }
+  }), []);
+
+  // Store references to DialogManager methods
+  const setDialogManagerMethods = useCallback((methods) => {
+    if (methods && methods.openEditBalanceForm) {
+      dialogManagerRef.current.openEditBalanceForm = methods.openEditBalanceForm;
+    }
+  }, []);
+
   // Loading state
   if (loading) {
     return (
@@ -827,7 +858,13 @@ export default function Dashboard() {
               <SummaryCards
                 financialData={financialData}
                 loading={loading || timeRangeLoading}
-                handleEditBalance={() => updateDialogState('editBalanceForm', true)}
+                handleEditBalance={(walletId) => {
+                  if (dialogManagerRef.current.openEditBalanceForm) {
+                    dialogManagerRef.current.openEditBalanceForm(walletId);
+                  } else {
+                    updateDialogState('editBalanceForm', true);
+                  }
+                }}
                 handleManageWallets={() => updateDialogState('walletManageForm', true)}
                 handleAddBalance={() => updateDialogState('addBalanceForm', true)}
                 timeRange={timeRange}
@@ -898,6 +935,7 @@ export default function Dashboard() {
         setSelectedWallet={setSelectedWallet}
         fetchFinancialData={fetchFinancialData} // Pass fetchFinancialData if needed by DialogManager
         onWalletDeleted={handleWalletDeleted} // Pass the handler down
+        ref={setDialogManagerMethods} // Pass a callback to get references to methods
       />
     </AppTheme>
   );

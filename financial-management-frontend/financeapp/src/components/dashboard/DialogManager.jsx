@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useImperativeHandle, forwardRef } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -47,25 +47,27 @@ DialogComponent.displayName = 'DialogComponent';
  * DialogManager centralizes the management of all dialogs and modals
  * This helps reduce complexity in the main Dashboard component
  */
-const DialogManager = ({
-  dialogStates,
-  updateDialogState,
-  userProfile,
-  selectedTransaction,
-  selectedWallet,
-  wallets,
-  handleTransactionAdded,
-  handleAccountAdded, // Used for wallet updates/additions
-  handleCategoryAdded,
-  handleBalanceAdded,
-  handleProfileUpdated,
-  handleCategoryUpdated,
-  handleDeleteConfirm, // This is for transaction deletion
-  setSelectedTransaction,
-  setSelectedWallet,
-  fetchFinancialData,
-  onWalletDeleted // Added prop for wallet deletion callback
-}) => {
+const DialogManager = forwardRef((props, ref) => {
+  const {
+    dialogStates,
+    updateDialogState,
+    userProfile,
+    selectedTransaction,
+    selectedWallet,
+    wallets,
+    handleTransactionAdded,
+    handleAccountAdded, // Used for wallet updates/additions
+    handleCategoryAdded,
+    handleBalanceAdded,
+    handleProfileUpdated,
+    handleCategoryUpdated,
+    handleDeleteConfirm, // This is for transaction deletion
+    setSelectedTransaction,
+    setSelectedWallet,
+    fetchFinancialData,
+    onWalletDeleted // Added prop for wallet deletion callback
+  } = props;
+  
   const { t } = useTranslation();
 
   // Helper function to close dialogs - memoized to prevent unnecessary re-renders
@@ -99,6 +101,16 @@ const DialogManager = ({
     updateDialogState('userTransferDialog', true),
     [updateDialogState]
   );
+
+  const openEditBalanceForm = useCallback((walletId) => {
+    setSelectedWallet(walletId);
+    updateDialogState('editBalanceForm', true);
+  }, [updateDialogState, setSelectedWallet]);
+
+  // Expose methods to parent component
+  useImperativeHandle(ref, () => ({
+    openEditBalanceForm
+  }), [openEditBalanceForm]);
 
   const handleTransferCompleted = useCallback((refreshFlag, walletData) => {
     closeDialog('userTransferDialog');
@@ -190,7 +202,8 @@ const DialogManager = ({
       name: 'editBalanceForm',
       component: EditBalanceForm,
       props: {
-        onBalanceEdited: handleBalanceAdded // Assuming same handler works
+        onBalanceEdited: handleBalanceAdded, // Assuming same handler works
+        walletId: selectedWallet // Pass the selected wallet ID
       }
     },
     {
@@ -326,6 +339,6 @@ const DialogManager = ({
       </Dialog>
     </>
   );
-};
+});
 
 export default React.memo(DialogManager);

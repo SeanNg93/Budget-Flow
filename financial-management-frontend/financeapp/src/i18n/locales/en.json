@@ -238,7 +238,16 @@
     "walletNotFound": "Wallet not found",
     "errorDeletingWallet": "Failed to delete wallet. Please try again.",
     "createSuccess": "Wallet created successfully!",
-    "updateSuccess": "Wallet updated successfully!"
+    "updateSuccess": "Wallet updated successfully!",
+    "yourWallets": "Your Wallets",
+    "walletBalance": "Wallet Balance",
+    "noWallets": "No wallets found",
+    "addWallet": "Add Wallet",
+    "transferAmount": "Transfer Amount",
+    "transferSuccess": "Transfer completed successfully",
+    "insufficientFunds": "Insufficient funds in {{wallet}} (Available: {{balance}})",
+    "errorTransferringFunds": "Error transferring funds",
+    "cannotEditSharedBalance": "You can only edit the name of this shared wallet. Only the wallet owner can modify the balance."
   },
   "transactions": {
     "addTransaction": "Add Transaction",

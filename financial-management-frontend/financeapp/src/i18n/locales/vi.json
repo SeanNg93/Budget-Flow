@@ -242,7 +242,21 @@
     "transferSameSourceDestination": "Ví nguồn và ví đích phải khác nhau",
     "amount": "Số tiền",
     "createSuccess": "Đã tạo ví thành công!",
-    "updateSuccess": "Đã cập nhật ví thành công!"
+    "updateSuccess": "Đã cập nhật ví thành công!",
+    "yourWallets": "Ví của bạn",
+    "walletBalance": "Số dư ví",
+    "noWallets": "Không tìm thấy ví nào",
+    "addWallet": "Thêm ví",
+    "editWallet": "Chỉnh sửa ví",
+    "deleteWallet": "Xóa ví",
+    "transferMoney": "Chuyển tiền",
+    "from": "Từ",
+    "to": "Đến",
+    "transferAmount": "Số tiền chuyển",
+    "transferSuccess": "Chuyển tiền thành công",
+    "insufficientFunds": "Không đủ tiền trong {{wallet}} (Có sẵn: {{balance}})",
+    "errorTransferringFunds": "Lỗi khi chuyển tiền",
+    "cannotEditSharedBalance": "Bạn chỉ có thể chỉnh sửa tên của ví được chia sẻ này. Chỉ chủ sở hữu ví mới có thể thay đổi số dư."
   },
   "transactions": {
     "addTransaction": "Thêm giao dịch",

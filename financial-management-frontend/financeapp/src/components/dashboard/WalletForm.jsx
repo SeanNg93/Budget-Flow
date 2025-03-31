@@ -34,6 +34,7 @@ import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import ShowChartIcon from '@mui/icons-material/ShowChart';
 import SavingsOutlinedIcon from '@mui/icons-material/SavingsOutlined';
+import LockIcon from '@mui/icons-material/Lock';
 import { formatCurrency } from '../../utils/formatters';
 import { useTranslation } from 'react-i18next';
 
@@ -72,6 +73,9 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
   const [originalBalance, setOriginalBalance] = useState(0);
   const [isEditMode, setIsEditMode] = useState(false);
   const [success, setSuccess] = useState('');
+  // Add state for shared wallet permissions
+  const [canEditBalance, setCanEditBalance] = useState(true);
+  const [sharedWalletInfo, setSharedWalletInfo] = useState(null);
 
   // Add refs for transitions
   const dialogRef = useRef(null);
@@ -98,9 +102,15 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
         iconName: savedIcon || 'wallet',
         colorIndex: isNaN(colorIndex) ? 1 : colorIndex
       });
+
+      // Check if this is a shared wallet and get permission info
+      if (wallet.id) {
+        checkWalletPermissions(wallet.id);
+      }
     } else {
       setIsEditMode(false);
       resetForm();
+      setCanEditBalance(true); // Reset permissions for new wallets
     }
   }, [wallet]);
 
@@ -109,6 +119,54 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
       fetchBalanceData();
     }
   }, [open]);
+
+  // Add function to check wallet sharing permissions
+  const checkWalletPermissions = async (walletId) => {
+    try {
+      // Fetch shared wallets data in parallel
+      const [sharedWithMeResponse, sharedByMeResponse] = await Promise.all([
+        FinanceService.getSharedWalletsWithMe(),
+        FinanceService.getSharedWalletsByMe()
+      ]);
+
+      // Process shared wallets data
+      let isSharedWallet = false;
+      let isOwner = true;
+      let sharedInfo = null;
+
+      // Helper function to process shared wallets
+      const processSharedWallets = (wallets, isWalletOwner) => {
+        wallets.forEach(sharedWallet => {
+          if (sharedWallet.accepted && sharedWallet.walletId === walletId) {
+            isSharedWallet = true;
+            isOwner = isWalletOwner;
+            sharedInfo = {
+              isShared: true,
+              isOwner: isWalletOwner,
+              ownerUsername: sharedWallet.ownerUsername,
+              ownerId: sharedWallet.ownerId,
+              sharedWithId: sharedWallet.sharedWithId,
+              sharedWithUsername: sharedWallet.sharedWithUsername,
+              walletName: sharedWallet.walletName
+            };
+          }
+        });
+      };
+
+      processSharedWallets(sharedWithMeResponse.data || [], false);
+      processSharedWallets(sharedByMeResponse.data || [], true);
+
+      // Set permission based on ownership - only owners can edit balance
+      setCanEditBalance(!isSharedWallet || isOwner);
+      setSharedWalletInfo(sharedInfo);
+      
+      console.log(`Wallet ${walletId} is ${isSharedWallet ? 'shared' : 'not shared'}, user is ${isOwner ? '' : 'not '}the owner`);
+    } catch (err) {
+      console.error('Error checking wallet permissions:', err);
+      // Default to allowing edits if we can't check permissions
+      setCanEditBalance(true);
+    }
+  };
 
   const fetchBalanceData = async () => {
     setLoading(true);
@@ -225,9 +283,24 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
     try {
       const walletData = {
         accountName: formData.accountName,
-        balance: parseFloat(formData.balance),
+        // Only update balance if user has permission to edit it
+        balance: isEditMode && wallet && !canEditBalance 
+          ? wallet.balance  // Keep original balance if user can't edit
+          : parseFloat(formData.balance),
         currency: formData.currency
       };
+
+      // Log permission state
+      if (isEditMode && wallet) {
+        console.log(`Saving wallet ${wallet.id} with canEditBalance: ${canEditBalance}`);
+        console.log('Updating wallet with data:', {
+          id: wallet.id,
+          name: walletData.accountName,
+          oldBalance: wallet ? wallet.balance : 0,
+          newBalance: walletData.balance,
+          balanceChanged: canEditBalance && wallet && walletData.balance !== wallet.balance
+        });
+      }
 
       let response;
       if (isEditMode && wallet) {
@@ -414,11 +487,28 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
                   onChange={handleMoneyChange}
                   placeholder="0.00"
                   error={errors.balance}
-                  disabled={loading || availableBalance <= 0}
+                  disabled={loading || availableBalance <= 0 || (isEditMode && !canEditBalance)}
                   size="small"
                   className={styles.textField}
                   label=""
+                  InputProps={{
+                    sx: (isEditMode && !canEditBalance) ? {
+                      backgroundColor: 'rgba(0,0,0,0.03)',
+                      color: 'text.secondary'
+                    } : {}
+                  }}
                 />
+                {isEditMode && !canEditBalance && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
+                    <LockIcon fontSize="small" sx={{ fontSize: '0.9rem', mr: 0.5, color: 'warning.main' }} />
+                    <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic', fontSize: '0.75rem' }}>
+                      {t('wallets.cannotEditSharedBalance')}
+                    </Typography>
+                  </Box>
+                )}
+                {!errors.balance && !isEditMode && (
+                  <FormHelperText sx={{ mt: 0 }}>{t('wallets.maxAmount', { amount: formatCurrency(availableBalance, i18n.language) })}</FormHelperText>
+                )}
               </FormControl>
             </Grid>
             
@@ -498,12 +588,26 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
                   onChange={handleMoneyChange}
                   placeholder="0.00"
                   error={errors.balance}
-                  disabled={loading || availableBalance <= 0}
+                  disabled={loading || availableBalance <= 0 || (isEditMode && !canEditBalance)}
                   size="small"
                   className={styles.textField}
                   label=""
+                  InputProps={{
+                    sx: (isEditMode && !canEditBalance) ? {
+                      backgroundColor: 'rgba(0,0,0,0.03)',
+                      color: 'text.secondary'
+                    } : {}
+                  }}
                 />
-                {!errors.balance && (
+                {isEditMode && !canEditBalance && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
+                    <LockIcon fontSize="small" sx={{ fontSize: '0.9rem', mr: 0.5, color: 'warning.main' }} />
+                    <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic', fontSize: '0.75rem' }}>
+                      {t('wallets.cannotEditSharedBalance')}
+                    </Typography>
+                  </Box>
+                )}
+                {!errors.balance && !isEditMode && (
                   <FormHelperText sx={{ mt: 0 }}>{t('wallets.maxAmount', { amount: formatCurrency(availableBalance, i18n.language) })}</FormHelperText>
                 )}
               </FormControl>

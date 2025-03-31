@@ -60,6 +60,7 @@ import { WALLET_ICONS, WALLET_COLORS, getWalletIcon, saveWalletIcon, getWalletCo
 import { formatCurrency } from '../../utils/moneyFormatter';
 import MoneyInput from '../utils/MoneyInput';
 import { useTranslation } from 'react-i18next'; // Import useTranslation hook
+import LockIcon from '@mui/icons-material/Lock';
 
 // Map of icon names to components
 const iconComponents = {
@@ -140,6 +141,9 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
   const errorAlertRef = useRef(null);
   const transferErrorRef = useRef(null);
   const dialogRef = useRef(null);
+
+  // Add canEditBalance state
+  const [canEditBalance, setCanEditBalance] = useState(true);
 
   useEffect(() => {
     if (open) {
@@ -272,6 +276,18 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
     const colorClass = getWalletColorClass(wallet.id);
     const colorIndex = parseInt(colorClass.replace('walletColor', ''), 10);
     setEditWalletColor(isNaN(colorIndex) ? 1 : colorIndex);
+    
+    // Check if the wallet is shared and determine ownership status
+    const isSharedWallet = sharedWalletsInfo && sharedWalletsInfo[wallet.id];
+    let isNotOwner = false;
+    
+    if (isSharedWallet) {
+      isNotOwner = !sharedWalletsInfo[wallet.id].isOwner;
+      console.log(`Wallet ${wallet.id} is shared. User is ${isNotOwner ? 'not ' : ''}the owner`);
+    }
+    
+    // Set a flag to disable balance editing for non-owners of shared wallets
+    setCanEditBalance(!isNotOwner);
 
     // Calculate available balance excluding this wallet
     calculateAvailableBalance(totalBalance, wallets, wallet.id);
@@ -336,7 +352,10 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
       return;
     }
 
-    if (!validateBalanceEdit(editWalletBalance)) {
+    // Log permission state
+    console.log(`Saving wallet ${editWalletId} with canEditBalance: ${canEditBalance}`);
+
+    if (canEditBalance && !validateBalanceEdit(editWalletBalance)) {
       return;
     }
 
@@ -351,12 +370,22 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
         throw new Error(t('wallets.walletNotFound'));
       }
 
-      // Create updated wallet data
+      // Create updated wallet data based on permissions
       const updatedWallet = {
         ...walletToUpdate,
         accountName: editWalletName.trim(),
-        balance: parseFloat(editWalletBalance)
+        // Only update balance if user has permission (is owner)
+        balance: canEditBalance ? parseFloat(editWalletBalance) : walletToUpdate.balance
       };
+      
+      // Log the update details
+      console.log('Updating wallet with data:', {
+        id: editWalletId,
+        name: updatedWallet.accountName,
+        oldBalance: walletToUpdate.balance,
+        newBalance: updatedWallet.balance,
+        balanceChanged: canEditBalance && updatedWallet.balance !== walletToUpdate.balance
+      });
 
       // Update the wallet
       const response = await FinanceService.updateAccount(
@@ -398,6 +427,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
       setEditWalletBalance('');
       setEditWalletIcon('wallet');
       setEditWalletColor(1);
+      setCanEditBalance(true);
 
       // Refresh the wallets list in the background
       fetchFinancialData();
@@ -791,7 +821,24 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
                   margin="normal"
                   error={balanceError}
                   size="small"
+                  disabled={!canEditBalance}
                 />
+
+                {!canEditBalance && (
+                  <Typography 
+                    variant="caption" 
+                    color="text.secondary"
+                    sx={{ 
+                      display: 'block', 
+                      mt: 0.5, 
+                      mb: 1.5, 
+                      fontStyle: 'italic',
+                      fontSize: '0.75rem'
+                    }}
+                  >
+                    {t('wallets.cannotEditSharedBalance')}
+                  </Typography>
+                )}
 
                 <Box className={styles.actionButtonsContainer}>
                   <Button
@@ -851,32 +898,47 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
                       </Typography>
 
                       {isShared && (
-                        <Tooltip
-                          title={isOwner
-                            ? `Shared with: ${sharedInfo.sharedWithUsername}`
-                            : `Owner: ${sharedInfo.ownerUsername}`
-                          }
-                        >
-                          <Avatar
-                            src={isOwner
-                              ? sharedInfo.sharedWithProfilePictureUrl
-                              : sharedInfo.ownerProfilePictureUrl
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <Tooltip
+                            title={isOwner
+                              ? `Shared with: ${sharedInfo.sharedWithUsername}`
+                              : `Owner: ${sharedInfo.ownerUsername} - ${t('wallets.cannotEditSharedBalance')}`
                             }
-                            sx={{
-                              width: 20,
-                              height: 20,
-                              fontSize: '0.7rem',
-                              marginLeft: '8px',
-                              backgroundColor: '#1976d2',
-                              border: '1px solid white'
-                            }}
                           >
-                            {isOwner
-                              ? sharedInfo.sharedWithUsername?.charAt(0).toUpperCase()
-                              : sharedInfo.ownerUsername?.charAt(0).toUpperCase()
-                            }
-                          </Avatar>
-                        </Tooltip>
+                            <Avatar
+                              src={isOwner
+                                ? sharedInfo.sharedWithProfilePictureUrl
+                                : sharedInfo.ownerProfilePictureUrl
+                              }
+                              sx={{
+                                width: 20,
+                                height: 20,
+                                fontSize: '0.7rem',
+                                marginLeft: '8px',
+                                backgroundColor: isOwner ? '#1976d2' : '#ff9800',
+                                border: '1px solid white'
+                              }}
+                            >
+                              {isOwner
+                                ? sharedInfo.sharedWithUsername?.charAt(0).toUpperCase()
+                                : sharedInfo.ownerUsername?.charAt(0).toUpperCase()
+                              }
+                            </Avatar>
+                          </Tooltip>
+                          
+                          {!isOwner && (
+                            <Tooltip title={t('wallets.cannotEditSharedBalance')}>
+                              <LockIcon 
+                                fontSize="small" 
+                                sx={{ 
+                                  ml: 0.5, 
+                                  color: 'warning.main', 
+                                  fontSize: '0.9rem' 
+                                }} 
+                              />
+                            </Tooltip>
+                          )}
+                        </Box>
                       )}
                     </Box>
                   </Box>
