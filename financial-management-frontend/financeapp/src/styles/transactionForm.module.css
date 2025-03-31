@@ -436,3 +436,11 @@
     transform: translateY(0);
   }
 }
+
+/* Shared Wallet Badge */
+.sharedWalletBadge {
+  margin-left: 5px;
+  font-size: 0.7rem;
+  color: rgba(0, 0, 0, 0.6);
+  font-style: italic;
+}
