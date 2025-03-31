@@ -35,10 +35,12 @@ import FinanceService from '../../services/FinanceService';
 import { format, formatDistanceToNow } from 'date-fns';
 import styles from '../../styles/notificationMenu.module.css';
 import clsx from 'clsx';
+import { useTranslation } from 'react-i18next';
 // Import our new notification service
 import { useNotifications } from '../../services/NotificationService';
 
 const NotificationMenu = () => {
+  const { t } = useTranslation();
   // Local state for UI elements
   const [anchorEl, setAnchorEl] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -78,6 +80,53 @@ const NotificationMenu = () => {
     await clearNotifications();
     handleMenuClose();
   }, [clearNotifications, handleMenuClose]);
+  
+  // Function to get localized notification message based on notification type and content
+  const getLocalizedNotificationMessage = useCallback((notification) => {
+    // Check if it's a wallet sharing notification
+    if (notification.type === 'WALLET_SHARED' || notification.type === 'WALLET_RECEIVED') {
+      // Extract username and wallet name using regex
+      const sharedPattern = notification.message.match(/^(.+?)\s+shared\s+their\s+wallet\s+["'](.+?)["']/i);
+      if (sharedPattern) {
+        const username = sharedPattern[1];
+        const walletName = sharedPattern[2];
+        return t('notifications.types.walletShared', { username, walletName });
+      }
+    } 
+    // Check if it's a wallet accepted notification
+    else if (notification.type === 'WALLET_SHARE_ACCEPTED') {
+      // Extract username and wallet name for acceptance notification
+      const acceptedPattern = notification.message.match(/^(.+?)\s+accepted\s+your\s+shared\s+wallet\s+["'](.+?)["']/i);
+      if (acceptedPattern) {
+        const username = acceptedPattern[1];
+        const walletName = acceptedPattern[2];
+        return t('notifications.types.walletAccepted', { username, walletName });
+      }
+    }
+    // Check if it's a money sent notification
+    else if (notification.type === 'MONEY_SENT') {
+      // Extract amount and recipient for money sent notification
+      const sentPattern = notification.message.match(/You\s+sent\s+(.+?)\s+to\s+(.+?)$/i);
+      if (sentPattern) {
+        const amount = sentPattern[1];
+        const recipient = sentPattern[2];
+        return t('notifications.types.moneySent', { amount, recipient });
+      }
+    }
+    // Check if it's a money received notification
+    else if (notification.type === 'MONEY_RECEIVED') {
+      // Extract amount and sender for money received notification
+      const receivedPattern = notification.message.match(/You\s+received\s+(.+?)\s+from\s+(.+?)$/i);
+      if (receivedPattern) {
+        const amount = receivedPattern[1];
+        const sender = receivedPattern[2];
+        return t('notifications.types.moneyReceived', { amount, sender });
+      }
+    }
+    
+    // Return original message if no pattern matches
+    return notification.message;
+  }, [t]);
   
   // Handle accepting a shared wallet
   const handleAcceptSharedWallet = useCallback(async (notification) => {
@@ -184,7 +233,7 @@ const NotificationMenu = () => {
   return (
     <>
       <IconButton 
-        aria-label={`${unreadCount} unread notifications`}
+        aria-label={t('notifications.unreadCount', { count: unreadCount })}
         color="inherit" 
         onClick={handleMenuOpen}
         size="large"
@@ -230,7 +279,7 @@ const NotificationMenu = () => {
         <Box className={styles.headerContainer}>
           <Box className={styles.titleContainer}>
             <Typography variant="h6" className={styles.title}>
-              Notifications
+              {t('notifications.title')}
             </Typography>
             {unreadCount > 0 && (
               <Box 
@@ -250,7 +299,7 @@ const NotificationMenu = () => {
                 onClick={handleMarkAllAsRead}
                 className={styles.markAllReadButton}
               >
-                Mark all read
+                {t('notifications.markAllRead')}
               </Button>
             ) : (notifications.length > 0 && !loading) && (
               <Button 
@@ -259,7 +308,7 @@ const NotificationMenu = () => {
                 onClick={handleClearNotifications}
                 className={styles.clearButton}
               >
-                Clear all
+                {t('notifications.clearAll')}
               </Button>
             )}
           </Box>
@@ -272,7 +321,7 @@ const NotificationMenu = () => {
         ) : notifications.length === 0 ? (
           <Box className={styles.emptyNotification}>
             <Typography variant="body2">
-              No notifications yet
+              {t('notifications.noNotifications')}
             </Typography>
           </Box>
         ) : (
@@ -289,7 +338,7 @@ const NotificationMenu = () => {
                   {getNotificationIcon(notification.type)}
                 </ListItemIcon>
                 <ListItemText
-                  primary={notification.message}
+                  primary={getLocalizedNotificationMessage(notification)}
                   secondaryTypographyProps={{ component: 'div' }}
                   secondary={
                     <>
@@ -305,7 +354,7 @@ const NotificationMenu = () => {
                             className={styles.readStatus}
                           >
                             <ReadIcon fontSize="inherit" className={styles.readIcon} />
-                            Read
+                            {t('notifications.status.read')}
                           </Typography>
                         )}
                       </Box>
@@ -325,7 +374,7 @@ const NotificationMenu = () => {
                             {acceptingWallet === notification.id ? (
                               <CircularProgress size={16} color="inherit" />
                             ) : (
-                              'Accept'
+                              t('notifications.actions.accept')
                             )}
                           </Button>
                           <Button
@@ -334,7 +383,7 @@ const NotificationMenu = () => {
                             onClick={() => handleMarkAsRead(notification.id)}
                             className={styles.dismissButton}
                           >
-                            Dismiss
+                            {t('notifications.actions.dismiss')}
                           </Button>
                         </Box>
                       )}
