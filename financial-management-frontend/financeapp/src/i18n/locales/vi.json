@@ -52,6 +52,26 @@
     "notifications": "Thông báo",
     "search": "Tìm kiếm..."
   },
+  "notifications": {
+    "title": "Thông báo",
+    "unreadCount": "{{count}} thông báo chưa đọc",
+    "markAllRead": "Đánh dấu tất cả đã đọc",
+    "clearAll": "Xóa tất cả",
+    "noNotifications": "Chưa có thông báo",
+    "status": {
+      "read": "Đã đọc"
+    },
+    "actions": {
+      "accept": "Chấp nhận",
+      "dismiss": "Bỏ qua"
+    },
+    "types": {
+      "walletShared": "{{username}} đã chia sẻ ví \"{{walletName}}\" với bạn.",
+      "walletAccepted": "{{username}} đã chấp nhận ví \"{{walletName}}\" bạn chia sẻ.",
+      "moneySent": "Bạn đã gửi {{amount}} cho {{recipient}}.",
+      "moneyReceived": "Bạn đã nhận {{amount}} từ {{sender}}."
+    }
+  },
   "search": {
     "actions": {
       "newWallet": {

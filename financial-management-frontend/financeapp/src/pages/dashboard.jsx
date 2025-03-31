@@ -623,7 +623,16 @@ export default function Dashboard() {
       toast.success('Transaction deleted successfully');
     } catch (error) {
       console.error('Error deleting transaction:', error);
-      toast.error('Failed to delete transaction');
+      
+      // Show detailed error message from backend if available
+      if (error.response && error.response.data && error.response.data.message) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error('Failed to delete transaction');
+      }
+      
+      // Close the dialog to avoid confusing the user
+      updateDialogState('deleteConfirmOpen', false);
     }
   };
 

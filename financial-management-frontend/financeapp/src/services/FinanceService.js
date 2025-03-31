@@ -140,7 +140,11 @@ export const updateTransaction = (id, transactionData) => {
 };
 
 export const deleteTransaction = (id) => {
-  return axiosInstance.delete(`/transactions/${id}`);
+  return axiosInstance.delete(`/transactions/${id}`).catch(error => {
+    // Let the error propagate to the calling component, but log it
+    console.error(`Error deleting transaction ${id}:`, error);
+    throw error; // Re-throw the error so it can be handled by the component
+  });
 };
 
 export const getFinancialSummary = () => {

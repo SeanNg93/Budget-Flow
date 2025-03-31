@@ -52,6 +52,26 @@
     "notifications": "Notifications",
     "search": "Search..."
   },
+  "notifications": {
+    "title": "Notifications",
+    "unreadCount": "{{count}} unread notifications",
+    "markAllRead": "Mark all read",
+    "clearAll": "Clear all",
+    "noNotifications": "No notifications yet",
+    "status": {
+      "read": "Read"
+    },
+    "actions": {
+      "accept": "Accept",
+      "dismiss": "Dismiss"
+    },
+    "types": {
+      "walletShared": "{{username}} shared their wallet \"{{walletName}}\" with you.",
+      "walletAccepted": "{{username}} accepted your shared wallet \"{{walletName}}\".",
+      "moneySent": "You sent {{amount}} to {{recipient}}.",
+      "moneyReceived": "You received {{amount}} from {{sender}}."
+    }
+  },
   "search": {
     "actions": {
       "newWallet": {
