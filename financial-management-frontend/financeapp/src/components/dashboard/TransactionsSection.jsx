@@ -580,7 +580,8 @@ const TransactionsSection = ({
   onDeleteTransaction,
   onApplyFilters,
   onResetFilters,
-  formatCurrency
+  formatCurrency,
+  isDashboard = true // New prop to indicate if this is the dashboard view (defaults to true for backward compatibility)
 }) => {
   const { t } = useTranslation();
   const TIME_PERIODS = getTimePeriods(t);
@@ -983,12 +984,28 @@ const TransactionsSection = ({
     
     // If we have filtered transactions and they're not empty, show the filtered transactions
     if (filteredTransactions && filteredTransactions.length > 0) {
-      return filteredTransactions;
+      // In non-dashboard mode, the parent component is already handling pagination,
+      // so we should use the transactions array directly as it's already sliced
+      if (!isDashboard) {
+        return transactions || [];
+      }
+      
+      // In dashboard mode, limit to 8 transactions
+      return filteredTransactions.length > 8 
+        ? filteredTransactions.slice(0, 8) 
+        : filteredTransactions;
     }
     
-    // Default to showing all transactions (limited to 8 for the dashboard view)
-    return transactions?.length > 8 ? transactions.slice(0, 8) : transactions || [];
-  }, [searchState.term, searchState.results, filteredTransactions, transactions]);
+    // When in dashboard mode, limit to 8 transactions, otherwise use the transactions array
+    // which is already paginated by the parent component
+    if (!isDashboard) {
+      return transactions || [];
+    }
+    
+    return transactions?.length > 8 
+      ? transactions.slice(0, 8) 
+      : transactions || [];
+  }, [searchState.term, searchState.results, filteredTransactions, transactions, isDashboard]);
 
   // Focus the search input when it becomes visible
   useEffect(() => {
@@ -1258,8 +1275,7 @@ const TransactionsSection = ({
     { id: 'actions', label: t('transactions.headers.actions'), align: 'center' }
   ], [t]);
 
-  // Render transactions table
-  // Sort transactions by date in descending order (most recent first)
+  // Sort transactions by ID in descending order (most recent first)
   // We'll only sort the displayTransactions array if it's not already sorted
   const sortedTransactions = useMemo(() => {
     // Create a copy of the display transactions for sorting
@@ -1279,27 +1295,21 @@ const TransactionsSection = ({
         return 0; // Fallback
       };
       
-      // Parse dates consistently to year-month-day format for comparison
-      // This ensures we only compare the actual date, not the time
-      const getDateString = (dateValue) => {
-        const date = new Date(dateValue);
-        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-      };
-      
-      const dateAStr = getDateString(a.transactionDate);
-      const dateBStr = getDateString(b.transactionDate);
-      
-      // Different dates: sort by date (newest first)
-      if (dateAStr !== dateBStr) {
-        return dateBStr.localeCompare(dateAStr); // Descending order
-      }
-      
-      // Same date: use numeric ID for stable sorting (higher ID = newer)
+      // Primary sort: Sort by ID in descending order (highest/latest ID first)
       const idA = parseId(a.id);
       const idB = parseId(b.id);
       
-      // Higher ID values are typically newer transactions
-      return idB - idA;
+      if (idA !== idB) {
+        // Higher ID values are typically newer transactions
+        return idB - idA;
+      }
+      
+      // Secondary sort: If same ID (unlikely but possible), use date as tiebreaker
+      const dateA = new Date(a.transactionDate);
+      const dateB = new Date(b.transactionDate);
+      
+      // Sort by date in descending order (newest first)
+      return dateB - dateA;
     });
   }, [displayTransactions]);
 
@@ -1551,8 +1561,8 @@ const TransactionsSection = ({
         {/* Transactions Table */}
         {renderTransactionsTable()}
         
-        {/* Note explaining limited transactions shown */}
-        {displayTransactions.length > 0 && allTransactions.length > displayTransactions.length && (
+        {/* Note explaining limited transactions shown - only display on dashboard */}
+        {isDashboard && displayTransactions.length > 0 && allTransactions.length > displayTransactions.length && (
           <Box sx={{ mt: 2, textAlign: 'center' }}>
             <Typography variant="body2" className={styles.transactionsNote}>
               {t('transactions.limitedView')}{' '}

@@ -416,28 +416,30 @@ export default function Dashboard() {
       // Process and sort transactions consistently
       let processedTransactions = processTransactions(transactionsResponse.data || []);
       
-      // Sort transactions by date (newest first) then by ID
+      // Sort transactions by ID (highest/latest first) - using the same sorting logic as in transactions page
       processedTransactions = processedTransactions.sort((a, b) => {
-        const dateA = new Date(a.transactionDate);
-        const dateB = new Date(b.transactionDate);
-        const dateDiff = dateB - dateA; // Descending order
+        // Parse IDs to ensure proper numeric comparison
+        const parseId = (id) => {
+          if (typeof id === 'number') return id;
+          if (typeof id === 'string') {
+            if (id.includes(':')) return parseInt(id.split(':')[0], 10);
+            return parseInt(id, 10);
+          }
+          return 0;
+        };
         
-        // If dates are the same, use ID for stable sorting
-        if (dateDiff === 0) {
-          // Parse IDs to ensure proper numeric comparison
-          const parseId = (id) => {
-            if (typeof id === 'number') return id;
-            if (typeof id === 'string') {
-              if (id.includes(':')) return parseInt(id.split(':')[0], 10);
-              return parseInt(id, 10);
-            }
-            return 0;
-          };
-          
-          return parseId(b.id) - parseId(a.id); // Higher ID (newer) first
+        const idA = parseId(a.id);
+        const idB = parseId(b.id);
+        
+        // Higher ID values are typically newer transactions
+        if (idA !== idB) {
+          return idB - idA;
         }
         
-        return dateDiff;
+        // If IDs are the same (unlikely), use date as a tiebreaker
+        const dateA = new Date(a.transactionDate);
+        const dateB = new Date(b.transactionDate);
+        return dateB - dateA;
       });
       
       setTransactions(processedTransactions.slice(0, 8));
@@ -500,28 +502,30 @@ export default function Dashboard() {
       // Process and sort transactions consistently
       let processedTransactions = processTransactions(updatedTransactions || []);
       
-      // Sort transactions by date (newest first) then by ID - using the same logic as fetchFinancialData
+      // Sort transactions by ID (highest/latest first) - using the same sorting logic as in transactions page
       processedTransactions = processedTransactions.sort((a, b) => {
-        const dateA = new Date(a.transactionDate);
-        const dateB = new Date(b.transactionDate);
-        const dateDiff = dateB - dateA; // Descending order
+        // Parse IDs to ensure proper numeric comparison
+        const parseId = (id) => {
+          if (typeof id === 'number') return id;
+          if (typeof id === 'string') {
+            if (id.includes(':')) return parseInt(id.split(':')[0], 10);
+            return parseInt(id, 10);
+          }
+          return 0;
+        };
         
-        // If dates are the same, use ID for stable sorting
-        if (dateDiff === 0) {
-          // Parse IDs to ensure proper numeric comparison
-          const parseId = (id) => {
-            if (typeof id === 'number') return id;
-            if (typeof id === 'string') {
-              if (id.includes(':')) return parseInt(id.split(':')[0], 10);
-              return parseInt(id, 10);
-            }
-            return 0;
-          };
-          
-          return parseId(b.id) - parseId(a.id); // Higher ID (newer) first
+        const idA = parseId(a.id);
+        const idB = parseId(b.id);
+        
+        // Higher ID values are typically newer transactions
+        if (idA !== idB) {
+          return idB - idA;
         }
         
-        return dateDiff;
+        // If IDs are the same (unlikely), use date as a tiebreaker
+        const dateA = new Date(a.transactionDate);
+        const dateB = new Date(b.transactionDate);
+        return dateB - dateA;
       });
       
       // Only update filteredTransactions if we're not in a reset operation
