@@ -1035,6 +1035,15 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
                 >
                   <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
                     {account.accountName}
+                    {sharedWallets && Object.keys(sharedWallets).length > 0 && sharedWallets[account.id] && (
+                      <Typography 
+                        component="span"
+                        variant="caption"
+                        className={styles.sharedWalletBadge}
+                      >
+                        ({t('transactions.sharedWallet')})
+                      </Typography>
+                    )}
                     {account.balance !== undefined && (
                       <Typography 
                         variant="caption" 
