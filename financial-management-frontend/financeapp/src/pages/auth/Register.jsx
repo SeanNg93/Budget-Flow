@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
 import { register } from '../../config/axiosInstance';
 import styles from '../../styles/auth.module.css';
-import emailjs from '../../config/emailjs';
+import emailjs from '@emailjs/browser';
 import { EMAILJS_CONFIG } from '../../config/emailjs.config';
 import AuthError from '../../components/AuthError';
 import AuthSuccess from '../../components/AuthSuccess';
@@ -174,9 +174,9 @@ const Register = () => {
   };
 
   const handleSubmit = async (values, { setSubmitting }) => {
+    // Clear any previous errors
     setError('');
-    setSuccess('');
-
+    
     // If username is taken, prevent submission
     if (usernameStatus === 'taken') {
       setError('Username is already taken. Please choose a different username.');
@@ -195,8 +195,11 @@ const Register = () => {
       // Call the register function from axiosInstance
       const response = await register(values.username, values.email, values.password);
       
+      // Set flag for new user in localStorage to create default categories on first login
+      localStorage.setItem('newUser', 'true');
+      
       // Check for success response
-      if (response.data && response.data.success === "true") {
+      if (response.data && response.data.success === "true") {      
         // If we have an activation link, send email
         if (response.data.activationLink) {
           // Try to send activation email

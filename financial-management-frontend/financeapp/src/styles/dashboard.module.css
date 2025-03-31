@@ -976,7 +976,11 @@
   gap: 8px;
   width: 100%;
   overflow: visible;
-  position: relative;
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  right: 0;
+  height: 10px;
   z-index: 4;
 }
 
