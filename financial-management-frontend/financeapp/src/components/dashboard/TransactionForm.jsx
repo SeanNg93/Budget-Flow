@@ -288,6 +288,9 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
           accountId = initialData.account.id.toString();
         }
         
+        // Log what we found for debugging
+        console.log('Setting account ID for edit:', accountId, 'from initialData:', initialData);
+        
         // Handle different possible formats of category property
         let categoryId = '';
         if (initialData.category?.id) {
@@ -589,6 +592,17 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
         category: categoryDetails, // Include full category details
         transactionDate: formData.transactionDate
       };
+      
+      // Add wallet details when updating a transaction
+      if (formData.accountId) {
+        const selectedWallet = accounts.find(acc => acc.id.toString() === formData.accountId.toString());
+        if (selectedWallet) {
+          transactionData.wallet = {
+            id: selectedWallet.id,
+            accountName: selectedWallet.accountName
+          };
+        }
+      }
       
       let response;
       let isUpdate = false;
