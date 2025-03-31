@@ -24,6 +24,10 @@ dependencies {
     // Spring Security (JWT)
     implementation 'org.springframework.boot:spring-boot-starter-security'
 
+    // Spring Cache + Caffeine
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+    implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
+
     // JJWT (JSON Web Token) - Cần cả 3 phần
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
     implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
