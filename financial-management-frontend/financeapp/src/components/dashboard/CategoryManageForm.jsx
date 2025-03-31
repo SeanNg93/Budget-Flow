@@ -42,6 +42,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import FinanceService from '../../services/FinanceService';
 import CategoryForm from './CategoryForm';
 import styles from '../../styles/walletManage.module.css';
+import { useTranslation } from 'react-i18next';
 
 // Create a FadeTransition component with forwardRef
 const FadeTransition = React.forwardRef(function Transition(props, ref) {
@@ -49,6 +50,7 @@ const FadeTransition = React.forwardRef(function Transition(props, ref) {
 });
 
 const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = false }) => {
+  const { t } = useTranslation();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -104,7 +106,7 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
       setCategories(response.data || []);
     } catch (err) {
       console.error('Error fetching categories:', err);
-      setError('Failed to load categories. Please try again.');
+      setError(t('categories.errors.fetchFailed'));
     } finally {
       setLoading(false);
     }
@@ -169,7 +171,7 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
 
   const handleEditSave = async () => {
     if (!editCategoryName.trim()) {
-      setError('Category name cannot be empty');
+      setError(t('category.errors.nameRequired'));
       return;
     }
 
@@ -211,7 +213,7 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
       }
     } catch (err) {
       console.error('Error updating category:', err);
-      setError(err.response?.data?.message || 'Failed to update category. Please try again.');
+      setError(err.response?.data?.message || t('categories.errors.updateFailed'));
     } finally {
       setLoading(false);
     }
@@ -251,7 +253,7 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
       }
     } catch (err) {
       console.error('Error deleting category:', err);
-      setError(err.response?.data?.message || 'Failed to delete category. Please try again.');
+      setError(err.response?.data?.message || t('categories.errors.deleteFailed'));
     } finally {
       setDeleting(false);
     }
@@ -286,93 +288,89 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
     <>
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
       
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
-        <Tabs 
-          value={tabValue} 
-          onChange={handleTabChange}
-          aria-label="category type tabs"
-          variant="fullWidth"
-          className={styles.categoryTabs}
+      {/* Search and filter bar */}
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+        <Box sx={{ position: 'relative', flexGrow: 1, mb: 1 }}>
+          <TextField
+            placeholder={t('common.search')}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            variant="outlined"
+            fullWidth
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon color="action" sx={{ fontSize: '1.1rem' }} />
+                </InputAdornment>
+              ),
+              sx: { 
+                borderRadius: '8px',
+                fontSize: '0.9rem',
+                height: '38px'
+              }
+            }}
+            size="small"
+          />
+        </Box>
+        
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleOpenNewCategoryForm}
+          startIcon={<AddIcon />}
+          size="small"
           sx={{
-            '& .MuiTab-root': {
-              textTransform: 'none',
-              fontWeight: 500,
-              fontSize: '0.9rem',
-              minWidth: 100,
-              color: 'rgba(0, 0, 0, 0.6)' // Default text color for non-selected tabs
-            },
-            '& .Mui-selected': {
-              color: tabValue === 'EXPENSE' ? '#ff3b30' : '#34c759',
-              fontWeight: 600
-            },
-            '& .MuiTabs-indicator': {
-              backgroundColor: tabValue === 'EXPENSE' ? '#ff3b30' : '#34c759',
-            }
+            ml: 1,
+            mb: 1,
+            borderRadius: '8px',
+            textTransform: 'none',
+            boxShadow: 'none',
+            whiteSpace: 'nowrap',
+            fontSize: '0.85rem',
+            px: 1.5
           }}
         >
-          <Tab 
-            label={
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <span>Expenses</span>
-                <Box 
-                  component="span"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setTabValue('EXPENSE');
-                    handleOpenNewCategoryForm();
-                  }}
-                  className={`${styles.tabAddButton} ${styles.expenseTabAddButton}`}
-                >
-                  <AddIcon fontSize="small" />
-                </Box>
-              </Box>
-            } 
-            value="EXPENSE" 
-            className={styles.categoryTab} 
-          />
-          <Tab 
-            label={
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <span>Income</span>
-                <Box 
-                  component="span"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setTabValue('INCOME');
-                    handleOpenNewCategoryForm();
-                  }}
-                  className={`${styles.tabAddButton} ${styles.incomeTabAddButton}`}
-                >
-                  <AddIcon fontSize="small" />
-                </Box>
-              </Box>
-            } 
-            value="INCOME" 
-            className={styles.categoryTab} 
-          />
-        </Tabs>
+          {t('category.addCategory')}
+        </Button>
       </Box>
       
-      <Box sx={{ display: 'flex', mb: 2 }}>
-        <TextField
-          placeholder="Search categories..."
-          size="small"
-          fullWidth
-          value={searchQuery || ''}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-            sx: {
-              borderRadius: '12px',
-              backgroundColor: 'rgba(0, 0, 0, 0.02)',
+      {/* Tab navigation for category types */}
+      <Tabs
+        value={tabValue}
+        onChange={handleTabChange}
+        aria-label="category-type-tabs"
+        className={styles.categoryTabs}
+        sx={{ 
+          minHeight: '40px',
+          '& .MuiTab-root': {
+            fontSize: '0.85rem',
+            minHeight: '40px',
+            textTransform: 'none',
+            fontWeight: 500
+          }
+        }}
+      >
+        <Tab 
+          value="EXPENSE" 
+          label={t('transactions.expense')} 
+          sx={{ 
+            color: '#ff3b30',
+            '&.Mui-selected': {
+              color: '#ff3b30'
             }
           }}
         />
-      </Box>
+        <Tab 
+          value="INCOME" 
+          label={t('transactions.income')}
+          sx={{
+            color: '#34c759',
+            '&.Mui-selected': {
+              color: '#34c759'
+            }
+          }}
+        />
+      </Tabs>
       
       {loading ? (
         <Box className={styles.loadingContainer}>
@@ -380,7 +378,7 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
         </Box>
       ) : categories.length === 0 ? (
         <Typography variant="body1" className={styles.emptyMessage}>
-          No categories found. Create a category to get started.
+          {t('categories.noCategories')}
         </Typography>
       ) : (
         <>
@@ -394,7 +392,7 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
             if (filteredCategories.length === 0) {
               return (
                 <Typography variant="body1" className={styles.emptyMessage}>
-                  No categories match your search.
+                  {t('categories.noSearchMatch')}
                 </Typography>
               );
             }
@@ -415,124 +413,115 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
                       }}
                     >
                       {editMode && editCategoryId === category.id ? (
-                        <Box sx={{ width: '100%' }}>
-                          <Box className={styles.editContainer} sx={{ mb: 2 }}>
-                            <TextField
-                              fullWidth
-                              size="small"
-                              value={editCategoryName}
-                              onChange={(e) => setEditCategoryName(e.target.value)}
-                              placeholder="Category name"
-                              className={styles.textField}
-                              sx={{ mb: 2 }}
-                            />
+                        <Box sx={{ width: '100%', mt: 1 }}>
+                          <Grid container spacing={1.5}>
+                            <Grid item xs={12}>
+                              <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 500, display: 'block' }}>
+                                {t('categories.categoryName')}
+                              </Typography>
+                              <TextField
+                                fullWidth
+                                value={editCategoryName}
+                                onChange={(e) => setEditCategoryName(e.target.value)}
+                                variant="outlined"
+                                size="small"
+                                error={!editCategoryName.trim()}
+                                helperText={!editCategoryName.trim() ? t('category.errors.nameRequired') : ''}
+                                sx={{ 
+                                  mb: 1.5,
+                                  '& .MuiOutlinedInput-root': {
+                                    fontSize: '0.9rem'
+                                  }
+                                }}
+                              />
+                            </Grid>
                             
-                            {tabValue === 'EXPENSE' ? (
+                            {tabValue === 'EXPENSE' && (
                               <>
-                                <TextField
-                                  fullWidth
-                                  size="small"
-                                  type="number"
-                                  label="Spending Limit"
-                                  value={editSpendingLimit}
-                                  onChange={(e) => setEditSpendingLimit(e.target.value)}
-                                  InputProps={{
-                                    startAdornment: (
-                                      <InputAdornment position="start">
-                                        <AttachMoneyIcon fontSize="small" />
-                                      </InputAdornment>
-                                    ),
-                                  }}
-                                  placeholder="Set a spending limit"
-                                  className={styles.textField}
-                                  sx={{ mb: 2 }}
-                                />
-                                
-                                <Box sx={{ px: 1, mb: 1 }}>
-                                  <Typography id="warning-percentage-slider" gutterBottom variant="body2" sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                    <span>Warning at percentage:</span>
-                                    <span>{editWarningPercentage}%</span>
+                                <Grid item xs={7}>
+                                  <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 500, display: 'block' }}>
+                                    {t('categories.spendingLimit')}
                                   </Typography>
+                                  <TextField
+                                    fullWidth
+                                    value={editSpendingLimit}
+                                    onChange={(e) => {
+                                      const value = e.target.value;
+                                      if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                                        setEditSpendingLimit(value);
+                                      }
+                                    }}
+                                    placeholder={t('categories.spendingLimitPlaceholder')}
+                                    variant="outlined"
+                                    size="small"
+                                    InputProps={{
+                                      startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                                      sx: { fontSize: '0.9rem' }
+                                    }}
+                                  />
+                                </Grid>
+                                
+                                <Grid item xs={5}>
+                                  <Typography variant="caption" sx={{ mb: 0.5, fontWeight: 500, display: 'block' }}>
+                                    {t('categories.warnAt')}
+                                  </Typography>
+                                  <TextField
+                                    fullWidth
+                                    value={`${editWarningPercentage}%`}
+                                    disabled
+                                    variant="outlined"
+                                    size="small"
+                                    InputProps={{
+                                      endAdornment: <InputAdornment position="end">
+                                        <Tooltip title={t('categories.warningAtPercentage')} arrow>
+                                          <InfoIcon fontSize="small" sx={{ fontSize: '1rem', color: 'text.secondary' }} />
+                                        </Tooltip>
+                                      </InputAdornment>,
+                                      sx: { fontSize: '0.9rem' }
+                                    }}
+                                  />
+                                </Grid>
+                                
+                                <Grid item xs={12} sx={{ mt: 0.5 }}>
                                   <Slider
                                     value={editWarningPercentage}
                                     onChange={(e, newValue) => setEditWarningPercentage(newValue)}
-                                    aria-labelledby="warning-percentage-slider"
-                                    valueLabelDisplay="auto"
+                                    min={10}
+                                    max={100}
                                     step={5}
-                                    marks
-                                    min={50}
-                                    max={95}
-                                    sx={{
-                                      color: '#ff3b30',
-                                      '& .MuiSlider-thumb': {
-                                        width: 20,
-                                        height: 20
+                                    valueLabelDisplay="auto"
+                                    valueLabelFormat={(value) => `${value}%`}
+                                    sx={{ 
+                                      mt: 1,
+                                      '& .MuiSlider-valueLabel': {
+                                        fontSize: '0.75rem'
                                       }
                                     }}
                                   />
-                                  
-                                  {editSpendingLimit && (
-                                    <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-                                      <WarningIcon fontSize="small" sx={{ mr: 1, color: 'warning.main' }} />
-                                      Warning at: ${calculateWarningAmount(editSpendingLimit, editWarningPercentage).toFixed(2)}
-                                    </Typography>
-                                  )}
-                                </Box>
-                              </>
-                            ) : (
-                              <>
-                                <TextField
-                                  fullWidth
-                                  size="small"
-                                  type="number"
-                                  label="Income Goal"
-                                  value={editSpendingLimit}
-                                  onChange={(e) => setEditSpendingLimit(e.target.value)}
-                                  InputProps={{
-                                    startAdornment: (
-                                      <InputAdornment position="start">
-                                        <AttachMoneyIcon fontSize="small" />
-                                      </InputAdornment>
-                                    ),
-                                  }}
-                                  placeholder="Set an income goal"
-                                  className={styles.textField}
-                                  sx={{ mb: 2 }}
-                                />
+                                </Grid>
                               </>
                             )}
-                          </Box>
+                          </Grid>
                           
-                          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2, mb: 1 }}>
                             <Button 
-                              variant="outlined" 
-                              color="primary" 
-                              size="small"
-                              onClick={handleEditCancel}
                               startIcon={<CancelIcon />}
-                              sx={{
-                                borderRadius: '12px',
-                                textTransform: 'none'
-                              }}
-                              className={styles.cancelButton}
+                              onClick={handleEditCancel}
+                              size="small"
+                              sx={{ mr: 1, fontSize: '0.85rem' }}
                             >
-                              Cancel
+                              {t('common.cancel')}
                             </Button>
                             <Button 
                               variant="contained" 
-                              color="primary" 
-                              size="small"
-                              onClick={handleEditSave}
-                              disabled={loading}
+                              color="primary"
                               startIcon={<SaveIcon />}
-                              sx={{
-                                borderRadius: '12px',
-                                textTransform: 'none',
-                                boxShadow: 'none'
-                              }}
-                              className={`${styles.standardButton} ${styles.primaryButton}`}
+                              onClick={handleEditSave}
+                              disabled={!editCategoryName.trim() || loading}
+                              size="small"
+                              sx={{ fontSize: '0.85rem' }}
                             >
-                              Save
+                              {t('common.save')}
                             </Button>
                           </Box>
                         </Box>
@@ -540,13 +529,13 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
                         <>
                           <Box sx={{ width: '100%' }}>
                             <Box className={styles.categoryHeader}>
-                              <Typography variant="h6" className={styles.categoryName}>
+                              <Typography variant="subtitle1" className={styles.categoryName} sx={{ fontSize: '0.95rem', fontWeight: 600 }}>
                                 {category.categoryName}
                               </Typography>
                               <Box>
                                 <IconButton 
                                   edge="end" 
-                                  aria-label="edit"
+                                  aria-label={t('common.edit')}
                                   onClick={() => handleEditClick(category)}
                                   disabled={editMode}
                                   size="small"
@@ -556,7 +545,7 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
                                 </IconButton>
                                 <IconButton 
                                   edge="end" 
-                                  aria-label="delete"
+                                  aria-label={t('common.delete')}
                                   onClick={() => handleDeleteClick(category)}
                                   disabled={editMode}
                                   size="small"
@@ -572,12 +561,12 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
                                 <Box className={styles.limitInfo}>
                                   <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center' }}>
                                     <AttachMoneyIcon fontSize="small" sx={{ mr: 0.5, color: 'primary.main', opacity: 0.8 }} />
-                                    {tabValue === 'EXPENSE' ? 'Limit: ' : 'Goal: '}${parseFloat(category.spendingLimit).toFixed(2)}
+                                    {tabValue === 'EXPENSE' ? t('categories.limit') : t('categories.goal')}: ${parseFloat(category.spendingLimit).toFixed(2)}
                                   </Typography>
                                   {tabValue === 'EXPENSE' && (
                                     <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center' }}>
                                       <WarningIcon fontSize="small" sx={{ mr: 0.5, color: 'warning.main' }} />
-                                      Warn at: ${calculateWarningAmount(category.spendingLimit, category.warningPercentage || 80).toFixed(2)}
+                                      {t('categories.warnAt')}: ${calculateWarningAmount(category.spendingLimit, category.warningPercentage || 80).toFixed(2)}
                                     </Typography>
                                   )}
                                 </Box>
@@ -597,7 +586,7 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
                                         className={styles.warningPopup}
                                         style={{ left: `${category.warningPercentage || 80}%` }}
                                       >
-                                        {category.warningPercentage || 80}% Warning
+                                        {category.warningPercentage || 80}% {t('categories.warning')}
                                       </Box>
                                     </>
                                   )}
@@ -632,7 +621,7 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
                                 alignItems: 'center'
                               }}>
                                 <InfoIcon fontSize="small" className={styles.infoIconSmall} />
-                                No spending limit set
+                                {t('categories.noSpendingLimit')}
                               </Typography>
                             ) : (
                               <Typography variant="body2" color="text.secondary" sx={{ 
@@ -641,7 +630,7 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
                                 alignItems: 'center'
                               }}>
                                 <InfoIcon fontSize="small" className={styles.infoIconSmall} />
-                                No income goal set
+                                {t('categories.noIncomeGoal')}
                               </Typography>
                             )}
                           </Box>
@@ -663,40 +652,47 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
         onClose={handleDeleteCancel}
         maxWidth="xs"
         PaperProps={{
-          className: styles.confirmDialog
+          sx: {
+            borderRadius: '12px',
+            width: '350px',
+            maxWidth: '90vw',
+            p: 0.5
+          }
         }}
         TransitionComponent={FadeTransition}
         TransitionProps={{
           nodeRef: deleteDialogRef,
           mountOnEnter: true,
           unmountOnExit: true,
-          timeout: 400
+          timeout: 300
         }}
         ref={deleteDialogRef}
       >
-        <DialogTitle className={styles.confirmTitle}>Confirm Deletion</DialogTitle>
+        <DialogTitle sx={{ fontSize: '1rem', pt: 2, pb: 1 }}>{t('categories.confirmDeletion')}</DialogTitle>
         <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete the category "{deleteCategoryName}"? This action cannot be undone.
+          <DialogContentText sx={{ fontSize: '0.9rem' }}>
+            {t('categories.deleteConfirmMessage', { categoryName: deleteCategoryName })}
           </DialogContentText>
         </DialogContent>
-        <DialogActions className={styles.confirmActions}>
+        <DialogActions sx={{ pb: 2, px: 2 }}>
           <Button 
             onClick={handleDeleteCancel} 
             variant="outlined"
-            className={styles.cancelButton}
+            size="small"
+            sx={{ fontSize: '0.85rem' }}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button 
             onClick={handleDeleteConfirm} 
             color="error" 
             variant="contained"
             disabled={deleting}
-            startIcon={deleting ? <CircularProgress size={20} color="inherit" /> : null}
-            className={`${styles.standardButton} ${styles.deleteButton}`}
+            startIcon={deleting ? <CircularProgress size={18} color="inherit" /> : null}
+            size="small"
+            sx={{ fontSize: '0.85rem' }}
           >
-            {deleting ? 'Deleting...' : 'Delete'}
+            {deleting ? t('categories.deleting') : t('common.delete')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -718,9 +714,9 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
         }}
         ref={newCategoryDialogRef}
       >
-        <DialogTitle sx={{ pb: 1, pt: 1.5, fontWeight: 600 }}>
+        <DialogTitle sx={{ pb: 1, pt: 1.5, fontWeight: 600, fontSize: '1rem' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            Add New Category
+            {t('categories.addCategory')}
             <IconButton size="small" onClick={handleCloseNewCategoryForm}>
               <CloseIcon fontSize="small" />
             </IconButton>
@@ -751,7 +747,10 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
       maxWidth="sm"
       PaperProps={{
         className: styles.dialogPaper,
-        style: { width: '500px', maxWidth: '90vw' }
+        style: { 
+          width: '500px', 
+          maxWidth: '90vw'
+        }
       }}
       TransitionComponent={FadeTransition}
       TransitionProps={{
@@ -764,10 +763,10 @@ const CategoryManageForm = ({ open, handleClose, onCategoryUpdated, embedded = f
     >
       <DialogTitle className={styles.dialogTitle}>
         <Box className={styles.headerContainer}>
-          <Typography variant="h6" className={styles.title}>
-            Manage Categories
-            <span className={styles.walletCount}>
-              (Total: {categories.length})
+          <Typography variant="h6" className={styles.title} sx={{ fontSize: '1.1rem' }}>
+            {t('categories.manageCategories')}
+            <span className={styles.walletCount} style={{ fontSize: '0.9rem' }}>
+              ({t('categories.total')}: {categories.length})
             </span>
           </Typography>
           <IconButton 

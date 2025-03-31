@@ -27,6 +27,7 @@ import ShareIcon from '@mui/icons-material/Share';
 import SearchIcon from '@mui/icons-material/Search';
 import FinanceService from '../../services/FinanceService';
 import styles from '../../styles/shareWalletForm.module.css';
+import { useTranslation } from 'react-i18next';
 
 // Create a SlideTransition component with forwardRef
 const SlideTransition = React.forwardRef(function Transition(props, ref) {
@@ -34,6 +35,7 @@ const SlideTransition = React.forwardRef(function Transition(props, ref) {
 });
 
 const ShareWalletForm = ({ open, handleClose, wallet, onWalletShared }) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -80,7 +82,7 @@ const ShareWalletForm = ({ open, handleClose, wallet, onWalletShared }) => {
       setSearchResults(response.data || []);
     } catch (err) {
       console.error('Error searching users:', err);
-      setError('Failed to search users. Please try again.');
+      setError(t('wallets.errorSearchingUsers'));
     } finally {
       setLoading(false);
     }
@@ -93,7 +95,7 @@ const ShareWalletForm = ({ open, handleClose, wallet, onWalletShared }) => {
 
   const handleShare = async () => {
     if (!selectedUser) {
-      setError('Please select a user to share with');
+      setError(t('wallets.selectUserToShare'));
       return;
     }
 
@@ -104,7 +106,7 @@ const ShareWalletForm = ({ open, handleClose, wallet, onWalletShared }) => {
     try {
       const response = await FinanceService.shareWallet(wallet.id, selectedUser.id);
       
-      setSuccess(`Wallet shared successfully with ${selectedUser.username}`);
+      setSuccess(t('wallets.sharedSuccessfully', { username: selectedUser.username }));
       
       // Reset form
       setTimeout(() => {
@@ -120,7 +122,7 @@ const ShareWalletForm = ({ open, handleClose, wallet, onWalletShared }) => {
       }, 2000);
     } catch (err) {
       console.error('Error sharing wallet:', err);
-      setError(err.response?.data?.error || 'Failed to share wallet. Please try again.');
+      setError(err.response?.data?.error || t('wallets.errorSharingWallet'));
     } finally {
       setSharing(false);
     }
@@ -152,9 +154,9 @@ const ShareWalletForm = ({ open, handleClose, wallet, onWalletShared }) => {
       <DialogTitle className={styles.dialogTitle}>
         <Box className={styles.headerContainer}>
           <Typography variant="h6" className={styles.title}>
-            Share Wallet: {wallet?.accountName}
+            {t('wallets.shareWalletTitle', { name: wallet?.accountName })}
           </Typography>
-          <IconButton aria-label="close" onClick={closeWithAnimation} size="small">
+          <IconButton aria-label={t('common.close')} onClick={closeWithAnimation} size="small">
             <CloseIcon />
           </IconButton>
         </Box>
@@ -188,16 +190,16 @@ const ShareWalletForm = ({ open, handleClose, wallet, onWalletShared }) => {
         
         <Box className={styles.formContainer}>
           <Typography variant="body2" className={styles.description}>
-            Share your wallet with another user. They will be able to view and manage this wallet.
+            {t('wallets.shareWalletDescription')}
           </Typography>
           
           <Box className={styles.searchContainer}>
             <TextField
               fullWidth
-              label="Search users by username"
+              label={t('wallets.searchUsersLabel')}
               value={searchQuery}
               onChange={handleSearchChange}
-              placeholder="Enter username"
+              placeholder={t('wallets.searchUsersPlaceholder')}
               variant="outlined"
               margin="normal"
               InputProps={{
@@ -233,7 +235,7 @@ const ShareWalletForm = ({ open, handleClose, wallet, onWalletShared }) => {
                       </ListItemAvatar>
                       <ListItemText 
                         primary={user.username} 
-                        secondary={user.fullName || 'User'} 
+                        secondary={user.fullName || t('common.user')} 
                       />
                     </ListItem>
                     <Divider component="li" />
@@ -245,7 +247,7 @@ const ShareWalletForm = ({ open, handleClose, wallet, onWalletShared }) => {
             {selectedUser && (
               <Box className={styles.selectedUserContainer}>
                 <Typography variant="subtitle1" className={styles.selectedUserLabel}>
-                  Share with:
+                  {t('wallets.shareWith')}:
                 </Typography>
                 <Box className={styles.selectedUser}>
                   <Avatar 
@@ -257,7 +259,7 @@ const ShareWalletForm = ({ open, handleClose, wallet, onWalletShared }) => {
                   </Avatar>
                   <Box>
                     <Typography variant="subtitle2">{selectedUser.username}</Typography>
-                    <Typography variant="caption">{selectedUser.fullName || 'User'}</Typography>
+                    <Typography variant="caption">{selectedUser.fullName || t('common.user')}</Typography>
                   </Box>
                 </Box>
               </Box>
@@ -272,7 +274,7 @@ const ShareWalletForm = ({ open, handleClose, wallet, onWalletShared }) => {
           className={styles.cancelButton}
           disabled={sharing}
         >
-          Cancel
+          {t('common.cancel')}
         </Button>
         <Button 
           variant="contained" 
@@ -282,7 +284,7 @@ const ShareWalletForm = ({ open, handleClose, wallet, onWalletShared }) => {
           startIcon={sharing ? <CircularProgress size={20} /> : <ShareIcon />}
           className={styles.shareButton}
         >
-          {sharing ? 'Sharing...' : 'Share Wallet'}
+          {sharing ? t('wallets.sharing') : t('wallets.shareWallet')}
         </Button>
       </DialogActions>
     </Dialog>

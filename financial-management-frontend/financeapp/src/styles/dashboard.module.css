@@ -16,10 +16,10 @@
   z-index: 1;
   width: 100%;
   max-width: 1600px;
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: calc(16px * var(--scale-factor));
-  padding-right: calc(16px * var(--scale-factor));
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
 }
 
 /* Adding a backdrop container for the whole dashboard content */
@@ -31,13 +31,13 @@
   box-shadow: 0 7px 30px rgba(0, 0, 0, 0.05);
   padding: calc(22px * var(--scale-factor));
   margin-bottom: calc(1.9rem * var(--scale-factor));
-  width: calc(100% * var(--scale-factor));
+  width: 100%;
   max-width: calc(1400px * var(--scale-factor));
   min-height: calc((100vh - 95px) * var(--scale-factor));
   display: flex;
   flex-direction: column;
-  margin-left: auto;
-  margin-right: auto;
+  margin-left: auto !important;
+  margin-right: auto !important;
 }
 
 /* For browsers that don't support backdrop-filter */

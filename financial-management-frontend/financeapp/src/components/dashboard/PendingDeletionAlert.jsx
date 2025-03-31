@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Alert, Snackbar, Button } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 
 export default function PendingDeletionAlert() {
+    const { t } = useTranslation();
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(true);
 
@@ -68,11 +70,11 @@ export default function PendingDeletionAlert() {
                         size="small" 
                         onClick={handleClose}
                     >
-                        Dismiss
+                        {t('alerts.dismiss')}
                     </Button>
                 }
             >
-                Your account deletion has been cancelled because you logged back in.
+                {t('alerts.deletionCancelled')}
             </Alert>
         </Snackbar>
     );

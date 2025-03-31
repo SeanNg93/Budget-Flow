@@ -23,6 +23,7 @@ import CategoryIcon from '@mui/icons-material/Category';
 import axios from 'axios';
 import { useUser } from '../../context/UserContext';
 import SettingsPanel from '../settings/SettingsPanel';
+import { useTranslation } from 'react-i18next';
 
 const API_BASE_URL = "http://localhost:8080";
 const DEFAULT_AVATAR = "/default-avatar.svg";
@@ -61,6 +62,7 @@ const SideMenu = ({ open, handleDrawerClose, setProfileDialogOpen, setCategoryMa
   const navigate = useNavigate();
   const location = useLocation();
   const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+  const { t } = useTranslation();
   
   // Use context for user profile data
   const { profileData } = useUser();
@@ -84,13 +86,13 @@ const SideMenu = ({ open, handleDrawerClose, setProfileDialogOpen, setCategoryMa
   };
 
   const handleMenuItemClick = (item) => {
-    if (item.text === 'Profile') {
+    if (item.text === t('common.profile')) {
       // Open profile dialog instead of navigating
       setProfileDialogOpen(true);
-    } else if (item.text === 'Category Manage') {
+    } else if (item.text === t('categories.title')) {
       // Open category manage dialog instead of navigating
       setCategoryManageFormOpen(true);
-    } else if (item.text === 'Settings') {
+    } else if (item.text === t('common.settings')) {
       // Open settings panel instead of navigating
       setSettingsPanelOpen(true);
     } else {
@@ -100,11 +102,11 @@ const SideMenu = ({ open, handleDrawerClose, setProfileDialogOpen, setCategoryMa
   };
 
   const menuItems = [
-    { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
-    { text: 'Transactions', icon: <AccountBalanceWalletIcon />, path: '/transactions' },
-    { text: 'Category Manage', icon: <CategoryIcon />, path: '/categories' },
-    { text: 'Profile', icon: <PersonIcon />, path: '/profile' },
-    { text: 'Settings', icon: <SettingsIcon />, path: '/settings' },
+    { text: t('common.dashboard'), icon: <DashboardIcon />, path: '/dashboard' },
+    { text: t('common.transactions'), icon: <AccountBalanceWalletIcon />, path: '/transactions' },
+    { text: t('categories.title'), icon: <CategoryIcon />, path: '/categories' },
+    { text: t('common.profile'), icon: <PersonIcon />, path: '/profile' },
+    { text: t('common.settings'), icon: <SettingsIcon />, path: '/settings' },
   ];
 
   return (
@@ -118,6 +120,7 @@ const SideMenu = ({ open, handleDrawerClose, setProfileDialogOpen, setCategoryMa
             boxSizing: 'border-box',
             border: 'none',
             boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.05)',
+            position: 'fixed'
           },
         }}
         variant="persistent"
@@ -128,7 +131,7 @@ const SideMenu = ({ open, handleDrawerClose, setProfileDialogOpen, setCategoryMa
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Avatar 
               src={profileData.profilePicture || DEFAULT_AVATAR}
-              alt={profileData.fullName || userData.username || 'User'}
+              alt={profileData.fullName || userData.username || t('common.user')}
               sx={{ 
                 width: 40, 
                 height: 40, 
@@ -141,14 +144,14 @@ const SideMenu = ({ open, handleDrawerClose, setProfileDialogOpen, setCategoryMa
             </Avatar>
             <Box>
               <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                {profileData.fullName || userData.username || 'User'}
+                {profileData.fullName || userData.username || t('common.user')}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 {userData.email || 'user@example.com'}
               </Typography>
             </Box>
           </Box>
-          <IconButton onClick={handleDrawerClose} sx={{ color: 'text.secondary' }}>
+          <IconButton onClick={handleDrawerClose} sx={{ color: 'text.secondary' }} aria-label={t('common.closeMenu')}>
             <ChevronLeftIcon />
           </IconButton>
         </DrawerHeader>
@@ -166,7 +169,7 @@ const SideMenu = ({ open, handleDrawerClose, setProfileDialogOpen, setCategoryMa
               letterSpacing: '0.05em'
             }}
           >
-            MENU
+            {t('common.menu')}
           </Typography>
           
           <List sx={{ mt: 1 }}>
@@ -210,7 +213,7 @@ const SideMenu = ({ open, handleDrawerClose, setProfileDialogOpen, setCategoryMa
                 <LogoutIcon />
               </ListItemIcon>
               <ListItemText 
-                primary="Logout" 
+                primary={t('common.logout')}
                 primaryTypographyProps={{ 
                   fontSize: '0.95rem',
                   fontWeight: 500

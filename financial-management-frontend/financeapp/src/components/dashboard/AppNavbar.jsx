@@ -34,6 +34,8 @@ import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import styles from '../../styles/appNavbar.module.css';
 import { useUser } from '../../context/UserContext';
+import LanguageSwitcher from '../common/LanguageSwitcher';
+import { useTranslation } from 'react-i18next';
 
 const API_BASE_URL = "http://localhost:8080";
 const DEFAULT_AVATAR = "/default-avatar.svg";
@@ -56,47 +58,48 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
   
   // Use our context to get the profile data
   const { profileData } = useUser();
+  const { t } = useTranslation();
 
   const searchActions = [
     { 
       id: 'new-wallet', 
-      name: 'Create New Wallet', 
-      description: 'Create a new wallet to manage your money',
+      name: t('search.actions.newWallet.title'),
+      description: t('search.actions.newWallet.description'),
       icon: <AddIcon color="primary" />,
       action: () => navigate('/dashboard', { state: { openWalletForm: true } })
     },
     { 
       id: 'transfer-money', 
-      name: 'Transfer Money', 
-      description: 'Transfer money between wallets',
+      name: t('search.actions.transferMoney.title'),
+      description: t('search.actions.transferMoney.description'),
       icon: <SwapHorizIcon color="primary" />,
       action: () => navigate('/dashboard', { state: { openTransferDialog: true } }) 
     },
     { 
       id: 'send-money', 
-      name: 'Send Money', 
-      description: 'Send money to another user',
+      name: t('search.actions.sendMoney.title'),
+      description: t('search.actions.sendMoney.description'),
       icon: <SendIcon color="primary" />,
       action: () => navigate('/dashboard', { state: { openUserTransferDialog: true } }) 
     },
     { 
       id: 'share-wallet', 
-      name: 'Share Wallet', 
-      description: 'Share a wallet with another user',
+      name: t('search.actions.shareWallet.title'),
+      description: t('search.actions.shareWallet.description'),
       icon: <ShareIcon color="primary" />,
       action: () => navigate('/dashboard', { state: { openShareWalletDialog: true } }) 
     },
     { 
       id: 'new-transaction', 
-      name: 'New Transaction', 
-      description: 'Add a new income or expense',
+      name: t('search.actions.newTransaction.title'),
+      description: t('search.actions.newTransaction.description'),
       icon: <ReceiptIcon color="primary" />,
       action: () => navigate('/dashboard', { state: { openTransactionForm: true } }) 
     },
     { 
       id: 'manage-categories', 
-      name: 'Manage Categories', 
-      description: 'Create or edit transaction categories',
+      name: t('search.actions.manageCategories.title'),
+      description: t('search.actions.manageCategories.description'),
       icon: <CategoryIcon color="primary" />,
       action: () => navigate('/dashboard', { state: { openCategoryForm: true } }) 
     }
@@ -150,7 +153,7 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
     
     // Search in wallets
     const matchingWallets = wallets.filter(wallet => 
-      wallet.accountName.toLowerCase().includes(lowerCaseQuery)
+      wallet.accountName && wallet.accountName.toLowerCase().includes(lowerCaseQuery)
     );
     results.push(...matchingWallets.map(wallet => ({
       type: 'wallet',
@@ -160,7 +163,7 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
     // Search in transactions
     const matchingTransactions = transactions.filter(transaction => 
       (transaction.description && transaction.description.toLowerCase().includes(lowerCaseQuery)) ||
-      (transaction.category && transaction.category.name.toLowerCase().includes(lowerCaseQuery))
+      (transaction.category && transaction.category.name && transaction.category.name.toLowerCase().includes(lowerCaseQuery))
     );
     results.push(...matchingTransactions.map(transaction => ({
       type: 'transaction',
@@ -271,17 +274,17 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
     >
       <Box sx={{ px: 2, py: 1 }}>
         <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-          {profileData.fullName || userData.username || 'User'}
+          {profileData.fullName || userData.username || t('common.user')}
         </Typography>
         <Typography variant="body2" color="text.secondary">
           {userData.email || 'user@example.com'}
         </Typography>
       </Box>
       <Divider className={styles.menuDivider} />
-      <MenuItem onClick={handleProfile} className={styles.menuItem}>Profile</MenuItem>
-      <MenuItem onClick={handleOpenSettings} className={styles.menuItem}>Settings</MenuItem>
+      <MenuItem onClick={handleProfile} className={styles.menuItem}>{t('navbar.profile')}</MenuItem>
+      <MenuItem onClick={handleOpenSettings} className={styles.menuItem}>{t('navbar.settings')}</MenuItem>
       <Divider className={styles.menuDivider} />
-      <MenuItem onClick={handleLogout} className={styles.menuItem}>Logout</MenuItem>
+      <MenuItem onClick={handleLogout} className={styles.menuItem}>{t('navbar.logout')}</MenuItem>
     </Menu>
   );
 
@@ -308,7 +311,12 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
     >
       <MenuItem className={styles.menuItem}>
         <NotificationMenu />
-        <Typography variant="body1" sx={{ ml: 1 }}>Notifications</Typography>
+        <Typography variant="body1" sx={{ ml: 1 }}>{t('navbar.notifications')}</Typography>
+      </MenuItem>
+      <MenuItem className={styles.menuItem}>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <LanguageSwitcher />
+        </Box>
       </MenuItem>
       <MenuItem onClick={handleProfileMenuOpen} className={styles.menuItem}>
         <IconButton
@@ -320,7 +328,7 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
         >
           <Avatar 
             src={profileData.profilePicture || DEFAULT_AVATAR}
-            alt={profileData.fullName || userData.username || 'User'}
+            alt={profileData.fullName || userData.username || t('common.user')}
             sx={{ 
               width: 32, 
               height: 32, 
@@ -332,7 +340,7 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
             {!profileData.profilePicture && (profileData.fullName || userData.username) ? (profileData.fullName || userData.username).charAt(0).toUpperCase() : null}
           </Avatar>
         </IconButton>
-        <Typography variant="body1" sx={{ ml: 1 }}>Profile</Typography>
+        <Typography variant="body1" sx={{ ml: 1 }}>{t('navbar.profile')}</Typography>
       </MenuItem>
     </Menu>
   );
@@ -373,7 +381,7 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
               letterSpacing: '-0.01em'
             }}
           >
-            Budget Flow
+            {t('app.name')}
           </Typography>
           
           <ClickAwayListener onClickAway={handleClickAway}>
@@ -383,7 +391,7 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
                   <SearchIcon />
                 </div>
                 <InputBase
-                  placeholder="Search…"
+                  placeholder={t('navbar.search')}
                   inputProps={{ 'aria-label': 'search' }}
                   value={searchValue}
                   onChange={handleSearchChange}
@@ -449,13 +457,15 @@ const AppNavbar = ({ open, handleDrawerOpen }) => {
           <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center' }}>
             <NotificationMenu />
             
+            <LanguageSwitcher iconOnly={true} />
+            
             <Box 
               onClick={handleProfileMenuOpen}
               className={styles.profileButton}
             >
               <Avatar 
                 src={profileData.profilePicture || DEFAULT_AVATAR}
-                alt={profileData.fullName || userData.username || 'User'}
+                alt={profileData.fullName || userData.username || t('common.user')}
                 className={styles.avatar}
                 sx={{ 
                   bgcolor: !profileData.profilePicture ? 'primary.main' : 'transparent',

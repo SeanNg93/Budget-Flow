@@ -40,6 +40,7 @@
   position: relative;
   margin-top: 10px;
   min-height: 240px;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -113,24 +114,26 @@
   flex-wrap: nowrap;
   gap: 10px;
   margin-bottom: 10px;
-  justify-content: space-between;
+  justify-content: center;
   padding: 0 5px;
   margin-top: 5px;
+  width: 100%;
 }
 
 .summaryItem {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   padding: 10px;
   border-radius: 8px;
   background-color: rgba(0, 0, 0, 0.03);
   flex: 1;
-  min-width: 120px;
-  margin-right: 8px;
+  min-width: 100px;
+  max-width: 130px;
+  margin: 0 5px;
   padding-left: 12px;
   padding-right: 12px;
-  align-items: center;
+  text-align: center;
 }
 
 .summaryItem:last-child {
@@ -141,11 +144,13 @@
   font-size: 11px !important;
   color: var(--text-secondary);
   margin-bottom: 4px !important;
+  text-align: center;
 }
 
 .summaryValue {
   font-size: 14px !important;
   font-weight: 600 !important;
+  text-align: center;
 }
 
 /* Smaller fonts for chart section */
@@ -185,11 +190,13 @@
   .summaryContainer {
     flex-direction: row;
     gap: 4px;
+    justify-content: center;
   }
   
   .summaryItem {
     width: 33.33%;
     padding: 4px 0;
+    text-align: center;
   }
   
   .summaryItem:not(:last-child) {

@@ -7,6 +7,7 @@ import {
   DialogContentText,
   Button
 } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 
 // Import dialog components
 import FinanceActionPanel from './FinanceActionPanel';
@@ -65,6 +66,8 @@ const DialogManager = ({
   fetchFinancialData,
   onWalletDeleted // Added prop for wallet deletion callback
 }) => {
+  const { t } = useTranslation();
+
   // Helper function to close dialogs - memoized to prevent unnecessary re-renders
   const closeDialog = useCallback((dialogName) => {
     updateDialogState(dialogName, false);
@@ -261,7 +264,7 @@ const DialogManager = ({
         onClose={() => closeDialog('transferDialog')}
         aria-labelledby="transfer-dialog-title"
       >
-        <DialogTitle id="transfer-dialog-title">Transfer Money Between Wallets</DialogTitle>
+        <DialogTitle id="transfer-dialog-title">{t('wallets.transferMoney')}</DialogTitle>
         <DialogContent>
           {/* Note: WalletManageForm inside Transfer Dialog might need onWalletDeleted too if deletion is possible there */}
           <WalletManageForm
@@ -289,25 +292,25 @@ const DialogManager = ({
         }}
       >
         <DialogTitle id="delete-dialog-title">
-          Confirm Transaction Deletion
+          {t('transactions.deleteDialog.title')}
         </DialogTitle>
         <DialogContent>
           <DialogContentText id="delete-dialog-description">
-            Are you sure you want to delete this transaction? This action cannot be undone.
+            {t('transactions.deleteDialog.message')}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleDeleteCancel} color="primary">
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             onClick={handleDeleteConfirm}
             color="error"
             variant="contained"
             autoFocus
-            aria-label="Confirm delete transaction"
+            aria-label={t('transactions.deleteDialog.confirmAriaLabel')}
           >
-            Delete
+            {t('common.delete')}
           </Button>
         </DialogActions>
       </Dialog>

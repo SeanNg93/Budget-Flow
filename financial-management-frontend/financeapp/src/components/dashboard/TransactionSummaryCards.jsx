@@ -5,6 +5,8 @@ import {
   TrendingUp as IncomeIcon, 
   AccountBalance as SavingsIcon 
 } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
+import { formatCurrency } from '../../utils/formatters';
 import styles from '../../styles/transactions.module.css';
 
 /**
@@ -15,9 +17,10 @@ const TransactionSummaryCards = ({
   totalExpense, 
   totalIncome, 
   netSavings,
-  formatCurrency,
   currency = 'USD' 
 }) => {
+  const { t, i18n } = useTranslation();
+  
   // Helper to determine if a value is positive, negative, or zero
   const getAmountClass = (amount) => {
     if (amount > 0) return styles.positiveAmount;
@@ -36,13 +39,13 @@ const TransactionSummaryCards = ({
             </Box>
             <Box className={styles.cardTextContent}>
               <Typography variant="body2" className={styles.cardLabel}>
-                Total Expense
+                {t('dashboard.totalExpenses')}
               </Typography>
               <Typography 
                 variant="h5" 
                 className={`${styles.cardAmount} ${styles.expenseAmount}`}
               >
-                {formatCurrency(totalExpense, currency)}
+                {formatCurrency(totalExpense, i18n.language, currency)}
               </Typography>
             </Box>
           </Box>
@@ -58,13 +61,13 @@ const TransactionSummaryCards = ({
             </Box>
             <Box className={styles.cardTextContent}>
               <Typography variant="body2" className={styles.cardLabel}>
-                Total Income
+                {t('dashboard.totalIncome')}
               </Typography>
               <Typography 
                 variant="h5" 
                 className={`${styles.cardAmount} ${styles.incomeAmount}`}
               >
-                {formatCurrency(totalIncome, currency)}
+                {formatCurrency(totalIncome, i18n.language, currency)}
               </Typography>
             </Box>
           </Box>
@@ -80,13 +83,13 @@ const TransactionSummaryCards = ({
             </Box>
             <Box className={styles.cardTextContent}>
               <Typography variant="body2" className={styles.cardLabel}>
-                Net Savings
+                {t('dashboard.netSavings')}
               </Typography>
               <Typography 
                 variant="h5" 
                 className={`${styles.cardAmount} ${getAmountClass(netSavings)}`}
               >
-                {formatCurrency(netSavings, currency)}
+                {formatCurrency(netSavings, i18n.language, currency)}
               </Typography>
             </Box>
           </Box>

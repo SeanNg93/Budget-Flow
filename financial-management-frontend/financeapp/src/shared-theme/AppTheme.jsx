@@ -186,7 +186,13 @@ const AppTheme = ({ children, themeComponents = {} }) => {
           paper: {
             backgroundColor: '#F2F2F7',
             borderRight: 'none',
+            boxSizing: 'border-box',
+            width: '280px'
           },
+          root: {
+            width: '280px',
+            flexShrink: 0
+          }
         }
       },
       MuiDivider: {
@@ -237,12 +243,16 @@ const AppTheme = ({ children, themeComponents = {} }) => {
             scrollbarColor: "rgba(0, 0, 0, 0.15) transparent",
             // The overflow and padding help prevent layout shifts with modals
             overflowY: "scroll !important",
-            paddingRight: "0 !important"
+            paddingRight: "0 !important",
+            paddingLeft: "0 !important",
+            margin: "0 !important"
           },
           body: {
-            overflow: "auto !important",
+            overflow: "visible !important",
             // Prevent automatic padding adjustments from Material UI
-            paddingRight: "0 !important"
+            paddingRight: "0 !important",
+            paddingLeft: "0 !important",
+            margin: "0 !important"
           },
           // Customize scrollbars for better appearance
           "::-webkit-scrollbar": {
@@ -304,12 +314,12 @@ const AppTheme = ({ children, themeComponents = {} }) => {
       },
       MuiModal: {
         defaultProps: {
-          disableScrollLock: true
+          disableScrollLock: false
         }
       },
       MuiDialog: {
         defaultProps: {
-          disableScrollLock: true
+          disableScrollLock: false
         }
       },
       MuiSelect: {

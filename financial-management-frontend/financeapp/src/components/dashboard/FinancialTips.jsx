@@ -7,55 +7,53 @@ import SavingsIcon from '@mui/icons-material/Savings';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
+import { useTranslation } from 'react-i18next';
 import styles from '../../styles/financialTips.module.css';
 
-// Array of financial tips - keep content brief for better display
-const FINANCIAL_TIPS = [
-  {
-    icon: <SavingsIcon />,
-    title: "Create an Emergency Fund",
-    content: "Aim to save 3-6 months of expenses for unexpected events."
-  },
-  {
-    icon: <AccountBalanceIcon />,
-    title: "The 50/30/20 Rule",
-    content: "Try to allocate 50% of income to needs, 30% to wants, and 20% to savings."
-  },
-  {
-    icon: <TipsAndUpdatesIcon />,
-    title: "Pay Yourself First",
-    content: "Set aside savings as soon as you receive income, before spending on other things."
-  },
-  {
-    icon: <AutoGraphIcon />,
-    title: "Track Your Spending",
-    content: "Regularly review your expenses to identify areas where you can cut back."
-  },
-  {
-    icon: <LightbulbIcon />,
-    title: "Automate Your Finances",
-    content: "Set up automatic transfers to savings accounts and automatic bill payments."
-  },
-  {
-    icon: <SavingsIcon />,
-    title: "Diversify Your Investments",
-    content: "Don't put all your eggs in one basket. Spread investments across different asset classes."
-  },
-  {
-    icon: <AccountBalanceIcon />,
-    title: "Review Financial Goals Regularly",
-    content: "Adjust your financial plan as your life circumstances change."
-  },
-  {
-    icon: <TipsAndUpdatesIcon />,
-    title: "Minimize Debt",
-    content: "Pay off high-interest debt first and avoid unnecessary borrowing."
+const getIconComponent = (tipKey) => {
+  switch (tipKey) {
+    case 'emergencyFund':
+    case 'diversifyInvestments':
+      return <SavingsIcon />;
+    case 'fiftyThirtyTwenty':
+    case 'reviewGoals':
+      return <AccountBalanceIcon />;
+    case 'payYourselfFirst':
+    case 'minimizeDebt':
+      return <TipsAndUpdatesIcon />;
+    case 'trackSpending':
+      return <AutoGraphIcon />;
+    case 'automateFinances':
+      return <LightbulbIcon />;
+    default:
+      return <LightbulbIcon />;
   }
-];
+};
 
 const FinancialTips = ({ maxTips = 1, inWelcomeSection = false }) => {
+  const { t } = useTranslation();
   const [currentTipIndex, setCurrentTipIndex] = useState(0);
   const [fadeIn, setFadeIn] = useState(true);
+
+  // Get tips from translation file
+  const tipKeys = [
+    'emergencyFund',
+    'fiftyThirtyTwenty',
+    'payYourselfFirst',
+    'trackSpending',
+    'automateFinances',
+    'diversifyInvestments',
+    'reviewGoals',
+    'minimizeDebt'
+  ];
+
+  // Create tips array from translations
+  const FINANCIAL_TIPS = tipKeys.map(key => ({
+    key,
+    icon: getIconComponent(key),
+    title: t(`financialTips.${key}.title`),
+    content: t(`financialTips.${key}.content`)
+  }));
 
   // Ensure we don't show more than one tip in wallet overview
   const actualMaxTips = Math.min(maxTips, 1);
@@ -71,7 +69,7 @@ const FinancialTips = ({ maxTips = 1, inWelcomeSection = false }) => {
     }, 12000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [FINANCIAL_TIPS.length]);
 
   // Handle manual navigation between tips
   const handlePreviousTip = () => {
@@ -103,7 +101,7 @@ const FinancialTips = ({ maxTips = 1, inWelcomeSection = false }) => {
     <Box className={`${styles.tipsContainer} ${inWelcomeSection ? styles.welcomeTipsContainer : ''}`}>
       <Typography variant="h6" className={styles.tipsTitle}>
         <LightbulbIcon className={styles.tipIcon} />
-        Financial Tips
+        {t('financialTips.title')}
         
         {/* Only show current tip indicator when in welcome section */}
         {inWelcomeSection && (
@@ -111,31 +109,33 @@ const FinancialTips = ({ maxTips = 1, inWelcomeSection = false }) => {
             variant="caption" 
             sx={{ ml: 'auto', color: 'text.secondary', display: 'flex', alignItems: 'center' }}
           >
-            Tip {currentTipIndex + 1} of {FINANCIAL_TIPS.length}
+            {t('financialTips.tipCounter', { current: currentTipIndex + 1, total: FINANCIAL_TIPS.length })}
           </Typography>
         )}
       </Typography>
       
-      {tipsToShow.map((tip, index) => (
-        <Fade key={`${currentTipIndex + index}`} in={fadeIn} timeout={{ enter: 800, exit: 500 }}>
-          <Paper 
-            elevation={inWelcomeSection ? 1 : 0} 
-            className={`${styles.tipCard} ${inWelcomeSection ? styles.welcomeTipCard : ''}`}
-          >
-            <Box className={styles.iconContainer}>
-              {tip.icon}
-            </Box>
-            <Box className={styles.tipContent}>
-              <Typography variant="subtitle1" className={styles.tipTitle}>
-                {tip.title}
-              </Typography>
-              <Typography variant="body2" className={styles.tipText}>
-                {tip.content}
-              </Typography>
-            </Box>
-          </Paper>
-        </Fade>
-      ))}
+      <Box className={styles.tipsContent}>
+        {tipsToShow.map((tip, index) => (
+          <Fade key={`${currentTipIndex + index}`} in={fadeIn} timeout={{ enter: 800, exit: 500 }}>
+            <Paper 
+              elevation={inWelcomeSection ? 1 : 0} 
+              className={`${styles.tipCard} ${inWelcomeSection ? styles.welcomeTipCard : ''}`}
+            >
+              <Box className={styles.iconContainer}>
+                {tip.icon}
+              </Box>
+              <Box className={styles.tipContent}>
+                <Typography variant="subtitle1" className={styles.tipTitle}>
+                  {tip.title}
+                </Typography>
+                <Typography variant="body2" className={styles.tipText}>
+                  {tip.content}
+                </Typography>
+              </Box>
+            </Paper>
+          </Fade>
+        ))}
+      </Box>
       
       {/* Navigation controls - only show in welcome section */}
       {inWelcomeSection && (
@@ -143,7 +143,7 @@ const FinancialTips = ({ maxTips = 1, inWelcomeSection = false }) => {
           <IconButton 
             size="small"
             onClick={handlePreviousTip}
-            aria-label="Previous tip"
+            aria-label={t('financialTips.previousTip')}
             className={styles.tipNavButton}
           >
             <NavigateBeforeIcon fontSize="small" />
@@ -166,7 +166,8 @@ const FinancialTips = ({ maxTips = 1, inWelcomeSection = false }) => {
                 }}
                 role="button"
                 tabIndex={0}
-                aria-label={`Go to tip ${index + 1}`}
+                aria-label={t('financialTips.goToTip', { number: index + 1 })}
+                aria-current={currentTipIndex === index ? 'true' : undefined}
               />
             ))}
           </Box>
@@ -174,7 +175,7 @@ const FinancialTips = ({ maxTips = 1, inWelcomeSection = false }) => {
           <IconButton 
             size="small"
             onClick={handleNextTip}
-            aria-label="Next tip"
+            aria-label={t('financialTips.nextTip')}
             className={styles.tipNavButton}
           >
             <NavigateNextIcon fontSize="small" />

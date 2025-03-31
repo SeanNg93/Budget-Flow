@@ -3,16 +3,19 @@ import { Paper, Box, Fade } from '@mui/material';
 import SplitText from './SplitText';
 import styles from '../../styles/dashboard.module.css';
 import FinancialTips from './FinancialTips';
+import { useTranslation } from 'react-i18next';
 
 /**
  * WelcomeSection component displays a greeting to the user
  * and provides introduction text to the dashboard
  */
 const WelcomeSection = ({ userProfile, user, openFinanceActionPanel, walletCount = 0 }) => {
+  const { t } = useTranslation();
+  
   // Get user name from profile with fallbacks
   const userName = useMemo(() => 
-    userProfile?.fullName || user?.username || 'User'
-  , [userProfile, user]);
+    userProfile?.fullName || user?.username || t('common.user')
+  , [userProfile, user, t]);
 
   // State for image carousel
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -41,16 +44,16 @@ const WelcomeSection = ({ userProfile, user, openFinanceActionPanel, walletCount
         setCurrentImageIndex((prevIndex) => (prevIndex + 1) % welcomeImages.length);
         setFadeIn(true);
       }, 500);
-    }, 5000);
+    }, 7000);
 
     return () => clearInterval(interval);
   }, [welcomeImages.length]);
 
   // Effect to swap welcome text with financial tips after delay
   useEffect(() => {
-    // Only set up transition timer if wallet count is 3 or more
+    // If wallet count is 3 or more, set up transition to financial tips
     if (walletCount >= 3) {
-      // Wait 20 seconds before transitioning to financial tips
+      // Wait 10 seconds before transitioning to financial tips
       const tipTransitionTimer = setTimeout(() => {
         // Fade out current content
         setContentFadeIn(false);
@@ -60,11 +63,21 @@ const WelcomeSection = ({ userProfile, user, openFinanceActionPanel, walletCount
           setShowWelcome(false);
           setContentFadeIn(true);
         }, 500);
-      }, 20000);
+      }, 10000);
       
       return () => clearTimeout(tipTransitionTimer);
+    } else if (!showWelcome) {
+      // If wallet count drops below 3 and we're showing tips, transition back to welcome text
+      // Fade out current content
+      setContentFadeIn(false);
+      
+      // Wait for fade-out to complete before switching content back to welcome
+      setTimeout(() => {
+        setShowWelcome(true);
+        setContentFadeIn(true);
+      }, 500);
     }
-  }, [walletCount]);
+  }, [walletCount, showWelcome]);
 
   // Handle manual image change
   const handleImageChange = (index) => {
@@ -93,7 +106,7 @@ const WelcomeSection = ({ userProfile, user, openFinanceActionPanel, walletCount
           <Fade in={fadeIn} timeout={{ enter: 800, exit: 500 }}>
             <img 
               src={welcomeImages[currentImageIndex]} 
-              alt={`Welcome ${currentImageIndex + 1}`} 
+              alt={t('dashboard.welcomeImageAlt', { number: currentImageIndex + 1 })} 
               className={styles.welcomeImage}
             />
           </Fade>
@@ -107,7 +120,7 @@ const WelcomeSection = ({ userProfile, user, openFinanceActionPanel, walletCount
                 onClick={() => handleImageChange(index)}
                 role="button"
                 tabIndex={0}
-                aria-label={`View image ${index + 1}`}
+                aria-label={t('dashboard.viewImage', { number: index + 1 })}
               />
             ))}
           </Box>
@@ -120,7 +133,7 @@ const WelcomeSection = ({ userProfile, user, openFinanceActionPanel, walletCount
               <>
                 <Box className={styles.welcomeHeader}>
                   <SplitText
-                    text={`Welcome, ${userName}! 👋`}
+                    text={t('dashboard.welcomeGreeting', { name: userName })}
                     className={styles.welcomeTitle}
                     {...animationProps}
                     delay={35}
@@ -130,7 +143,7 @@ const WelcomeSection = ({ userProfile, user, openFinanceActionPanel, walletCount
                 </Box>
                 
                 <SplitText
-                  text="This is your financial dashboard. Here you can manage your finances, track expenses, and plan your budget."
+                  text={t('dashboard.welcomeMessage')}
                   className={styles['subtitle-split']}
                   {...animationProps}
                   delay={15}
@@ -168,7 +181,7 @@ const WelcomeSection = ({ userProfile, user, openFinanceActionPanel, walletCount
                       }}
                       role="button"
                       tabIndex={0}
-                      aria-label="Open quick navigation menu"
+                      aria-label={t('dashboard.openNavigationMenu')}
                       className={styles['nav-link-highlight']}
                       sx={{
                         marginLeft: '2px',
@@ -177,7 +190,7 @@ const WelcomeSection = ({ userProfile, user, openFinanceActionPanel, walletCount
                       }}
                     >
                       <SplitText
-                        text="Click here"
+                        text={t('dashboard.clickHere')}
                         className={styles['subtitle-split']}
                         {...animationProps}
                         delay={30}
@@ -201,7 +214,7 @@ const WelcomeSection = ({ userProfile, user, openFinanceActionPanel, walletCount
                     />
                     
                     <SplitText
-                      text="for quick navigation."
+                      text={t('dashboard.forQuickNavigation')}
                       className={styles['subtitle-split']}
                       {...animationProps}
                       delay={35}

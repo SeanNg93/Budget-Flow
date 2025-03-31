@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
 import { changePassword } from '../../config/axiosInstance';
+import { useTranslation } from 'react-i18next';
 
 // Material UI imports
 import {
@@ -22,23 +23,24 @@ import {
 } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 
-// Validation schema
-const ChangePasswordSchema = Yup.object().shape({
-  currentPassword: Yup.string()
-    .required('Current password is required'),
-  newPassword: Yup.string()
-    .min(6, 'Password must be at least 6 characters')
-    .required('New password is required'),
-  confirmPassword: Yup.string()
-    .oneOf([Yup.ref('newPassword'), null], 'Passwords must match')
-    .required('Confirm password is required'),
-});
-
 const ChangePassword = ({ open, onClose }) => {
+  const { t } = useTranslation();
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [status, setStatus] = useState({ message: '', severity: 'info', show: false });
+
+  // Validation schema - created inside component to access translation function
+  const ChangePasswordSchema = Yup.object().shape({
+    currentPassword: Yup.string()
+      .required(t('password.errors.currentRequired')),
+    newPassword: Yup.string()
+      .min(6, t('password.errors.minLength'))
+      .required(t('password.errors.newRequired')),
+    confirmPassword: Yup.string()
+      .oneOf([Yup.ref('newPassword'), null], t('password.errors.mustMatch'))
+      .required(t('password.errors.confirmRequired')),
+  });
 
   const handleClickShowCurrentPassword = () => {
     setShowCurrentPassword(!showCurrentPassword);
@@ -60,7 +62,7 @@ const ChangePassword = ({ open, onClose }) => {
     try {
       await changePassword(values.currentPassword, values.newPassword);
       setStatus({
-        message: 'Password changed successfully!',
+        message: t('password.changeSuccess'),
         severity: 'success',
         show: true
       });
@@ -69,7 +71,7 @@ const ChangePassword = ({ open, onClose }) => {
         onClose();
       }, 2000);
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Failed to change password. Please try again.';
+      const errorMessage = error.response?.data?.message || t('password.changeFailed');
       setStatus({
         message: errorMessage,
         severity: 'error',
@@ -82,7 +84,7 @@ const ChangePassword = ({ open, onClose }) => {
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Change Password</DialogTitle>
+      <DialogTitle>{t('password.changePassword')}</DialogTitle>
       <Formik
         initialValues={{ currentPassword: '', newPassword: '', confirmPassword: '' }}
         validationSchema={ChangePasswordSchema}
@@ -92,7 +94,7 @@ const ChangePassword = ({ open, onClose }) => {
           <Form>
             <DialogContent>
               <DialogContentText>
-                To change your password, please enter your current password and then your new password.
+                {t('password.instructions')}
               </DialogContentText>
               
               {status.show && (
@@ -107,7 +109,7 @@ const ChangePassword = ({ open, onClose }) => {
                     <FormControl error={meta.touched && Boolean(meta.error)}>
                       <TextField
                         {...field}
-                        label="Current Password"
+                        label={t('password.current')}
                         type={showCurrentPassword ? 'text' : 'password'}
                         fullWidth
                         error={meta.touched && Boolean(meta.error)}
@@ -116,7 +118,7 @@ const ChangePassword = ({ open, onClose }) => {
                           endAdornment: (
                             <InputAdornment position="end">
                               <IconButton
-                                aria-label="toggle password visibility"
+                                aria-label={t('password.toggleVisibility')}
                                 onClick={handleClickShowCurrentPassword}
                                 onMouseDown={handleMouseDownPassword}
                                 edge="end"
@@ -136,7 +138,7 @@ const ChangePassword = ({ open, onClose }) => {
                     <FormControl error={meta.touched && Boolean(meta.error)}>
                       <TextField
                         {...field}
-                        label="New Password"
+                        label={t('password.new')}
                         type={showNewPassword ? 'text' : 'password'}
                         fullWidth
                         error={meta.touched && Boolean(meta.error)}
@@ -145,7 +147,7 @@ const ChangePassword = ({ open, onClose }) => {
                           endAdornment: (
                             <InputAdornment position="end">
                               <IconButton
-                                aria-label="toggle password visibility"
+                                aria-label={t('password.toggleVisibility')}
                                 onClick={handleClickShowNewPassword}
                                 onMouseDown={handleMouseDownPassword}
                                 edge="end"
@@ -165,7 +167,7 @@ const ChangePassword = ({ open, onClose }) => {
                     <FormControl error={meta.touched && Boolean(meta.error)}>
                       <TextField
                         {...field}
-                        label="Confirm New Password"
+                        label={t('password.confirm')}
                         type={showConfirmPassword ? 'text' : 'password'}
                         fullWidth
                         error={meta.touched && Boolean(meta.error)}
@@ -174,7 +176,7 @@ const ChangePassword = ({ open, onClose }) => {
                           endAdornment: (
                             <InputAdornment position="end">
                               <IconButton
-                                aria-label="toggle password visibility"
+                                aria-label={t('password.toggleVisibility')}
                                 onClick={handleClickShowConfirmPassword}
                                 onMouseDown={handleMouseDownPassword}
                                 edge="end"
@@ -192,7 +194,7 @@ const ChangePassword = ({ open, onClose }) => {
             </DialogContent>
             <DialogActions>
               <Button onClick={onClose} color="primary">
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button 
                 type="submit" 
@@ -200,7 +202,7 @@ const ChangePassword = ({ open, onClose }) => {
                 variant="contained" 
                 disabled={isSubmitting}
               >
-                {isSubmitting ? 'Changing...' : 'Change Password'}
+                {isSubmitting ? t('password.changing') : t('password.changePassword')}
               </Button>
             </DialogActions>
           </Form>

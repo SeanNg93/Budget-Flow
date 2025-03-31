@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { 
   Button, 
   Dialog, 
@@ -48,6 +48,7 @@ import CategoryManageForm from './CategoryManageForm';
 import WalletManageForm from './WalletManageForm';
 import styles from '../../styles/transactionForm.module.css';
 import { formatCurrency } from '../../utils/moneyFormatter';
+import { useTranslation } from 'react-i18next';
 
 // Create a SlideTransition component with forwardRef
 const SlideTransition = React.forwardRef(function Transition(props, ref) {
@@ -55,6 +56,8 @@ const SlideTransition = React.forwardRef(function Transition(props, ref) {
 });
 
 const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = false, initialData = null }) => {
+  const { t } = useTranslation();
+
   const [accounts, setAccounts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -864,45 +867,88 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
     }
   };
 
-  // Add a helper function to check if there are insufficient funds
+  // Helper function to check if user has insufficient funds
   const hasInsufficientFunds = () => {
     if (formData.transactionType !== 'EXPENSE' || !formData.accountId || !formData.amount) {
       return false;
     }
     
-    const selectedAccount = accounts.find(a => a.id.toString() === formData.accountId.toString());
-    if (!selectedAccount) {
+    const amount = parseFloat(formData.amount);
+    if (isNaN(amount) || amount <= 0) {
       return false;
     }
     
-    const walletBalance = selectedAccount.balance || 0;
-    const amount = parseFloat(formData.amount) || 0;
-    
-    // If editing, account for the original amount
-    let originalAmount = 0;
-    if (initialData && initialData.transactionType === 'EXPENSE' && 
-        initialData.wallet && initialData.wallet.id.toString() === formData.accountId.toString()) {
-      originalAmount = parseFloat(initialData.amount) || 0;
+    const account = accounts.find(a => a.id.toString() === formData.accountId.toString());
+    if (!account) {
+      return false;
     }
     
-    const effectiveAmount = amount - (initialData ? originalAmount : 0);
-    
-    return effectiveAmount > walletBalance;
+    return amount > (account.balance || 0);
   };
-
-  // Add a helper function to calculate if the transaction would exceed warning threshold
+  
+  // Helper function for checking if approaching warning threshold
   const isExceedingWarningThreshold = () => {
-    if (!categorySpendingData || !categorySpendingData.warningThreshold) {
+    if (!formData.categoryId || !formData.amount || !categorySpendingData || !categorySpendingData.limit) {
       return false;
     }
     
-    const currentAmount = parseFloat(formData.amount) || 0;
-    const totalWithCurrentAmount = categorySpendingData.totalSpent + currentAmount;
+    const amount = parseFloat(formData.amount);
+    if (isNaN(amount) || amount <= 0) {
+      return false;
+    }
     
-    return totalWithCurrentAmount > categorySpendingData.warningThreshold && 
-           totalWithCurrentAmount <= categorySpendingData.limit;
+    const category = categories.find(c => c.id.toString() === formData.categoryId.toString());
+    if (!category || !category.spendingLimit) {
+      return false;
+    }
+    
+    const warningThreshold = categorySpendingData.limit * (category.warningPercentage || 80) / 100;
+    const newTotal = categorySpendingData.totalSpent + amount;
+    
+    return newTotal > warningThreshold && newTotal <= categorySpendingData.limit;
   };
 
+  // Shared wallet badge component
+  const sharedWalletBadge = useMemo(() => {
+    try {
+      if (formData && formData.accountId && sharedWallets && 
+          Object.keys(sharedWallets).length > 0 && 
+          sharedWallets[parseInt(formData.accountId, 10)]) {
+        return (
+          <Typography 
+            component="span"
+            variant="caption"
+            className={styles.sharedWalletBadge}
+          >
+            ({t('transactions.sharedWallet')})
+          </Typography>
+        );
+      }
+    } catch (err) {
+      console.error('Error rendering shared wallet badge:', err);
+    }
+    return null;
+  }, [formData, formData?.accountId, sharedWallets, t]);
+
+  // Helper function to render wallet selection value
+  const renderWalletValue = (selected) => {
+    try {
+      if (!selected) {
+        return <Typography sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>{t('transactions.selectWallet')}</Typography>;
+      }
+      // Use toString() for consistent string comparison
+      const selectedStr = selected.toString();
+      const account = accounts.find(a => a && a.id && a.id.toString() === selectedStr);
+      return <Typography sx={{ fontSize: '0.8rem' }}>
+        {account ? (account.accountName + (sharedWallets && Object.keys(sharedWallets).length > 0 && sharedWallets[account.id] ? ` (${t('transactions.sharedWallet')})` : "")) : ''}
+      </Typography>;
+    } catch (err) {
+      console.error('Error rendering wallet value:', err);
+      return <Typography sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>{t('transactions.selectWallet')}</Typography>;
+    }
+  };
+  
+  // Helper function to render category selection value
   const renderValue = (selected) => {
     if (!selected) {
       return <Typography sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>Select your category</Typography>;
@@ -936,24 +982,26 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
             <Box className={styles.labelContainer}>
               <Typography variant="subtitle2" className={styles.labelText}>
                 <AccountBalanceWalletIcon className={styles.labelIcon} />
-                Wallet
-                {formData.accountId && (
-                  <Typography 
-                    component="span"
-                    variant="caption"
-                    className={styles.walletBalance}
-                  >
-                    (Balance: {formatCurrency(accounts.find(a => a.id === parseInt(formData.accountId, 10))?.balance || 0)})
-                  </Typography>
-                )}
+                {t('transactions.wallet')}
+                {sharedWalletBadge}
               </Typography>
               <Box className={styles.actionButtonsContainer}>
                 <IconButton 
                   size="small" 
+                  className={styles.addIconButton}
+                  onClick={() => setAccountFormOpen(true)}
+                  disabled={loading}
+                  title={t('transactions.addWallet')}
+                >
+                  <AddIcon fontSize="small" />
+                </IconButton>
+                <IconButton
+                  size="small"
+                  color="primary"
                   className={styles.manageButton}
                   onClick={handleOpenWalletManage}
                   disabled={loading}
-                  title="Manage Wallets"
+                  title={t('transactions.manageWallets')}
                 >
                   <AccountBalanceWalletIcon fontSize="small" />
                 </IconButton>
@@ -974,22 +1022,29 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
                 '& .MuiInputBase-root': { height: '36px' },
                 '& .MuiSelect-select': { fontSize: '0.8rem' }
               }}
-              renderValue={(selected) => {
-                if (!selected) {
-                  return <Typography sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>Select a wallet</Typography>;
-                }
-                // Use toString() for consistent string comparison
-                const selectedStr = selected.toString();
-                const account = accounts.find(a => a.id.toString() === selectedStr);
-                return <Typography sx={{ fontSize: '0.8rem' }}>
-                  {account ? (account.accountName + (sharedWallets[account.id] ? " (shared wallet)" : "")) : ''}
-                </Typography>;
-              }}
+              renderValue={renderWalletValue}
             >
-              <MenuItem value="" disabled>Select a wallet</MenuItem>
+              <MenuItem value="" disabled>
+                <Typography sx={{ fontSize: '0.8rem' }}>{t('transactions.selectWallet')}</Typography>
+              </MenuItem>
               {accounts.map((account) => (
-                <MenuItem key={account.id} value={account.id.toString()} sx={{ fontSize: '0.8rem' }}>
-                  {account.accountName}{sharedWallets[account.id] ? " (shared wallet)" : ""}
+                <MenuItem 
+                  key={account.id} 
+                  value={account.id.toString()}
+                  sx={{ fontSize: '0.8rem' }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                    {account.accountName}
+                    {account.balance !== undefined && (
+                      <Typography 
+                        variant="caption" 
+                        color="text.secondary" 
+                        sx={{ marginLeft: 'auto', fontSize: '0.75rem' }}
+                      >
+                        {formatCurrency(account.balance)}
+                      </Typography>
+                    )}
+                  </Box>
                 </MenuItem>
               ))}
             </Select>
@@ -1001,7 +1056,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
             <Box className={styles.labelContainer}>
               <Typography variant="subtitle2" className={styles.labelText}>
                 <CategoryIcon className={styles.labelIcon} />
-                Category
+                {t('transactions.category')}
                 {formData.transactionType === 'EXPENSE' && categorySpendingData && categorySpendingData.limit > 0 && (
                   <Typography 
                     component="span" 
@@ -1009,10 +1064,10 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
                     className={`${styles.categoryInfoText} ${categoryExcessAmount > 0 ? styles.categoryExceedingText : ''}`}
                   >
                     {categoryExcessAmount > 0 ? 
-                      `(Exceeding limit by $${categoryExcessAmount.toFixed(2)})` : 
+                      `(${t('transactions.exceedingLimitBy')} ${formatCurrency(categoryExcessAmount)})` : 
                       initialData ?
-                        `(Limit: $${categorySpendingData.limit.toFixed(2)}, Current: $${categorySpendingData.originalTotalSpent ? categorySpendingData.originalTotalSpent.toFixed(2) : categorySpendingData.totalSpent.toFixed(2)})` :
-                        `(Limit: $${categorySpendingData.limit.toFixed(2)}, Left: $${Math.max(0, categorySpendingData.limit - categorySpendingData.totalSpent).toFixed(2)})`
+                        `(${t('transactions.limit')}: ${formatCurrency(categorySpendingData.limit)}, ${t('transactions.current')}: ${formatCurrency(categorySpendingData.originalTotalSpent ? categorySpendingData.originalTotalSpent : categorySpendingData.totalSpent)})` :
+                        `(${t('transactions.limit')}: ${formatCurrency(categorySpendingData.limit)}, ${t('transactions.left')}: ${formatCurrency(Math.max(0, categorySpendingData.limit - categorySpendingData.totalSpent))})`
                     }
                   </Typography>
                 )}
@@ -1023,6 +1078,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
                   className={styles.addIconButton}
                   onClick={() => setCategoryFormOpen(true)}
                   disabled={loading}
+                  title={t('transactions.addCategory')}
                 >
                   <AddIcon fontSize="small" />
                 </IconButton>
@@ -1032,7 +1088,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
                   className={styles.manageButton}
                   onClick={handleOpenCategoryManage}
                   disabled={loading}
-                  title="Manage Categories"
+                  title={t('transactions.manageCategories')}
                 >
                   <CategoryIcon fontSize="small" />
                 </IconButton>
@@ -1056,7 +1112,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
               renderValue={renderValue}
             >
               <MenuItem value="" disabled>
-                <Typography sx={{ fontSize: '0.8rem' }}>Select your category</Typography>
+                <Typography sx={{ fontSize: '0.8rem' }}>{t('transactions.selectCategory')}</Typography>
               </MenuItem>
               {categories
                 .filter(category => category.type === formData.transactionType)
@@ -1078,8 +1134,12 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
                     className={styles.categoryAlert}
                   >
                     {initialData ? 
-                      `This transaction would exceed your spending limit for this category. Your updated total spending would be $${(categorySpendingData.totalSpent + parseFloat(formData.amount || 0)).toFixed(2)}.` :
-                      `You are exceeding your spending limit for this category. Your total spending would be $${(categorySpendingData.totalSpent + parseFloat(formData.amount || 0)).toFixed(2)}.`
+                      t('transactions.exceedLimitUpdateWarning', {
+                        total: formatCurrency(categorySpendingData.totalSpent + parseFloat(formData.amount || 0))
+                      }) :
+                      t('transactions.exceedLimitNewWarning', {
+                        total: formatCurrency(categorySpendingData.totalSpent + parseFloat(formData.amount || 0))
+                      })
                     }
                   </Alert>
                 ) : isExceedingWarningThreshold() ? (
@@ -1089,8 +1149,14 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
                     className={styles.categoryAlert}
                   >
                     {initialData ?
-                      `You are approaching your spending limit of $${categorySpendingData.limit.toFixed(2)}. This transaction would update your total to $${(categorySpendingData.totalSpent + parseFloat(formData.amount || 0)).toFixed(2)}.` :
-                      `You are approaching your spending limit of $${categorySpendingData.limit.toFixed(2)}. This transaction would bring your total to $${(categorySpendingData.totalSpent + parseFloat(formData.amount || 0)).toFixed(2)}.`
+                      t('transactions.approachingLimitUpdateWarning', {
+                        limit: formatCurrency(categorySpendingData.limit),
+                        total: formatCurrency(categorySpendingData.totalSpent + parseFloat(formData.amount || 0))
+                      }) :
+                      t('transactions.approachingLimitNewWarning', {
+                        limit: formatCurrency(categorySpendingData.limit),
+                        total: formatCurrency(categorySpendingData.totalSpent + parseFloat(formData.amount || 0))
+                      })
                     }
                   </Alert>
                 ) : null}
@@ -1108,7 +1174,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
               <Box className={styles.labelContainer}>
                 <Typography variant="subtitle2" className={styles.labelText}>
                   <AttachMoneyIcon className={styles.labelIcon} />
-                  Amount
+                  {t('transactions.amount')}
                 </Typography>
               </Box>
               
@@ -1136,9 +1202,11 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
                         const selectedAccount = accounts.find(a => a.id.toString() === formData.accountId.toString());
                         if (selectedAccount) {
                           const walletBalance = selectedAccount.balance || 0;
-                          return `Insufficient funds! Available: ${formatCurrency(walletBalance)}`;
+                          return t('transactions.insufficientFundsWithBalance', {
+                            balance: formatCurrency(walletBalance)
+                          });
                         }
-                        return 'Insufficient funds in wallet';
+                        return t('transactions.insufficientFunds');
                       })()}
                     </span>
                   </Box>
@@ -1152,7 +1220,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
               <Box className={styles.labelContainer}>
                 <Typography variant="subtitle2" className={styles.labelText}>
                   <CalendarTodayIcon className={styles.labelIcon} />
-                  Date
+                  {t('transactions.date')}
                 </Typography>
               </Box>
               <DatePicker
@@ -1183,14 +1251,14 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
           <Box className={styles.labelContainer}>
             <Typography variant="subtitle2" className={styles.labelText}>
               <DescriptionIcon className={styles.labelIcon} />
-              Description
+              {t('transactions.description')}
             </Typography>
           </Box>
           <TextField
             name="description"
             value={formData.description}
             onChange={handleChange}
-            placeholder="What's this transaction for?"
+            placeholder={t('transactions.descriptionPlaceholder')}
             error={!!errors.description}
             helperText={errors.description}
             disabled={loading}
@@ -1204,7 +1272,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
           />
           <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Typography variant="caption" color="text.secondary">
-              {formData.description.length}/500 characters
+              {formData.description.length}/500 {t('common.characters')}
             </Typography>
           </Box>
         </FormControl>
@@ -1227,11 +1295,11 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
         >
           <ToggleButton value="EXPENSE" aria-label="expense" className={styles.expenseToggle}>
             <ArrowUpwardIcon fontSize="small" sx={{ fontSize: '0.9rem' }} />
-            <span style={{ marginLeft: '3px' }}>Expense</span>
+            <span style={{ marginLeft: '3px' }}>{t('transactions.expense')}</span>
           </ToggleButton>
           <ToggleButton value="INCOME" aria-label="income" className={styles.incomeToggle}>
             <ArrowDownwardIcon fontSize="small" sx={{ fontSize: '0.9rem' }} />
-            <span style={{ marginLeft: '3px' }}>Income</span>
+            <span style={{ marginLeft: '3px' }}>{t('transactions.income')}</span>
           </ToggleButton>
         </ToggleButtonGroup>
 
@@ -1242,7 +1310,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
               disabled={submitting} 
               className={styles.cancelButton}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
           )}
           <Button 
@@ -1253,7 +1321,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
             startIcon={submitting ? <CircularProgress size={18} /> : null}
             className={styles.saveTransactionButton}
           >
-            {submitting ? 'Saving...' : formData.transactionType === 'EXPENSE' ? 'Save Expense' : 'Save Income'}
+            {submitting ? t('common.saving') : formData.transactionType === 'EXPENSE' ? t('transactions.saveExpense') : t('transactions.saveIncome')}
           </Button>
         </Box>
       </Box>
@@ -1266,13 +1334,13 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
         PaperProps={{ sx: { borderRadius: '16px', boxShadow: '0px 8px 24px rgba(0, 0, 0, 0.15)' } }}
         ref={editCategoryDialogRef}
       >
-        <DialogTitle sx={{ pb: 1, fontWeight: 600 }}>Edit Category</DialogTitle>
+        <DialogTitle sx={{ pb: 1, fontWeight: 600 }}>{t('transactions.editCategory')}</DialogTitle>
         <DialogContent sx={{ pt: 1 }}>
           <TextField
             fullWidth
             value={editCategoryName}
             onChange={(e) => setEditCategoryName(e.target.value)}
-            placeholder="Category name"
+            placeholder={t('transactions.categoryName')}
             sx={{ mt: 1, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}
           />
         </DialogContent>
@@ -1281,7 +1349,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
             onClick={handleEditCategoryClose}
             sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 500 }}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button 
             variant="contained" 
@@ -1289,7 +1357,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
             onClick={handleEditCategorySave}
             sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 500, boxShadow: 'none' }}
           >
-            Save
+            {t('common.save')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -1302,10 +1370,10 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
         PaperProps={{ sx: { borderRadius: '16px', boxShadow: '0px 8px 24px rgba(0, 0, 0, 0.15)' } }}
         ref={deleteCategoryDialogRef}
       >
-        <DialogTitle sx={{ pb: 1, fontWeight: 600 }}>Delete Category</DialogTitle>
+        <DialogTitle sx={{ pb: 1, fontWeight: 600 }}>{t('transactions.deleteCategory')}</DialogTitle>
         <DialogContent sx={{ pt: 1 }}>
           <DialogContentText>
-            Are you sure you want to delete the category "{deleteCategoryName}"? This action cannot be undone.
+            {t('transactions.deleteCategoryConfirm', { categoryName: deleteCategoryName })}
           </DialogContentText>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
@@ -1313,7 +1381,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
             onClick={handleDeleteCategoryClose}
             sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 500 }}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button 
             variant="contained" 
@@ -1321,7 +1389,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
             onClick={handleDeleteCategoryConfirm}
             sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 500, boxShadow: 'none' }}
           >
-            Delete
+            {t('common.delete')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -1334,13 +1402,13 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
         PaperProps={{ sx: { borderRadius: '16px', boxShadow: '0px 8px 24px rgba(0, 0, 0, 0.15)' } }}
         ref={editWalletDialogRef}
       >
-        <DialogTitle sx={{ pb: 1, fontWeight: 600 }}>Edit Wallet</DialogTitle>
+        <DialogTitle sx={{ pb: 1, fontWeight: 600 }}>{t('transactions.editWallet')}</DialogTitle>
         <DialogContent sx={{ pt: 1 }}>
           <TextField
             fullWidth
             value={editWalletName}
             onChange={(e) => setEditWalletName(e.target.value)}
-            placeholder="Wallet name"
+            placeholder={t('transactions.walletName')}
             sx={{ mt: 1, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}
           />
         </DialogContent>
@@ -1349,7 +1417,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
             onClick={handleEditWalletClose}
             sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 500 }}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button 
             variant="contained" 
@@ -1357,7 +1425,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
             onClick={handleEditWalletSave}
             sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 500, boxShadow: 'none' }}
           >
-            Save
+            {t('common.save')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -1370,10 +1438,10 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
         PaperProps={{ sx: { borderRadius: '16px', boxShadow: '0px 8px 24px rgba(0, 0, 0, 0.15)' } }}
         ref={deleteWalletDialogRef}
       >
-        <DialogTitle sx={{ pb: 1, fontWeight: 600 }}>Delete Wallet</DialogTitle>
+        <DialogTitle sx={{ pb: 1, fontWeight: 600 }}>{t('transactions.deleteWallet')}</DialogTitle>
         <DialogContent sx={{ pt: 1 }}>
           <DialogContentText>
-            Are you sure you want to delete the wallet "{deleteWalletName}"? This action cannot be undone.
+            {t('transactions.deleteWalletConfirm', { walletName: deleteWalletName })}
           </DialogContentText>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
@@ -1381,7 +1449,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
             onClick={handleDeleteWalletClose}
             sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 500 }}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button 
             variant="contained" 
@@ -1389,7 +1457,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
             onClick={handleDeleteWalletConfirm}
             sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 500, boxShadow: 'none' }}
           >
-            Delete
+            {t('common.delete')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -1402,7 +1470,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
         PaperProps={{ sx: { borderRadius: '16px', boxShadow: '0px 8px 24px rgba(0, 0, 0, 0.15)' } }}
         ref={categoryFormDialogRef}
       >
-        <DialogTitle sx={{ pb: 1, fontWeight: 600 }}>Add Wallet</DialogTitle>
+        <DialogTitle sx={{ pb: 1, fontWeight: 600 }}>{t('transactions.addWallet')}</DialogTitle>
         <DialogContent sx={{ pt: 1 }}>
           <WalletForm 
             open={true} 
@@ -1421,7 +1489,7 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
         PaperProps={{ sx: { borderRadius: '16px', boxShadow: '0px 8px 24px rgba(0, 0, 0, 0.15)' } }}
         ref={categoryFormDialogRef}
       >
-        <DialogTitle sx={{ pb: 1, fontWeight: 600 }}>Add Category</DialogTitle>
+        <DialogTitle sx={{ pb: 1, fontWeight: 600 }}>{t('transactions.addCategory')}</DialogTitle>
         <DialogContent sx={{ pt: 1 }}>
           <CategoryForm 
             open={true} 
@@ -1441,7 +1509,10 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
         fullWidth={true}
         PaperProps={{
           className: styles.dialogPaper,
-          style: { width: '500px', maxWidth: '90vw' }
+          style: { 
+            width: '500px', 
+            maxWidth: '90vw'
+          }
         }}
       >
         <DialogContent sx={{ p: 2 }}>
@@ -1508,11 +1579,11 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
         {formData.transactionType === 'EXPENSE' ? 
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <ArrowUpwardIcon sx={{ mr: 0.8, color: '#ff3b30', fontSize: '1.1rem' }} />
-            {initialData ? 'Edit Expense' : 'Add Transaction'}
+            {initialData ? t('transactions.editExpense') : t('transactions.addTransaction')}
           </Box> : 
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <ArrowDownwardIcon sx={{ mr: 0.8, color: '#34c759', fontSize: '1.1rem' }} />
-            {initialData ? 'Edit Income' : 'Add Transaction'}
+            {initialData ? t('transactions.editIncome') : t('transactions.addTransaction')}
           </Box>
         }
       </DialogTitle>

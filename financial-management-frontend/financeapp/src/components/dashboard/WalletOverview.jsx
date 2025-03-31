@@ -34,13 +34,8 @@ import ShareWalletForm from './ShareWalletForm';
 import UserTransferForm from './UserTransferForm';
 import WalletForm from './WalletForm';
 import FinancialTips from './FinancialTips';
-
-// Helper to format currency
-const formatCurrency = (value) => {
-  // Ensure value is a number before formatting
-  const numericValue = typeof value === 'number' ? value : parseFloat(value || 0);
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(numericValue);
-};
+import { useTranslation } from 'react-i18next';
+import { formatCurrency } from '../../utils/formatters';
 
 // Map of icon types to components
 const iconComponents = {
@@ -69,15 +64,29 @@ const WalletIcon = React.memo(({ wallet }) => {
   // Update the render key when the wallet id, customIcon or forceRefresh changes
   useEffect(() => {
     setRenderKey(Date.now());
-  }, [wallet.id, customIcon, wallet._forceIconRefresh]);
+  }, [wallet.id, customIcon, wallet._forceIconRefresh, wallet._icon]);
   
   // Check if the icon is an emoji
   if (customIcon) {
     const iconItem = WALLET_ICONS.find(icon => icon.value === customIcon);
     if (iconItem?.type === 'emoji') {
-      return <span key={renderKey} className={styles.walletIcon} style={{ fontSize: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px' }}>{customIcon}</span>;
+      return (
+        <span 
+          key={`${wallet.id}-${customIcon}-${renderKey}`} 
+          className={styles.walletIcon} 
+          style={{ fontSize: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px' }}
+        >
+          {customIcon}
+        </span>
+      );
     } else if (iconComponents[customIcon]) {
-      return React.cloneElement(iconComponents[customIcon], { key: renderKey, style: { display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px' } });
+      return React.cloneElement(
+        iconComponents[customIcon], 
+        { 
+          key: `${wallet.id}-${customIcon}-${renderKey}`, 
+          style: { display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px' } 
+        }
+      );
     }
   }
   
@@ -93,17 +102,23 @@ const WalletIcon = React.memo(({ wallet }) => {
   const key = wallet.accountType?.toLowerCase() || 'default';
   const iconType = typeToIcon[key] || 'default';
   
-  return React.cloneElement(iconComponents[iconType] || iconComponents.default, { key: renderKey, style: { display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px' } });
+  return React.cloneElement(
+    iconComponents[iconType] || iconComponents.default, 
+    { 
+      key: `${wallet.id}-${iconType}-${renderKey}`, 
+      style: { display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px' } 
+    }
+  );
 });
 
 // Extracted Shared Wallet Avatar component
-const SharedWalletAvatar = React.memo(({ info, isOwner }) => {
+const SharedWalletAvatar = React.memo(({ info, isOwner, t }) => {
   const avatarUrl = isOwner ? info.sharedWithProfilePictureUrl : info.ownerProfilePictureUrl;
   const username = isOwner ? info.sharedWithUsername : info.ownerUsername;
   
   const tooltipTitle = isOwner 
-    ? `Shared with: ${info.sharedWithUsername}`
-    : `Owner: ${info.ownerUsername}`;
+    ? t('wallets.sharedWithUser', { username: info.sharedWithUsername })
+    : t('wallets.ownedByUser', { username: info.ownerUsername });
   
   return (
     <Tooltip title={tooltipTitle}>
@@ -127,22 +142,36 @@ const SharedWalletAvatar = React.memo(({ info, isOwner }) => {
 });
 
 // Extracted Wallet Card component
-const WalletCard = React.memo(({ wallet, colorClass, isShared, isWalletOwner, getSharedWalletInfo, onMenuOpen }) => {
+const WalletCard = React.memo(({ wallet, colorClass, isShared, isWalletOwner, getSharedWalletInfo, onMenuOpen, t, i18n }) => {
   const handleMenuOpen = useCallback((e) => {
     e.stopPropagation();
     onMenuOpen(e, wallet);
   }, [wallet, onMenuOpen]);
 
   // Force component to update when wallet or colorClass changes
-  const [updated, setUpdated] = useState(false);
+  const [updated, setUpdated] = useState(Date.now());
   
   // Use direct color class if available (for immediate updates after editing)
   const effectiveColorClass = wallet._colorClass || colorClass;
   
+  // Function to force a refresh when needed
+  const refreshState = useCallback(() => {
+    setUpdated(Date.now());
+  }, []);
+  
   useEffect(() => {
-    // This effect will run whenever wallet or colorClass changes
-    setUpdated(prev => !prev);
-  }, [wallet, colorClass, wallet.accountName, wallet.balance, wallet._forceIconRefresh]);
+    // This effect will run whenever relevant wallet properties change
+    refreshState();
+  }, [
+    wallet.id, 
+    wallet.accountName, 
+    wallet.balance, 
+    wallet._colorClass, 
+    wallet._icon, 
+    wallet._forceIconRefresh, 
+    colorClass,
+    refreshState
+  ]);
 
   return (
     <Box key={`${wallet.id}-${updated}`} className={`${styles.walletItem} ${styles[effectiveColorClass]}`}>
@@ -150,7 +179,7 @@ const WalletCard = React.memo(({ wallet, colorClass, isShared, isWalletOwner, ge
         size="small"
         className={styles.walletMenuButtonCircle}
         onClick={handleMenuOpen}
-        aria-label="Wallet options"
+        aria-label={t('wallets.options')}
       >
         <MoreVertIcon fontSize="small" />
       </IconButton>
@@ -177,7 +206,7 @@ const WalletCard = React.memo(({ wallet, colorClass, isShared, isWalletOwner, ge
       </Box>
 
       <Typography variant="h4" className={styles.walletBalance}>
-        {formatCurrency(wallet.balance)}
+        {formatCurrency(wallet.balance, i18n.language)}
       </Typography>
 
       <Box sx={{ flexGrow: 1 }}></Box>
@@ -197,31 +226,36 @@ const WalletCard = React.memo(({ wallet, colorClass, isShared, isWalletOwner, ge
       >
         {isShared ? (
           <>
-            {isWalletOwner(wallet.id) ? 'Shared Wallet with:' : 'Shared Wallet by:'}
+            {isWalletOwner(wallet.id) ? t('wallets.sharedWalletWith') : t('wallets.sharedWalletBy')}
             <SharedWalletAvatar 
               info={getSharedWalletInfo(wallet.id)} 
               isOwner={isWalletOwner(wallet.id)} 
+              t={t}
             />
           </>
         ) : (
-          wallet.accountType || "General Account"
+          wallet.accountType || t('wallets.generalAccount')
         )}
       </Typography>
     </Box>
   );
 }, (prevProps, nextProps) => {
   // Custom comparison function to determine if we need to re-render
+  // Return false to force re-render if any of these properties change
   return (
     prevProps.wallet.id === nextProps.wallet.id &&
     prevProps.wallet.accountName === nextProps.wallet.accountName &&
     prevProps.wallet.balance === nextProps.wallet.balance &&
     prevProps.colorClass === nextProps.colorClass &&
     prevProps.wallet._forceIconRefresh === nextProps.wallet._forceIconRefresh &&
+    prevProps.wallet._icon === nextProps.wallet._icon &&
+    prevProps.wallet._colorClass === nextProps.wallet._colorClass &&
     prevProps.isShared === nextProps.isShared
   );
 });
 
 const WalletOverview = ({ onManageWallets, externalWallets }) => {
+  const { t, i18n } = useTranslation();
   const [wallets, setWallets] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -286,11 +320,11 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
       fetchSharedWalletsInfo();
     } catch (err) {
       console.error('Error fetching wallets:', err);
-      setError('Failed to load wallets. Please try again.');
+      setError(t('wallets.fetchError'));
     } finally {
       setLoading(false);
     }
-  }, [externalWallets]);
+  }, [externalWallets, t]);
 
   const fetchSharedWalletsInfo = useCallback(async () => {
     try {
@@ -399,60 +433,35 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
     setWalletToEdit(null);
   }, [updateDialogState]);
   
-  const handleWalletUpdated = useCallback((updatedWallet = null) => {
-    // If we received the updated wallet object directly from the form
+  const handleWalletUpdated = useCallback((updatedWallet) => {
+    setLoading(false);
+
+    // Only update if we have a valid updatedWallet object
     if (updatedWallet) {
-      // Immediately update the local state with the direct updated wallet
-      const updatedWallets = wallets.map(w => {
-        if (w.id === updatedWallet.id) {
-          // Return the updated wallet with all changes
-          return updatedWallet;
-        }
-        return w;
+      // Update the wallets state with the changed wallet
+      setWallets(currentWallets => {
+        return currentWallets.map(wallet => {
+          if (wallet.id === updatedWallet.id) {
+            // Use the properties directly from the updated wallet, as they already include
+            // the _colorClass, _icon, and _forceIconRefresh properties
+            return updatedWallet;
+          }
+          return wallet;
+        });
       });
-      
-      setWallets(updatedWallets);
+
+      // Update the selected wallet if it was the one that got updated
+      if (selectedWalletForMenu && selectedWalletForMenu.id === updatedWallet.id) {
+        setSelectedWalletForMenu(updatedWallet);
+      }
     }
-    // If no updated wallet was provided but we have walletToEdit
-    else if (walletToEdit) {
-      // Force a UI refresh by triggering a rerender
-      const forceRefresh = Date.now();
-      
-      // Clear any local caches to ensure fresh data
-      localStorage.removeItem('walletIconsCache');
-      
-      // Immediately make the edited wallet and its changes visible
-      const updatedWallets = wallets.map(w => {
-        if (w.id === walletToEdit.id) {
-          // Get the freshly saved icon and color from localStorage
-          const savedIcon = getWalletIcon(walletToEdit.id);
-          const colorClass = getWalletColorClass(walletToEdit.id);
-          
-          // Return a copy with potentially updated values
-          const updatedWallet = {
-            ...w,
-            accountName: walletToEdit.accountName, // Update name from the edited wallet
-            _forceIconRefresh: forceRefresh, // Add a timestamp to force icon refresh
-            _icon: savedIcon, // Add the icon directly to the wallet object
-            _colorClass: colorClass // Add the color class directly to the wallet object
-          };
-          
-          return updatedWallet;
-        }
-        return w;
-      });
-      
-      setWallets(updatedWallets);
-    }
-    
-    // Then fetch fresh data from the server with a slight delay
-    // to ensure localStorage updates are complete
-    setTimeout(() => {
-      fetchWallets();
-    }, 100);
-    
-    handleEditWalletClose();
-  }, [fetchWallets, handleEditWalletClose, walletToEdit, wallets]);
+
+    // Close the wallet form dialog
+    setDialogStates(prev => ({
+      ...prev,
+      editWalletDialog: false
+    }));
+  }, [setWallets, selectedWalletForMenu, setDialogStates]);
   
   const handleWalletShared = useCallback(() => {
     fetchWallets();
@@ -489,19 +498,26 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
   const renderContent = useCallback(() => {
     if (loading) {
       return (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 3, flexGrow: 1 }}>
-          <CircularProgress size={32} />
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 200 }}>
+          <CircularProgress />
         </Box>
       );
     }
     
     if (error) {
       return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
-          <Typography color="error" variant="body2" sx={{ textAlign: 'center', py: 2 }}>
+        <Box sx={{ textAlign: 'center', py: 3 }}>
+          <Typography variant="body1" color="error">
             {error}
           </Typography>
-          <FinancialTips maxTips={3} />
+          <Button 
+            variant="outlined" 
+            onClick={fetchWallets} 
+            sx={{ mt: 2 }}
+            size="small"
+          >
+            {t('common.retry')}
+          </Button>
         </Box>
       );
     }
@@ -511,7 +527,7 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
         <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, justifyContent: 'space-between' }}>
           <Box sx={{ textAlign: 'center', py: 3 }}>
             <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-              You don't have any wallets yet. Create one to get started!
+              {t('wallets.noWallets')}
             </Typography>
             <Button 
               variant="contained" 
@@ -519,7 +535,7 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
               onClick={onManageWallets}
               size="small"
             >
-              Create Wallet
+              {t('wallets.createWallet')}
             </Button>
           </Box>
           
@@ -545,7 +561,7 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
               onClick={() => changePage('prev')}
               sx={{ left: -20 }}
               disabled={!!slideDirection}
-              aria-label="Previous wallets"
+              aria-label={t('wallets.previousWallets')}
             >
               <ArrowBackIosNewIcon fontSize="small" />
             </IconButton>
@@ -561,6 +577,8 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
                 isWalletOwner={isWalletOwner}
                 getSharedWalletInfo={getSharedWalletInfo}
                 onMenuOpen={handleWalletMenuOpen}
+                t={t}
+                i18n={i18n}
               />
             ))}
           </Box>
@@ -571,14 +589,14 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
               onClick={() => changePage('next')}
               sx={{ right: -20 }}
               disabled={!!slideDirection}
-              aria-label="Next wallets"
+              aria-label={t('wallets.nextWallets')}
             >
               <ArrowForwardIosIcon fontSize="small" />
             </IconButton>
           )}
           
           {totalPages > 1 && (
-            <Box className={styles.paginationDots} role="navigation" aria-label="Wallet pages">
+            <Box className={styles.paginationDots} role="navigation" aria-label={t('wallets.walletPages')}>
               {[...Array(totalPages)].map((_, index) => (
                 <Box 
                   key={index}
@@ -589,7 +607,7 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
                   }}
                   role="button"
                   tabIndex={0}
-                  aria-label={`Go to page ${index + 1}`}
+                  aria-label={t('wallets.goToPage', { number: index + 1 })}
                   aria-current={currentPage === index ? 'page' : undefined}
                 />
               ))}
@@ -599,7 +617,7 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
         
         {/* Only show financial tips when there are 2 or fewer wallets */}
         {wallets.length <= 2 && (
-          <Box sx={{ mt: 2, mb: 1 }}>
+          <Box sx={{ mt: 1, mb: 0.5 }}>
             <FinancialTips maxTips={1} />
           </Box>
         )}
@@ -619,7 +637,10 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
     isWalletOwner, 
     getSharedWalletInfo, 
     handleWalletMenuOpen,
-    onManageWallets
+    onManageWallets,
+    t,
+    i18n,
+    fetchWallets
   ]);
 
   return (
@@ -631,7 +652,7 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
           color="text.primary" 
           className={styles.sectionTitle}
         >
-          Your Wallets
+          {t('dashboard.yourWallets')}
           {wallets.length > 0 && (
             <Typography 
               component="span" 
@@ -655,9 +676,9 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
           className={styles.manageWalletsButton}
           size="small"
           startIcon={<SettingsIcon />}
-          aria-label="Manage wallets"
+          aria-label={t('wallets.manageWallets')}
         >
-          Manage Wallets
+          {t('dashboard.manageWallets')}
         </Button>
       </Box>
       
@@ -672,15 +693,15 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
       >
         <MenuItem onClick={handleEditWallet} className={styles.dashboardMenuItem}>
           <EditIcon fontSize="small" className={styles.dashboardMenuIcon} />
-          <span>Edit Wallet</span>
+          <span>{t('wallets.editWallet')}</span>
         </MenuItem>
         <MenuItem onClick={handleSendMoney} className={styles.dashboardMenuItem}>
           <SendIcon fontSize="small" className={styles.dashboardMenuIcon} />
-          <span>Send Money</span>
+          <span>{t('wallets.sendMoney')}</span>
         </MenuItem>
         <MenuItem onClick={handleShareWallet} className={styles.dashboardMenuItem}>
           <PersonAddIcon fontSize="small" className={styles.dashboardMenuIcon} />
-          <span>Share Wallet</span>
+          <span>{t('wallets.shareWallet')}</span>
         </MenuItem>
       </Menu>
       

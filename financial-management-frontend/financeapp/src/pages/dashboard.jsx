@@ -21,6 +21,9 @@ import SummaryCards from '../components/dashboard/SummaryCards';
 import TransactionsSection from '../components/dashboard/TransactionsSection';
 import DialogManager from '../components/dashboard/DialogManager';
 
+// Import CSS module for dashboard
+import styles from '../styles/dashboard.module.css';
+
 // Import theme
 import AppTheme from '../shared-theme/AppTheme';
 import {
@@ -36,26 +39,35 @@ import FinanceService from '../services/FinanceService';
 // Define the backend API base URL
 const API_BASE_URL = "http://localhost:8080";
 
-const drawerWidth = 225;
+const drawerWidth = 280;
 
 const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(
   ({ theme, open }) => ({
     flexGrow: 1,
-    padding: theme.spacing(2.8),
-    transition: theme.transitions.create('margin', {
+    padding: theme.spacing(3),
+    paddingLeft: open ? theme.spacing(3) : theme.spacing(2.5),
+    paddingRight: theme.spacing(3),
+    transition: theme.transitions.create(['margin', 'width', 'padding'], {
       easing: theme.transitions.easing.sharp,
       duration: theme.transitions.duration.leavingScreen,
     }),
-    marginLeft: `-${drawerWidth}px`,
+    marginLeft: 0,
+    marginRight: 0,
+    width: open ? `calc(100% - ${drawerWidth}px)` : '100%',
     backgroundColor: theme.palette.mode === 'light' ? '#f8f9fa' : theme.palette.background.default,
     minHeight: '100vh',
     position: 'relative',
+    overflowX: 'hidden',
+    boxSizing: 'border-box',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
     ...(open && {
-      transition: theme.transitions.create('margin', {
+      transition: theme.transitions.create(['margin', 'width', 'padding'], {
         easing: theme.transitions.easing.easeOut,
         duration: theme.transitions.duration.enteringScreen,
       }),
-      marginLeft: 0,
+      marginLeft: 0
     }),
   }),
 );
@@ -732,7 +744,7 @@ export default function Dashboard() {
 
   return (
     <AppTheme themeComponents={themeComponents}>
-      <Box sx={{ display: 'flex' }}>
+      <Box sx={{ display: 'flex', margin: 0, padding: 0, width: '100%', maxWidth: '100%' }}>
         <CssBaseline />
         <AppNavbar open={open} handleDrawerOpen={handleDrawerOpen} />
         <SideMenu
@@ -744,73 +756,75 @@ export default function Dashboard() {
         <PendingDeletionAlert />
         <Main open={open}>
           <DrawerHeader />
-          <Container maxWidth="lg" sx={{ p: 2 }}>
-            <Box sx={{ p: 2, borderRadius: '12px', backgroundColor: 'rgba(255,255,255,0.8)' }}>
-                <Grid container spacing={2.4}>
-                  {/* Welcome Section */}
-                  <Grid item xs={12}>
-                    <WelcomeSection
-                      userProfile={userProfile}
-                      user={user}
-                      openFinanceActionPanel={() => updateDialogState('financeActionPanel', true)}
-                      walletCount={wallets?.length || 0}
-                    />
-                  </Grid>
+          <Box className={styles.dashboardContainer}>
+            <Box 
+              className={styles.dashboardBackdrop}
+            >
+              <Grid container spacing={2.4}>
+                {/* Welcome Section */}
+                <Grid item xs={12}>
+                  <WelcomeSection
+                    userProfile={userProfile}
+                    user={user}
+                    openFinanceActionPanel={() => updateDialogState('financeActionPanel', true)}
+                    walletCount={wallets?.length || 0}
+                  />
                 </Grid>
+              </Grid>
 
-                {/* Summary Cards */}
-                <SummaryCards
-                  financialData={financialData}
-                  loading={loading || timeRangeLoading}
-                  handleEditBalance={() => updateDialogState('editBalanceForm', true)}
-                  handleManageWallets={() => updateDialogState('walletManageForm', true)}
-                  handleAddBalance={() => updateDialogState('addBalanceForm', true)}
-                  timeRange={timeRange}
-                  onTimeRangeChange={handleTimeRangeChange}
-                  timeRangeLoading={timeRangeLoading}
-                />
+              {/* Summary Cards */}
+              <SummaryCards
+                financialData={financialData}
+                loading={loading || timeRangeLoading}
+                handleEditBalance={() => updateDialogState('editBalanceForm', true)}
+                handleManageWallets={() => updateDialogState('walletManageForm', true)}
+                handleAddBalance={() => updateDialogState('addBalanceForm', true)}
+                timeRange={timeRange}
+                onTimeRangeChange={handleTimeRangeChange}
+                timeRangeLoading={timeRangeLoading}
+              />
 
-                <Grid container spacing={2.4} sx={{ mt: 1.2 }}>
-                  {/* Wallet Overview and Chart Side by Side */}
-                  <Grid item xs={12}>
-                    <Grid container spacing={2.4}>
-                      {/* Wallet Overview */}
-                      <Grid item xs={12} md={6}>
-                        <WalletOverview
-                        onManageWallets={() => updateDialogState('walletManageForm', true)}
-                          externalWallets={wallets}
-                        />
-                      </Grid>
+              <Grid container spacing={2.4} sx={{ mt: 1.2 }}>
+                {/* Wallet Overview and Chart Side by Side */}
+                <Grid item xs={12}>
+                  <Grid container spacing={2.4}>
+                    {/* Wallet Overview */}
+                    <Grid item xs={12} md={6}>
+                      <WalletOverview
+                      onManageWallets={() => updateDialogState('walletManageForm', true)}
+                        externalWallets={wallets}
+                      />
+                    </Grid>
 
-                      {/* Financial Chart - Pass refreshKey */}
-                      <Grid item xs={12} md={6}>
-                        <FinanceChart refreshKey={chartRefreshKey} />
-                      </Grid>
+                    {/* Financial Chart - Pass refreshKey */}
+                    <Grid item xs={12} md={6}>
+                      <FinanceChart refreshKey={chartRefreshKey} />
                     </Grid>
                   </Grid>
-
-                {/* Transactions Section */}
-                <TransactionsSection
-                  transactions={transactions}
-                  allTransactions={allTransactions}
-                  filteredTransactions={filteredTransactions}
-                  categories={categories}
-                  wallets={wallets}
-                  sharedWallets={sharedWallets}
-                  sharedWalletsInfo={sharedWalletsInfo}
-                  onAddTransaction={() => updateDialogState('transactionForm', true)}
-                  onEditTransaction={handleEditTransaction}
-                  onDeleteTransaction={handleDeleteTransaction}
-                  onApplyFilters={handleApplyFilters}
-                  onResetFilters={() => fetchTransactions(false)}
-                  formatCurrency={(amount) => new Intl.NumberFormat('en-US', {
-                    style: 'currency',
-                    currency: 'USD'
-                  }).format(amount)}
-                />
                 </Grid>
+
+              {/* Transactions Section */}
+              <TransactionsSection
+                transactions={transactions}
+                allTransactions={allTransactions}
+                filteredTransactions={filteredTransactions}
+                categories={categories}
+                wallets={wallets}
+                sharedWallets={sharedWallets}
+                sharedWalletsInfo={sharedWalletsInfo}
+                onAddTransaction={() => updateDialogState('transactionForm', true)}
+                onEditTransaction={handleEditTransaction}
+                onDeleteTransaction={handleDeleteTransaction}
+                onApplyFilters={handleApplyFilters}
+                onResetFilters={() => fetchTransactions(false)}
+                formatCurrency={(amount) => new Intl.NumberFormat('en-US', {
+                  style: 'currency',
+                  currency: 'USD'
+                }).format(amount)}
+              />
+              </Grid>
             </Box>
-          </Container>
+          </Box>
         </Main>
       </Box>
 
