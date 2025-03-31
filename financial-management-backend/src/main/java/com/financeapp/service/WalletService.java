@@ -207,27 +207,42 @@ public class WalletService {
      * 
      * @param id Wallet ID
      * @param amount Amount to add
+     * @param skipAvailableCheck Whether to skip the available balance check (true for transaction updates)
      * @return Updated wallet
      */
     @Transactional
-    public Wallet addToBalance(Long id, BigDecimal amount) {
+    public Wallet addToBalance(Long id, BigDecimal amount, boolean skipAvailableCheck) {
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Amount to add must be positive");
         }
         
         Wallet wallet = getWalletById(id);
-        User user = wallet.getUser();
         
-        // Check available balance
-        BigDecimal availableBalance = getAvailableBalance(user.getId());
-        if (amount.compareTo(availableBalance) > 0) {
-            throw new IllegalArgumentException("Adding " + amount 
-                + " to wallet exceeds available balance of " + availableBalance);
+        // Check available balance if required
+        if (!skipAvailableCheck) {
+            User user = wallet.getUser();
+            BigDecimal availableBalance = getAvailableBalance(user.getId());
+            if (amount.compareTo(availableBalance) > 0) {
+                throw new IllegalArgumentException("Adding " + amount 
+                    + " to wallet exceeds available balance of " + availableBalance);
+            }
         }
         
         BigDecimal newBalance = wallet.getBalance().add(amount);
         wallet.setBalance(newBalance);
         return walletRepository.save(wallet);
+    }
+    
+    /**
+     * Adds specified amount to wallet balance (with default available balance check).
+     * 
+     * @param id Wallet ID
+     * @param amount Amount to add
+     * @return Updated wallet
+     */
+    @Transactional
+    public Wallet addToBalance(Long id, BigDecimal amount) {
+        return addToBalance(id, amount, false);
     }
 
     /**

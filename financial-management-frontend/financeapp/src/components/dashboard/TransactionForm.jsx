@@ -984,6 +984,19 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
                 <AccountBalanceWalletIcon className={styles.labelIcon} />
                 {t('transactions.wallet')}
                 {sharedWalletBadge}
+                {formData.accountId && accounts.length > 0 && (
+                  <Typography 
+                    component="span" 
+                    className={styles.walletBalance}
+                    sx={{ 
+                      fontSize: '0.65rem', 
+                      opacity: 0.75,
+                      fontWeight: 400
+                    }}
+                  >
+                    ({formatCurrency(accounts.find(a => a.id.toString() === formData.accountId.toString())?.balance || 0)})
+                  </Typography>
+                )}
               </Typography>
               <Box className={styles.actionButtonsContainer}>
                 <IconButton 

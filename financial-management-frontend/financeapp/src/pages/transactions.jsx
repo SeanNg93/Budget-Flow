@@ -266,7 +266,15 @@ const TransactionsPage = () => {
       transactionsData = transactionsData.sort((a, b) => {
         const dateA = new Date(a.transactionDate);
         const dateB = new Date(b.transactionDate);
-        return dateB - dateA; // Descending order
+        const dateDiff = dateB - dateA; // Descending order
+        
+        // If dates are the same, use ID to maintain a stable order
+        if (dateDiff === 0) {
+          // Ensure we're using numeric comparison for IDs
+          return parseInt(b.id) - parseInt(a.id);
+        }
+        
+        return dateDiff;
       });
       
       // Process transactions to add profile pictures where needed
@@ -430,8 +438,17 @@ const TransactionsPage = () => {
 
   // Handle transaction added/updated
   const handleTransactionAdded = (isUpdate = false) => {
-    // Refresh data after transaction added/updated
-    fetchData();
+    if (isUpdate) {
+      // For updates, just refresh the data but keep the same page
+      const currentPage = page;
+      fetchData().then(() => {
+        // Restore the same page after data is refreshed
+        setPage(currentPage);
+      });
+    } else {
+      // For new transactions, do a full data refresh
+      fetchData();
+    }
     
     // Show success toast
     toast.success(isUpdate ? t('transactions.updateSuccess') : t('transactions.addSuccess'), {
