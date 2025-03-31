@@ -17,20 +17,6 @@ class AuthService {
         }
     }
 
-    static async getUserInfoGoogle(access_token) {
-        try {
-            const userInfo = await axiosInstance
-                .get('https://www.googleapis.com/oauth2/v3/userinfo', {
-                    params: {
-                        access_token: access_token,
-                    }
-                });
-            return userInfo.data;
-        } catch (error) {
-            throw error;
-        }
-    }
-
     static async getCurrentUser() {
         const userData = localStorage.getItem('userData');
         if (userData) {

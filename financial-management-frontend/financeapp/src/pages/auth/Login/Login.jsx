@@ -3,8 +3,6 @@ import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
 import { login } from '../../../config/axiosInstance';
-import AuthService from "@/services/auth.service";
-import { useGoogleLogin } from "@react-oauth/google";
 import styles from '../../../styles/auth.module.css';
 import AuthError from '../../../components/AuthError';
 
@@ -24,7 +22,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { Visibility, VisibilityOff, Google, Facebook, GitHub, Person, Lock } from '@mui/icons-material';
+import { Visibility, VisibilityOff, Person, Lock } from '@mui/icons-material';
 
 // Validation schema
 const LoginSchema = Yup.object().shape({
@@ -121,33 +119,6 @@ const Login = () => {
     }
   };
 
-  const handleSuccessLoginGoogle = async (response) => {
-    try {
-      const userInfo = await AuthService.getUserInfoGoogle(response.access_token);
-      
-      // Here you would typically send this info to your backend to verify
-      // and create a session or JWT token
-      
-      // For now, we'll just store the Google info and redirect
-      localStorage.setItem('userToken', response.access_token);
-      localStorage.setItem('userData', JSON.stringify({
-        id: userInfo.sub,
-        username: userInfo.name,
-        email: userInfo.email,
-        picture: userInfo.picture
-      }));
-      
-      navigate('/dashboard');
-    } catch (error) {
-      setError('Google login failed. Please try again.');
-    }
-  };
-
-  const loginGoogle = useGoogleLogin({
-    onSuccess: handleSuccessLoginGoogle,
-    scope: "profile email",
-  });
-
   return (
     <CssBaseline>
       <div className={styles.authContainer}>
@@ -177,7 +148,7 @@ const Login = () => {
           >
             {({ errors, touched, isSubmitting, handleSubmit: formikSubmit }) => (
               <Form>
-                <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 1.5 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 1 }}>
                   <FormControl className={styles.formField}>
                     <FormLabel htmlFor="username" className={styles.formLabel}>Username</FormLabel>
                     <Field name="username">
@@ -247,7 +218,7 @@ const Login = () => {
                     </Field>
                   </FormControl>
 
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
                     <FormControlLabel
                       control={<Checkbox size="small" value="remember" color="primary" />}
                       label={<Typography variant="body2" sx={{ fontSize: '0.85rem' }}>Remember me</Typography>}
@@ -278,36 +249,6 @@ const Login = () => {
               </Form>
             )}
           </Formik>
-
-          <Typography className={styles.dividerText}>
-            Or Sign Up Using
-          </Typography>
-
-          <Box className={styles.socialButtonsContainer}>
-            <Button
-              variant="outlined"
-              className={styles.socialButton}
-              onClick={() => loginGoogle()}
-            >
-              <Google fontSize="small" />
-            </Button>
-            
-            <Button
-              variant="outlined"
-              className={styles.socialButton}
-              onClick={() => alert('Login with Facebook')}
-            >
-              <Facebook fontSize="small" />
-            </Button>
-
-            <Button
-              variant="outlined"
-              className={styles.socialButton}
-              onClick={() => window.location.href = `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}`}
-            >
-              <GitHub fontSize="small" />
-            </Button>
-          </Box>
           
           <Typography sx={{ textAlign: 'center', mt: 2, fontSize: '0.85rem' }}>
             Don't have an account?{' '}
