@@ -35,7 +35,12 @@
     "closeMenu": "Đóng menu",
     "close": "Đóng",
     "back": "Quay lại",
-    "saving": "Đang lưu..."
+    "saving": "Đang lưu...",
+    "deleting": "Đang xóa...",
+    "total": "Tổng",
+    "income": "Thu nhập",
+    "expenses": "Chi phí",
+    "characters": "ký tự"
   },
   "app": {
     "name": "Budget Flow"
@@ -125,6 +130,7 @@
     "accountType": "Loại tài khoản",
     "shareWallet": "Chia sẻ ví",
     "sendMoney": "Gửi tiền",
+    "sendMoneyToUser": "Gửi tiền cho người dùng",
     "editWallet": "Chỉnh sửa ví",
     "deleteWallet": "Xóa ví",
     "sharedWallet": "Ví được chia sẻ",
@@ -165,6 +171,19 @@
     "selectIcon": "Chọn biểu tượng",
     "selectColor": "Chọn màu sắc",
     "maxAmount": "Tối đa: {{amount}}",
+    "transferMoney": "Chuyển tiền",
+    "transfer": "Chuyển",
+    "transferring": "Đang chuyển...",
+    "transferFrom": "Từ",
+    "transferTo": "Đến",
+    "transferDescription": "Chuyển tiền giữa các ví của bạn hoặc phân bổ tiền từ tổng số dư khả dụng.",
+    "available": "Khả dụng",
+    "allocated": "Đã phân bổ",
+    "deleteConfirmation": "Bạn có chắc chắn muốn xóa ví \"{{name}}\" không? Hành động này không thể hoàn tác.",
+    "transferSelectSource": "Vui lòng chọn ví nguồn",
+    "transferSelectDestination": "Vui lòng chọn ví đích",
+    "transferSameSourceDestination": "Ví nguồn và ví đích phải khác nhau",
+    "amount": "Số tiền",
     "iconNames": {
       "wallet": "Ví",
       "creditCard": "Thẻ tín dụng",
@@ -194,7 +213,16 @@
       "✈️": "Máy bay",
       "🏖️": "Bãi biển",
       "⛰️": "Núi"
-    }
+    },
+    "nameRequired": "Tên ví không được để trống",
+    "walletNotFound": "Không tìm thấy ví",
+    "errorDeletingWallet": "Không thể xóa ví. Vui lòng thử lại.",
+    "transferSelectSource": "Vui lòng chọn ví nguồn",
+    "transferSelectDestination": "Vui lòng chọn ví đích",
+    "transferSameSourceDestination": "Ví nguồn và ví đích phải khác nhau",
+    "amount": "Số tiền",
+    "createSuccess": "Đã tạo ví thành công!",
+    "updateSuccess": "Đã cập nhật ví thành công!"
   },
   "transactions": {
     "addTransaction": "Thêm giao dịch",
@@ -286,7 +314,37 @@
       "title": "Xác nhận xóa giao dịch",
       "message": "Bạn có chắc chắn muốn xóa giao dịch này? Hành động này không thể hoàn tác.",
       "confirmAriaLabel": "Xác nhận xóa giao dịch"
-    }
+    },
+    "saveExpense": "Lưu khoản chi",
+    "saveIncome": "Lưu khoản thu",
+    "editExpense": "Sửa khoản chi",
+    "editIncome": "Sửa khoản thu",
+    "categoryName": "Tên danh mục",
+    "walletName": "Tên ví",
+    "deleteCategoryConfirm": "Bạn có chắc chắn muốn xóa danh mục \"{{categoryName}}\"? Hành động này không thể hoàn tác.",
+    "deleteWalletConfirm": "Bạn có chắc chắn muốn xóa ví \"{{walletName}}\"? Hành động này không thể hoàn tác.",
+    "addWallet": "Thêm ví",
+    "addCategory": "Thêm danh mục",
+    "editWallet": "Sửa ví",
+    "editCategory": "Sửa danh mục",
+    "deleteWallet": "Xóa ví",
+    "deleteCategory": "Xóa danh mục",
+    "insufficientFunds": "Không đủ tiền trong ví",
+    "insufficientFundsWithBalance": "Không đủ tiền! Số dư khả dụng: {{balance}}",
+    "exceedLimitUpdateWarning": "Giao dịch này sẽ vượt quá hạn mức chi tiêu cho danh mục này. Tổng chi tiêu của bạn sẽ là {{total}}.",
+    "exceedLimitNewWarning": "Bạn đang vượt quá hạn mức chi tiêu cho danh mục này. Tổng chi tiêu của bạn sẽ là {{total}}.",
+    "approachingLimitUpdateWarning": "Bạn đang tiến gần đến hạn mức chi tiêu {{limit}}. Giao dịch này sẽ cập nhật tổng chi tiêu của bạn lên {{total}}.",
+    "approachingLimitNewWarning": "Bạn đang tiến gần đến hạn mức chi tiêu {{limit}}. Giao dịch này sẽ đưa tổng chi tiêu của bạn lên {{total}}.",
+    "exceedingLimitBy": "Vượt hạn mức {{amount}}",
+    "limit": "Hạn mức",
+    "current": "Hiện tại",
+    "left": "Còn lại",
+    "sharedWallet": "ví được chia sẻ",
+    "selectCategory": "Chọn danh mục",
+    "selectWallet": "Chọn ví",
+    "manageCategories": "Quản lý danh mục",
+    "manageWallets": "Quản lý ví",
+    "descriptionPlaceholder": "Giao dịch này dùng để làm gì?"
   },
   "categories": {
     "title": "Danh mục",
@@ -358,7 +416,6 @@
     "deleteAccountWarning": "Hành động này không thể hoàn tác. Tất cả dữ liệu của bạn sẽ bị xóa vĩnh viễn.",
     "deleteAccountConfirmMessage": "Để xác nhận rằng bạn muốn xóa tài khoản và TẤT CẢ dữ liệu của bạn, vui lòng nhập DELETE vào ô dưới đây.",
     "typeToConfirm": "Vui lòng nhập {{text}} để xác nhận",
-    "deleting": "Đang xóa...",
     "deleteConfirmRequired": "Vui lòng nhập DELETE để xác nhận xóa tài khoản",
     "deleteAccountSuccess": "Tài khoản của bạn đã được xóa",
     "deleteAccountError": "Không thể xóa tài khoản. Vui lòng thử lại sau."
@@ -406,6 +463,7 @@
     "day": "Ngày",
     "week": "Tuần",
     "month": "Tháng",
+    "quarter": "Quý",
     "year": "Năm",
     "all": "Tất cả thời gian",
     "custom": "Tùy chỉnh",
@@ -467,5 +525,12 @@
   "alerts": {
     "dismiss": "Đóng",
     "deletionCancelled": "Việc xóa tài khoản của bạn đã bị hủy vì bạn đã đăng nhập lại."
+  },
+  "charts": {
+    "renderError": "Không thể hiển thị biểu đồ. Vui lòng thử lại sau.",
+    "noData": "Không có dữ liệu tài chính trong khoảng thời gian này.",
+    "addTransactionsHint": "Thêm giao dịch để xem biểu đồ hiệu suất tài chính của bạn.",
+    "previousTimeRange": "Khoảng thời gian trước",
+    "nextTimeRange": "Khoảng thời gian tiếp theo"
   }
 } 

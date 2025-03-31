@@ -59,6 +59,7 @@ import styles from '../../styles/walletManage.module.css';
 import { WALLET_ICONS, WALLET_COLORS, getWalletIcon, saveWalletIcon, getWalletColorClass, saveWalletColor } from '../../utils/walletIcons';
 import { formatCurrency } from '../../utils/moneyFormatter';
 import MoneyInput from '../utils/MoneyInput';
+import { useTranslation } from 'react-i18next'; // Import useTranslation hook
 
 // Map of icon names to components
 const iconComponents = {
@@ -84,6 +85,7 @@ const FadeTransition = React.forwardRef(function Transition(props, ref) {
 
 // Add onWalletDeleted prop
 const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted, embedded = false, initialOpenTransfer = false }) => {
+  const { t } = useTranslation(); // Add translation hook
   const [wallets, setWallets] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -174,7 +176,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
       calculateAvailableBalance(totalBalance, wallets, null);
     } catch (err) {
       console.error('Error fetching data:', err);
-      setError('Failed to load wallets. Please try again.');
+      setError(t('wallets.errorLoadingWallets'));
     } finally {
       setLoading(false);
     }
@@ -301,7 +303,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
     const maxAllowed = availableBalance + originalBalance;
 
     if (newBalance > maxAllowed) {
-      setBalanceError(`Balance exceeds available amount (max: ${formatCurrency(maxAllowed)})`); 
+      setBalanceError(t('wallets.balanceExceedsAvailable', { amount: formatCurrency(maxAllowed) })); 
       return false;
     }
 
@@ -321,7 +323,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
       // Only show error if exceeds available amount
       if (dynamicAvailable < 0) {
         const maxAllowed = availableBalance + originalBalance;
-        setBalanceError(`Balance exceeds available amount (max: ${formatCurrency(maxAllowed)})`);
+        setBalanceError(t('wallets.balanceExceedsAvailable', { amount: formatCurrency(maxAllowed) }));
       }
     } else {
       validateBalanceEdit(value);
@@ -330,7 +332,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
 
   const handleEditSave = async () => {
     if (!editWalletName.trim()) {
-      setError('Wallet name cannot be empty');
+      setError(t('wallets.nameRequired'));
       return;
     }
 
@@ -346,7 +348,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
       const walletToUpdate = wallets.find(w => w.id === editWalletId);
 
       if (!walletToUpdate) {
-        throw new Error('Wallet not found');
+        throw new Error(t('wallets.walletNotFound'));
       }
 
       // Create updated wallet data
@@ -362,12 +364,32 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
         updatedWallet
       );
 
-      // Update icon and color preferences
+      // Update icon and color preferences in localStorage
       saveWalletIcon(editWalletId, editWalletIcon);
       saveWalletColor(editWalletId, editWalletColor);
 
-      // Refresh the wallets list
-      await fetchFinancialData();
+      // Immediately update the UI with the new wallet data
+      const updatedWalletWithCustomProperties = {
+        ...response.data,
+        _forceIconRefresh: Date.now(),
+        _colorClass: `walletColor${editWalletColor}`,
+        _icon: editWalletIcon
+      };
+
+      // Update the wallets state immediately before fetching from API
+      setWallets(currentWallets => {
+        return currentWallets.map(wallet => {
+          if (wallet.id === editWalletId) {
+            return updatedWalletWithCustomProperties;
+          }
+          return wallet;
+        });
+      });
+
+      // Notify parent component with the updated wallet
+      if (onWalletUpdated) {
+        onWalletUpdated(updatedWalletWithCustomProperties);
+      }
 
       // Reset edit mode
       setEditMode(false);
@@ -377,13 +399,11 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
       setEditWalletIcon('wallet');
       setEditWalletColor(1);
 
-      // Notify parent component
-      if (onWalletUpdated) {
-        onWalletUpdated();
-      }
+      // Refresh the wallets list in the background
+      fetchFinancialData();
     } catch (err) {
       console.error('Error updating wallet:', err);
-      setError(err.response?.data?.message || 'Failed to update wallet. Please try again.');
+      setError(err.response?.data?.message || t('wallets.errorUpdatingWallet'));
     } finally {
       setLoading(false);
     }
@@ -445,7 +465,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
       if (err.response?.data?.error) {
         setError(err.response.data.error);
       } else {
-        setError('Failed to delete wallet. Please try again.');
+        setError(t('wallets.errorDeletingWallet'));
       }
       // Close the dialog to show the error
       setDeleteConfirmOpen(false);
@@ -513,17 +533,17 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
 
     // Check if source and destination are selected and different
     if (!sourceWalletId) {
-      setTransferError('Please select a source');
+      setTransferError(t('wallets.transferSelectSource'));
       return false;
     }
 
     if (!destinationWalletId) {
-      setTransferError('Please select a destination');
+      setTransferError(t('wallets.transferSelectDestination'));
       return false;
     }
 
     if (sourceWalletId === destinationWalletId) {
-      setTransferError('Source and destination must be different');
+      setTransferError(t('wallets.transferSameSourceDestination'));
       return false;
     }
 
@@ -682,16 +702,20 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
   // Render wallet list items with edit mode
   const renderWalletListItems = () => {
     return wallets.map((wallet) => {
-      // Get wallet color class
-      const colorClass = getWalletColorClass(wallet.id);
+      // Get wallet color class - force refresh based on recent edits
+      const colorClass = editWalletId === wallet.id && editMode
+        ? `walletColor${editWalletColor}`
+        : getWalletColorClass(wallet.id);
 
       // Check if this is a shared wallet
       const isShared = sharedWalletsInfo[wallet.id] !== undefined;
       const isOwner = isShared ? sharedWalletsInfo[wallet.id].isOwner : false;
       const sharedInfo = isShared ? sharedWalletsInfo[wallet.id] : null;
 
-      // Get saved icon
-      const savedIcon = getWalletIcon(wallet.id);
+      // Get saved icon - for the wallet being edited, use the current edit value
+      const savedIcon = editWalletId === wallet.id && editMode
+        ? editWalletIcon
+        : getWalletIcon(wallet.id);
       const iconToUse = savedIcon || 'wallet';
 
       // Determine if icon is emoji or standard
@@ -704,12 +728,12 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
             <ListItem className={`${styles.walletItem} ${styles.walletItemEditing}`}>
               <Box className={styles.editContainer}>
                 <Typography variant="subtitle1" className={styles.editLabel}>
-                  Edit Wallet
+                  {t('wallets.editWallet')}
                 </Typography>
 
                 <TextField
                   fullWidth
-                  label="Wallet Name"
+                  label={t('wallets.walletName')}
                   value={editWalletName}
                   onChange={(e) => setEditWalletName(e.target.value)}
                   className={styles.textField}
@@ -719,11 +743,11 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
                 />
 
                 <Typography variant="subtitle1" className={styles.fieldLabel} sx={{ mt: 2, mb: 1 }}>
-                  Wallet Icon
+                  {t('wallets.iconAndColor')}
                 </Typography>
                 <Box className={styles.iconSelection}>
                   {WALLET_ICONS.map(icon => (
-                    <Tooltip key={icon.id} title={icon.label}>
+                    <Tooltip key={icon.id} title={t(`wallets.iconNames.${icon.value}`) || icon.label}>
                       <Box
                         className={`${styles.iconOption} ${editWalletIcon === icon.value ? styles.selectedIcon : ''}`}
                         onClick={() => setEditWalletIcon(icon.value)}
@@ -742,7 +766,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
                 {(WALLET_ICONS.find(icon => icon.value === editWalletIcon)?.type !== 'emoji') && (
                   <>
                     <Typography variant="subtitle1" className={styles.fieldLabel} sx={{ mt: 2, mb: 1 }}>
-                      Wallet Color
+                      {t('wallets.selectColor')}
                     </Typography>
                     <Box className={styles.colorSelection}>
                       {WALLET_COLORS.map(color => (
@@ -760,7 +784,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
 
                 <MoneyInput
                   fullWidth
-                  label="Balance"
+                  label={t('wallets.balance')}
                   value={editWalletBalance}
                   onChange={handleBalanceChange}
                   className={styles.textField}
@@ -777,7 +801,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
                     onClick={handleEditCancel}
                     startIcon={<CancelIcon />}
                   >
-                    Cancel
+                    {t('common.cancel')}
                   </Button>
                   <Button
                     variant="contained"
@@ -786,7 +810,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
                     onClick={handleEditSave}
                     startIcon={<SaveIcon />}
                   >
-                    Save
+                    {t('common.save')}
                   </Button>
                 </Box>
               </Box>
@@ -863,19 +887,19 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
                 </Typography>
 
                 <Box className={styles.walletActions} sx={{ display: 'flex', gap: 0.5, borderLeft: '1px solid rgba(0,0,0,0.08)', pl: 1 }}>
-                  <Tooltip title="Send Money to User" arrow>
+                  <Tooltip title={t('wallets.sendMoneyToUser')} arrow>
                     <IconButton
                       size="small"
                       className={`${styles.iconButton} ${styles.sendIconButton}`}
                       onClick={() => handleOpenUserTransferDialog(wallet)}
-                      aria-label="Send money"
+                      aria-label={t('wallets.sendMoney')}
                       sx={{ width: '28px', height: '28px', color: 'info.main' }}
                     >
                       <SendIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
 
-                  <Tooltip title="Share Wallet" arrow>
+                  <Tooltip title={t('wallets.shareWallet')} arrow>
                     <IconButton
                       size="small"
                       className={`${styles.iconButton} ${styles.shareIconButton}`}
@@ -883,32 +907,32 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
                         setWalletToShare(wallet);
                         updateDialogState('shareWalletDialog', true);
                       }}
-                      aria-label="Share wallet"
+                      aria-label={t('wallets.shareWallet')}
                       sx={{ width: '28px', height: '28px', color: 'secondary.main' }}
                     >
                       <PersonAddIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
 
-                  <Tooltip title="Edit Wallet" arrow>
+                  <Tooltip title={t('wallets.editWallet')} arrow>
                     <IconButton
                       size="small"
                       className={styles.iconButton}
                       onClick={() => handleEditClick(wallet)}
-                      aria-label="Edit wallet"
+                      aria-label={t('wallets.editWallet')}
                       sx={{ width: '28px', height: '28px', color: 'primary.main' }}
                     >
                       <EditIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
 
-                  <Tooltip title="Delete Wallet" arrow>
+                  <Tooltip title={t('wallets.deleteWallet')} arrow>
                     <IconButton
                       size="small"
                       className={styles.deleteIconButton}
                       onClick={() => handleDeleteClick(wallet)}
-                      aria-label="Delete wallet"
-                      sx={{ width: '28px', height: '28px', color: 'error.main' }} // Added color
+                      aria-label={t('wallets.deleteWallet')}
+                      sx={{ width: '28px', height: '28px', color: 'error.main' }}
                     >
                       <DeleteIcon fontSize="small" />
                     </IconButton>
@@ -938,7 +962,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
               <Box sx={{ display: 'flex', alignItems: 'center' }} className={styles.infoText}>
                 <InfoIcon fontSize="small" sx={{ fontSize: '14px' }} className={styles.infoIcon} />
                 <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
-                  Total: {formatCurrency(totalBalance)}
+                  {t('wallets.totalBalance')}: {formatCurrency(totalBalance)}
                 </Typography>
               </Box>
             </Grid>
@@ -946,7 +970,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
               <Box sx={{ display: 'flex', alignItems: 'center' }} className={styles.infoText}>
                 <InfoIcon fontSize="small" sx={{ fontSize: '14px' }} className={styles.infoIcon} />
                 <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
-                  Allocated: {formatCurrency(wallets.reduce((sum, wallet) => sum + wallet.balance, 0))}
+                  {t('wallets.allocated')}: {formatCurrency(wallets.reduce((sum, wallet) => sum + wallet.balance, 0))}
                 </Typography>
               </Box>
             </Grid>
@@ -954,7 +978,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <InfoIcon fontSize="small" sx={{ fontSize: '14px' }} className={styles.infoIcon} />
                 <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
-                  Available: {formatCurrency(availableBalance)}
+                  {t('wallets.available')}: {formatCurrency(availableBalance)}
                 </Typography>
               </Box>
             </Grid>
@@ -970,7 +994,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
             className={styles.compactButton}
             sx={{ borderRadius: '10px', height: '32px', fontSize: '0.8rem' }}
           >
-            Transfer
+            {t('wallets.transferMoney')}
           </Button>
           <Button
             variant="contained"
@@ -981,7 +1005,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
             className={styles.compactButton}
             sx={{ borderRadius: '10px', height: '32px', fontSize: '0.8rem' }}
           >
-            New Wallet
+            {t('wallets.createWallet')}
           </Button>
         </Box>
       </Box>
@@ -992,7 +1016,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
         </Box>
       ) : wallets.length === 0 ? (
         <Typography variant="body1" className={styles.emptyMessage}>
-          No wallets found. Create a wallet to get started.
+          {t('wallets.noWallets')}
         </Typography>
       ) : (
         <List className={styles.walletList} sx={{ p: 0 }}>
@@ -1017,10 +1041,10 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
         }}
         ref={deleteDialogRef}
       >
-        <DialogTitle className={styles.confirmTitle}>Confirm Deletion</DialogTitle>
+        <DialogTitle className={styles.confirmTitle}>{t('common.confirm')}</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete the wallet "{deleteWalletName}"? This action cannot be undone.
+            {t('wallets.deleteConfirmation', { name: deleteWalletName })}
           </DialogContentText>
         </DialogContent>
         <DialogActions className={styles.confirmActions}>
@@ -1029,7 +1053,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
             variant="outlined"
             className={styles.cancelButton}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             onClick={handleDeleteConfirm}
@@ -1039,7 +1063,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
             startIcon={deleting ? <CircularProgress size={20} color="inherit" /> : null}
             className={`${styles.standardButton} ${styles.deleteButton}`}
           >
-            {deleting ? 'Deleting...' : 'Delete'}
+            {deleting ? t('common.deleting') : t('common.delete')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -1061,7 +1085,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
         }}
         ref={newWalletDialogRef}
       >
-        <DialogTitle>Add New Wallet</DialogTitle>
+        <DialogTitle>{t('wallets.createWallet')}</DialogTitle>
         <DialogContent>
           <WalletForm
             open={true}
@@ -1089,7 +1113,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
         }}
         ref={transferDialogRef}
       >
-        <DialogTitle className={styles.transferTitle}>Transfer Money</DialogTitle>
+        <DialogTitle className={styles.transferTitle}>{t('wallets.transferMoney')}</DialogTitle>
         <DialogContent>
           {transferError && (
             <Fade in={!!transferError} timeout={300} nodeRef={transferErrorRef}>
@@ -1100,12 +1124,12 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
           )}
 
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Transfer money between your wallets or allocate funds from your available total balance.
+            {t('wallets.transferDescription')}
           </Typography>
 
           <FormControl fullWidth margin="normal">
             <Typography variant="subtitle2" gutterBottom>
-              From
+              {t('wallets.transferFrom')}
             </Typography>
             <Select
               value={sourceWalletId}
@@ -1115,11 +1139,11 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
               className={styles.selectField}
             >
               <MenuItem value="total">
-                Total Balance (Available: {formatCurrency(availableBalance)}) {/* Use formatCurrency */}
+                {t('wallets.totalBalance')} ({t('wallets.available')}: {formatCurrency(availableBalance)})
               </MenuItem>
               {wallets.map((wallet) => (
                 <MenuItem key={wallet.id} value={wallet.id.toString()}>
-                  {wallet.accountName} ({formatCurrency(wallet.balance)}) {/* Use formatCurrency */}
+                  {wallet.accountName} ({formatCurrency(wallet.balance)})
                 </MenuItem>
               ))}
             </Select>
@@ -1127,7 +1151,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
 
           <FormControl fullWidth margin="normal">
             <Typography variant="subtitle2" gutterBottom>
-              To
+              {t('wallets.transferTo')}
             </Typography>
             <Select
               value={destinationWalletId}
@@ -1137,11 +1161,11 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
               className={styles.selectField}
             >
               <MenuItem value="total">
-                Total Balance (Available: {formatCurrency(availableBalance)}) {/* Use formatCurrency */}
+                {t('wallets.totalBalance')} ({t('wallets.available')}: {formatCurrency(availableBalance)})
               </MenuItem>
               {wallets.map((wallet) => (
                 <MenuItem key={wallet.id} value={wallet.id.toString()}>
-                  {wallet.accountName} ({formatCurrency(wallet.balance)}) {/* Use formatCurrency */}
+                  {wallet.accountName} ({formatCurrency(wallet.balance)})
                 </MenuItem>
               ))}
             </Select>
@@ -1149,15 +1173,19 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
 
           <FormControl fullWidth margin="normal">
             <Typography variant="subtitle2" gutterBottom>
-              Amount
+              {t('wallets.amount')}
             </Typography>
-            <MoneyInput
+            <MoneyInput 
               value={transferAmount}
               onChange={handleTransferAmountChange}
               placeholder="0.00"
+              fullWidth
               size="small"
-              error={transferError}
+              className={styles.moneyTextField}
             />
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+              {transferAmount ? formatCurrency(Number(transferAmount)) : ''}
+            </Typography>
           </FormControl>
 
           {/* Show contextual help text based on transfer type */}
@@ -1176,13 +1204,13 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
           )}
 
         </DialogContent>
-        <DialogActions className={styles.transferActions}>
+        <DialogActions className={styles.dialogActions}>
           <Button
             onClick={handleCloseTransferDialog}
             variant="outlined"
             className={styles.cancelButton}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             onClick={handleTransfer}
@@ -1192,7 +1220,7 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
             startIcon={transferring ? <CircularProgress size={20} color="inherit" /> : null}
             className={`${styles.standardButton} ${styles.transferButton}`}
           >
-            {transferring ? 'Transferring...' : 'Transfer'}
+            {transferring ? t('wallets.transferring') : t('wallets.transfer')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -1243,9 +1271,9 @@ const WalletManageForm = ({ open, handleClose, onWalletUpdated, onWalletDeleted,
       <DialogTitle className={styles.dialogTitle}>
         <Box className={styles.headerContainer}>
           <Typography variant="h6" className={styles.title}>
-            Manage Wallets
+            {t('wallets.manageWallets')}
             <span className={styles.walletCount}>
-              (Total: {wallets.length})
+              ({t('common.total')}: {wallets.length})
             </span>
           </Typography>
           <IconButton aria-label="close" onClick={handleClose} size="small">

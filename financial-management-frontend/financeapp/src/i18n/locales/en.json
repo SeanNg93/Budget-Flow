@@ -35,7 +35,12 @@
     "closeMenu": "Close menu",
     "close": "Close",
     "back": "Back",
-    "saving": "Saving..."
+    "saving": "Saving...",
+    "deleting": "Deleting...",
+    "total": "Total",
+    "income": "Income",
+    "expenses": "Expenses",
+    "characters": "characters"
   },
   "app": {
     "name": "Budget Flow"
@@ -125,6 +130,7 @@
     "accountType": "Account Type",
     "shareWallet": "Share Wallet",
     "sendMoney": "Send Money",
+    "sendMoneyToUser": "Send Money to User",
     "editWallet": "Edit Wallet",
     "deleteWallet": "Delete Wallet",
     "sharedWallet": "Shared Wallet",
@@ -165,6 +171,19 @@
     "selectIcon": "Select Icon",
     "selectColor": "Select Color",
     "maxAmount": "Max: {{amount}}",
+    "transferMoney": "Transfer Money",
+    "transfer": "Transfer",
+    "transferring": "Transferring...",
+    "transferFrom": "From",
+    "transferTo": "To",
+    "transferDescription": "Transfer money between your wallets or allocate funds from your available total balance.",
+    "available": "Available",
+    "allocated": "Allocated",
+    "deleteConfirmation": "Are you sure you want to delete the wallet \"{{name}}\"? This action cannot be undone.",
+    "transferSelectSource": "Please select a source",
+    "transferSelectDestination": "Please select a destination",
+    "transferSameSourceDestination": "Source and destination must be different",
+    "amount": "Amount",
     "iconNames": {
       "wallet": "Wallet",
       "creditCard": "Credit Card",
@@ -194,7 +213,12 @@
       "✈️": "Airplane",
       "🏖️": "Beach",
       "⛰️": "Mountain"
-    }
+    },
+    "nameRequired": "Wallet name cannot be empty",
+    "walletNotFound": "Wallet not found",
+    "errorDeletingWallet": "Failed to delete wallet. Please try again.",
+    "createSuccess": "Wallet created successfully!",
+    "updateSuccess": "Wallet updated successfully!"
   },
   "transactions": {
     "addTransaction": "Add Transaction",
@@ -286,7 +310,37 @@
       "title": "Confirm Transaction Deletion",
       "message": "Are you sure you want to delete this transaction? This action cannot be undone.",
       "confirmAriaLabel": "Confirm delete transaction"
-    }
+    },
+    "saveExpense": "Save Expense",
+    "saveIncome": "Save Income",
+    "editExpense": "Edit Expense",
+    "editIncome": "Edit Income",
+    "categoryName": "Category name",
+    "walletName": "Wallet name",
+    "deleteCategoryConfirm": "Are you sure you want to delete the category \"{{categoryName}}\"? This action cannot be undone.",
+    "deleteWalletConfirm": "Are you sure you want to delete the wallet \"{{walletName}}\"? This action cannot be undone.",
+    "addWallet": "Add Wallet",
+    "addCategory": "Add Category",
+    "editWallet": "Edit Wallet",
+    "editCategory": "Edit Category",
+    "deleteWallet": "Delete Wallet",
+    "deleteCategory": "Delete Category",
+    "insufficientFunds": "Insufficient funds in wallet",
+    "insufficientFundsWithBalance": "Insufficient funds! Available: {{balance}}",
+    "exceedLimitUpdateWarning": "This transaction would exceed your spending limit for this category. Your updated total spending would be {{total}}.",
+    "exceedLimitNewWarning": "You are exceeding your spending limit for this category. Your total spending would be {{total}}.",
+    "approachingLimitUpdateWarning": "You are approaching your spending limit of {{limit}}. This transaction would update your total to {{total}}.",
+    "approachingLimitNewWarning": "You are approaching your spending limit of {{limit}}. This transaction would bring your total to {{total}}.",
+    "exceedingLimitBy": "Exceeding limit by {{amount}}",
+    "limit": "Limit",
+    "current": "Current",
+    "left": "Left",
+    "sharedWallet": "shared wallet",
+    "selectCategory": "Select your category",
+    "selectWallet": "Select a wallet",
+    "manageCategories": "Manage Categories",
+    "manageWallets": "Manage Wallets",
+    "descriptionPlaceholder": "What's this transaction for?"
   },
   "categories": {
     "title": "Categories",
@@ -358,7 +412,6 @@
     "deleteAccountWarning": "This action cannot be undone. All your data will be permanently deleted.",
     "deleteAccountConfirmMessage": "To confirm that you want to delete your account and ALL of your data, please type DELETE in the field below.",
     "typeToConfirm": "Please type {{text}} to confirm",
-    "deleting": "Deleting...",
     "deleteConfirmRequired": "Please type DELETE to confirm account deletion",
     "deleteAccountSuccess": "Your account has been deleted",
     "deleteAccountError": "Failed to delete account. Please try again later."
@@ -406,6 +459,7 @@
     "day": "Day",
     "week": "Week",
     "month": "Month",
+    "quarter": "Quarter",
     "year": "Year",
     "all": "All Time",
     "custom": "Custom",
@@ -467,5 +521,12 @@
   "alerts": {
     "dismiss": "Dismiss",
     "deletionCancelled": "Your account deletion has been cancelled because you logged back in."
+  },
+  "charts": {
+    "renderError": "Unable to render chart. Please try again later.",
+    "noData": "No financial data available for this time period.",
+    "addTransactionsHint": "Add transactions to see your financial performance chart.",
+    "previousTimeRange": "Previous time range",
+    "nextTimeRange": "Next time range"
   }
 } 

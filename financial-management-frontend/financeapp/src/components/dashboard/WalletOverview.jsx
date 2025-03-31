@@ -64,15 +64,29 @@ const WalletIcon = React.memo(({ wallet }) => {
   // Update the render key when the wallet id, customIcon or forceRefresh changes
   useEffect(() => {
     setRenderKey(Date.now());
-  }, [wallet.id, customIcon, wallet._forceIconRefresh]);
+  }, [wallet.id, customIcon, wallet._forceIconRefresh, wallet._icon]);
   
   // Check if the icon is an emoji
   if (customIcon) {
     const iconItem = WALLET_ICONS.find(icon => icon.value === customIcon);
     if (iconItem?.type === 'emoji') {
-      return <span key={renderKey} className={styles.walletIcon} style={{ fontSize: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px' }}>{customIcon}</span>;
+      return (
+        <span 
+          key={`${wallet.id}-${customIcon}-${renderKey}`} 
+          className={styles.walletIcon} 
+          style={{ fontSize: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px' }}
+        >
+          {customIcon}
+        </span>
+      );
     } else if (iconComponents[customIcon]) {
-      return React.cloneElement(iconComponents[customIcon], { key: renderKey, style: { display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px' } });
+      return React.cloneElement(
+        iconComponents[customIcon], 
+        { 
+          key: `${wallet.id}-${customIcon}-${renderKey}`, 
+          style: { display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px' } 
+        }
+      );
     }
   }
   
@@ -88,7 +102,13 @@ const WalletIcon = React.memo(({ wallet }) => {
   const key = wallet.accountType?.toLowerCase() || 'default';
   const iconType = typeToIcon[key] || 'default';
   
-  return React.cloneElement(iconComponents[iconType] || iconComponents.default, { key: renderKey, style: { display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px' } });
+  return React.cloneElement(
+    iconComponents[iconType] || iconComponents.default, 
+    { 
+      key: `${wallet.id}-${iconType}-${renderKey}`, 
+      style: { display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px' } 
+    }
+  );
 });
 
 // Extracted Shared Wallet Avatar component
@@ -129,15 +149,29 @@ const WalletCard = React.memo(({ wallet, colorClass, isShared, isWalletOwner, ge
   }, [wallet, onMenuOpen]);
 
   // Force component to update when wallet or colorClass changes
-  const [updated, setUpdated] = useState(false);
+  const [updated, setUpdated] = useState(Date.now());
   
   // Use direct color class if available (for immediate updates after editing)
   const effectiveColorClass = wallet._colorClass || colorClass;
   
+  // Function to force a refresh when needed
+  const refreshState = useCallback(() => {
+    setUpdated(Date.now());
+  }, []);
+  
   useEffect(() => {
-    // This effect will run whenever wallet or colorClass changes
-    setUpdated(prev => !prev);
-  }, [wallet, colorClass, wallet.accountName, wallet.balance, wallet._forceIconRefresh]);
+    // This effect will run whenever relevant wallet properties change
+    refreshState();
+  }, [
+    wallet.id, 
+    wallet.accountName, 
+    wallet.balance, 
+    wallet._colorClass, 
+    wallet._icon, 
+    wallet._forceIconRefresh, 
+    colorClass,
+    refreshState
+  ]);
 
   return (
     <Box key={`${wallet.id}-${updated}`} className={`${styles.walletItem} ${styles[effectiveColorClass]}`}>
@@ -207,12 +241,15 @@ const WalletCard = React.memo(({ wallet, colorClass, isShared, isWalletOwner, ge
   );
 }, (prevProps, nextProps) => {
   // Custom comparison function to determine if we need to re-render
+  // Return false to force re-render if any of these properties change
   return (
     prevProps.wallet.id === nextProps.wallet.id &&
     prevProps.wallet.accountName === nextProps.wallet.accountName &&
     prevProps.wallet.balance === nextProps.wallet.balance &&
     prevProps.colorClass === nextProps.colorClass &&
     prevProps.wallet._forceIconRefresh === nextProps.wallet._forceIconRefresh &&
+    prevProps.wallet._icon === nextProps.wallet._icon &&
+    prevProps.wallet._colorClass === nextProps.wallet._colorClass &&
     prevProps.isShared === nextProps.isShared
   );
 });
@@ -399,32 +436,31 @@ const WalletOverview = ({ onManageWallets, externalWallets }) => {
   const handleWalletUpdated = useCallback((updatedWallet) => {
     setLoading(false);
 
-    // Update the wallets state with the changed wallet
-    setWallets(currentWallets => {
-      return currentWallets.map(wallet => {
-        if (wallet.id === updatedWallet.id) {
-          // Preserve custom properties from the updated wallet
-          return {
-            ...updatedWallet,
-            _colorClass: updatedWallet._colorClass || getWalletColorClass(updatedWallet.id),
-            _icon: updatedWallet._icon || getWalletIcon(updatedWallet.id),
-            _forceIconRefresh: Date.now() // Force icon refresh
-          };
-        }
-        return wallet;
+    // Only update if we have a valid updatedWallet object
+    if (updatedWallet) {
+      // Update the wallets state with the changed wallet
+      setWallets(currentWallets => {
+        return currentWallets.map(wallet => {
+          if (wallet.id === updatedWallet.id) {
+            // Use the properties directly from the updated wallet, as they already include
+            // the _colorClass, _icon, and _forceIconRefresh properties
+            return updatedWallet;
+          }
+          return wallet;
+        });
       });
-    });
+
+      // Update the selected wallet if it was the one that got updated
+      if (selectedWalletForMenu && selectedWalletForMenu.id === updatedWallet.id) {
+        setSelectedWalletForMenu(updatedWallet);
+      }
+    }
 
     // Close the wallet form dialog
     setDialogStates(prev => ({
       ...prev,
       editWalletDialog: false
     }));
-
-    // Update the selected wallet if it was the one that got updated
-    if (selectedWalletForMenu && selectedWalletForMenu.id === updatedWallet.id) {
-      setSelectedWalletForMenu(updatedWallet);
-    }
   }, [setWallets, selectedWalletForMenu, setDialogStates]);
   
   const handleWalletShared = useCallback(() => {

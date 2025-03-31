@@ -234,43 +234,66 @@ const WalletForm = ({ open, handleClose, onWalletAdded, embedded = false, compac
         // Update existing wallet
         response = await FinanceService.updateAccount(wallet.id, walletData);
         
-        // Add custom properties to force UI updates
-        response.data._forceIconRefresh = Date.now();
-        response.data._colorClass = getWalletColorClass(wallet.id);
-        response.data._icon = getWalletIcon(wallet.id);
+        // Update icon and color preferences in localStorage
+        saveWalletIcon(wallet.id, formData.iconName);
+        if (formData.colorIndex) {
+          saveWalletColor(wallet.id, formData.colorIndex);
+        }
         
-        setSuccess('Wallet updated successfully!');
+        // Create a modified wallet object with all necessary UI properties
+        const updatedWallet = {
+          ...response.data,
+          _forceIconRefresh: Date.now(),
+          _colorClass: formData.colorIndex ? `walletColor${formData.colorIndex}` : 'walletColor1',
+          _icon: formData.iconName // Directly use the selected icon
+        };
+        
+        // Show success message
+        setSuccess(t('wallets.updateSuccess'));
+        
+        // Call the callback with the updated wallet immediately
+        if (onWalletAdded) {
+          onWalletAdded(updatedWallet);
+        }
+        
+        // Close the form after successful submission if not embedded
+        if (!embedded) {
+          // Wait briefly to show success message
+          await new Promise(resolve => setTimeout(resolve, 800));
+          handleClose();
+        }
       } else {
         // Create new wallet
         response = await FinanceService.createAccount(walletData);
         
-        // Add custom properties to force UI updates
-        response.data._forceIconRefresh = Date.now();
-        response.data._colorClass = getWalletColorClass(response.data.id);
-        response.data._icon = getWalletIcon(response.data.id);
+        // Save icon and color to localStorage for the new wallet
+        saveWalletIcon(response.data.id, formData.iconName);
+        if (formData.colorIndex) {
+          saveWalletColor(response.data.id, formData.colorIndex);
+        }
         
-        setSuccess('Wallet created successfully!');
-      }
-      
-      // Save wallet color and icon to local storage
-      if (response.data._icon) {
-        saveWalletIcon(response.data.id, response.data._icon);
-      }
-      if (response.data._colorClass) {
-        saveWalletColor(response.data.id, parseInt(response.data._colorClass.replace('walletColor', ''), 10));
-      }
-      
-      // Wait briefly for animation
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Call the callback with the updated/created wallet
-      if (onWalletAdded) {
-        onWalletAdded(isEditMode, response.data);
-      }
-      
-      // Close the form after successful submission if onClose is provided
-      if (!embedded) {
-        handleClose();
+        // Create a modified wallet object with all necessary UI properties
+        const newWallet = {
+          ...response.data,
+          _forceIconRefresh: Date.now(),
+          _colorClass: formData.colorIndex ? `walletColor${formData.colorIndex}` : 'walletColor1',
+          _icon: formData.iconName // Directly use the selected icon
+        };
+        
+        // Show success message
+        setSuccess(t('wallets.createSuccess'));
+        
+        // Call the callback with the created wallet immediately
+        if (onWalletAdded) {
+          onWalletAdded(newWallet);
+        }
+        
+        // Close the form after successful submission if not embedded
+        if (!embedded) {
+          // Wait briefly to show success message
+          await new Promise(resolve => setTimeout(resolve, 800));
+          handleClose();
+        }
       }
     } catch (error) {
       console.error('Error saving wallet:', error);

@@ -25,13 +25,14 @@ import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear } from 'date-fns';
 import styles from '../../styles/financeChart.module.css';
 import FinanceService from '../../services/FinanceService';
+import { useTranslation } from 'react-i18next';
 
-// Time range configuration
-const TIME_RANGES = [
-  { value: 'year', label: 'Year' },
-  { value: 'quarter', label: 'Quarter' },
-  { value: 'month', label: 'Month' },
-  { value: 'week', label: 'Week' }
+// Time range configuration with translation
+const getTimeRanges = (t) => [
+  { value: 'year', label: t('timeRanges.year') },
+  { value: 'quarter', label: t('timeRanges.quarter') },
+  { value: 'month', label: t('timeRanges.month') },
+  { value: 'week', label: t('timeRanges.week') }
 ];
 
 // Chart summary item component - Removed onClick and isMockMode handling
@@ -47,11 +48,11 @@ const SummaryItem = React.memo(({ label, value, color }) => (
 ));
 
 // Chart content state component
-const ChartContent = React.memo(({ loading, renderError, chartData, onRetry, formatCurrency }) => {
+const ChartContent = React.memo(({ loading, renderError, chartData, onRetry, formatCurrency, t }) => {
   if (loading) {
     return (
       <Box className={styles.loadingContainer}>
-        <CircularProgress aria-label="Loading chart data" />
+        <CircularProgress aria-label={t('common.loading')} />
       </Box>
     );
   }
@@ -60,16 +61,16 @@ const ChartContent = React.memo(({ loading, renderError, chartData, onRetry, for
     return (
       <Box className={styles.errorContainer}>
         <Typography color="error" align="center">
-          Unable to render chart. Please try again later.
+          {t('charts.renderError')}
         </Typography>
         <Box mt={2}>
           <Button
             variant="outlined"
             color="primary"
             onClick={onRetry}
-            aria-label="Retry loading chart"
+            aria-label={t('common.retry')}
           >
-            Retry
+            {t('common.retry')}
           </Button>
         </Box>
       </Box>
@@ -80,10 +81,10 @@ const ChartContent = React.memo(({ loading, renderError, chartData, onRetry, for
     return (
       <Box className={styles.loadingContainer} sx={{ bgcolor: 'rgba(0, 0, 0, 0.01)' }}>
         <Typography color="textSecondary" align="center">
-          No financial data available for this time period.
+          {t('charts.noData')}
         </Typography>
         <Typography color="textSecondary" align="center" variant="body2" sx={{ mt: 1 }}>
-          Add transactions to see your financial performance chart.
+          {t('charts.addTransactionsHint')}
         </Typography>
       </Box>
     );
@@ -107,8 +108,8 @@ const ChartContent = React.memo(({ loading, renderError, chartData, onRetry, for
         <YAxis tick={{ fontSize: 11 }} />
         <Tooltip formatter={(value) => formatCurrency(value)} />
         <Legend wrapperStyle={{ fontSize: '11px' }} />
-        <Bar dataKey="income" name="Income" fill="#4caf50" />
-        <Bar dataKey="expenses" name="Expenses" fill="#f44336" />
+        <Bar dataKey="income" name={t('common.income')} fill="#4caf50" />
+        <Bar dataKey="expenses" name={t('common.expenses')} fill="#f44336" />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -117,15 +118,17 @@ const ChartContent = React.memo(({ loading, renderError, chartData, onRetry, for
 // Time range navigation component
 const TimeRangeNavigation = React.memo(({
   timeRangeIndex,
-  handleTimeRangeChange
+  handleTimeRangeChange,
+  timeRanges,
+  t
 }) => (
   <Box className={styles.timeRangeControls}>
     <IconButton
       onClick={() => handleTimeRangeChange('prev')}
-      disabled={timeRangeIndex >= TIME_RANGES.length - 1}
+      disabled={timeRangeIndex >= timeRanges.length - 1}
       size="small"
       className={styles.navButton}
-      aria-label="Previous time range"
+      aria-label={t('charts.previousTimeRange')}
     >
       <NavigateBeforeIcon fontSize="small" />
     </IconButton>
@@ -134,7 +137,7 @@ const TimeRangeNavigation = React.memo(({
       variant="subtitle2"
       className={styles.timeRangeLabel}
     >
-      {TIME_RANGES[timeRangeIndex].label}
+      {timeRanges[timeRangeIndex].label}
     </Typography>
 
     <IconButton
@@ -142,7 +145,7 @@ const TimeRangeNavigation = React.memo(({
       disabled={timeRangeIndex <= 0}
       size="small"
       className={styles.navButton}
-      aria-label="Next time range"
+      aria-label={t('charts.nextTimeRange')}
     >
       <NavigateNextIcon fontSize="small" />
     </IconButton>
@@ -151,6 +154,11 @@ const TimeRangeNavigation = React.memo(({
 
 // Accept refreshKey prop
 const FinanceChart = ({ refreshKey }) => {
+  const { t } = useTranslation();
+  
+  // Get translated time ranges
+  const timeRanges = useMemo(() => getTimeRanges(t), [t]);
+  
   // State management
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -166,7 +174,7 @@ const FinanceChart = ({ refreshKey }) => {
   // Removed mockDataMode and incomeLabelClicks state
 
   // Derived state with useMemo
-  const timeRange = useMemo(() => TIME_RANGES[timeRangeIndex].value, [timeRangeIndex]);
+  const timeRange = useMemo(() => timeRanges[timeRangeIndex].value, [timeRangeIndex, timeRanges]);
 
   // Format currency function memoized
   const formatCurrency = useCallback((amount) => {
@@ -250,7 +258,7 @@ const FinanceChart = ({ refreshKey }) => {
     let newIndex;
     if (direction === 'next' && timeRangeIndex > 0) {
       newIndex = timeRangeIndex - 1;
-    } else if (direction === 'prev' && timeRangeIndex < TIME_RANGES.length - 1) {
+    } else if (direction === 'prev' && timeRangeIndex < timeRanges.length - 1) {
       newIndex = timeRangeIndex + 1;
     } else {
       return;
@@ -258,7 +266,7 @@ const FinanceChart = ({ refreshKey }) => {
 
     setTimeRangeIndex(newIndex);
     updateDateRangeForTimeRange(newIndex);
-  }, [timeRangeIndex, updateDateRangeForTimeRange]);
+  }, [timeRangeIndex, updateDateRangeForTimeRange, timeRanges]);
 
   // Removed handleIncomeLabelClick function
 
@@ -274,59 +282,58 @@ const FinanceChart = ({ refreshKey }) => {
 
   // Memoized summary items rendering - Removed onClick and isMockMode from Total Income
   const renderSummaryItems = useMemo(() => (
-    <Box className={styles.summaryContainer}>
+    <Box className={styles.summaryContainer} sx={{ display: 'flex', justifyContent: 'center' }}>
       <SummaryItem
-        label="Total Income"
+        label={t('dashboard.totalIncome')}
         value={formatCurrency(summaryData.totalIncome)}
-        color="primary"
+        color="#4caf50"
       />
 
       <SummaryItem
-        label="Total Expenses"
+        label={t('dashboard.totalExpenses')}
         value={formatCurrency(summaryData.totalExpenses)}
-        color="error"
+        color="#f44336"
       />
 
       <SummaryItem
-        label="Net Savings"
+        label={t('dashboard.netSavings')}
         value={formatCurrency(summaryData.netSavings)}
-        color={summaryData.netSavings >= 0 ? "success" : "error"}
+        color={summaryData.netSavings >= 0 ? "#2196f3" : "#f44336"}
       />
     </Box>
   // Removed handleIncomeLabelClick and mockDataMode dependencies
-  ), [summaryData, formatCurrency]);
+  ), [summaryData, formatCurrency, t]);
 
   return (
-    <Card className={styles.chartCard}>
-      <CardHeader
-        title="Financial performance chart"
-        action={
-          <Box className={styles.headerControls}>
-            <TimeRangeNavigation
-              timeRangeIndex={timeRangeIndex}
-              handleTimeRangeChange={handleTimeRangeChange}
-            />
-          </Box>
+    <Card className={styles.chartCard} sx={{ mb: 2, borderRadius: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+      <CardHeader 
+        title={
+          <Typography variant="h6" className={styles.title} sx={{ fontSize: { xs: '1rem', md: '1.1rem' }, fontWeight: 600 }}>
+            {t('dashboard.financialPerformance')}
+          </Typography>
         }
+        action={
+          <TimeRangeNavigation 
+            timeRangeIndex={timeRangeIndex}
+            handleTimeRangeChange={handleTimeRangeChange}
+            timeRanges={timeRanges}
+            t={t}
+          />
+        }
+        sx={{ pb: 0.5 }}
       />
-
       <Divider />
-
-      <CardContent>
-        <Box className={styles.chartContentWrapper}>
-          {/* Summary Section */}
-          {renderSummaryItems}
-
-          {/* Chart */}
-          <Box className={styles.chartContainer}>
-            <ChartContent
-              loading={loading}
-              renderError={renderError}
-              chartData={chartData}
-              onRetry={handleRetry}
-              formatCurrency={formatCurrency}
-            />
-          </Box>
+      <CardContent sx={{ p: 1, '&:last-child': { pb: 2 } }}>
+        {renderSummaryItems}
+        <Box className={styles.chartContainer} sx={{ width: '100%' }}>
+          <ChartContent
+            loading={loading}
+            renderError={renderError}
+            chartData={chartData}
+            onRetry={handleRetry}
+            formatCurrency={formatCurrency}
+            t={t}
+          />
         </Box>
       </CardContent>
     </Card>
