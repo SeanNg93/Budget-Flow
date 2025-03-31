@@ -180,7 +180,7 @@ public class TransactionController {
      * Delete a transaction
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTransaction(@PathVariable Long id) {
+    public ResponseEntity<?> deleteTransaction(@PathVariable Long id) {
         try {
             log.info("Deleting transaction with ID: {}", id);
             
@@ -196,7 +196,10 @@ public class TransactionController {
             if (!existingTransaction.getUser().getId().equals(currentUser.getId())) {
                 log.warn("User {} attempted to delete transaction {} which they didn't create", 
                         currentUser.getUsername(), id);
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+                Map<String, String> errorResponse = new HashMap<>();
+                errorResponse.put("error", "Forbidden");
+                errorResponse.put("message", "You can only delete transactions that you created");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
             }
             
             transactionService.deleteTransaction(id);

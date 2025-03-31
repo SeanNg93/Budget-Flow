@@ -316,7 +316,8 @@ public class TransactionService {
                     "SUM(CASE WHEN t.transactionType = 'INCOME' THEN t.amount ELSE 0 END) AS income, " +
                     "SUM(CASE WHEN t.transactionType = 'EXPENSE' THEN t.amount ELSE 0 END) AS expenses " +
                     "FROM Transaction t " +
-                    "WHERE t.user.id = :userId " +
+                    "JOIN TransactionVisibility tv ON t.id = tv.transaction.id " +
+                    "WHERE tv.user.id = :userId " +
                     "AND t.transactionDate BETWEEN :startDate AND :endDate ";
             
             if (categoryId != null && categoryId > 0) {
@@ -396,7 +397,8 @@ public class TransactionService {
                     "SUM(CASE WHEN t.transactionType = 'INCOME' THEN t.amount ELSE 0 END) AS totalIncome, " +
                     "SUM(CASE WHEN t.transactionType = 'EXPENSE' THEN t.amount ELSE 0 END) AS totalExpenses " +
                     "FROM Transaction t " +
-                    "WHERE t.user.id = :userId " +
+                    "JOIN TransactionVisibility tv ON t.id = tv.transaction.id " +
+                    "WHERE tv.user.id = :userId " +
                     "AND t.transactionDate BETWEEN :startDate AND :endDate ";
             
             if (categoryId != null && categoryId > 0) {
