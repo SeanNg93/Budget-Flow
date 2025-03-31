@@ -444,12 +444,41 @@ export default function Dashboard() {
         ? await FinanceService.getFilteredTransactions(filterParams)
         : await FinanceService.getTransactions();
 
-      const processedTransactions = processTransactions(response.data || []);
+      // Before processing, ensure any existing shared wallet transactions maintain their ID format
+      const updatedTransactions = response.data.map(transaction => {
+        // Check if we have this transaction in allTransactions with a different ID format
+        const existingTransaction = allTransactions.find(t => {
+          // For normal transactions, simple equality check
+          if (t.id === transaction.id) return true;
+          
+          // For shared wallet transactions, check numeric part of ID if formatted as "number:string"
+          if (typeof t.id === 'string' && t.id.includes(':') && 
+              typeof transaction.id === 'number' || typeof transaction.id === 'string') {
+            const existingIdParts = t.id.toString().split(':');
+            return existingIdParts[0] === transaction.id.toString();
+          }
+          
+          return false;
+        });
+        
+        // If we found a match with a different format, preserve the original format
+        if (existingTransaction && existingTransaction.id !== transaction.id) {
+          return {
+            ...transaction,
+            id: existingTransaction.id
+          };
+        }
+        
+        return transaction;
+      });
+      
+      const processedTransactions = processTransactions(updatedTransactions || []);
       setFilteredTransactions(processedTransactions);
       setAllTransactions(processedTransactions);
       setTransactions(processedTransactions.slice(0, 8));
-    } catch (err) {
-      console.error('Error fetching transactions:', err);
+    } catch (error) {
+      console.error('Error fetching transactions:', error);
+      toast.error('Failed to load transactions');
     }
   };
 
@@ -495,11 +524,17 @@ export default function Dashboard() {
   const handleDrawerClose = () => setOpen(false);
 
   const handleTransactionAdded = (isUpdate = false) => {
-    // Update only what's needed
-    updateFinancialSummary();
-    fetchTransactions();
-    updateWallets();
-    setChartRefreshKey(prevKey => prevKey + 1); // Trigger chart refresh
+    // For updates, do a more thorough refresh to ensure sorting is consistent
+    if (isUpdate) {
+      // Complete refresh of financial data and transactions
+      fetchFinancialData();
+    } else {
+      // For new transactions, lighter update
+      updateFinancialSummary();
+      fetchTransactions();
+      updateWallets();
+      setChartRefreshKey(prevKey => prevKey + 1); // Trigger chart refresh
+    }
 
     // Show success toast
     toast.success(isUpdate ? 'Transaction updated successfully' : 'Transaction added successfully', {

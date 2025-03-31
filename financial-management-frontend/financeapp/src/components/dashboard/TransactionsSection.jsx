@@ -1158,20 +1158,42 @@ const TransactionsSection = ({
   const sortedTransactions = useMemo(() => {
     // Create a copy of the display transactions for sorting
     return [...displayTransactions].sort((a, b) => {
-      // First sort by date in descending order
-      const dateA = new Date(a.transactionDate);
-      const dateB = new Date(b.transactionDate);
-      const dateDiff = dateB - dateA; // Descending order
+      // More robust parsing of transaction IDs
+      const parseId = (id) => {
+        if (typeof id === 'number') return id;
+        
+        // Handle string IDs (including those with ':' format for shared wallets)
+        if (typeof id === 'string') {
+          if (id.includes(':')) {
+            return parseInt(id.split(':')[0], 10);
+          }
+          return parseInt(id, 10);
+        }
+        
+        return 0; // Fallback
+      };
       
-      // If dates are equal (same day), preserve the original order
-      // This helps prevent edited transactions from moving to the bottom
-      if (dateDiff === 0) {
-        // Use the transaction ID to maintain stable sorting
-        // Ensure we're using numeric comparison
-        return parseInt(b.id) - parseInt(a.id);
+      // Parse dates consistently to year-month-day format for comparison
+      // This ensures we only compare the actual date, not the time
+      const getDateString = (dateValue) => {
+        const date = new Date(dateValue);
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      };
+      
+      const dateAStr = getDateString(a.transactionDate);
+      const dateBStr = getDateString(b.transactionDate);
+      
+      // Different dates: sort by date (newest first)
+      if (dateAStr !== dateBStr) {
+        return dateBStr.localeCompare(dateAStr); // Descending order
       }
       
-      return dateDiff;
+      // Same date: use numeric ID for stable sorting (higher ID = newer)
+      const idA = parseId(a.id);
+      const idB = parseId(b.id);
+      
+      // Higher ID values are typically newer transactions
+      return idB - idA;
     });
   }, [displayTransactions]);
 

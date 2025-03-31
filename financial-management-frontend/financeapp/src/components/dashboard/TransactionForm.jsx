@@ -675,6 +675,8 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
         
         // Get the transaction ID, handling different possible formats
         let transactionId;
+        let originalIdFormat = initialData.id; // Store the original format
+        
         if (typeof initialData.id === 'number') {
           transactionId = initialData.id;
         } else if (typeof initialData.id === 'string' && initialData.id.includes(':')) {
@@ -689,7 +691,35 @@ const TransactionForm = ({ open, handleClose, onTransactionAdded, embedded = fal
           throw new Error('Invalid transaction ID');
         }
         
+        // Store original transaction date string format if available
+        const originalDateFormat = initialData.transactionDate;
+        
         response = await FinanceService.updateTransaction(transactionId, transactionData);
+        
+        // For shared wallets, we need to preserve the original transaction ID format
+        // in the response to ensure proper sorting
+        if (response && response.data) {
+          // Preserve the original ID format if needed
+          if (response.data.id && typeof originalIdFormat === 'string' && originalIdFormat.includes(':')) {
+            // If the original was in format "123:string", ensure response keeps this format
+            // This is critical for sorting consistency with shared wallet transactions
+            response.data.id = originalIdFormat;
+          }
+          
+          // Ensure we preserve the exact original date format if possible
+          // This helps maintain consistent date sorting
+          if (response.data.transactionDate && originalDateFormat) {
+            // Keep the date part but update the time if needed
+            const newDate = new Date(response.data.transactionDate);
+            const oldDate = new Date(originalDateFormat);
+            
+            // If dates are the same day, preserve the original exact timestamp
+            if (newDate.toDateString() === oldDate.toDateString()) {
+              response.data.transactionDate = originalDateFormat;
+            }
+          }
+        }
+        
         isUpdate = true;
       } else {
         // Create new transaction
