@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -94,12 +95,11 @@ public class NotificationService {
                     .orElseThrow(() -> new RuntimeException("Recipient not found with id: " + recipientId));
             
             // Create additional data
-            Map<String, Object> senderData = Map.of(
-                "amount", amount,
-                "recipientUsername", recipient.getUsername(),
-                "recipientId", recipientId,
-                "walletName", senderWalletName
-            );
+            Map<String, Object> senderData = new HashMap<>();
+            senderData.put("amount", amount);
+            senderData.put("recipientUsername", recipient.getUsername());
+            senderData.put("recipientId", recipientId);
+            senderData.put("walletName", senderWalletName);
             
             // Create notification for sender
             createNotification(
@@ -112,11 +112,10 @@ public class NotificationService {
             );
             
             // Create additional data for recipient
-            Map<String, Object> recipientData = Map.of(
-                "amount", amount,
-                "senderUsername", sender.getUsername(),
-                "senderId", senderId
-            );
+            Map<String, Object> recipientData = new HashMap<>();
+            recipientData.put("amount", amount);
+            recipientData.put("senderUsername", sender.getUsername());
+            recipientData.put("senderId", senderId);
             
             // Create notification for recipient
             createNotification(
@@ -145,11 +144,10 @@ public class NotificationService {
                     .orElseThrow(() -> new RuntimeException("Recipient not found with id: " + recipientId));
             
             // Create additional data for owner
-            Map<String, Object> ownerData = Map.of(
-                "walletName", walletName,
-                "recipientUsername", recipient.getUsername(),
-                "recipientId", recipientId
-            );
+            Map<String, Object> ownerData = new HashMap<>();
+            ownerData.put("walletName", walletName);
+            ownerData.put("recipientUsername", recipient.getUsername());
+            ownerData.put("recipientId", recipientId);
             
             // Create notification for the owner
             createNotification(
@@ -162,11 +160,10 @@ public class NotificationService {
             );
             
             // Create additional data for recipient
-            Map<String, Object> recipientData = Map.of(
-                "walletName", walletName,
-                "ownerUsername", owner.getUsername(),
-                "ownerId", ownerId
-            );
+            Map<String, Object> recipientData = new HashMap<>();
+            recipientData.put("walletName", walletName);
+            recipientData.put("ownerUsername", owner.getUsername());
+            recipientData.put("ownerId", ownerId);
             
             // Action link for shared wallet page
             String actionLink = "/shared-wallets";
@@ -197,12 +194,11 @@ public class NotificationService {
             User recipient = userRepository.findById(recipientId)
                     .orElseThrow(() -> new RuntimeException("Recipient not found with id: " + recipientId));
             
-            // Create additional data
-            Map<String, Object> data = Map.of(
-                "walletName", walletName,
-                "recipientUsername", recipient.getUsername(),
-                "recipientId", recipientId
-            );
+            // Create additional data using HashMap instead of Map.of() to avoid UnsupportedOperationException
+            Map<String, Object> data = new HashMap<>();
+            data.put("walletName", walletName);
+            data.put("recipientUsername", recipient.getUsername());
+            data.put("recipientId", recipientId);
             
             // Action link to the shared wallet
             String actionLink = "/wallets";
