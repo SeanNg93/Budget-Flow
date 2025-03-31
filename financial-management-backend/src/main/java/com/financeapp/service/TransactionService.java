@@ -140,127 +140,187 @@ public class TransactionService {
             isTypeChange);
         
         try {
-            // Only adjust balances if the wallet still exists
+            // Check if wallet is being changed
+            boolean isWalletChanged = false;
+            Long oldWalletId = null;
+            Long oldWalletOwnerId = null;
+            
             if (transaction.getWallet() != null) {
-                // Get the wallet owner ID instead of the transaction creator ID
-                Long walletId = transaction.getWallet().getId();
-                Long walletOwnerId = transaction.getWallet().getUser().getId();
+                oldWalletId = transaction.getWallet().getId();
+                oldWalletOwnerId = transaction.getWallet().getUser().getId();
                 
-                // Log the current wallet balance before any operations
-                Wallet wallet = walletRepository.findById(walletId).orElse(null);
-                if (wallet != null) {
-                    logger.info("Before reverting old transaction - Wallet ID {} balance: {}", walletId, wallet.getBalance());
+                // If transactionDetails has a different wallet, we're changing wallets
+                if (transactionDetails.getWallet() != null && 
+                    !transactionDetails.getWallet().getId().equals(oldWalletId)) {
+                    isWalletChanged = true;
+                    logger.info("Transaction wallet is changing from {} to {}", 
+                        oldWalletId, transactionDetails.getWallet().getId());
+                }
+            }
+            
+            // Handle wallet change first if needed
+            if (isWalletChanged) {
+                // First revert the effect from the old wallet
+                if (transaction.getTransactionType() == Transaction.TransactionType.INCOME) {
+                    walletService.subtractFromBalance(oldWalletId, transaction.getAmount());
+                    userProfileService.subtractFromTotalBalance(oldWalletOwnerId, transaction.getAmount());
+                    logger.info("Wallet change - Reverted INCOME: Subtracted {} from old wallet {}", 
+                        transaction.getAmount(), oldWalletId);
+                } else if (transaction.getTransactionType() == Transaction.TransactionType.EXPENSE) {
+                    walletService.addToBalance(oldWalletId, transaction.getAmount(), true);
+                    userProfileService.addToTotalBalance(oldWalletOwnerId, transaction.getAmount());
+                    logger.info("Wallet change - Reverted EXPENSE: Added {} to old wallet {}", 
+                        transaction.getAmount(), oldWalletId);
                 }
                 
-                // Special handling for transaction type changes between income and expense
-                if (isTypeChange) {
-                    // Handle income-to-expense conversion
-                    if (oldType == Transaction.TransactionType.INCOME && 
-                        transactionDetails.getTransactionType() == Transaction.TransactionType.EXPENSE) {
-                        
-                        // For income-to-expense, we need to:
-                        // 1. First completely remove the income effect (by subtracting the old amount)
-                        // 2. Then apply the expense effect (by subtracting the new amount)
-                        
-                        // Step 1: Revert the income effect
-                        walletService.subtractFromBalance(walletId, oldAmount);
-                        userProfileService.subtractFromTotalBalance(walletOwnerId, oldAmount);
-                        logger.info("TYPE CHANGE - Reverted INCOME: Subtracted {} from wallet {}", oldAmount, walletId);
-                        
-                        // Get wallet balance after reverting
+                // Get the new wallet and its owner ID
+                Wallet newWallet = walletRepository.findById(transactionDetails.getWallet().getId())
+                    .orElseThrow(() -> new EntityNotFoundException("New wallet not found"));
+                Long newWalletId = newWallet.getId();
+                Long newWalletOwnerId = newWallet.getUser().getId();
+                
+                // Apply the effect to the new wallet
+                if (transaction.getTransactionType() == Transaction.TransactionType.INCOME) {
+                    walletService.addToBalance(newWalletId, transaction.getAmount(), true);
+                    userProfileService.addToTotalBalance(newWalletOwnerId, transaction.getAmount());
+                    logger.info("Wallet change - Applied INCOME: Added {} to new wallet {}", 
+                        transaction.getAmount(), newWalletId);
+                } else if (transaction.getTransactionType() == Transaction.TransactionType.EXPENSE) {
+                    walletService.subtractFromBalance(newWalletId, transaction.getAmount());
+                    userProfileService.subtractFromTotalBalance(newWalletOwnerId, transaction.getAmount());
+                    logger.info("Wallet change - Applied EXPENSE: Subtracted {} to new wallet {}", 
+                        transaction.getAmount(), newWalletId);
+                }
+                
+                // Update the transaction's wallet
+                transaction.setWallet(newWallet);
+            }
+            
+            // Only adjust balances for type/amount changes if the wallet hasn't changed
+            // or if the wallet is null (deleted)
+            if (!isWalletChanged) {
+                // Only adjust balances if the wallet still exists
+                if (transaction.getWallet() != null) {
+                    // Get the wallet owner ID instead of the transaction creator ID
+                    Long walletId = transaction.getWallet().getId();
+                    Long walletOwnerId = transaction.getWallet().getUser().getId();
+                    
+                    // Log the current wallet balance before any operations
+                    Wallet wallet = walletRepository.findById(walletId).orElse(null);
+                    if (wallet != null) {
+                        logger.info("Before reverting old transaction - Wallet ID {} balance: {}", walletId, wallet.getBalance());
+                    }
+                    
+                    // Special handling for transaction type changes between income and expense
+                    if (isTypeChange) {
+                        // Handle income-to-expense conversion
+                        if (oldType == Transaction.TransactionType.INCOME && 
+                            transactionDetails.getTransactionType() == Transaction.TransactionType.EXPENSE) {
+                            
+                            // For income-to-expense, we need to:
+                            // 1. First completely remove the income effect (by subtracting the old amount)
+                            // 2. Then apply the expense effect (by subtracting the new amount)
+                            
+                            // Step 1: Revert the income effect
+                            walletService.subtractFromBalance(walletId, oldAmount);
+                            userProfileService.subtractFromTotalBalance(walletOwnerId, oldAmount);
+                            logger.info("TYPE CHANGE - Reverted INCOME: Subtracted {} from wallet {}", oldAmount, walletId);
+                            
+                            // Get wallet balance after reverting
+                            if (wallet != null) {
+                                wallet = walletRepository.findById(walletId).orElse(null);
+                                logger.info("After reverting income - Wallet ID {} balance: {}", walletId, wallet.getBalance());
+                            }
+                            
+                            // Step 2: Apply the expense effect
+                            walletService.subtractFromBalance(walletId, transactionDetails.getAmount());
+                            userProfileService.subtractFromTotalBalance(walletOwnerId, transactionDetails.getAmount());
+                            logger.info("TYPE CHANGE - Applied EXPENSE: Subtracted {} from wallet {}", 
+                                transactionDetails.getAmount(), walletId);
+                        } 
+                        // Handle expense-to-income conversion
+                        else if (oldType == Transaction.TransactionType.EXPENSE && 
+                                 transactionDetails.getTransactionType() == Transaction.TransactionType.INCOME) {
+                            
+                            // For expense-to-income, we need to:
+                            // 1. First completely remove the expense effect (by adding back the old amount)
+                            // 2. Then apply the income effect (by adding the new amount)
+                            
+                            // Step 1: Revert the expense effect
+                            walletService.addToBalance(walletId, oldAmount, true);
+                            userProfileService.addToTotalBalance(walletOwnerId, oldAmount);
+                            logger.info("TYPE CHANGE - Reverted EXPENSE: Added {} to wallet {}", oldAmount, walletId);
+                            
+                            // Get wallet balance after reverting
+                            if (wallet != null) {
+                                wallet = walletRepository.findById(walletId).orElse(null);
+                                logger.info("After reverting expense - Wallet ID {} balance: {}", walletId, wallet.getBalance());
+                            }
+                            
+                            // Step 2: Apply the income effect
+                            walletService.addToBalance(walletId, transactionDetails.getAmount(), true);
+                            userProfileService.addToTotalBalance(walletOwnerId, transactionDetails.getAmount());
+                            logger.info("TYPE CHANGE - Applied INCOME: Added {} to wallet {}", 
+                                transactionDetails.getAmount(), walletId);
+                        }
+                    } else {
+                        // Regular update (without type change) - Revert old and apply new
+                        // Revert the old transaction's effect on the wallet balance and total balance
+                        if (transaction.getTransactionType() == Transaction.TransactionType.INCOME) {
+                            walletService.subtractFromBalance(walletId, transaction.getAmount());
+                            
+                            // Subtract from the wallet OWNER's total balance
+                            userProfileService.subtractFromTotalBalance(walletOwnerId, transaction.getAmount());
+                            
+                            logger.info("Reverted INCOME transaction: Subtracted {} from wallet {}", transaction.getAmount(), walletId);
+                        } else if (transaction.getTransactionType() == Transaction.TransactionType.EXPENSE) {
+                            walletService.addToBalance(walletId, transaction.getAmount(), true);
+                            
+                            // Add back to the wallet OWNER's total balance
+                            userProfileService.addToTotalBalance(walletOwnerId, transaction.getAmount());
+                            
+                            logger.info("Reverted EXPENSE transaction: Added {} to wallet {}", transaction.getAmount(), walletId);
+                        }
+                    
+                        // Log the wallet balance after reverting the old transaction
+                        wallet = walletRepository.findById(walletId).orElse(null);
                         if (wallet != null) {
-                            wallet = walletRepository.findById(walletId).orElse(null);
-                            logger.info("After reverting income - Wallet ID {} balance: {}", walletId, wallet.getBalance());
+                            logger.info("After reverting old transaction - Wallet ID {} balance: {}", walletId, wallet.getBalance());
                         }
                         
-                        // Step 2: Apply the expense effect
-                        walletService.subtractFromBalance(walletId, transactionDetails.getAmount());
-                        userProfileService.subtractFromTotalBalance(walletOwnerId, transactionDetails.getAmount());
-                        logger.info("TYPE CHANGE - Applied EXPENSE: Subtracted {} from wallet {}", 
-                            transactionDetails.getAmount(), walletId);
-                    } 
-                    // Handle expense-to-income conversion
-                    else if (oldType == Transaction.TransactionType.EXPENSE && 
-                             transactionDetails.getTransactionType() == Transaction.TransactionType.INCOME) {
-                        
-                        // For expense-to-income, we need to:
-                        // 1. First completely remove the expense effect (by adding back the old amount)
-                        // 2. Then apply the income effect (by adding the new amount)
-                        
-                        // Step 1: Revert the expense effect
-                        walletService.addToBalance(walletId, oldAmount, true);
-                        userProfileService.addToTotalBalance(walletOwnerId, oldAmount);
-                        logger.info("TYPE CHANGE - Reverted EXPENSE: Added {} to wallet {}", oldAmount, walletId);
-                        
-                        // Get wallet balance after reverting
+                        // Apply the new transaction (only for same-type updates)
+                        wallet = walletRepository.findById(walletId).orElse(null);
                         if (wallet != null) {
-                            wallet = walletRepository.findById(walletId).orElse(null);
-                            logger.info("After reverting expense - Wallet ID {} balance: {}", walletId, wallet.getBalance());
+                            logger.info("Before applying new transaction - Wallet ID {} balance: {}", walletId, wallet.getBalance());
                         }
                         
-                        // Step 2: Apply the income effect
-                        walletService.addToBalance(walletId, transactionDetails.getAmount(), true);
-                        userProfileService.addToTotalBalance(walletOwnerId, transactionDetails.getAmount());
-                        logger.info("TYPE CHANGE - Applied INCOME: Added {} to wallet {}", 
-                            transactionDetails.getAmount(), walletId);
+                        if (transactionDetails.getTransactionType() == Transaction.TransactionType.INCOME) {
+                            walletService.addToBalance(walletId, transactionDetails.getAmount(), true);
+                            
+                            // Add to the wallet OWNER's total balance
+                            userProfileService.addToTotalBalance(walletOwnerId, transactionDetails.getAmount());
+                            
+                            logger.info("Applied new INCOME transaction: Added {} to wallet {}", transactionDetails.getAmount(), walletId);
+                        } else if (transactionDetails.getTransactionType() == Transaction.TransactionType.EXPENSE) {
+                            walletService.subtractFromBalance(walletId, transactionDetails.getAmount());
+                            
+                            // Subtract from the wallet OWNER's total balance
+                            userProfileService.subtractFromTotalBalance(walletOwnerId, transactionDetails.getAmount());
+                            
+                            logger.info("Applied new EXPENSE transaction: Subtracted {} from wallet {}", transactionDetails.getAmount(), walletId);
+                        }
+                    }
+                    
+                    // Log the final wallet balance
+                    wallet = walletRepository.findById(walletId).orElse(null);
+                    if (wallet != null) {
+                        logger.info("Final wallet ID {} balance after update: {}", walletId, wallet.getBalance());
                     }
                 } else {
-                    // Regular update (without type change) - Revert old and apply new
-                    // Revert the old transaction's effect on the wallet balance and total balance
-                    if (transaction.getTransactionType() == Transaction.TransactionType.INCOME) {
-                        walletService.subtractFromBalance(walletId, transaction.getAmount());
-                        
-                        // Subtract from the wallet OWNER's total balance
-                        userProfileService.subtractFromTotalBalance(walletOwnerId, transaction.getAmount());
-                        
-                        logger.info("Reverted INCOME transaction: Subtracted {} from wallet {}", transaction.getAmount(), walletId);
-                    } else if (transaction.getTransactionType() == Transaction.TransactionType.EXPENSE) {
-                        walletService.addToBalance(walletId, transaction.getAmount(), true);
-                        
-                        // Add back to the wallet OWNER's total balance
-                        userProfileService.addToTotalBalance(walletOwnerId, transaction.getAmount());
-                        
-                        logger.info("Reverted EXPENSE transaction: Added {} to wallet {}", transaction.getAmount(), walletId);
-                    }
-                
-                    // Log the wallet balance after reverting the old transaction
-                    wallet = walletRepository.findById(walletId).orElse(null);
-                    if (wallet != null) {
-                        logger.info("After reverting old transaction - Wallet ID {} balance: {}", walletId, wallet.getBalance());
-                    }
-                    
-                    // Apply the new transaction (only for same-type updates)
-                    wallet = walletRepository.findById(walletId).orElse(null);
-                    if (wallet != null) {
-                        logger.info("Before applying new transaction - Wallet ID {} balance: {}", walletId, wallet.getBalance());
-                    }
-                    
-                    if (transactionDetails.getTransactionType() == Transaction.TransactionType.INCOME) {
-                        walletService.addToBalance(walletId, transactionDetails.getAmount(), true);
-                        
-                        // Add to the wallet OWNER's total balance
-                        userProfileService.addToTotalBalance(walletOwnerId, transactionDetails.getAmount());
-                        
-                        logger.info("Applied new INCOME transaction: Added {} to wallet {}", transactionDetails.getAmount(), walletId);
-                    } else if (transactionDetails.getTransactionType() == Transaction.TransactionType.EXPENSE) {
-                        walletService.subtractFromBalance(walletId, transactionDetails.getAmount());
-                        
-                        // Subtract from the wallet OWNER's total balance
-                        userProfileService.subtractFromTotalBalance(walletOwnerId, transactionDetails.getAmount());
-                        
-                        logger.info("Applied new EXPENSE transaction: Subtracted {} from wallet {}", transactionDetails.getAmount(), walletId);
-                    }
+                    // If wallet is null (deleted), log this situation
+                    // We can't adjust balances since the wallet doesn't exist anymore
+                    logger.info("Updating transaction with ID {} that references a deleted wallet", transactionId);
                 }
-                
-                // Log the final wallet balance
-                wallet = walletRepository.findById(walletId).orElse(null);
-                if (wallet != null) {
-                    logger.info("Final wallet ID {} balance after update: {}", walletId, wallet.getBalance());
-                }
-            } else {
-                // If wallet is null (deleted), log this situation
-                // We can't adjust balances since the wallet doesn't exist anymore
-                logger.info("Updating transaction with ID {} that references a deleted wallet", transactionId);
             }
             
             // Update transaction details
@@ -269,6 +329,17 @@ public class TransactionService {
             transaction.setCategory(transactionDetails.getCategory());
             transaction.setDescription(transactionDetails.getDescription());
             transaction.setTransactionDate(transactionDetails.getTransactionDate());
+            
+            // If the wallet is being changed (and wasn't handled above already)
+            if (!isWalletChanged && transactionDetails.getWallet() != null && 
+                (transaction.getWallet() == null || 
+                !transaction.getWallet().getId().equals(transactionDetails.getWallet().getId()))) {
+                // Get the new wallet from the repository to ensure it's a proper entity
+                Wallet newWallet = walletRepository.findById(transactionDetails.getWallet().getId())
+                    .orElseThrow(() -> new EntityNotFoundException("New wallet not found"));
+                transaction.setWallet(newWallet);
+                logger.info("Updated transaction wallet to ID: {}", newWallet.getId());
+            }
             
             return transactionRepository.save(transaction);
         } catch (Exception e) {

@@ -172,11 +172,29 @@ const TransactionRow = React.memo(({
   onDeleteTransaction,
   t
 }) => {
-  // Local state to track expanded description
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   
-  // Character limit for description truncation
-  const DESCRIPTION_CHAR_LIMIT = 25;
+  // Get current user ID from localStorage
+  const getCurrentUserId = () => {
+    try {
+      const userData = localStorage.getItem('userData');
+      if (userData) {
+        const parsedData = JSON.parse(userData);
+        return parsedData.id;
+      }
+    } catch (error) {
+      console.error('Error parsing user data:', error);
+    }
+    return null;
+  };
+  
+  // Check if current user is the creator of the transaction
+  const isCreator = useMemo(() => {
+    const currentUserId = getCurrentUserId();
+    return currentUserId && transaction.user && currentUserId === transaction.user.id;
+  }, [transaction.user]);
+  
+  const DESCRIPTION_CHAR_LIMIT = 40;
   
   // Toggle description expansion
   const toggleDescription = (e) => {
@@ -422,30 +440,69 @@ const TransactionRow = React.memo(({
           
     <TableCell className={styles.tableCell}>
       <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-        <Tooltip title="Edit transaction" arrow placement="top">
-          <IconButton 
-            size="small" 
-            color="primary" 
-            onClick={() => onEditTransaction(transaction)}
-            className={styles.editButton}
-            sx={{ mx: 0.5 }}
-            aria-label={`Edit transaction: ${transaction.description}`}
-          >
-            <EditIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Delete transaction" arrow placement="top">
-          <IconButton 
-            size="small" 
-            color="error" 
-            onClick={() => onDeleteTransaction(transaction)}
-            className={styles.deleteButton}
-            sx={{ mx: 0.5 }}
-            aria-label={`Delete transaction: ${transaction.description}`}
-          >
-            <DeleteIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
+        {isCreator ? (
+          // Edit button for transaction creator
+          <Tooltip title={t('transactions.editTransaction')} arrow placement="top">
+            <IconButton 
+              size="small" 
+              color="primary" 
+              onClick={() => onEditTransaction(transaction)}
+              className={styles.editButton}
+              sx={{ mx: 0.5 }}
+              aria-label={`${t('transactions.editTransaction')}: ${transaction.description}`}
+            >
+              <EditIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        ) : (
+          // Disabled edit button for non-creators with explanatory tooltip
+          <Tooltip title={t('transactions.cannotEditOthersTransaction')} arrow placement="top">
+            <span>
+              <IconButton 
+                size="small" 
+                color="primary" 
+                disabled={true}
+                className={styles.editButtonDisabled}
+                sx={{ mx: 0.5, opacity: 0.5 }}
+                aria-label={`${t('transactions.cannotEditTransaction')}: ${transaction.description}`}
+              >
+                <EditIcon fontSize="small" />
+              </IconButton>
+            </span>
+          </Tooltip>
+        )}
+        
+        {isCreator ? (
+          // Delete button for transaction creator
+          <Tooltip title={t('transactions.deleteTransaction')} arrow placement="top">
+            <IconButton 
+              size="small" 
+              color="error" 
+              onClick={() => onDeleteTransaction(transaction)}
+              className={styles.deleteButton}
+              sx={{ mx: 0.5 }}
+              aria-label={`${t('transactions.deleteTransaction')}: ${transaction.description}`}
+            >
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        ) : (
+          // Disabled delete button for non-creators with explanatory tooltip
+          <Tooltip title={t('transactions.cannotDeleteOthersTransaction')} arrow placement="top">
+            <span>
+              <IconButton 
+                size="small" 
+                color="error" 
+                disabled={true}
+                className={styles.deleteButtonDisabled}
+                sx={{ mx: 0.5, opacity: 0.5 }}
+                aria-label={`${t('transactions.cannotDeleteTransaction')}: ${transaction.description}`}
+              >
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            </span>
+          </Tooltip>
+        )}
       </Box>
     </TableCell>
         </>
