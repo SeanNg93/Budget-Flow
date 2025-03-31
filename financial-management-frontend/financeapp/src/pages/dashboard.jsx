@@ -413,11 +413,36 @@ export default function Dashboard() {
       });
       setWallets(accountsResponse.data || []);
 
-      // Process and set transactions
-      const processedTransactions = processTransactions(transactionsResponse.data || []);
+      // Process and sort transactions consistently
+      let processedTransactions = processTransactions(transactionsResponse.data || []);
+      
+      // Sort transactions by date (newest first) then by ID
+      processedTransactions = processedTransactions.sort((a, b) => {
+        const dateA = new Date(a.transactionDate);
+        const dateB = new Date(b.transactionDate);
+        const dateDiff = dateB - dateA; // Descending order
+        
+        // If dates are the same, use ID for stable sorting
+        if (dateDiff === 0) {
+          // Parse IDs to ensure proper numeric comparison
+          const parseId = (id) => {
+            if (typeof id === 'number') return id;
+            if (typeof id === 'string') {
+              if (id.includes(':')) return parseInt(id.split(':')[0], 10);
+              return parseInt(id, 10);
+            }
+            return 0;
+          };
+          
+          return parseId(b.id) - parseId(a.id); // Higher ID (newer) first
+        }
+        
+        return dateDiff;
+      });
+      
       setTransactions(processedTransactions.slice(0, 8));
       setFilteredTransactions(processedTransactions.slice(0, 8));
-      setAllTransactions(processedTransactions || []);
+      setAllTransactions(processedTransactions);
 
       // If a time range other than 'all' is selected, apply the filter after setting initial data
       if (timeRange !== 'all') {
@@ -438,7 +463,7 @@ export default function Dashboard() {
     }
   };
 
-  const fetchTransactions = async (applyFilters = false, filterParams = {}) => {
+  const fetchTransactions = async (applyFilters = false, filterParams = {}, updateFiltered = true) => {
     try {
       const response = applyFilters
         ? await FinanceService.getFilteredTransactions(filterParams)
@@ -472,8 +497,38 @@ export default function Dashboard() {
         return transaction;
       });
       
-      const processedTransactions = processTransactions(updatedTransactions || []);
-      setFilteredTransactions(processedTransactions);
+      // Process and sort transactions consistently
+      let processedTransactions = processTransactions(updatedTransactions || []);
+      
+      // Sort transactions by date (newest first) then by ID - using the same logic as fetchFinancialData
+      processedTransactions = processedTransactions.sort((a, b) => {
+        const dateA = new Date(a.transactionDate);
+        const dateB = new Date(b.transactionDate);
+        const dateDiff = dateB - dateA; // Descending order
+        
+        // If dates are the same, use ID for stable sorting
+        if (dateDiff === 0) {
+          // Parse IDs to ensure proper numeric comparison
+          const parseId = (id) => {
+            if (typeof id === 'number') return id;
+            if (typeof id === 'string') {
+              if (id.includes(':')) return parseInt(id.split(':')[0], 10);
+              return parseInt(id, 10);
+            }
+            return 0;
+          };
+          
+          return parseId(b.id) - parseId(a.id); // Higher ID (newer) first
+        }
+        
+        return dateDiff;
+      });
+      
+      // Only update filteredTransactions if we're not in a reset operation
+      if (updateFiltered) {
+        setFilteredTransactions(processedTransactions);
+      }
+      
       setAllTransactions(processedTransactions);
       setTransactions(processedTransactions.slice(0, 8));
     } catch (error) {
@@ -714,16 +769,76 @@ export default function Dashboard() {
       if (filterParams.clientFiltered) {
         // If we have client-filtered data, use it directly
         const processedTransactions = processTransactions(filterParams.clientFiltered);
-        setFilteredTransactions(processedTransactions);
-        setTransactions(processedTransactions.slice(0, 8));
+        
+        // Before setting the filtered transactions, ensure any IDs from shared wallets are preserved
+        const updatedTransactions = processedTransactions.map(transaction => {
+          // Check if we have this transaction in allTransactions with a different ID format
+          const existingTransaction = allTransactions.find(t => {
+            // For normal transactions, simple equality check
+            if (t.id === transaction.id) return true;
+            
+            // For shared wallet transactions, check numeric part of ID if formatted as "number:string"
+            if (typeof t.id === 'string' && t.id.includes(':') && 
+                (typeof transaction.id === 'number' || typeof transaction.id === 'string')) {
+              const existingIdParts = t.id.toString().split(':');
+              return existingIdParts[0] === transaction.id.toString();
+            }
+            
+            return false;
+          });
+          
+          // If we found a match with a different format, preserve the original format
+          if (existingTransaction && existingTransaction.id !== transaction.id) {
+            return {
+              ...transaction,
+              id: existingTransaction.id
+            };
+          }
+          
+          return transaction;
+        });
+        
+        setFilteredTransactions(updatedTransactions);
+        setTransactions(updatedTransactions.slice(0, 8));
         setFilterLoading(false);
         return;
       }
 
       // Otherwise, make API call for server filtering
       const response = await FinanceService.getFilteredTransactions(filterParams);
-      const processedTransactions = processTransactions(response.data || []);
-
+      
+      // Process the transactions to ensure proper ID formats
+      const rawTransactions = response.data || [];
+      
+      // Map through the transactions and preserve ID formats from existing transactions
+      const updatedTransactions = rawTransactions.map(transaction => {
+        // Check if we have this transaction in allTransactions with a different ID format
+        const existingTransaction = allTransactions.find(t => {
+          // For normal transactions, simple equality check
+          if (t.id === transaction.id) return true;
+          
+          // For shared wallet transactions, check numeric part of ID if formatted as "number:string"
+          if (typeof t.id === 'string' && t.id.includes(':') && 
+              (typeof transaction.id === 'number' || typeof transaction.id === 'string')) {
+            const existingIdParts = t.id.toString().split(':');
+            return existingIdParts[0] === transaction.id.toString();
+          }
+          
+          return false;
+        });
+        
+        // If we found a match with a different format, preserve the original format
+        if (existingTransaction && existingTransaction.id !== transaction.id) {
+          return {
+            ...transaction,
+            id: existingTransaction.id
+          };
+        }
+        
+        return transaction;
+      });
+      
+      const processedTransactions = processTransactions(updatedTransactions);
       setFilteredTransactions(processedTransactions);
       setTransactions(processedTransactions.slice(0, 8));
 
@@ -845,6 +960,18 @@ export default function Dashboard() {
     }
   }, []);
 
+  // Handle filter reset specifically for dashboard
+  const handleResetFilters = () => {
+    // First, clear filtered transactions
+    setFilteredTransactions([]);
+    
+    // Fetch all transactions and update them with the limit of 8
+    // Pass false for updateFiltered to prevent overwriting empty filteredTransactions
+    fetchTransactions(false, {}, false);
+    
+    // No need for additional sorting since fetchTransactions now sorts consistently
+  };
+
   // Loading state
   if (loading) {
     return (
@@ -939,7 +1066,7 @@ export default function Dashboard() {
                 onEditTransaction={handleEditTransaction}
                 onDeleteTransaction={handleDeleteTransaction}
                 onApplyFilters={handleApplyFilters}
-                onResetFilters={() => fetchTransactions(false)}
+                onResetFilters={handleResetFilters}
                 formatCurrency={(amount) => new Intl.NumberFormat('en-US', {
                   style: 'currency',
                   currency: 'USD'
