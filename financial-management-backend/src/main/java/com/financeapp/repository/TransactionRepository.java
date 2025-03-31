@@ -5,6 +5,7 @@ import com.financeapp.model.Transaction;
 import com.financeapp.model.Transaction.TransactionType;
 import com.financeapp.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -23,6 +24,11 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     List<Transaction> findByCategoryId(Long categoryId);
     
     List<Transaction> findByUserAndTransactionDateBetween(User user, LocalDateTime startDate, LocalDateTime endDate);
+    
+    // Delete all transactions for a user
+    @Modifying
+    @Query("DELETE FROM Transaction t WHERE t.user.id = :userId")
+    int deleteAllByUserId(@Param("userId") Long userId);
     
     @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t WHERE t.user = :user AND t.transactionType = 'INCOME'")
     BigDecimal getTotalIncome(@Param("user") User user);
