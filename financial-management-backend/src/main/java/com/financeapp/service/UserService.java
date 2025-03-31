@@ -4,6 +4,7 @@ import com.financeapp.model.Role;
 import com.financeapp.model.User;
 import com.financeapp.repository.RoleRepository;
 import com.financeapp.repository.UserRepository;
+import com.financeapp.security.CustomUserDetailsService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,6 +25,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final CustomUserDetailsService userDetailsService;
 
     @Value("${app.frontend.url}")
     private String frontendUrl;
@@ -37,7 +39,11 @@ public class UserService {
 
     @Transactional
     public void deleteUser(Long id) {
-        userRepository.deleteById(id);
+        userRepository.findById(id).ifPresent(user -> {
+            // Evict from cache before deleting
+            userDetailsService.evictUserFromCache(user.getUsername());
+            userRepository.deleteById(id);
+        });
     }
 
     public Map<String, String> requestPasswordReset(String email) {
@@ -77,6 +83,9 @@ public class UserService {
         user.setResetPasswordToken(null);
         user.setResetPasswordTokenExpiry(null);
         userRepository.save(user);
+        
+        // Evict from cache after password reset
+        userDetailsService.evictUserFromCache(user.getUsername());
 
         return true;
     }
@@ -119,6 +128,9 @@ public class UserService {
         user.setActivationToken(null);
         user.setActivationTokenExpiry(null);
         userRepository.save(user);
+        
+        // Evict from cache after account activation
+        userDetailsService.evictUserFromCache(user.getUsername());
 
         return true;
     }
@@ -129,6 +141,8 @@ public class UserService {
         if (userOpt.isPresent()) {
             User user = userOpt.get();
             if (passwordEncoder.matches(rawPassword, user.getPassword())) {
+                // Evict from cache before deleting account
+                userDetailsService.evictUserFromCache(username);
                 userRepository.delete(user);
                 return true;
             }
@@ -157,6 +171,10 @@ public class UserService {
 
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
+        
+        // Evict from cache after password change
+        userDetailsService.evictUserFromCache(username);
+        
         return true;
     }
 }

@@ -5,6 +5,7 @@ import com.financeapp.model.User;
 import com.financeapp.model.UserProfile;
 import com.financeapp.repository.UserProfileRepository;
 import com.financeapp.repository.UserRepository;
+import com.financeapp.security.CustomUserDetailsService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +33,7 @@ import java.util.UUID;
 public class UserProfileService {
     private final UserProfileRepository userProfileRepository;
     private final UserRepository userRepository;
+    private final CustomUserDetailsService userDetailsService;
 
     @Value("${app.upload.dir:uploads/profile-pictures}")
     private String uploadDir;
@@ -127,6 +129,9 @@ public class UserProfileService {
 
         // Save the profile
         UserProfile savedProfile = userProfileRepository.save(profile);
+        
+        // Evict user from cache after profile update
+        userDetailsService.evictUserFromCache(user.getUsername());
 
         return mapToDto(savedProfile, user);
     }
@@ -181,6 +186,9 @@ public class UserProfileService {
         String relativePath = uploadDir + "/" + filename;
         profile.setProfilePicturePath(relativePath);
         UserProfile savedProfile = userProfileRepository.save(profile);
+        
+        // Evict user from cache after profile picture update
+        userDetailsService.evictUserFromCache(user.getUsername());
 
         return mapToDto(savedProfile, user);
     }

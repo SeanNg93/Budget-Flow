@@ -6,6 +6,8 @@ import com.financeapp.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -24,8 +26,10 @@ public class CustomUserDetailsService implements UserDetailsService {
     private final UserRepository userRepository;
 
     @Override
+    @Cacheable(value = "userCache", key = "#usernameOrEmail")
     public UserDetails loadUserByUsername(String usernameOrEmail) throws UsernameNotFoundException {
-        logger.info("Attempting to load user: {}", usernameOrEmail);
+        // Only log at debug level for cache misses
+        logger.debug("Attempting to load user: {}", usernameOrEmail);
         
         User user = userRepository.findByUsername(usernameOrEmail)
                 .or(() -> userRepository.findByEmail(usernameOrEmail))
@@ -47,17 +51,34 @@ public class CustomUserDetailsService implements UserDetailsService {
         List<GrantedAuthority> authorities = user.getRoles().stream()
                 .map(role -> {
                     String roleName = role.getName().name();
-                    logger.info("User {} has role: {}", usernameOrEmail, roleName);
+                    logger.debug("User {} has role: {}", usernameOrEmail, roleName);
                     return new SimpleGrantedAuthority(roleName);
                 })
                 .collect(Collectors.toList());
 
-        logger.info("Successfully loaded user: {}", usernameOrEmail);
+        logger.debug("Successfully loaded user: {}", usernameOrEmail);
         
         return new org.springframework.security.core.userdetails.User(
                 user.getUsername(),   // luôn trả về username để đảm bảo JWT đúng định dạng
                 user.getPassword(),
                 authorities
         );
+    }
+    
+    /**
+     * Evicts a specific user from the cache
+     * @param username the username of the user to evict
+     */
+    @CacheEvict(value = "userCache", key = "#username")
+    public void evictUserFromCache(String username) {
+        logger.debug("Evicting user from cache: {}", username);
+    }
+    
+    /**
+     * Evicts all users from the cache
+     */
+    @CacheEvict(value = "userCache", allEntries = true)
+    public void evictAllUsersFromCache() {
+        logger.debug("Evicting all users from cache");
     }
 }
