@@ -314,6 +314,80 @@ export const createCategory = (categoryData) => {
   return axiosInstance.post('/categories', categoryData);
 };
 
+// New function to create default categories for new users
+export const createDefaultCategories = async () => {
+  try {
+    // Default expense categories
+    const defaultExpenseCategories = [
+      {
+        categoryName: "Food & Dining",
+        iconName: "restaurant",
+        color: "#FF5722",
+        type: "EXPENSE",
+        limit: 500,
+        warningThreshold: 80
+      },
+      {
+        categoryName: "Transportation",
+        iconName: "directions_car",
+        color: "#2196F3",
+        type: "EXPENSE",
+        limit: 300,
+        warningThreshold: 80
+      },
+      {
+        categoryName: "Utilities",
+        iconName: "bolt",
+        color: "#FFC107",
+        type: "EXPENSE",
+        limit: 200,
+        warningThreshold: 80
+      }
+    ];
+
+    // Default income categories
+    const defaultIncomeCategories = [
+      {
+        categoryName: "Salary",
+        iconName: "work",
+        color: "#4CAF50",
+        type: "INCOME",
+        limit: 0,
+        warningThreshold: 0
+      },
+      {
+        categoryName: "Freelance",
+        iconName: "laptop",
+        color: "#9C27B0",
+        type: "INCOME",
+        limit: 0,
+        warningThreshold: 0
+      },
+      {
+        categoryName: "Investment",
+        iconName: "trending_up",
+        color: "#00BCD4",
+        type: "INCOME",
+        limit: 0,
+        warningThreshold: 0
+      }
+    ];
+
+    // Combine all categories
+    const allDefaultCategories = [...defaultExpenseCategories, ...defaultIncomeCategories];
+
+    // Create each category sequentially
+    const results = await Promise.all(
+      allDefaultCategories.map(category => createCategory(category))
+    );
+
+    return results;
+  } catch (error) {
+    console.error("Error creating default categories:", error);
+    throw error;
+  }
+};
+
 export const updateCategory = (id, categoryData) => {
   return axiosInstance.put(`/categories/${id}`, categoryData);
 };
@@ -612,6 +686,9 @@ const FinanceService = {
   // Account Management functions
   changePassword,
   deleteUserAccount,
+  
+  // New function for creating default categories
+  createDefaultCategories
 };
 
 export default FinanceService; 

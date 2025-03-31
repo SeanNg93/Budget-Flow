@@ -4,6 +4,7 @@ import SplitText from './SplitText';
 import styles from '../../styles/dashboard.module.css';
 import FinancialTips from './FinancialTips';
 import { useTranslation } from 'react-i18next';
+import { useUser } from '../../context/UserContext';
 
 /**
  * WelcomeSection component displays a greeting to the user
@@ -11,11 +12,12 @@ import { useTranslation } from 'react-i18next';
  */
 const WelcomeSection = ({ userProfile, user, openFinanceActionPanel, walletCount = 0 }) => {
   const { t } = useTranslation();
+  const { profileData } = useUser();
   
-  // Get user name from profile with fallbacks
+  // Get user name from context first, then from props with fallbacks
   const userName = useMemo(() => 
-    userProfile?.fullName || user?.username || t('common.user')
-  , [userProfile, user, t]);
+    profileData?.fullName || userProfile?.fullName || user?.username || t('common.user')
+  , [profileData, userProfile, user, t]);
 
   // State for image carousel
   const [currentImageIndex, setCurrentImageIndex] = useState(0);

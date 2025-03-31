@@ -3,6 +3,7 @@ import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
 import { login } from '../../../config/axiosInstance';
+import { createDefaultCategories } from '../../../services/FinanceService';
 import styles from '../../../styles/auth.module.css';
 import AuthError from '../../../components/AuthError';
 
@@ -90,6 +91,21 @@ const Login = () => {
             email: response.data.email,
             roles: response.data.roles || []
           }));
+        }
+        
+        // Check if this is a new user that needs default categories
+        const isNewUser = localStorage.getItem('newUser') === 'true';
+        if (isNewUser) {
+          try {
+            // Now that the user is logged in, create default categories
+            await createDefaultCategories();
+            console.log('Default categories created successfully for new user');
+            // Remove the new user flag
+            localStorage.removeItem('newUser');
+          } catch (categoryError) {
+            console.error('Failed to create default categories:', categoryError);
+            // Continue with login process even if category creation fails
+          }
         }
         
         navigate('/dashboard');

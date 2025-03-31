@@ -655,7 +655,11 @@ export default function ProfileDialog({
                       </Box>
                     ) : (
                       <Typography variant="body2" className="field-value">
-                        {profile.dateOfBirth || "Not provided"}
+                        {profile.dateOfBirth ? new Date(profile.dateOfBirth).toLocaleDateString('en-GB', {
+                          day: '2-digit', 
+                          month: '2-digit', 
+                          year: 'numeric'
+                        }) : "Not provided"}
                       </Typography>
                     )}
                   </Box>
