@@ -12,6 +12,7 @@ import com.financeapp.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -61,6 +62,23 @@ public class AuthController {
             
             // Check if account is enabled
             User user = userOptional.get();
+            
+            // Add detailed logging for debugging the empty password issue
+            logger.info("Found user: {} (ID: {}), Password hash present: {}, Account enabled: {}", 
+                user.getUsername(),
+                user.getId(),
+                (user.getPassword() != null && !user.getPassword().isEmpty() ? "YES" : "NO"),
+                user.isEnabled());
+                
+            if (user.getPassword() == null || user.getPassword().isEmpty()) {
+                logger.error("User found but password is empty for user: {}", loginRequest.getUsername());
+                return ResponseEntity.status(401).body(Map.of(
+                    "error", "Authentication failed",
+                    "message", "Password data is missing. Please reset your password.",
+                    "code", "EMPTY_PASSWORD"
+                ));
+            }
+            
             if (!user.isEnabled()) {
                 logger.warn("Login failed: Account not activated for user: {}", loginRequest.getUsername());
                 throw AuthenticationException.accountDisabled();
@@ -80,6 +98,9 @@ public class AuthController {
             } catch (BadCredentialsException e) {
                 logger.warn("Login failed: Incorrect password for user: {}", loginRequest.getUsername());
                 throw AuthenticationException.invalidCredentials();
+            } catch (Exception e) {
+                logger.error("Unexpected authentication error for user {}: {}", loginRequest.getUsername(), e.getMessage());
+                throw new AuthenticationException("Authentication error: " + e.getMessage(), "AUTH_ERROR", HttpStatus.UNAUTHORIZED);
             }
 
             // Set the authentication in the security context

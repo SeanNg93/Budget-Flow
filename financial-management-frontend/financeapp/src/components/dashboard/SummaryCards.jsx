@@ -110,7 +110,10 @@ const SummaryCard = React.memo(({
  * - Net Savings
  */
 const SummaryCards = ({ 
-  financialData, 
+  totalBalance,
+  totalIncome,
+  totalExpense,
+  netSavings,
   loading, 
   handleEditBalance, 
   handleManageWallets, 
@@ -287,84 +290,70 @@ const SummaryCards = ({
     t
   ]);
 
-  // Card configurations - Memoized to prevent unnecessary recalculations
-  const cardConfigs = useMemo(() => {
-    const { totalBalance, totalIncome, totalExpense, netSavings } = financialData;
-    
-    return [
-      {
-        title: `${t('dashboard.totalBalance')}${timeRange !== 'all' ? '' : ''}`,
-        icon: <AccountBalanceWalletIcon />,
-        iconColor: '#007aff',
-        amount: formatCurrency(totalBalance, i18n.language),
-        cardClass: styles.balanceCard,
-        amountClass: styles.balanceAmount,
-        extraHeader: balanceHeader,
-        extraContent: balanceMenu,
-        gridSize: 3,
-        accessibleLabel: `${t('dashboard.totalBalance')}: ${formatCurrency(totalBalance, i18n.language)}`,
-        loadingLabel: t('dashboard.loadingBalance')
-      },
-      {
-        title: `${t('dashboard.totalIncome')}${timeRange !== 'all' ? ` (${currentTimeRangeLabel})` : ''}`,
-        icon: <TrendingUpIcon />,
-        iconColor: '#34c759',
-        amount: formatCurrency(totalIncome, i18n.language),
-        cardClass: styles.incomeCard,
-        amountClass: styles.incomeAmount,
-        amountColor: 'success.main',
-        gridSize: 3,
-        accessibleLabel: `${t('dashboard.totalIncome')}: ${formatCurrency(totalIncome, i18n.language)}`,
-        loadingLabel: t('dashboard.loadingIncome')
-      },
-      {
-        title: `${t('dashboard.totalExpenses')}${timeRange !== 'all' ? ` (${currentTimeRangeLabel})` : ''}`,
-        icon: <TrendingDownIcon />,
-        iconColor: '#ff3b30',
-        amount: formatCurrency(totalExpense, i18n.language),
-        cardClass: styles.expenseCard,
-        amountClass: styles.expenseAmount,
-        amountColor: 'error.main',
-        gridSize: 3,
-        accessibleLabel: `${t('dashboard.totalExpenses')}: ${formatCurrency(totalExpense, i18n.language)}`,
-        loadingLabel: t('dashboard.loadingExpenses')
-      },
-      {
-        title: `${t('dashboard.netSavings')}${timeRange !== 'all' ? ` (${currentTimeRangeLabel})` : ''}`,
-        icon: <SavingsIcon />,
-        iconColor: netSavings >= 0 ? '#34c759' : '#ff3b30',
-        amount: formatCurrency(netSavings, i18n.language),
-        cardClass: styles.savingsCard,
-        amountClass: styles.savingsAmount,
-        amountColor: netSavings >= 0 ? 'success.main' : 'error.main',
-        gridSize: 3,
-        accessibleLabel: `${t('dashboard.netSavings')}: ${formatCurrency(netSavings, i18n.language)}`,
-        loadingLabel: t('dashboard.loadingSavings')
-      }
-    ];
-  }, [
-    financialData,
-    balanceHeader,
-    balanceMenu,
-    timeRange,
-    currentTimeRangeLabel,
-    t,
-    i18n.language
-  ]);
-
-  // Memoize grid items to prevent unnecessary re-renders
-  const gridItems = useMemo(() => (
-    cardConfigs.map((config, index) => (
-      <Grid item xs={12} sm={6} md={config.gridSize} key={index}>
-        <SummaryCard
-          {...config}
+  return (
+    <Grid container spacing={2.4} sx={{ mt: 2 }}>
+      {/* Total Balance Card */}
+      <Grid item xs={12} sm={6} md={3}>
+        <SummaryCard 
+          title={t('dashboard.totalBalance')}
+          amount={formatCurrency(totalBalance)}
+          icon={<AccountBalanceWalletIcon />}
+          iconColor="#4caf50"
+          cardClass={styles.balanceCard}
+          amountClass={styles.balanceAmount}
           loading={loading}
+          extraHeader={balanceHeader}
+          extraContent={balanceMenu}
+          loadingLabel={t('dashboard.loadingBalance')}
         />
       </Grid>
-    ))
-  ), [cardConfigs, loading]);
 
-  return <Grid container spacing={2.4}>{gridItems}</Grid>;
+      {/* Income Card */}
+      <Grid item xs={12} sm={6} md={3}>
+        <SummaryCard 
+          title={t('dashboard.income')}
+          amount={formatCurrency(totalIncome)}
+          icon={<TrendingUpIcon />}
+          iconColor="#66bb6a"
+          cardClass={styles.incomeCard}
+          amountClass={styles.incomeAmount}
+          loading={loading}
+          accessibleLabel={`${t('dashboard.income')} ${currentTimeRangeLabel}`}
+          loadingLabel={t('dashboard.loadingIncome')}
+        />
+      </Grid>
+
+      {/* Expenses Card */}
+      <Grid item xs={12} sm={6} md={3}>
+        <SummaryCard 
+          title={t('dashboard.expenses')}
+          amount={formatCurrency(totalExpense)}
+          icon={<TrendingDownIcon />}
+          iconColor="#ef5350"
+          cardClass={styles.expenseCard}
+          amountClass={styles.expenseAmount}
+          loading={loading}
+          accessibleLabel={`${t('dashboard.expenses')} ${currentTimeRangeLabel}`}
+          loadingLabel={t('dashboard.loadingExpenses')}
+        />
+      </Grid>
+
+      {/* Net Savings Card */}
+      <Grid item xs={12} sm={6} md={3}>
+        <SummaryCard 
+          title={t('dashboard.netSavings')}
+          amount={formatCurrency(netSavings)}
+          icon={<SavingsIcon />}
+          iconColor={netSavings >= 0 ? '#29b6f6' : '#ffa726'} // Blue for positive, orange for negative
+          cardClass={styles.savingsCard}
+          amountClass={netSavings >= 0 ? styles.savingsAmountPositive : styles.savingsAmountNegative}
+          loading={loading}
+          accessibleLabel={`${t('dashboard.netSavings')} ${currentTimeRangeLabel}`}
+          loadingLabel={t('dashboard.loadingSavings')}
+        />
+      </Grid>
+    </Grid>
+  );
 };
 
 export default React.memo(SummaryCards); 

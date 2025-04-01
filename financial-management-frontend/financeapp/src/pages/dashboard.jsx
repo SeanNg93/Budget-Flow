@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback, useContext } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
@@ -8,6 +8,7 @@ import Grid from '@mui/material/Grid';
 import CircularProgress from '@mui/material/CircularProgress';
 import { toast } from 'react-toastify';
 import { useTranslation } from 'react-i18next';
+import { useUser } from '../context/UserContext';
 
 // Import dashboard components
 import SideMenu from '../components/dashboard/SideMenu';
@@ -91,21 +92,26 @@ const themeComponents = {
 };
 
 export default function Dashboard() {
+  const { 
+    profileData,
+    financialSummary,
+    wallets,
+    transactions: contextTransactions,
+    sharedWallets: contextSharedWallets,
+    fetchWalletsAndShared,
+    fetchTransactions,
+    fetchInitialData,
+    loading: contextLoading,
+    error: contextError
+  } = useUser();
+
   const navigate = useNavigate();
   const location = useLocation();
   const { t, i18n } = useTranslation();
   const [open, setOpen] = useState(true);
-  const [user, setUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [filterLoading, setFilterLoading] = useState(false);
-  const [wallets, setWallets] = useState([]);
-  const [financialData, setFinancialData] = useState({
-    totalBalance: 0,
-    totalIncome: 0,
-    totalExpense: 0,
-    netSavings: 0
-  });
   const [transactions, setTransactions] = useState([]);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [allTransactions, setAllTransactions] = useState([]);
@@ -115,7 +121,7 @@ export default function Dashboard() {
   const [sharedWallets, setSharedWallets] = useState({});
   const [sharedWalletsInfo, setSharedWalletsInfo] = useState({});
   const [error, setError] = useState(null);
-  const [chartRefreshKey, setChartRefreshKey] = useState(0); // State to trigger chart refresh
+  const [chartRefreshKey, setChartRefreshKey] = useState(0);
 
   // Dialog states centralized
   const [dialogStates, setDialogStates] = useState({
@@ -137,7 +143,7 @@ export default function Dashboard() {
 
   const [selectedWallet, setSelectedWallet] = useState(null);
 
-  const [timeRange, setTimeRange] = useState('all'); // Default to 'all' time
+  const [timeRange, setTimeRange] = useState('all');
   const [timeRangeLoading, setTimeRangeLoading] = useState(false);
 
   // Timeout reference for debounced operations
@@ -158,33 +164,125 @@ export default function Dashboard() {
 
   // Initial setup
   useEffect(() => {
-    checkAuth();
+    setLoading(true);
+    if (financialSummary && contextTransactions.length > 0) {
+      setLoading(false);
+      processContextData();
+    } else {
+      // If context is still loading, wait for it (UserContext should ideally handle its own loading state)
+      // Or trigger initial fetch if needed (though UserContext does this)
+      // fetchInitialData();
+    }
+    if (profileData && profileData.userId) {
+      setupLocalProfile(profileData);
+    }
+
+    // Fetch categories locally if not managed by context
+    fetchCategories();
   }, []);
 
-  // Load user data
+  // Effect to react to changes in context data
   useEffect(() => {
-    if (user) {
-      fetchFinancialData();
+    console.log("Context data updated, processing...");
+    processContextData();
+    setLoading(false);
+  }, [financialSummary, wallets, contextTransactions, contextSharedWallets]);
 
-      // Set a default userProfile from existing user data to avoid API call
-      setUserProfile({
-        id: user.id,
-        fullName: user.username || 'User',
-        joinDate: new Date().toISOString().split('T')[0],
-        role: user.roles?.includes('ROLE_ADMIN') ? 'Administrator' : 'User',
-        bio: '',
-        profilePicturePath: user.profilePicture || '',
-        currency: 'USD'
-      });
-
-      // Only try to fetch user profile if we already have the data
-      if (user.hasProfile) {
-      fetchUserProfile();
+  // Effect to react to profile data changes from context
+  useEffect(() => {
+    if (profileData && profileData.userId) {
+      setupLocalProfile(profileData);
     }
+  }, [profileData]);
 
-      fetchCategories();
+  // Function to process data received from context
+  const processContextData = () => {
+    let processedTxs = processTransactions(contextTransactions || []);
+    processedTxs = sortTransactions(processedTxs);
+    setTransactions(processedTxs.slice(0, 8));
+    setAllTransactions(processedTxs);
+    setFilteredTransactions(processedTxs.slice(0, 8));
+
+    const { sharedMap, sharedInfo } = processSharedWalletsFromContext(contextSharedWallets);
+    setSharedWallets(sharedMap);
+    setSharedWalletsInfo(sharedInfo);
+
+    setChartRefreshKey(prev => prev + 1);
+  };
+
+  // Helper function to setup local profile state from context profile data
+  const setupLocalProfile = (ctxProfileData) => {
+    setUserProfile({
+      id: ctxProfileData.userId,
+      fullName: ctxProfileData.fullName || 'User',
+      joinDate: new Date().toISOString().split('T')[0],
+      role: 'User',
+      bio: '',
+      profilePicturePath: ctxProfileData.profilePicture || '',
+      currency: 'USD'
+    });
+  };
+
+  // Helper function to process shared wallets received from context
+  const processSharedWalletsFromContext = (ctxSharedWallets) => {
+    const sharedMap = {};
+    const sharedInfo = {};
+    (ctxSharedWallets || []).forEach(sharedWallet => {
+      if (sharedWallet.accepted) {
+        sharedMap[sharedWallet.walletId] = true;
+        sharedInfo[sharedWallet.walletId] = {
+          isShared: true,
+          isOwner: sharedWallet.ownerId === profileData?.userId,
+          ownerUsername: sharedWallet.ownerUsername,
+          ownerId: sharedWallet.ownerId,
+          sharedWithId: sharedWallet.sharedWithId,
+          sharedWithUsername: sharedWallet.sharedWithUsername,
+          walletName: sharedWallet.walletName,
+          ownerProfilePictureUrl: sharedWallet.ownerProfilePictureUrl,
+          sharedWithProfilePictureUrl: sharedWallet.sharedWithProfilePictureUrl
+        };
+      }
+    });
+    return { sharedMap, sharedInfo };
+  };
+
+  // Use the sorting logic in a separate function
+  const sortTransactions = (transactionsToSort) => {
+    return [...transactionsToSort].sort((a, b) => {
+      const parseId = (id) => {
+        if (typeof id === 'number') return id;
+        if (typeof id === 'string') {
+          if (id.includes(':')) return parseInt(id.split(':')[0], 10);
+          return parseInt(id, 10);
+        }
+        return 0;
+      };
+      const idA = parseId(a.id);
+      const idB = parseId(b.id);
+      if (idA !== idB) return idB - idA;
+      const dateA = new Date(a.transactionDate);
+      const dateB = new Date(b.transactionDate);
+      return dateB - dateA;
+    });
+  };
+
+  // Update local fetchTransactions to use context fetch and process results
+  const fetchAndProcessTransactions = async (applyFilters = false, filterParams = {}, updateFiltered = true) => {
+    try {
+      let processedTxs = processTransactions(contextTransactions || []);
+      processedTxs = sortTransactions(processedTxs);
+      
+      if (updateFiltered) {
+        setFilteredTransactions(processedTxs);
+      }
+      setAllTransactions(processedTxs);
+      setTransactions(processedTxs.slice(0, 8));
+
+    } catch (error) {
+      console.error('Error fetching/processing transactions:', error);
+      toast.error('Failed to load transactions');
     }
-  }, [user]);
+  };
 
   // Handle location state for navigation/search
   useEffect(() => {
@@ -267,7 +365,7 @@ export default function Dashboard() {
 
     try {
       const userData = localStorage.getItem('userData');
-      setUser(JSON.parse(userData));
+      // setUser(JSON.parse(userData));
     } catch (err) {
       localStorage.removeItem('userToken');
       localStorage.removeItem('userData');
@@ -333,9 +431,9 @@ export default function Dashboard() {
   // API Calls grouped by functionality
   const fetchUserProfile = async () => {
     try {
-      if (!user?.id) return;
+      if (!profileData?.userId) return;
 
-      const response = await FinanceService.getUserProfile(user.id);
+      const response = await FinanceService.getUserProfile(profileData.userId);
 
       if (response.data) {
         setUserProfile(prevProfile => ({
@@ -359,185 +457,6 @@ export default function Dashboard() {
     } catch (error) {
       console.error('Error fetching transaction details:', error);
       setError('Failed to fetch transaction details');
-    }
-  };
-
-  const fetchFinancialData = async () => {
-    try {
-      setLoading(true);
-      // Parallel API calls for better performance
-      const [summaryResponse, accountsResponse, transactionsResponse,
-             sharedWithMeResponse, sharedByMeResponse] = await Promise.all([
-        FinanceService.getFinancialSummary(),
-        FinanceService.getAccounts(),
-        FinanceService.getTransactions(),
-        FinanceService.getSharedWalletsWithMe(),
-        FinanceService.getSharedWalletsByMe()
-      ]);
-
-      // Process shared wallets
-      const sharedWalletsMap = {};
-      const sharedInfo = {};
-
-      // Process shared wallets similar to WalletOverview component
-      const processSharedWallets = (wallets, isOwner) => {
-        wallets.forEach(sharedWallet => {
-          if (sharedWallet.accepted) {
-            sharedWalletsMap[sharedWallet.walletId] = true;
-            sharedInfo[sharedWallet.walletId] = {
-              isShared: true,
-              isOwner,
-              ownerUsername: sharedWallet.ownerUsername,
-              ownerId: sharedWallet.ownerId,
-              sharedWithId: sharedWallet.sharedWithId,
-              sharedWithUsername: sharedWallet.sharedWithUsername,
-              walletName: sharedWallet.walletName,
-              ownerProfilePictureUrl: sharedWallet.ownerProfilePictureUrl,
-              sharedWithProfilePictureUrl: sharedWallet.sharedWithProfilePictureUrl
-            };
-          }
-        });
-      };
-
-      processSharedWallets(sharedWithMeResponse.data || [], false);
-      processSharedWallets(sharedByMeResponse.data || [], true);
-
-      // Update state with fetched data
-      setSharedWallets(sharedWalletsMap);
-      setSharedWalletsInfo(sharedInfo);
-      setFinancialData({
-        totalBalance: summaryResponse.data.totalBalance || 0,
-        totalIncome: summaryResponse.data.totalIncome || 0,
-        totalExpense: summaryResponse.data.totalExpense || 0,
-        netSavings: summaryResponse.data.netSavings || 0
-      });
-      setWallets(accountsResponse.data || []);
-
-      // Process and sort transactions consistently
-      let processedTransactions = processTransactions(transactionsResponse.data || []);
-      
-      // Sort transactions by ID (highest/latest first) - using the same sorting logic as in transactions page
-      processedTransactions = processedTransactions.sort((a, b) => {
-        // Parse IDs to ensure proper numeric comparison
-        const parseId = (id) => {
-          if (typeof id === 'number') return id;
-          if (typeof id === 'string') {
-            if (id.includes(':')) return parseInt(id.split(':')[0], 10);
-            return parseInt(id, 10);
-          }
-          return 0;
-        };
-        
-        const idA = parseId(a.id);
-        const idB = parseId(b.id);
-        
-        // Higher ID values are typically newer transactions
-        if (idA !== idB) {
-          return idB - idA;
-        }
-        
-        // If IDs are the same (unlikely), use date as a tiebreaker
-        const dateA = new Date(a.transactionDate);
-        const dateB = new Date(b.transactionDate);
-        return dateB - dateA;
-      });
-      
-      setTransactions(processedTransactions.slice(0, 8));
-      setFilteredTransactions(processedTransactions.slice(0, 8));
-      setAllTransactions(processedTransactions);
-
-      // If a time range other than 'all' is selected, apply the filter after setting initial data
-      if (timeRange !== 'all') {
-        await fetchFinancialDataByTimeRange(timeRange);
-      }
-      // Trigger chart refresh after initial full data load
-      setChartRefreshKey(prevKey => prevKey + 1);
-    } catch (error) {
-      setError('Failed to load financial data. Please try again later.');
-      setFinancialData({
-        totalBalance: 0,
-        totalIncome: 0,
-        totalExpense: 0,
-        netSavings: 0
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchTransactions = async (applyFilters = false, filterParams = {}, updateFiltered = true) => {
-    try {
-      const response = applyFilters
-        ? await FinanceService.getFilteredTransactions(filterParams)
-        : await FinanceService.getTransactions();
-
-      // Before processing, ensure any existing shared wallet transactions maintain their ID format
-      const updatedTransactions = response.data.map(transaction => {
-        // Check if we have this transaction in allTransactions with a different ID format
-        const existingTransaction = allTransactions.find(t => {
-          // For normal transactions, simple equality check
-          if (t.id === transaction.id) return true;
-          
-          // For shared wallet transactions, check numeric part of ID if formatted as "number:string"
-          if (typeof t.id === 'string' && t.id.includes(':') && 
-              typeof transaction.id === 'number' || typeof transaction.id === 'string') {
-            const existingIdParts = t.id.toString().split(':');
-            return existingIdParts[0] === transaction.id.toString();
-          }
-          
-          return false;
-        });
-        
-        // If we found a match with a different format, preserve the original format
-        if (existingTransaction && existingTransaction.id !== transaction.id) {
-          return {
-            ...transaction,
-            id: existingTransaction.id
-          };
-        }
-        
-        return transaction;
-      });
-      
-      // Process and sort transactions consistently
-      let processedTransactions = processTransactions(updatedTransactions || []);
-      
-      // Sort transactions by ID (highest/latest first) - using the same sorting logic as in transactions page
-      processedTransactions = processedTransactions.sort((a, b) => {
-        // Parse IDs to ensure proper numeric comparison
-        const parseId = (id) => {
-          if (typeof id === 'number') return id;
-          if (typeof id === 'string') {
-            if (id.includes(':')) return parseInt(id.split(':')[0], 10);
-            return parseInt(id, 10);
-          }
-          return 0;
-        };
-        
-        const idA = parseId(a.id);
-        const idB = parseId(b.id);
-        
-        // Higher ID values are typically newer transactions
-        if (idA !== idB) {
-          return idB - idA;
-        }
-        
-        // If IDs are the same (unlikely), use date as a tiebreaker
-        const dateA = new Date(a.transactionDate);
-        const dateB = new Date(b.transactionDate);
-        return dateB - dateA;
-      });
-      
-      // Only update filteredTransactions if we're not in a reset operation
-      if (updateFiltered) {
-        setFilteredTransactions(processedTransactions);
-      }
-      
-      setAllTransactions(processedTransactions);
-      setTransactions(processedTransactions.slice(0, 8));
-    } catch (error) {
-      console.error('Error fetching transactions:', error);
-      toast.error('Failed to load transactions');
     }
   };
 
@@ -586,11 +505,11 @@ export default function Dashboard() {
     // For updates, do a more thorough refresh to ensure sorting is consistent
     if (isUpdate) {
       // Complete refresh of financial data and transactions
-      fetchFinancialData();
+      fetchAndProcessTransactions();
     } else {
       // For new transactions, lighter update
       updateFinancialSummary();
-      fetchTransactions();
+      fetchAndProcessTransactions();
       updateWallets();
       setChartRefreshKey(prevKey => prevKey + 1); // Trigger chart refresh
     }
@@ -608,8 +527,7 @@ export default function Dashboard() {
 
   const handleAccountAdded = (forceFullRefresh = false) => {
     if (forceFullRefresh) {
-      fetchFinancialData(); // This already triggers chart refresh
-      fetchTransactions();
+      fetchAndProcessTransactions();
       fetchCategories();
       updateFinancialSummary();
     } else {
@@ -622,7 +540,7 @@ export default function Dashboard() {
   // Add handler for wallet deletion
   const handleWalletDeleted = () => {
     // Refresh transactions to show updated names
-    fetchTransactions();
+    fetchAndProcessTransactions();
     // Refresh financial summary and wallets list
     updateFinancialSummary();
     updateWallets();
@@ -647,7 +565,7 @@ export default function Dashboard() {
     try {
       const response = await FinanceService.getAccounts();
       if (response?.data) {
-        setWallets(response.data);
+        // setWallets(response.data);
       }
     } catch (error) {
       console.error("Error updating wallets:", error);
@@ -655,7 +573,7 @@ export default function Dashboard() {
   };
 
   const handleCategoryAdded = () => {
-      fetchFinancialData(); // This already triggers chart refresh
+      fetchAndProcessTransactions();
   };
 
   const handleBalanceAdded = async () => {
@@ -760,7 +678,7 @@ export default function Dashboard() {
   const handleCategoryUpdated = async () => {
     toast.success('Categories updated successfully!');
     await fetchCategories();
-    await fetchTransactions();
+    await fetchAndProcessTransactions();
     setChartRefreshKey(prevKey => prevKey + 1); // Trigger chart refresh
   };
 
@@ -909,17 +827,17 @@ export default function Dashboard() {
       
       if (walletId && typeof newBalance === 'number') {
         // Update the wallet in our local state
-        setWallets(currentWallets => {
-          return currentWallets.map(wallet => {
-            if (wallet.id.toString() === walletId.toString()) {
-              return {
-                ...wallet,
-                balance: newBalance
-              };
-            }
-            return wallet;
-          });
-        });
+        // setWallets(currentWallets => {
+        //   return currentWallets.map(wallet => {
+        //     if (wallet.id.toString() === walletId.toString()) {
+        //       return {
+        //         ...wallet,
+        //         balance: newBalance
+        //       };
+        //     }
+        //     return wallet;
+        //   });
+        // });
         
         // Update the financial summary to reflect the new balance
         updateFinancialSummary();
@@ -971,7 +889,7 @@ export default function Dashboard() {
     
     // Fetch all transactions and update them with the limit of 8
     // Pass false for updateFiltered to prevent overwriting empty filteredTransactions
-    fetchTransactions(false, {}, false);
+    fetchAndProcessTransactions(false, {}, false);
     
     // No need for additional sorting since fetchTransactions now sorts consistently
   };
@@ -1013,7 +931,7 @@ export default function Dashboard() {
                 <Grid item xs={12}>
                   <WelcomeSection
                     userProfile={userProfile}
-                    user={user}
+                    user={profileData}
                     openFinanceActionPanel={() => updateDialogState('financeActionPanel', true)}
                     walletCount={wallets?.length || 0}
                   />
@@ -1022,7 +940,10 @@ export default function Dashboard() {
 
               {/* Summary Cards */}
               <SummaryCards
-                financialData={financialData}
+                totalBalance={financialSummary.totalBalance}
+                totalIncome={financialSummary.totalIncome}
+                totalExpense={financialSummary.totalExpense}
+                netSavings={financialSummary.netSavings}
                 loading={loading || timeRangeLoading}
                 handleEditBalance={(walletId) => {
                   if (dialogManagerRef.current.openEditBalanceForm) {
@@ -1099,9 +1020,9 @@ export default function Dashboard() {
         handleDeleteConfirm={handleDeleteConfirm}
         setSelectedTransaction={setSelectedTransaction}
         setSelectedWallet={setSelectedWallet}
-        fetchFinancialData={fetchFinancialData} // Pass fetchFinancialData if needed by DialogManager
-        onWalletDeleted={handleWalletDeleted} // Pass the handler down
-        ref={setDialogManagerMethods} // Pass a callback to get references to methods
+        fetchFinancialData={fetchAndProcessTransactions}
+        onWalletDeleted={handleWalletDeleted}
+        ref={setDialogManagerMethods}
       />
     </AppTheme>
   );

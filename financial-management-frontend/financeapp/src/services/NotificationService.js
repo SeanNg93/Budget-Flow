@@ -15,12 +15,30 @@ let sharedState = {
 // Subscribed components
 const subscribers = new Set();
 
+// Callbacks for specific notification types
+const notificationCallbacks = {
+  WALLET_SHARE_ACCEPTED: null, // User accepted a share invite
+  WALLET_RECEIVED: null,       // User received a share invite (can optionally trigger update)
+  MONEY_SENT: null,            // User sent money
+  MONEY_RECEIVED: null         // User received money
+};
+
 // User ID for authorization
 let currentUserId = null;
 
 // Function to notify all subscribers of state changes
 const notifySubscribers = () => {
   subscribers.forEach(callback => callback(sharedState));
+};
+
+// Function to register callbacks
+export const registerNotificationCallback = (type, callback) => {
+  if (notificationCallbacks.hasOwnProperty(type)) {
+    notificationCallbacks[type] = callback;
+    console.log(`Registered callback for type: ${type}`); // Debug log
+  } else {
+    console.warn(`Attempted to register callback for unknown type: ${type}`);
+  }
 };
 
 // Check if we should fetch new data
@@ -67,17 +85,38 @@ const fetchNotifications = async () => {
     const response = await FinanceService.getNotifications();
     
     if (response && response.data) {
+      const newNotifications = response.data;
+      const previousNotificationIds = new Set(sharedState.notifications.map(n => n.id));
+      
       sharedState = {
         ...sharedState,
-        notifications: response.data,
+        notifications: newNotifications,
         lastFetched: new Date()
       };
       
       // Update the unread count based on notifications array
-      const unreadCount = response.data.filter(n => !n.read).length;
+      const unreadCount = newNotifications.filter(n => !n.read).length;
       sharedState.unreadCount = unreadCount;
       
       notifySubscribers();
+
+      // Check for actionable notifications
+      newNotifications.forEach(notification => {
+        // Only process new notifications
+        if (!previousNotificationIds.has(notification.id)) {
+          console.log('Processing new notification:', notification); // Debug log
+          
+          // Trigger callbacks based on exact notification type from backend
+          const callback = notificationCallbacks[notification.type];
+          if (callback) {
+            console.log(`Triggering callback for type: ${notification.type}`); // Debug log
+            callback(); // Call the registered callback
+          } else {
+            // Optionally handle notifications without registered callbacks
+            // console.log(`No callback registered for type: ${notification.type}`);
+          }
+        }
+      });
     }
   } catch (error) {
     console.error('Error fetching notifications:', error);

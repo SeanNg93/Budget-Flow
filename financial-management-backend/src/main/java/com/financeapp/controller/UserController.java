@@ -122,15 +122,22 @@ public class UserController {
      */
     @PostMapping("/change-password")
     public ResponseEntity<Map<String, String>> changePassword(@RequestBody ChangePasswordRequest request) {
-        // Extract username and password from the request
-        String[] parts = request.getCurrentPassword().split(":");
-        if (parts.length != 2) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("success", "false", "message", "Invalid request format"));
-        }
+        // Get username and password from the request
+        String username = request.getUsername();
+        String currentPassword = request.getCurrentPassword();
         
-        String username = parts[0];
-        String currentPassword = parts[1];
+        // For backward compatibility, check if the current password contains a username prefix
+        if (username == null || username.isEmpty()) {
+            // Try to parse from old format if username is not provided
+            String[] parts = request.getCurrentPassword().split(":");
+            if (parts.length == 2) {
+                username = parts[0];
+                currentPassword = parts[1];
+            } else {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("success", "false", "message", "Username not provided"));
+            }
+        }
         
         log.info("Attempting to change password for user: {}", username);
         

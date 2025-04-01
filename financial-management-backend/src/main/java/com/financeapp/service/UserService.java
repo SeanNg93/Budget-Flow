@@ -6,7 +6,9 @@ import com.financeapp.repository.RoleRepository;
 import com.financeapp.repository.UserRepository;
 import com.financeapp.security.CustomUserDetailsService;
 import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -20,18 +22,26 @@ import java.util.UUID;
 import java.util.HashSet;
 
 @Service
-@RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final CustomUserDetailsService userDetailsService;
+    private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
     @Value("${app.frontend.url}")
     private String frontendUrl;
 
     @Value("${app.token.expiry.minutes}")
     private int tokenExpiryMinutes;
+
+    @Autowired
+    public UserService(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder, CustomUserDetailsService userDetailsService) {
+        this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.userDetailsService = userDetailsService;
+    }
 
     public Optional<User> getUserById(Long id) {
         return userRepository.findById(id);
@@ -40,8 +50,8 @@ public class UserService {
     @Transactional
     public void deleteUser(Long id) {
         userRepository.findById(id).ifPresent(user -> {
-            // Evict from cache before deleting
-            userDetailsService.evictUserFromCache(user.getUsername());
+            // Evict from cache using both username and email before deleting
+            userDetailsService.evictUserFromCacheByUsernameAndEmail(user);
             userRepository.deleteById(id);
         });
     }
@@ -83,9 +93,9 @@ public class UserService {
         user.setResetPasswordToken(null);
         user.setResetPasswordTokenExpiry(null);
         userRepository.save(user);
-        
-        // Evict from cache after password reset
-        userDetailsService.evictUserFromCache(user.getUsername());
+
+        // Evict from cache after password reset using both username and email
+        userDetailsService.evictUserFromCacheByUsernameAndEmail(user);
 
         return true;
     }
@@ -117,6 +127,11 @@ public class UserService {
             return false;
         }
 
+        // Log password status before activation
+        logger.info("User password before activation for {}: {}", 
+            user.getUsername(), 
+            (user.getPassword() == null || user.getPassword().isEmpty()) ? "EMPTY" : "PRESENT");
+
         // Ensure user has the default ROLE_USER role
         if (user.getRoles() == null || user.getRoles().isEmpty()) {
             Role userRole = roleRepository.findByName(Role.ERole.ROLE_USER)
@@ -127,10 +142,22 @@ public class UserService {
         user.setEnabled(true);
         user.setActivationToken(null);
         user.setActivationTokenExpiry(null);
+        
+        // Verify password isn't null or empty before saving
+        if (user.getPassword() == null || user.getPassword().isEmpty()) {
+            logger.error("Password is empty during activation for user: {}", user.getUsername());
+            return false;
+        }
+        
         userRepository.save(user);
         
-        // Evict from cache after account activation
-        userDetailsService.evictUserFromCache(user.getUsername());
+        // Log password status after save
+        logger.info("User password after activation for {}: {}", 
+            user.getUsername(), 
+            (user.getPassword() == null || user.getPassword().isEmpty()) ? "EMPTY" : "PRESENT");
+
+        // Evict from cache after account activation using both username and email
+        userDetailsService.evictUserFromCacheByUsernameAndEmail(user);
 
         return true;
     }
@@ -140,12 +167,12 @@ public class UserService {
         Optional<User> userOpt = userRepository.findByUsername(username);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
-            if (passwordEncoder.matches(rawPassword, user.getPassword())) {
-                // Evict from cache before deleting account
-                userDetailsService.evictUserFromCache(username);
-                userRepository.delete(user);
-                return true;
-            }
+        if (passwordEncoder.matches(rawPassword, user.getPassword())) {
+            // Evict from cache before deleting account using both username and email
+            userDetailsService.evictUserFromCacheByUsernameAndEmail(user);
+            userRepository.delete(user);
+            return true;
+        }
         }
         return false;
     }
@@ -171,10 +198,10 @@ public class UserService {
 
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
-        
-        // Evict from cache after password change
-        userDetailsService.evictUserFromCache(username);
-        
+
+        // Evict from cache after password change using both username and email
+        userDetailsService.evictUserFromCacheByUsernameAndEmail(user);
+
         return true;
     }
 }
