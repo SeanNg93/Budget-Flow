@@ -122,12 +122,11 @@ export const changePassword = (currentPassword, newPassword) => {
   const userData = JSON.parse(localStorage.getItem('userData') || '{}');
   const username = userData.username || '';
   
-  // Format the currentPassword to include the username
-  const formattedCurrentPassword = `${username}:${currentPassword}`;
-  
+  // Send the raw password without formatting
   return axiosInstance.post('/user/change-password', { 
-    currentPassword: formattedCurrentPassword, 
-    newPassword 
+    currentPassword, 
+    newPassword,
+    username // Send username as a separate field
   });
 };
 
