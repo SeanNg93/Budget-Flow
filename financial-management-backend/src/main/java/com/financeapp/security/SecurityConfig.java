@@ -35,7 +35,7 @@ public class SecurityConfig {
                 .cors() // This will use the CorsConfigurationSource bean from CorsConfig
                 .and()
                 .authorizeHttpRequests()
-                .requestMatchers("/api/auth/**", "/api/password/**", "/api/activate/**", "/api/account/**", "/api/test/**", "/api/user/deletion-status", "/uploads/**").permitAll()
+                .requestMatchers("/api/auth/**", "/api/password/**", "/api/activate/**", "/api/account/**", "/api/test/**", "/api/user/deletion-status", "/uploads/**", "/ws/**").permitAll()
                 // Explicitly configure notification endpoints to be authenticated
                 .requestMatchers("/api/notifications/**").authenticated()
                 // The following endpoints require authentication
