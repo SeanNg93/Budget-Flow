@@ -1,181 +1,216 @@
 import { useState, useEffect, useCallback } from 'react';
 import FinanceService from './FinanceService';
+import SockJS from 'sockjs-client';
+import { Client } from '@stomp/stompjs';
 
 // Configuration
-const POLLING_INTERVAL = 30000; // 30 seconds
+const WEBSOCKET_URL = 'http://localhost:8080/ws'; // Make sure this matches your backend WebSocket endpoint
+const NOTIFICATION_QUEUE = '/user/queue/notifications'; // User-specific queue
 
 // Shared state for all components
 let sharedState = {
   unreadCount: 0,
   notifications: [],
-  lastFetched: null,
-  isPolling: false
+  isConnected: false, // Track connection status
 };
 
 // Subscribed components
 const subscribers = new Set();
 
-// Callbacks for specific notification types
+// Callbacks for specific notification types (can be kept if needed elsewhere)
 const notificationCallbacks = {
-  WALLET_SHARE_ACCEPTED: null, // User accepted a share invite
-  WALLET_RECEIVED: null,       // User received a share invite (can optionally trigger update)
-  MONEY_SENT: null,            // User sent money
-  MONEY_RECEIVED: null         // User received money
+  WALLET_SHARE_ACCEPTED: null,
+  WALLET_RECEIVED: null,
+  MONEY_SENT: null,
+  MONEY_RECEIVED: null
 };
 
-// User ID for authorization
-let currentUserId = null;
+// WebSocket client instance
+let stompClient = null;
+let currentUsername = null; // Store username for destination path
+let currentUserId = null; // Keep userId if needed for initial fetch
 
 // Function to notify all subscribers of state changes
 const notifySubscribers = () => {
-  subscribers.forEach(callback => callback(sharedState));
+  // Make sure to pass a copy of the state to avoid mutation issues
+  const stateCopy = { ...sharedState }; 
+  subscribers.forEach(callback => callback(stateCopy));
 };
 
-// Function to register callbacks
+// Function to register callbacks (if still needed)
 export const registerNotificationCallback = (type, callback) => {
   if (notificationCallbacks.hasOwnProperty(type)) {
     notificationCallbacks[type] = callback;
-    console.log(`Registered callback for type: ${type}`); // Debug log
   } else {
     console.warn(`Attempted to register callback for unknown type: ${type}`);
   }
 };
 
-// Check if we should fetch new data
-const shouldFetchData = () => {
-  if (!sharedState.lastFetched) return true;
-  
-  const now = new Date();
-  const lastFetch = new Date(sharedState.lastFetched);
-  const timeDiff = now - lastFetch;
-  
-  // If it's been more than 15 seconds since last fetch
-  return timeDiff > 15000;
-};
-
-// Function to fetch unread counts with throttling
-const fetchUnreadCount = async () => {
+// Function to fetch initial notifications (called once on connect or manually)
+const fetchInitialNotifications = async () => {
   if (!currentUserId) return;
   
   try {
-    // Only fetch if necessary
-    if (shouldFetchData()) {
-      const response = await FinanceService.getUnreadNotificationCount();
-      
-      if (response && response.data) {
-        sharedState = {
-          ...sharedState,
-          unreadCount: response.data.unreadCount,
-          lastFetched: new Date()
-        };
-        
-        notifySubscribers();
-      }
-    }
-  } catch (error) {
-    console.error('Error fetching unread count:', error);
-  }
-};
-
-// Function to fetch notifications
-const fetchNotifications = async () => {
-  if (!currentUserId) return;
-  
-  try {
-    const response = await FinanceService.getNotifications();
+    const response = await FinanceService.getNotifications(); // Use existing API call
     
     if (response && response.data) {
-      const newNotifications = response.data;
-      const previousNotificationIds = new Set(sharedState.notifications.map(n => n.id));
+      const initialNotifications = response.data;
+      const unreadCount = initialNotifications.filter(n => !n.read).length;
       
       sharedState = {
         ...sharedState,
-        notifications: newNotifications,
-        lastFetched: new Date()
+        notifications: initialNotifications,
+        unreadCount: unreadCount,
       };
       
-      // Update the unread count based on notifications array
-      const unreadCount = newNotifications.filter(n => !n.read).length;
-      sharedState.unreadCount = unreadCount;
-      
       notifySubscribers();
-
-      // Check for actionable notifications
-      newNotifications.forEach(notification => {
-        // Only process new notifications
-        if (!previousNotificationIds.has(notification.id)) {
-          console.log('Processing new notification:', notification); // Debug log
-          
-          // Trigger callbacks based on exact notification type from backend
-          const callback = notificationCallbacks[notification.type];
-          if (callback) {
-            console.log(`Triggering callback for type: ${notification.type}`); // Debug log
-            callback(); // Call the registered callback
-          } else {
-            // Optionally handle notifications without registered callbacks
-            // console.log(`No callback registered for type: ${notification.type}`);
-          }
-        }
-      });
     }
   } catch (error) {
-    console.error('Error fetching notifications:', error);
+    console.error('Error fetching initial notifications:', error);
+    // Handle error appropriately, maybe set an error state
   }
 };
 
-// Function to mark a notification as read
+// Function to handle incoming WebSocket messages
+const handleWebSocketMessage = (message) => {
+  try {
+    const notification = JSON.parse(message.body);
+
+    // Add the new notification to the beginning of the list
+    const updatedNotifications = [notification, ...sharedState.notifications];
+    
+    // Optionally, limit the number of stored notifications
+    // if (updatedNotifications.length > MAX_NOTIFICATIONS) { ... }
+
+    sharedState = {
+      ...sharedState,
+      notifications: updatedNotifications,
+      unreadCount: sharedState.unreadCount + 1, // Increment unread count
+    };
+
+    notifySubscribers();
+
+    // Trigger callbacks if needed
+    const callback = notificationCallbacks[notification.type];
+    if (callback) {
+      callback();
+    }
+
+  } catch (error) {
+    console.error('Error processing WebSocket message:', error);
+  }
+};
+
+// Function to connect WebSocket
+const connectWebSocket = (username) => {
+  if (stompClient && stompClient.connected) {
+    return;
+  }
+
+  const socket = new SockJS(WEBSOCKET_URL);
+  stompClient = new Client({
+    webSocketFactory: () => socket,
+    reconnectDelay: 5000, // Attempt reconnect every 5 seconds
+    heartbeatIncoming: 4000,
+    heartbeatOutgoing: 4000,
+    onConnect: (frame) => {
+      sharedState = { ...sharedState, isConnected: true };
+      notifySubscribers();
+
+      // Fetch initial notifications upon connection
+      fetchInitialNotifications();
+
+      // Subscribe to user-specific queue
+      // Note: The destination needs /user prefix which is handled by the broker
+      const userQueue = `/user/${username}/queue/notifications`;
+      stompClient.subscribe(userQueue, handleWebSocketMessage);
+    },
+    onStompError: (frame) => {
+      console.error('Broker reported error: ' + frame.headers['message']);
+      console.error('Additional details: ' + frame.body);
+      sharedState = { ...sharedState, isConnected: false };
+      notifySubscribers();
+    },
+    onWebSocketError: (event) => {
+      console.error('WebSocket error:', event);
+      sharedState = { ...sharedState, isConnected: false };
+      notifySubscribers();
+    },
+    onDisconnect: () => {
+        sharedState = { ...sharedState, isConnected: false };
+        notifySubscribers();
+        // Optionally try to reconnect here or let the reconnectDelay handle it
+    }
+  });
+
+  stompClient.activate();
+};
+
+// Function to disconnect WebSocket
+const disconnectWebSocket = () => {
+  if (stompClient && stompClient.connected) {
+    stompClient.deactivate();
+  }
+  stompClient = null;
+  sharedState = { ...sharedState, isConnected: false };
+  notifySubscribers();
+};
+
+// Function to mark a notification as read (API call)
 const markAsRead = async (id) => {
   try {
     await FinanceService.markNotificationAsRead(id);
     
-    // Update local state
-    const updatedNotifications = sharedState.notifications.map(notification => 
-      notification.id === id 
-        ? { ...notification, read: true } 
-        : notification
-    );
+    let notificationFound = false;
+    const updatedNotifications = sharedState.notifications.map(notification => {
+      if (notification.id === id && !notification.read) {
+        notificationFound = true;
+        return { ...notification, read: true };
+      }
+      return notification;
+    });
     
-    sharedState = {
-      ...sharedState,
-      notifications: updatedNotifications,
-      unreadCount: Math.max(0, sharedState.unreadCount - 1)
-    };
-    
-    notifySubscribers();
+    if (notificationFound) {
+        sharedState = {
+          ...sharedState,
+          notifications: updatedNotifications,
+          unreadCount: Math.max(0, sharedState.unreadCount - 1)
+        };
+        notifySubscribers();
+    }
   } catch (error) {
     console.error('Error marking notification as read:', error);
   }
 };
 
-// Function to mark all notifications as read
+// Function to mark all notifications as read (API call)
 const markAllAsRead = async () => {
   try {
     await FinanceService.markAllNotificationsAsRead();
     
-    // Update local state
     const updatedNotifications = sharedState.notifications.map(notification => ({ 
       ...notification, 
       read: true 
     }));
     
-    sharedState = {
-      ...sharedState,
-      notifications: updatedNotifications,
-      unreadCount: 0
-    };
-    
-    notifySubscribers();
+    if (sharedState.unreadCount > 0) {
+        sharedState = {
+          ...sharedState,
+          notifications: updatedNotifications,
+          unreadCount: 0
+        };
+        notifySubscribers();
+    }
   } catch (error) {
     console.error('Error marking all notifications as read:', error);
   }
 };
 
-// Function to clear all notifications
+// Function to clear all notifications (API call)
 const clearNotifications = async () => {
   try {
     await FinanceService.deleteAllNotifications();
     
-    // Update local state
     sharedState = {
       ...sharedState,
       notifications: [],
@@ -188,53 +223,30 @@ const clearNotifications = async () => {
   }
 };
 
-// Start polling function
-const startPolling = () => {
-  if (sharedState.isPolling) return;
-  
-  sharedState.isPolling = true;
-  
-  // Fetch immediately
-  fetchUnreadCount();
-  
-  // Set up interval
-  const interval = setInterval(() => {
-    fetchUnreadCount();
-  }, POLLING_INTERVAL);
-  
-  // Store interval ID for cleanup
-  sharedState.pollingInterval = interval;
-};
-
-// Stop polling function
-const stopPolling = () => {
-  if (!sharedState.isPolling) return;
-  
-  clearInterval(sharedState.pollingInterval);
-  sharedState.isPolling = false;
-  sharedState.pollingInterval = null;
-};
-
-// Initialize the notification service with a user ID
-export const initializeNotificationService = (userId) => {
-  if (userId !== currentUserId) {
-    // Clear any existing state if user changes
-    if (currentUserId) {
-      stopPolling();
-      sharedState = {
-        unreadCount: 0,
-        notifications: [],
-        lastFetched: null,
-        isPolling: false
-      };
-    }
-    
-    // Set the new user ID
-    currentUserId = userId;
-    
-    // Start polling with the new user ID
-    startPolling();
+// Initialize the notification service with username and userId
+// We need the username for the WebSocket topic
+export const initializeNotificationService = (username, userId) => {
+  if (!username || !userId) {
+      console.error("Cannot initialize NotificationService without username and userId.");
+      return;
   }
+  
+  // If user changes, disconnect old socket and clear state
+  if ((username && username !== currentUsername) || (userId && userId !== currentUserId)) {
+    disconnectWebSocket();
+    sharedState = {
+      unreadCount: 0,
+      notifications: [],
+      isConnected: false,
+    };
+    notifySubscribers(); // Notify about cleared state
+  }
+
+  currentUsername = username;
+  currentUserId = userId;
+  
+  // Connect WebSocket if not already connected
+  connectWebSocket(username);
 };
 
 // React hook to use notifications
@@ -242,41 +254,36 @@ export const useNotifications = () => {
   const [state, setState] = useState(sharedState);
   
   useEffect(() => {
-    // Add subscriber
-    const callback = (newState) => {
-      setState({ ...newState });
+    // Callback function to update local state when sharedState changes
+    const handleStateUpdate = (newState) => {
+      setState({ ...newState }); // Update component state
     };
     
-    subscribers.add(callback);
+    // Subscribe the component
+    subscribers.add(handleStateUpdate);
     
-    // Start polling if not already started
-    if (!sharedState.isPolling && currentUserId) {
-      startPolling();
-    }
-    
-    // Return cleanup function
+    // Initial state sync
+    handleStateUpdate(sharedState); 
+
+    // Cleanup: Unsubscribe when component unmounts
     return () => {
-      subscribers.delete(callback);
-      
-      // If no more subscribers, stop polling
-      if (subscribers.size === 0) {
-        stopPolling();
-      }
+      subscribers.delete(handleStateUpdate);
+      // Optional: Disconnect WebSocket if no components are using the service
+      // if (subscribers.size === 0) { 
+      //   disconnectWebSocket();
+      // }
     };
-  }, []);
+  }, []); // Empty dependency array ensures this runs only on mount and unmount
   
-  // Memoized functions to prevent unnecessary re-renders
-  const memoizedFetchNotifications = useCallback(fetchNotifications, []);
-  const memoizedMarkAsRead = useCallback(markAsRead, []);
-  const memoizedMarkAllAsRead = useCallback(markAllAsRead, []);
-  const memoizedClearNotifications = useCallback(clearNotifications, []);
-  
+  // Expose state and actions
   return {
+    isConnected: state.isConnected,
     unreadCount: state.unreadCount,
     notifications: state.notifications,
-    fetchNotifications: memoizedFetchNotifications,
-    markAsRead: memoizedMarkAsRead,
-    markAllAsRead: memoizedMarkAllAsRead,
-    clearNotifications: memoizedClearNotifications
+    // Expose actions that components might need
+    fetchInitialNotifications: useCallback(fetchInitialNotifications, []), // Allow manual refresh if needed
+    markAsRead: useCallback(markAsRead, []), 
+    markAllAsRead: useCallback(markAllAsRead, []), 
+    clearNotifications: useCallback(clearNotifications, [])
   };
 }; 

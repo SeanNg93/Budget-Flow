@@ -136,7 +136,9 @@
     "loadingBalance": "Loading balance data",
     "loadingIncome": "Loading income data",
     "loadingExpenses": "Loading expenses data",
-    "loadingSavings": "Loading savings data"
+    "loadingSavings": "Loading savings data",
+    "income": "Income",
+    "expenses": "Expenses"
   },
   "wallets": {
     "createWallet": "Create Wallet",
