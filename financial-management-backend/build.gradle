@@ -21,6 +21,9 @@ dependencies {
     // Spring Boot Starter
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
+    // Spring WebSocket
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
     // Spring Security (JWT)
     implementation 'org.springframework.boot:spring-boot-starter-security'
 

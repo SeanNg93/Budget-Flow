@@ -19,7 +19,8 @@ export const UserProvider = ({ children }) => {
     fullName: null,
     profilePicture: null,
     userId: null,
-    email: null
+    email: null,
+    username: null // Added username to profile state
   });
   // Add state for wallets and transactions if not already present
   const [wallets, setWallets] = useState([]);
@@ -33,27 +34,39 @@ export const UserProvider = ({ children }) => {
     netSavings: 0
   });
   
-  // Load initial user data from localStorage
+  // Load initial user ID from localStorage and fetch profile
   useEffect(() => {
     const userData = JSON.parse(localStorage.getItem('userData') || '{}');
     if (userData && userData.id) {
       fetchUserProfile(userData.id);
-      // Initialize notification service with user ID
-      initializeNotificationService(userData.id);
-      // Fetch initial data including summary
+    } else {
+      // console.log("No user data found in localStorage on initial load."); // Removed log
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps 
+  }, []); // Run only once on mount
+
+  // Initialize WebSocket and fetch data AFTER profile is loaded
+  useEffect(() => {
+    if (profileData.userId && profileData.username) {
+      // console.log(`User profile loaded. Initializing services for user: ${profileData.username} (ID: ${profileData.userId})`); // Removed log
+
+      initializeNotificationService(profileData.username, profileData.userId);
+
       fetchInitialData();
 
-      // Register notification callbacks
       registerNotificationCallback('WALLET_SHARE_ACCEPTED', fetchWalletsAndShared);
       registerNotificationCallback('WALLET_RECEIVED', fetchWalletsAndShared);
       registerNotificationCallback('MONEY_SENT', fetchTransactionsAndSummary);
       registerNotificationCallback('MONEY_RECEIVED', fetchTransactionsAndSummary);
+
+    } else {
+        // console.log("User profile not yet loaded, skipping service initialization."); // Removed log
     }
-  }, []);
+  }, [profileData.userId, profileData.username]); // Dependencies: userId and username
 
   // Function to fetch wallets and shared wallets
   const fetchWalletsAndShared = useCallback(async () => {
-    console.log("Fetching wallets and shared wallets..."); // Debug log
+    // console.log("Fetching wallets and shared wallets..."); // Removed log
     try {
       // Fetch wallets, wallets shared with the user, and wallets shared by the user
       const [walletsResponse, sharedWithMeResponse, sharedByMeResponse] = await Promise.all([
@@ -81,7 +94,7 @@ export const UserProvider = ({ children }) => {
 
   // Function to fetch transactions
   const fetchTransactions = useCallback(async () => {
-    console.log("Fetching transactions..."); // Debug log
+    // console.log("Fetching transactions..."); // Removed log
     try {
       const response = await FinanceService.getTransactions({}); // Pass empty object or appropriate filters
       setTransactions(response.data || []);
@@ -92,7 +105,7 @@ export const UserProvider = ({ children }) => {
 
   // Function to fetch financial summary
   const fetchFinancialSummary = useCallback(async () => {
-    console.log("Fetching financial summary..."); // Debug log
+    // console.log("Fetching financial summary..."); // Removed log
     try {
       const response = await FinanceService.getFinancialSummary();
       setFinancialSummary(response.data || { totalBalance: 0, totalIncome: 0, totalExpense: 0, netSavings: 0 });
@@ -103,21 +116,19 @@ export const UserProvider = ({ children }) => {
 
   // Function to fetch transactions AND summary (triggered by money transfer notifications)
   const fetchTransactionsAndSummary = useCallback(async () => {
-    console.log("Fetching transactions and summary after notification..."); // Debug log
-    // Fetching summary and transactions is likely sufficient, wallets might not change balance instantly depending on backend logic
-    // If balances ARE expected to update instantly, call fetchWalletsAndShared as well.
+    // console.log("Fetching transactions and summary after notification..."); // Removed log
     await Promise.all([fetchTransactions(), fetchFinancialSummary()]);
-    // Optional: Add fetchWalletsAndShared() if individual wallet balances need refresh
-    // await Promise.all([fetchTransactions(), fetchFinancialSummary(), fetchWalletsAndShared()]); 
   }, [fetchTransactions, fetchFinancialSummary]);
 
-  // Fetch initial data on load
+  // Fetch initial data on load (now triggered by the new useEffect)
   const fetchInitialData = useCallback(async () => {
+    // console.log("Fetching initial financial data..."); // Removed log
     await Promise.all([fetchWalletsAndShared(), fetchTransactions(), fetchFinancialSummary()]);
   }, [fetchWalletsAndShared, fetchTransactions, fetchFinancialSummary]);
   
   // Function to fetch user profile data
   const fetchUserProfile = async (userId) => {
+    // console.log(`Fetching user profile for ID: ${userId}`); // Removed log
     try {
       const token = localStorage.getItem('userToken');
       if (!token || !userId) return;
@@ -131,6 +142,7 @@ export const UserProvider = ({ children }) => {
       if (response.data) {
         // Process profile data
         const data = response.data;
+        // console.log("Received profile data:", data); // Removed log
         
         // Process profile picture URL
         let profilePicUrl = data.profilePictureUrl;
@@ -138,19 +150,25 @@ export const UserProvider = ({ children }) => {
           profilePicUrl = `${API_BASE_URL}${profilePicUrl}`;
         }
         
-        // Update context state
+        // Update context state with all necessary info
         setProfileData({
           fullName: data.fullName || null,
           profilePicture: profilePicUrl || null,
           userId: data.userId || userId,
-          email: data.email || null
+          email: data.email || null,
+          username: data.username || null // Store username from API response
         });
         
-        // Initialize notification service with user ID when profile is loaded
-        initializeNotificationService(userId);
+        // DO NOT initialize WebSocket here - it will be handled by the dedicated useEffect
+        
+      } else {
+          console.warn("No data received from user profile API.");
+          // Consider clearing profile data or handling error state
       }
     } catch (err) {
       console.error("Error fetching user profile:", err);
+      // Consider clearing profile data or handling error state
+      setProfileData({ userId: null, username: null, email: null, fullName: null, profilePicture: null });
     }
   };
   
@@ -193,7 +211,8 @@ export const UserProvider = ({ children }) => {
       fullName: profile.fullName || null,
       profilePicture: profilePicUrl || null,
       userId: profile.userId || profileData.userId,
-      email: profile.email || profileData.email
+      email: profile.email || profileData.email,
+      username: profile.username || profileData.username // Ensure username is updated if present
     });
   };
 

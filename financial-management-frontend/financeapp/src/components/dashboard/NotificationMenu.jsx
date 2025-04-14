@@ -50,7 +50,7 @@ const NotificationMenu = () => {
   const {
     unreadCount,
     notifications,
-    fetchNotifications,
+    fetchInitialNotifications,
     markAsRead,
     markAllAsRead,
     clearNotifications
@@ -60,9 +60,9 @@ const NotificationMenu = () => {
   const handleMenuOpen = useCallback(async (event) => {
     setAnchorEl(event.currentTarget);
     setLoading(true);
-    await fetchNotifications();
+    await fetchInitialNotifications();
     setLoading(false);
-  }, [fetchNotifications]);
+  }, [fetchInitialNotifications]);
   
   const handleMenuClose = useCallback(() => {
     setAnchorEl(null);

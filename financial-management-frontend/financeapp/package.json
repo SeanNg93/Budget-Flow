@@ -16,6 +16,7 @@
     "@mui/material": "^5.13.7",
     "@mui/x-date-pickers": "^6.20.2",
     "@react-spring/web": "^9.7.5",
+    "@stomp/stompjs": "^7.1.1",
     "autoprefixer": "^10.4.21",
     "axios": "^1.6.7",
     "clsx": "^2.1.1",
@@ -39,6 +40,7 @@
     "react-toastify": "^11.0.5",
     "react-use-measure": "^2.1.7",
     "recharts": "^2.15.1",
+    "sockjs-client": "^1.6.1",
     "yup": "^1.6.1"
   },
   "devDependencies": {

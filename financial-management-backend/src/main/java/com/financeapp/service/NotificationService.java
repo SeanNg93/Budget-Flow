@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,13 +25,15 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
     private final ObjectMapper objectMapper;
+    private final SimpMessagingTemplate messagingTemplate;
     private static final Logger logger = LoggerFactory.getLogger(NotificationService.class);
 
     @Autowired
-    public NotificationService(NotificationRepository notificationRepository, UserRepository userRepository, ObjectMapper objectMapper) {
+    public NotificationService(NotificationRepository notificationRepository, UserRepository userRepository, ObjectMapper objectMapper, SimpMessagingTemplate messagingTemplate) {
         this.notificationRepository = notificationRepository;
         this.userRepository = userRepository;
         this.objectMapper = objectMapper;
+        this.messagingTemplate = messagingTemplate;
     }
 
     /**
@@ -75,7 +78,15 @@ public class NotificationService {
                     .data(dataJson)
                     .build();
             
-            return notificationRepository.save(notification);
+            Notification savedNotification = notificationRepository.save(notification);
+
+            // Send notification via WebSocket
+            NotificationDto notificationDto = mapToDto(savedNotification);
+            String destination = "/user/" + user.getUsername() + "/queue/notifications";
+            messagingTemplate.convertAndSend(destination, notificationDto);
+            logger.info("Sent notification to {}: {}", destination, notificationDto.getMessage());
+
+            return savedNotification;
         } catch (Exception e) {
             logger.error("Error creating notification for user: {}", userId, e);
             throw new RuntimeException("Failed to create notification", e);
@@ -101,14 +112,14 @@ public class NotificationService {
             senderData.put("recipientId", recipientId);
             senderData.put("walletName", senderWalletName);
             
-            // Create notification for sender
+            // Create notification for sender (will also send via WebSocket)
             createNotification(
                 senderId,
                 "You sent $" + amount + " to " + recipient.getUsername() + " from your " + senderWalletName + " wallet.",
                 "MONEY_SENT",
-                null, // No sender for this notification (it's a system notification)
+                null, 
                 senderData,
-                null // No action link
+                null 
             );
             
             // Create additional data for recipient
@@ -117,14 +128,14 @@ public class NotificationService {
             recipientData.put("senderUsername", sender.getUsername());
             recipientData.put("senderId", senderId);
             
-            // Create notification for recipient
+            // Create notification for recipient (will also send via WebSocket)
             createNotification(
                 recipientId,
                 "You received $" + amount + " from " + sender.getUsername() + ".",
                 "MONEY_RECEIVED",
                 senderId,
                 recipientData,
-                null // No action link
+                null 
             );
         } catch (Exception e) {
             logger.error("Error creating money transfer notifications", e);
@@ -149,7 +160,7 @@ public class NotificationService {
             ownerData.put("recipientUsername", recipient.getUsername());
             ownerData.put("recipientId", recipientId);
             
-            // Create notification for the owner
+            // Create notification for the owner (will also send via WebSocket)
             createNotification(
                 ownerId,
                 "You shared your wallet \"" + walletName + "\" with " + recipient.getUsername() + ".",
@@ -166,9 +177,9 @@ public class NotificationService {
             recipientData.put("ownerId", ownerId);
             
             // Action link for shared wallet page
-            String actionLink = "/shared-wallets";
+            String actionLink = "/shared-wallets"; 
             
-            // Create notification for the recipient
+            // Create notification for the recipient (will also send via WebSocket)
             createNotification(
                 recipientId,
                 owner.getUsername() + " shared their wallet \"" + walletName + "\" with you.",
@@ -194,16 +205,16 @@ public class NotificationService {
             User recipient = userRepository.findById(recipientId)
                     .orElseThrow(() -> new RuntimeException("Recipient not found with id: " + recipientId));
             
-            // Create additional data using HashMap instead of Map.of() to avoid UnsupportedOperationException
+            // Create additional data using HashMap
             Map<String, Object> data = new HashMap<>();
             data.put("walletName", walletName);
             data.put("recipientUsername", recipient.getUsername());
             data.put("recipientId", recipientId);
             
             // Action link to the shared wallet
-            String actionLink = "/wallets";
+            String actionLink = "/wallets"; 
             
-            // Create notification for the owner
+            // Create notification for the owner (will also send via WebSocket)
             createNotification(
                 ownerId,
                 recipient.getUsername() + " accepted your shared wallet \"" + walletName + "\".",
@@ -360,13 +371,14 @@ public class NotificationService {
                                         Long userId, Map<String, Object> additionalData, String actionLink) {
         try {
             if (userId != null) {
-                // Send to specific user
+                // Send to specific user (will also send via WebSocket)
                 createNotification(userId, message, notificationType, null, additionalData, actionLink);
                 logger.info("System notification sent to user {}: {}", userId, message);
             } else {
                 // Send to all users
                 List<User> allUsers = userRepository.findAll();
                 for (User user : allUsers) {
+                    // createNotification will handle WebSocket sending for each user
                     createNotification(user.getId(), message, notificationType, null, additionalData, actionLink);
                 }
                 logger.info("System notification sent to all users: {}", message);
