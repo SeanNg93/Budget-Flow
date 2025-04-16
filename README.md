@@ -36,7 +36,7 @@ Main dasboard in en/vi:
 ![image](https://github.com/user-attachments/assets/fc552275-45c2-4ffa-a4f9-ee27082df049)
 ![image](https://github.com/user-attachments/assets/6d4f7c7c-17c5-4478-b1cf-389dd153197a)
 Transaction section:
-![image](https://github.com/user-attachments/assets/1f97e66e-325a-48b2-b1cf-0293fead8916)
+![image](https://github.com/user-attachments/assets/8081a39d-1247-4cc7-b8e2-3729a0482b38)
 Manage Categories:
 ![image](https://github.com/user-attachments/assets/a4df63bf-d00c-4bb1-a429-b3f0f9128a56)
 ![image](https://github.com/user-attachments/assets/17a2a981-6205-4244-8dbc-5f58c964424b)
