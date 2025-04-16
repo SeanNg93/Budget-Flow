@@ -45,6 +45,7 @@ Transaction section:
 ![image](https://github.com/user-attachments/assets/8712c868-428b-44bd-b637-fa6e35dd7b60)
 
 Manage Categories:
+
 ![image](https://github.com/user-attachments/assets/e33e6a12-8076-4bf4-a891-e98f25e19484)
 
 ![image](https://github.com/user-attachments/assets/17a2a981-6205-4244-8dbc-5f58c964424b)
@@ -52,7 +53,9 @@ Manage Categories:
 Manage Wallets:
 
 ![image](https://github.com/user-attachments/assets/0cc62604-2f94-4490-b02b-245e792b750c)
+
 edit form
+
 ![image](https://github.com/user-attachments/assets/00dda55b-3b01-4193-b8cd-9ac96e7c1718)
 
 
@@ -67,9 +70,11 @@ Send Money form:
 
 Share wallet:
 Shared Wallet can contain the owner/receiver profile picture. if you are the receiver, you can spent money or transfer money to that wallet but it will be the wallet owner money. you also can not edit the balance in the wallet
+
 ![image](https://github.com/user-attachments/assets/076e3241-d9f3-48af-bac8-28c9f309342f)
 
 Excel export form example:
+
 ![image](https://github.com/user-attachments/assets/fbbe6901-1bb1-4c98-a991-898c58c375f3)
 
 
