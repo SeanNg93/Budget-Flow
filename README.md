@@ -34,17 +34,25 @@ Budget Flow is a comprehensive financial management application designed to help
 
 Main dasboard in en/vi:
 ![image](https://github.com/user-attachments/assets/fc552275-45c2-4ffa-a4f9-ee27082df049)
+
 ![image](https://github.com/user-attachments/assets/6d4f7c7c-17c5-4478-b1cf-389dd153197a)
+
 Transaction section:
 ![image](https://github.com/user-attachments/assets/8081a39d-1247-4cc7-b8e2-3729a0482b38)
+
 Manage Categories:
 ![image](https://github.com/user-attachments/assets/a4df63bf-d00c-4bb1-a429-b3f0f9128a56)
+
 ![image](https://github.com/user-attachments/assets/17a2a981-6205-4244-8dbc-5f58c964424b)
+
 Manage Wallets:
 ![image](https://github.com/user-attachments/assets/0cc62604-2f94-4490-b02b-245e792b750c)
+
 Add Transaction(red button for expense, green for income):
 ![image](https://github.com/user-attachments/assets/830a0edb-7c29-4e26-878c-353630d47b7f)
+
 ![image](https://github.com/user-attachments/assets/7ada9bf7-b224-4cec-955f-542633ae7038)
+
 Excel export form example:
 ![image](https://github.com/user-attachments/assets/fbbe6901-1bb1-4c98-a991-898c58c375f3)
 
