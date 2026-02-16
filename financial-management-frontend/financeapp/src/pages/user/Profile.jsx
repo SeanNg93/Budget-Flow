@@ -36,7 +36,7 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 import styles from "../../styles/Profile.module.css";
 
 // Define the backend API base URL
-import { API_BASE_URL } from '../config/apiConfig';
+import { API_BASE_URL } from '../../config/apiConfig';
 const DEFAULT_AVATAR = "/default-avatar.svg";
 
 export default function Profile() {

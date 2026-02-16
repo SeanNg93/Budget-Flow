@@ -25,7 +25,7 @@ import { useUser } from '../../context/UserContext';
 import SettingsPanel from '../settings/SettingsPanel';
 import { useTranslation } from 'react-i18next';
 
-import { API_BASE_URL } from '../config/apiConfig';
+import { API_BASE_URL } from '../../config/apiConfig';
 const DEFAULT_AVATAR = "/default-avatar.svg";
 
 const drawerWidth = 280;
