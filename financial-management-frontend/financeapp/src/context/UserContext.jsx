@@ -4,7 +4,7 @@ import axios from 'axios';
 import { initializeNotificationService, registerNotificationCallback } from '../services/NotificationService';
 import FinanceService from '../services/FinanceService'; // Import FinanceService
 
-const API_BASE_URL = "http://localhost:8080";
+import { API_BASE_URL } from '../config/apiConfig';
 const DEFAULT_AVATAR = "/default-avatar.svg";
 
 // Create a context for user data

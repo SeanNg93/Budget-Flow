@@ -16,7 +16,7 @@ const TestConnection = () => {
 
     try {
       // Test the public endpoint
-      const response = await axios.get('http://localhost:8080/api/test/public');
+      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'}/api/test/public');
       setMessage(response.data.message || t('connection.successful'));
       setStatus('success');
     } catch (error) {

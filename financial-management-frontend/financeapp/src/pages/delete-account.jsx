@@ -58,7 +58,7 @@ export default function DeleteAccount() {
 
             // Use fetch instead of axios
             const response = await fetch(
-                `http://localhost:8080/api/user/delete-account?password=${encodeURIComponent(password)}`,
+                `${import.meta.env.VITE_API_BASE_URL || "http://localhost:8080"}/api/user/delete-account?password=${encodeURIComponent(password)}`,
                 {
                     method: 'DELETE',
                     headers: {

@@ -33,7 +33,7 @@ import { useUser } from "../../context/UserContext";
 
 import "../../styles/ProfileDialog.css";
 
-const API_BASE_URL = "http://localhost:8080";
+import { API_BASE_URL } from '../config/apiConfig';
 const DEFAULT_AVATAR = "/default-avatar.svg";
 
 // Slide transition component with ref

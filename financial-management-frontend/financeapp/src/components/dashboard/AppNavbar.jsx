@@ -37,7 +37,7 @@ import { useUser } from '../../context/UserContext';
 import LanguageSwitcher from '../common/LanguageSwitcher';
 import { useTranslation } from 'react-i18next';
 
-const API_BASE_URL = "http://localhost:8080";
+import { API_BASE_URL } from '../config/apiConfig';
 const DEFAULT_AVATAR = "/default-avatar.svg";
 
 const drawerWidth = 280;

@@ -2,9 +2,9 @@ import { useState, useEffect, useCallback } from 'react';
 import FinanceService from './FinanceService';
 import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
+import { WEBSOCKET_URL } from '../config/apiConfig';
 
-// Configuration
-const WEBSOCKET_URL = 'http://localhost:8080/ws'; // Make sure this matches your backend WebSocket endpoint
+// Configuration - uses environment variable in production
 const NOTIFICATION_QUEUE = '/user/queue/notifications'; // User-specific queue
 
 // Shared state for all components
