@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: budget-flow-backend
+    env: java
+    buildCommand: "./gradlew bootJar"
+    startCommand: "java -jar build/libs/*.jar"
+    envVars:
+      - key: SPRING_DATASOURCE_URL
+        value: jdbc:mysql://<host>/finance_db
+      - key: SPRING_DATASOURCE_USERNAME
+        value: <username>
+      - key: SPRING_DATASOURCE_PASSWORD
+        value: <password>
+      - key: APP_JWT_SECRET
+        value: <your-jwt-secret>
+    autoDeploy: true
