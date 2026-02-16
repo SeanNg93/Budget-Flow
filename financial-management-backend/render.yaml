@@ -1,0 +1,14 @@
+{
+  "name": "budget-flow-backend",
+  "version": 1,
+  "build": {
+    "builder": "heroku/gradle",
+    "buildpacks": ["heroku/jvm"],
+    "config": {
+      "JAVA_VERSION": "17"
+    }
+  },
+  "run": {
+    "command": "java -Dserver.port=$PORT $JAVA_OPTS -jar build/libs/*.jar"
+  }
+}

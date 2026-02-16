@@ -39,7 +39,7 @@ import {
 import FinanceService from '../services/FinanceService';
 
 // Define the backend API base URL
-const API_BASE_URL = "http://localhost:8080";
+import { API_BASE_URL } from '../config/apiConfig';
 
 const drawerWidth = 280;
 

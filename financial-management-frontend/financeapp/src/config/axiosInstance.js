@@ -1,7 +1,8 @@
 import axios from 'axios';
+import { API_BASE_URL } from './apiConfig';
 
-// Make sure the API URL is correct
-const API_URL = 'http://localhost:8080/api';
+// Make sure the API URL is correct - uses environment variable in production
+const API_URL = `${API_BASE_URL}/api`;
 
 // Create axios instance with proper configuration
 const axiosInstance = axios.create({

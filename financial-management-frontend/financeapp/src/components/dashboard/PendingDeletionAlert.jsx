@@ -17,7 +17,7 @@ export default function PendingDeletionAlert() {
                     return;
                 }
 
-                const response = await fetch('http://localhost:8080/api/user/deletion-status', {
+                const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'}/api/user/deletion-status', {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
