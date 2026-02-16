@@ -15,18 +15,17 @@ const TestConnection = () => {
     setMessage('');
 
     try {
-      // Test the public endpoint
-      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'}/api/test/public');
+      const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+      const response = await axios.get(apiUrl + '/api/test/public');
       setMessage(response.data.message || t('connection.successful'));
       setStatus('success');
-    } catch (error) {
-      setError(error.message || t('connection.failed'));
+    } catch (err) {
+      setError(err.message || t('connection.failed'));
       setStatus('error');
     }
   };
 
   useEffect(() => {
-    // Test connection on component mount
     testConnection();
   }, []);
 
@@ -66,4 +65,4 @@ const TestConnection = () => {
   );
 };
 
-export default TestConnection; 
+export default TestConnection;
