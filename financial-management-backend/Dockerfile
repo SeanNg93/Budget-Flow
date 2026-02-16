@@ -3,7 +3,7 @@ WORKDIR /app
 COPY . .
 RUN ./gradlew bootJar
 
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 COPY --from=build /app/build/libs/*.jar app.jar
 EXPOSE 8080
