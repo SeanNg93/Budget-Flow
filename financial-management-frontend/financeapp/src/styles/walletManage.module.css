@@ -1,17 +1,20 @@
 /* Wallet Management Dialog Styles */
 .dialogPaper {
-  border-radius: 12px;
-  box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.15);
+  border-radius: 24px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  background-color: #FFFFFF;
 }
 
 .dialogTitle {
-  padding-bottom: 8px;
-  padding-top: 12px;
+  padding-bottom: 12px;
+  padding-top: 1.25rem;
+  font-weight: 700;
+  color: #1A1A1A;
 }
 
 .dialogContent {
-  padding-top: 12px;
-  padding-bottom: 16px;
+  padding-top: 16px;
+  padding-bottom: 20px;
 }
 
 .headerContainer {
@@ -21,37 +24,41 @@
 }
 
 .title {
-  font-weight: 600;
-  font-size: 1.1rem;
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: #1A1A1A;
 }
 
 .walletCount {
-  font-weight: 400;
-  font-size: 0.9rem;
-  color: rgba(0, 0, 0, 0.6);
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: #6B7280;
   margin-left: 8px;
 }
 
 .loadingContainer {
   display: flex;
   justify-content: center;
-  padding: 16px;
+  padding: 20px;
+  color: #6B7280;
 }
 
 .emptyMessage {
   text-align: center;
-  padding: 16px 0;
-  color: rgba(0, 0, 0, 0.6);
+  padding: 20px 0;
+  color: #6B7280;
+  font-weight: 500;
 }
 
 .walletList {
   width: 100%;
   padding: 0;
-  border-radius: 8px;
-  background-color: rgba(255, 255, 255, 0.8);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border-radius: 16px;
+  background-color: #F3E7DD;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
   overflow: hidden;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
+  border: 1px solid #E6E6E6;
 }
 
 .walletItem {
@@ -61,11 +68,11 @@
 }
 
 .walletItem:hover {
-  background-color: rgba(0, 0, 0, 0.02);
+  background-color: rgba(255, 106, 79, 0.04);
 }
 
 .walletItemEditing {
-  background-color: rgba(0, 122, 255, 0.05);
+  background-color: rgba(255, 106, 79, 0.06);
 }
 
 .walletNameContainer {
@@ -74,37 +81,39 @@
 }
 
 .walletName {
-  color: #333;
+  color: #1A1A1A;
   margin-bottom: 0;
+  font-weight: 600;
 }
 
 .walletBalance {
-  font-weight: 600;
-  color: #007aff;
+  font-weight: 700;
+  color: #FF6A4F;
   margin: 0;
 }
 
 .walletDetails {
-  color: rgba(0, 0, 0, 0.6);
+  color: #6B7280;
 }
 
 /* Balance info box */
 .balanceInfoBox {
-  background-color: rgba(33, 150, 243, 0.06);
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  margin-right: 8px;
+  background-color: rgba(255, 106, 79, 0.06);
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  margin-right: 10px;
 }
 
 .infoIcon {
-  color: #0288d1;
-  margin-right: 4px;
-  font-size: 14px;
+  color: #FF6A4F;
+  margin-right: 6px;
+  font-size: 16px;
 }
 
 .infoText {
-  margin-bottom: 3px;
-  font-size: 0.85rem;
+  margin-bottom: 4px;
+  font-size: 0.875rem;
+  color: #6B7280;
 }
 
 .walletActions {
@@ -112,128 +121,132 @@
 }
 
 .iconButton {
-  color: rgba(0, 0, 0, 0.54);
-  border-radius: 6px;
+  color: #6B7280;
+  border-radius: 8px;
   transition: all 0.2s ease;
-  background-color: rgba(0, 0, 0, 0.03);
-  margin: 0 2px;
+  background-color: transparent;
+  margin: 0 3px;
 }
 
 .iconButton:hover {
-  background-color: rgba(0, 0, 0, 0.08);
-  color: #007aff;
+  background-color: rgba(255, 106, 79, 0.06);
+  color: #FF6A4F;
   transform: translateY(-1px);
 }
 
 .deleteIconButton {
-  color: rgba(0, 0, 0, 0.54);
-  border-radius: 6px;
+  color: #FF3B30;
+  border-radius: 8px;
   transition: all 0.2s ease;
-  background-color: rgba(255, 59, 48, 0.05);
-  margin: 0 2px;
+  background-color: rgba(255, 59, 48, 0.06);
+  margin: 0 3px;
 }
 
 .deleteIconButton:hover {
-  background-color: rgba(255, 59, 48, 0.1);
-  color: #ff3b30;
+  background-color: rgba(255, 59, 48, 0.12);
+  color: #D32F2F;
   transform: translateY(-1px);
 }
 
 /* Send button styles */
 .sendIconButton {
-  color: #007aff;
-  background-color: rgba(0, 122, 255, 0.08);
+  color: #FF6A4F;
+  background-color: rgba(255, 106, 79, 0.08);
 }
 
 .sendIconButton:hover {
-  background-color: rgba(0, 122, 255, 0.15);
-  color: #0062cc;
-  box-shadow: 0 1px 3px rgba(0, 122, 255, 0.15);
+  background-color: rgba(255, 106, 79, 0.15);
+  color: #E55A3F;
+  box-shadow: 0 1px 4px rgba(255, 106, 79, 0.15);
 }
 
 /* Share button styles */
 .shareIconButton {
-  color: #5856d6;
+  color: #5856D6;
   background-color: rgba(88, 86, 214, 0.08);
 }
 
 .shareIconButton:hover {
   background-color: rgba(88, 86, 214, 0.15);
-  color: #4745c5;
-  box-shadow: 0 1px 3px rgba(88, 86, 214, 0.15);
+  color: #4745C5;
+  box-shadow: 0 1px 4px rgba(88, 86, 214, 0.15);
 }
 
 /* Delete confirmation dialog */
 .confirmDialog {
-  border-radius: 12px;
-  box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.15);
-  width: 400px !important;
+  border-radius: 20px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  width: 420px !important;
+  background-color: #FFFFFF;
 }
 
 .confirmTitle {
-  padding-bottom: 8px;
-  font-weight: 600;
+  padding-bottom: 10px;
+  font-weight: 700;
+  color: #1A1A1A;
 }
 
 .confirmActions {
-  padding: 0 16px 12px 16px;
+  padding: 0 18px 14px 18px;
 }
 
 .deleteButton {
-  border-radius: 8px;
+  border-radius: 12px;
   text-transform: none;
-  font-weight: 500;
+  font-weight: 600;
   box-shadow: none;
-  background-color: #ff3b30;
+  background-color: #FF3B30;
   color: white;
+  border: none;
 }
 
 .deleteButton:hover {
-  background-color: #e0352b;
-  box-shadow: 0 2px 4px rgba(224, 53, 43, 0.2);
+  background-color: #D04A2F;
+  box-shadow: 0 4px 16px rgba(255, 59, 48, 0.3);
 }
 
-/* Updated cancel button with blue styling */
+/* Updated cancel button with orange styling */
 .cancelButton {
-  border-radius: 8px;
+  border-radius: 12px;
   text-transform: none;
-  font-weight: 500;
-  color: #007aff;
-  border: 1px solid rgba(0, 122, 255, 0.5);
+  font-weight: 600;
+  color: #FF6A4F;
+  border: 1px solid rgba(255, 106, 79, 0.4);
   background-color: transparent;
   transition: all 0.2s ease;
 }
 
 .cancelButton:hover {
-  background-color: rgba(0, 122, 255, 0.08);
-  border-color: #007aff;
+  background-color: rgba(255, 106, 79, 0.06);
+  border-color: #FF6A4F;
 }
 
 /* Standardized button styles for consistent look across the app */
 .standardButton {
-  border-radius: 8px;
+  border-radius: 12px;
   text-transform: none;
-  font-weight: 500;
+  font-weight: 600;
   transition: all 0.2s ease;
 }
 
 .primaryButton {
-  background-color: #007aff;
+  background-color: #FF6A4F;
   color: white;
-  box-shadow: none;
+  box-shadow: 0 2px 8px rgba(255, 106, 79, 0.2);
+  border: none;
 }
 
 .primaryButton:hover {
-  background-color: #0062cc;
-  box-shadow: 0 2px 4px rgba(0, 98, 204, 0.2);
+  background-color: #E55A3F;
+  box-shadow: 0 4px 16px rgba(255, 106, 79, 0.3);
 }
 
 .compactButton {
   font-size: 0.875rem;
-  padding: 6px 12px;
-  border-radius: 8px;
+  padding: 8px 14px;
+  border-radius: 12px;
   text-transform: none;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: 0;
   box-shadow: none;
 }
@@ -246,27 +259,28 @@
 }
 
 .textField {
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .textField input {
-  border-radius: 8px;
-  font-size: 0.9rem;
-  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 12px;
+  font-size: 0.875rem;
+  background-color: #FFFFFF;
+  border: 1px solid #E6E6E6;
 }
 
 .actionButtonsContainer {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   justify-content: flex-end;
 }
 
 .actionButton {
-  border-radius: 8px;
+  border-radius: 12px;
   text-transform: none;
-  font-weight: 500;
-  font-size: 0.8rem;
-  padding: 4px 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 6px 12px;
 }
 
 .saveButton {
@@ -275,16 +289,16 @@
 
 /* Wallet Edit Specific Styles */
 .editLabel {
-  color: rgba(0, 0, 0, 0.6);
-  font-weight: 500;
-  font-size: 0.75rem;
-  margin-bottom: 8px;
+  color: #1A1A1A;
+  font-weight: 600;
+  font-size: 0.8rem;
+  margin-bottom: 6px;
   display: block;
 }
 
 .fieldLabel {
-  font-weight: 500;
-  color: rgba(0, 0, 0, 0.6);
+  font-weight: 600;
+  color: #1A1A1A;
   margin-bottom: 4px;
   margin-top: 8px;
   font-size: 0.875rem;
@@ -295,70 +309,70 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 8px;
+  margin-top: 10px;
 }
 
 .iconOption {
   width: 36px;
   height: 36px;
-  border-radius: 8px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(0, 0, 0, 0.12);
+  border: 1.5px solid #E6E6E6;
   cursor: pointer;
   transition: all 0.2s ease;
-  background-color: #f5f5f5;
+  background-color: #FFFFFF;
 }
 
 .iconOption:hover {
-  background-color: #e0e0e0;
+  background-color: #F3E7DD;
   transform: translateY(-2px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .selectedIcon {
-  background-color: #e3f2fd;
-  border: 2px solid #2196f3;
-  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.2);
+  background-color: rgba(255, 106, 79, 0.1);
+  border: 2px solid #FF6A4F;
+  box-shadow: 0 2px 8px rgba(255, 106, 79, 0.2);
 }
 
 .iconOption svg {
   font-size: 20px;
-  color: #555;
+  color: #6B7280;
 }
 
 .selectedIcon svg {
-  color: #2196f3;
+  color: #FF6A4F;
 }
 
 /* Color Selection Styles */
 .colorSelection {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 8px;
+  gap: 10px;
+  margin-top: 10px;
 }
 
 .colorOption {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   cursor: pointer;
   transition: all 0.2s ease;
   border: 2px solid transparent;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
 
 .colorOption:hover {
-  transform: scale(1.1);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transform: scale(1.15);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
 }
 
 .selectedColor {
-  border: 2px solid #fff;
-  box-shadow: 0 0 0 2px #2196f3, 0 2px 8px rgba(0, 0, 0, 0.2);
-  transform: scale(1.1);
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 0 0 2px #FF6A4F, 0 2px 10px rgba(255, 106, 79, 0.3);
+  transform: scale(1.15);
 }
 
 /* Icon Container */
@@ -366,128 +380,137 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: 10px;
   margin-right: 12px;
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: rgba(255, 106, 79, 0.08);
 }
 
 /* Wallet color classes for icon container */
 .walletColor1 {
-  color: #007aff !important;
-  background-color: rgba(0, 122, 255, 0.1);
+  color: #007AFF !important;
+  background-color: rgba(0, 122, 255, 0.08);
 }
 
 .walletColor2 {
-  color: #34c759 !important;
-  background-color: rgba(52, 199, 89, 0.1);
+  color: #34C759 !important;
+  background-color: rgba(52, 199, 89, 0.08);
 }
 
 .walletColor3 {
-  color: #ff9500 !important;
-  background-color: rgba(255, 149, 0, 0.1);
+  color: #FF9500 !important;
+  background-color: rgba(255, 149, 0, 0.08);
 }
 
 .walletColor4 {
-  color: #ff3b30 !important;
-  background-color: rgba(255, 59, 48, 0.1);
+  color: #FF3B30 !important;
+  background-color: rgba(255, 59, 48, 0.08);
 }
 
 .walletColor5 {
-  color: #5856d6 !important;
-  background-color: rgba(88, 86, 214, 0.1);
+  color: #5856D6 !important;
+  background-color: rgba(88, 86, 214, 0.08);
 }
 
 .walletColor6 {
-  color: #af52de !important;
-  background-color: rgba(175, 82, 222, 0.1);
+  color: #AF52DE !important;
+  background-color: rgba(175, 82, 222, 0.08);
 }
 
 .walletColor7 {
-  color: #ff2d55 !important;
-  background-color: rgba(255, 45, 85, 0.1);
+  color: #FF2D55 !important;
+  background-color: rgba(255, 45, 85, 0.08);
 }
 
 .walletColor8 {
-  color: #5ac8fa !important;
-  background-color: rgba(90, 200, 250, 0.1);
+  color: #5AC8FA !important;
+  background-color: rgba(90, 200, 250, 0.08);
 }
 
 .walletColor9 {
-  color: #ffcc00 !important;
-  background-color: rgba(255, 204, 0, 0.1);
+  color: #FFCC00 !important;
+  background-color: rgba(255, 204, 0, 0.08);
 }
 
 .walletColor10 {
-  color: #4cd964 !important;
-  background-color: rgba(76, 217, 100, 0.1);
+  color: #4CD964 !important;
+  background-color: rgba(76, 217, 100, 0.08);
 }
 
 /* Wallet menu */
 .menuPaper {
-  border-radius: 12px;
-  box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.1);
-  min-width: 160px;
+  border-radius: 16px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+  min-width: 180px;
+  border: 1px solid #E6E6E6 !important;
+  background-color: #FFFFFF !important;
 }
 
 .menuItem {
-  padding: 8px 16px;
+  padding: 10px 16px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.9rem;
+  gap: 10px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1A1A1A;
 }
 
 .menuIcon {
-  color: rgba(0, 0, 0, 0.6);
+  color: #6B7280;
 }
 
 /* Category management styles */
 .categoryCard {
   padding: 16px;
-  border-left: 4px solid #ff3b30;
-  transition: background-color 0.2s;
-  margin-bottom: 8px;
-  border-radius: 8px;
-  background-color: rgba(255, 255, 255, 0.8);
+  border-left: 4px solid #FF6A4F;
+  transition: all 0.2s ease;
+  margin-bottom: 10px;
+  border-radius: 12px;
+  background-color: #FFFFFF;
+  border: 1px solid #E6E6E6;
 }
 
 .categoryCard:hover {
-  background-color: rgba(0, 0, 0, 0.03);
+  background-color: #F3E7DD;
+  border-color: rgba(255, 106, 79, 0.2);
 }
 
 .categoryHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .categoryName {
-  font-weight: 600;
-  font-size: 1.1rem;
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: #1A1A1A;
 }
 
 .limitInfo {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+  color: #6B7280;
+  font-size: 0.85rem;
 }
 
 .progressBarContainer {
   width: 100%;
   height: 8px;
-  background-color: rgba(0, 0, 0, 0.08);
+  background-color: #F3E7DD;
   border-radius: 4px;
   position: relative;
   overflow: visible;
-  margin-top: 8px;
-  margin-bottom: 4px;
+  margin-top: 10px;
+  margin-bottom: 6px;
 }
 
 .warningMarker {
   position: absolute;
   width: 2px;
-  background-color: #ff9800;
+  background-color: #FF9500;
   top: 0;
   bottom: 0;
   z-index: 2;
@@ -496,19 +519,19 @@
 /* New popup styles for warning threshold */
 .warningPopup {
   position: absolute;
-  bottom: -22px;
+  bottom: -24px;
   transform: translateX(-50%);
-  background-color: #fff8e1;
-  border: 1px solid #ffecb3;
-  border-radius: 4px;
-  padding: 2px 6px;
-  font-size: 10px;
-  font-weight: 500;
+  background-color: #F3E7DD;
+  border: 1px solid #E6D5C5;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
   line-height: 1.2;
   text-align: center;
-  color: #ff8f00;
+  color: #FF9500;
   white-space: nowrap;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
   z-index: 10;
   pointer-events: none;
   opacity: 1;
@@ -516,16 +539,16 @@
 
 .progressBar {
   height: 100%;
-  background-color: #ff3b30;
+  background-color: #FF6A4F;
   border-radius: 4px;
 }
 
 .incomeCategory {
-  border-left-color: #34c759;
+  border-left-color: #34C759;
 }
 
 .incomeCategory .progressBar {
-  background-color: #34c759;
+  background-color: #34C759;
 }
 
 /* Custom tab styles */
@@ -535,9 +558,10 @@
 
 .categoryTab {
   text-transform: none;
-  font-weight: 500;
+  font-weight: 600;
   min-height: 40px;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
+  border-radius: 12px;
 }
 
 .optionsContainer {
@@ -548,150 +572,165 @@
 }
 
 .optionButton {
-  padding: 8px 0;
-  border-radius: 8px;
+  padding: 10px 0;
+  border-radius: 12px;
   text-transform: none;
-  font-weight: 500;
+  font-weight: 600;
   justify-content: flex-start;
-  font-size: 0.85rem;
+  font-size: 0.875rem;
 }
 
 .backButton {
   margin-bottom: 12px;
-  border-radius: 8px;
+  border-radius: 12px;
   text-transform: none;
-  font-weight: 500;
-  font-size: 0.85rem;
-  padding: 4px 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 6px 12px;
+  color: #FF6A4F;
+  border: 1px solid #E6E6E6;
+  background-color: #FFFFFF;
 }
 
 /* New wallet form dialog */
 .walletFormDialog {
-  border-radius: 12px;
-  box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.15);
+  border-radius: 24px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  background-color: #FFFFFF;
 }
 
 /* Add wallet button */
 .addWalletButton {
-  background-color: #007bff;
+  background-color: #FF6A4F;
   color: white;
-  border-radius: 8px;
-  box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(255, 106, 79, 0.2);
   text-transform: none;
-  font-weight: 500;
+  font-weight: 600;
+  border: none;
 }
 
 .addWalletButton:hover {
-  background-color: #0069d9;
+  background-color: #E55A3F;
+  box-shadow: 0 4px 16px rgba(255, 106, 79, 0.3);
 }
 
 /* Transfer money dialog and button */
 .transferDialog {
-  border-radius: 12px;
-  box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.15);
+  border-radius: 24px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  background-color: #FFFFFF;
 }
 
 .transferTitle {
-  padding-bottom: 8px;
-  font-weight: 600;
+  padding-bottom: 10px;
+  font-weight: 700;
+  color: #1A1A1A;
 }
 
 .transferActions {
-  padding: 0 16px 16px 16px;
+  padding: 0 18px 18px 18px;
 }
 
 .transferButton {
   border-radius: 12px;
   text-transform: none;
-  font-weight: 500;
-  box-shadow: none;
-  background-color: #007aff;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(255, 106, 79, 0.2);
+  background-color: #FF6A4F;
   color: white;
+  border: none;
 }
 
 .transferButton:hover {
-  background-color: #0062cc;
-  box-shadow: 0 2px 4px rgba(0, 98, 204, 0.2);
+  background-color: #E55A3F;
+  box-shadow: 0 4px 16px rgba(255, 106, 79, 0.3);
 }
 
 /* Send Money button */
 .sendMoneyButton {
-  border-radius: 8px;
+  border-radius: 12px;
   text-transform: none;
-  font-weight: 500;
-  color: #2e7d32;
-  border-color: #2e7d32;
+  font-weight: 600;
+  color: #34C759;
+  border: 1.5px solid #34C759;
+  background-color: transparent;
 }
 
 .sendMoneyButton:hover {
-  background-color: rgba(46, 125, 50, 0.05);
-  border-color: #2e7d32;
+  background-color: rgba(52, 199, 89, 0.08);
+  border-color: #2EB350;
 }
 
 .sendMoneyButton:disabled {
-  color: rgba(0, 0, 0, 0.26);
-  border-color: rgba(0, 0, 0, 0.12);
+  color: #6B7280;
+  border-color: #E6E6E6;
 }
 
 .selectField {
-  border-radius: 8px;
+  border-radius: 12px;
+  border: 1px solid #E6E6E6;
+  background-color: #FFFFFF;
 }
 
 .tabsContainer {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  border-bottom: 1px solid #E6E6E6;
   padding: 0 16px;
 }
 
 .tab {
   text-transform: none;
-  font-weight: 500;
+  font-weight: 600;
   min-height: 40px;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
+  border-radius: 12px;
 }
 
 .newCategoryButton {
-  background-color: #ff3b30;
+  background-color: #FF3B30;
   color: white;
   border-radius: 12px;
-  box-shadow: 0 2px 5px rgba(255, 59, 48, 0.2);
+  box-shadow: 0 2px 8px rgba(255, 59, 48, 0.2);
   text-transform: none;
-  font-weight: 500;
+  font-weight: 600;
   transition: all 0.2s ease;
+  border: none;
 }
 
 .newCategoryButton:hover {
-  background-color: #e0352b;
-  box-shadow: 0 4px 8px rgba(255, 59, 48, 0.3);
+  background-color: #D04A2F;
+  box-shadow: 0 4px 16px rgba(255, 59, 48, 0.3);
 }
 
 .infoIconSmall {
   font-size: 1rem;
   margin-right: 8px;
-  color: rgba(0, 0, 0, 0.6);
+  color: #6B7280;
 }
 
 /* Add new styles for the add button inside tabs */
 .tabAddButton {
-  margin-left: 4px;
-  padding: 3px;
+  margin-left: 6px;
+  padding: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   cursor: pointer;
-  color: inherit; 
+  color: #FF6A4F; 
   transition: all 0.2s ease;
+  background-color: rgba(255, 106, 79, 0.08);
 }
 
 .tabAddButton:hover {
-  background-color: rgba(0, 0, 0, 0.06);
+  background-color: rgba(255, 106, 79, 0.15);
   transform: scale(1.05);
 }
 
 .tabAddButton svg {
-  font-size: 1rem;
+  font-size: 1.1rem;
 }
 
 .expenseTabAddButton:hover {
@@ -708,7 +747,7 @@
   scrollbar-width: thin;
   scrollbar-gutter: stable;
   max-height: calc(85vh - 80px); /* Account for dialog title and padding */
-  padding-right: 2px; /* Add a little padding to prevent scrollbar from touching content */
+  padding-right: 4px; /* Add a little padding to prevent scrollbar from touching content */
 }
 
 .dialogScrollableContent::-webkit-scrollbar {
@@ -717,7 +756,7 @@
 }
 
 .dialogScrollableContent::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.15);
+  background: #E6E6E6;
   border-radius: 4px;
 }
 

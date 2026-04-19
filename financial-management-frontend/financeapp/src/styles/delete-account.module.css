@@ -1,16 +1,23 @@
 .deleteAccountDialog {
-    border-radius: 12px;
-    padding: 16px;
+    border-radius: 20px;
+    padding: 20px;
+    background-color: #FFFFFF;
 }
 
 .title {
-    color: #d32f2f;
-    font-weight: bold;
+    color: #1A1A1A;
+    font-weight: 700;
+    font-size: 1.15rem;
 }
 
 .warning {
     margin: 16px 0;
-    color: #d32f2f;
+    color: #FF3B30;
+    font-weight: 500;
+    background-color: rgba(255, 59, 48, 0.08);
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 59, 48, 0.15);
 }
 
 .input {
@@ -18,20 +25,31 @@
 }
 
 .buttonGroup {
-    padding: 16px;
+    padding: 16px 0 0 0;
     display: flex;
     justify-content: flex-end;
     gap: 12px;
 }
 
 .cancelButton {
-    color: #666;
+    color: #6B7280;
+    border-radius: 12px;
+    text-transform: none;
+    font-weight: 600;
+    border: 1px solid #E6E6E6;
+    background-color: #FFFFFF;
 }
 
 .deleteButton {
-    background-color: #d32f2f;
+    background-color: #FF3B30;
     color: white;
-    &:hover {
-        background-color: #b71c1c;
-    }
-} 
+    border-radius: 12px;
+    text-transform: none;
+    font-weight: 600;
+    border: none;
+}
+
+.deleteButton:hover {
+    background-color: #D04A2F;
+    box-shadow: 0 4px 16px rgba(255, 59, 48, 0.3);
+}

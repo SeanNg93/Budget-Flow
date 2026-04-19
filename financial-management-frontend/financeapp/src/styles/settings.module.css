@@ -1,17 +1,20 @@
 /* Settings Panel Styles */
 .dialogPaper {
-  border-radius: 12px;
+  border-radius: 24px;
   overflow: hidden;
+  background-color: #FFFFFF;
 }
 
 .dialogTitle {
-  padding: 16px 24px;
-  background-color: #f8f9fa;
+  padding: 1.25rem 1.5rem;
+  background-color: #F3E7DD;
+  border-bottom: 1px solid #E6E6E6;
 }
 
 .dialogTitleText {
-  font-weight: 600;
+  font-weight: 700;
   font-size: 1.25rem;
+  color: #1A1A1A;
 }
 
 .closeButton {
@@ -19,7 +22,7 @@
 }
 
 .closeButton:hover {
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: rgba(0, 0, 0, 0.04);
 }
 
 .dialogContent {
@@ -27,17 +30,18 @@
 }
 
 .sectionTitle {
-  font-weight: 600;
-  color: #2c3e50;
+  font-weight: 700;
+  color: #1A1A1A;
   margin-bottom: 16px;
   font-size: 1rem;
 }
 
 .settingsSection {
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 8px;
+  border: 1px solid #E6E6E6;
+  border-radius: 16px;
   overflow: hidden;
   margin-bottom: 24px;
+  background-color: #FFFFFF;
 }
 
 .resetOption {
@@ -46,51 +50,55 @@
 }
 
 .resetOption:hover {
-  background-color: rgba(0, 0, 0, 0.04);
+  background-color: rgba(255, 106, 79, 0.04);
 }
 
 .resetIcon {
   min-width: 42px;
+  color: #FF6A4F !important;
 }
 
 .resetOptionText {
-  font-weight: 500;
+  font-weight: 600;
   font-size: 0.95rem;
+  color: #1A1A1A;
 }
 
 .resetOptionDescription {
-  font-size: 0.85rem;
-  color: rgba(0, 0, 0, 0.6);
+  font-size: 0.875rem;
+  color: #6B7280;
 }
 
 .infoAlert {
-  background-color: rgba(33, 150, 243, 0.1);
-  border-radius: 8px;
+  background-color: rgba(255, 106, 79, 0.08);
+  border-radius: 12px;
 }
 
 /* Reset Confirmation Dialog */
 .resetConfirmPaper {
-  border-radius: 12px;
+  border-radius: 20px;
   overflow: hidden;
+  background-color: #FFFFFF;
 }
 
 .resetConfirmTitle {
-  background-color: #ffeeee;
+  background-color: #F3E7DD;
   padding: 16px 24px;
 }
 
 .warningIcon {
   margin-right: 12px;
-  color: #ff9800;
+  color: #FF6A4F;
 }
 
 .resetConfirmTitleText {
-  font-weight: 600;
-  color: #d32f2f;
+  font-weight: 700;
+  color: #1A1A1A;
 }
 
 .resetConfirmContent {
   padding: 24px;
+  color: #6B7280;
 }
 
 .resetConfirmMessage {
@@ -99,30 +107,44 @@
 
 .resetList {
   padding: 0 0 16px 0;
+  color: #6B7280;
 }
 
 .warningAlert {
   margin-top: 8px;
   margin-bottom: 8px;
-  background-color: rgba(244, 67, 54, 0.1);
-  border-radius: 8px;
+  background-color: rgba(255, 59, 48, 0.1);
+  border-radius: 12px;
+  color: #D32F2F;
 }
 
 .resetConfirmActions {
   padding: 16px 24px;
-  background-color: #f8f9fa;
+  background-color: #F3E7DD;
+  border-top: 1px solid #E6E6E6;
 }
 
 .cancelButton {
-  margin-right: 8px;
+  margin-right: 10px;
+  border-radius: 12px;
+  text-transform: none;
+  font-weight: 600;
+  border: 1px solid #E6E6E6;
+  color: #6B7280;
+  background-color: #FFFFFF;
 }
 
 .resetButton {
-  background-color: #d32f2f;
+  background-color: #FF3B30;
+  border-radius: 12px;
+  text-transform: none;
+  font-weight: 600;
+  border: none;
 }
 
 .resetButton:hover {
-  background-color: #b71c1c;
+  background-color: #D04A2F;
+  box-shadow: 0 4px 16px rgba(255, 59, 48, 0.3);
 }
 
 .resetSuccessContainer {
@@ -131,12 +153,16 @@
   align-items: center;
   justify-content: center;
   min-height: 200px;
+  color: #34C759;
 }
 
 .resetSuccessAlert {
   width: 100%;
   padding: 16px;
-  border-radius: 8px;
+  border-radius: 12px;
+  background-color: rgba(52, 199, 89, 0.1);
+  border: 1px solid rgba(52, 199, 89, 0.2);
+  color: #2E7D32;
 }
 
 /* Media Queries */
@@ -161,21 +187,23 @@
 }
 
 .settingOption:hover {
-  background-color: rgba(0, 0, 0, 0.04);
+  background-color: rgba(255, 106, 79, 0.04);
 }
 
 .settingIcon {
   min-width: 42px;
+  color: #FF6A4F !important;
 }
 
 .settingOptionText {
-  font-weight: 500;
+  font-weight: 600;
   font-size: 0.95rem;
+  color: #1A1A1A;
 }
 
 .settingOptionDescription {
-  font-size: 0.85rem;
-  color: rgba(0, 0, 0, 0.6);
+  font-size: 0.875rem;
+  color: #6B7280;
 }
 
 /* Delete Account Styles */
@@ -185,42 +213,46 @@
 }
 
 .deleteAccountOption:hover {
-  background-color: rgba(255, 0, 0, 0.05);
+  background-color: rgba(255, 59, 48, 0.06);
 }
 
 .deleteAccountIcon {
   min-width: 42px;
+  color: #FF3B30 !important;
 }
 
 .deleteAccountText {
-  font-weight: 500;
+  font-weight: 600;
   font-size: 0.95rem;
-  color: #d32f2f;
+  color: #FF3B30;
 }
 
 .deleteAccountDescription {
-  font-size: 0.85rem;
-  color: rgba(0, 0, 0, 0.6);
+  font-size: 0.875rem;
+  color: #6B7280;
 }
 
 /* Password Change Dialog */
 .passwordChangePaper {
-  border-radius: 12px;
+  border-radius: 24px;
   overflow: hidden;
+  background-color: #FFFFFF;
 }
 
 .passwordChangeTitle {
-  padding: 16px 24px;
-  background-color: #f8f9fa;
+  padding: 1.25rem 1.5rem;
+  background-color: #F3E7DD;
+  border-bottom: 1px solid #E6E6E6;
 }
 
 .passwordIcon {
   margin-right: 12px;
-  color: #3f51b5;
+  color: #FF6A4F;
 }
 
 .passwordChangeTitleText {
-  font-weight: 600;
+  font-weight: 700;
+  color: #1A1A1A;
 }
 
 .passwordChangeContent {
@@ -229,35 +261,43 @@
 
 .passwordChangeActions {
   padding: 16px 24px;
-  background-color: #f8f9fa;
+  background-color: #F3E7DD;
+  border-top: 1px solid #E6E6E6;
 }
 
 .saveButton {
-  background-color: #3f51b5;
+  background-color: #FF6A4F;
+  border-radius: 12px;
+  text-transform: none;
+  font-weight: 600;
+  border: none;
 }
 
 .saveButton:hover {
-  background-color: #303f9f;
+  background-color: #E55A3F;
+  box-shadow: 0 4px 16px rgba(255, 106, 79, 0.3);
 }
 
 /* Delete Account Dialog */
 .deleteAccountConfirmPaper {
-  border-radius: 12px;
+  border-radius: 20px;
   overflow: hidden;
+  background-color: #FFFFFF;
 }
 
 .deleteAccountConfirmTitle {
-  background-color: #ffeeee;
+  background-color: #F3E7DD;
   padding: 16px 24px;
 }
 
 .deleteAccountConfirmTitleText {
-  font-weight: 600;
-  color: #d32f2f;
+  font-weight: 700;
+  color: #1A1A1A;
 }
 
 .deleteAccountConfirmContent {
   padding: 24px;
+  color: #6B7280;
 }
 
 .deleteAccountConfirmMessage {
@@ -265,19 +305,26 @@
 }
 
 .deleteAccountWarningAlert {
-  background-color: rgba(244, 67, 54, 0.1);
-  border-radius: 8px;
+  background-color: rgba(255, 59, 48, 0.1);
+  border-radius: 12px;
+  color: #D32F2F;
 }
 
 .deleteAccountConfirmActions {
   padding: 16px 24px;
-  background-color: #f8f9fa;
+  background-color: #F3E7DD;
+  border-top: 1px solid #E6E6E6;
 }
 
 .deleteButton {
-  background-color: #d32f2f;
+  background-color: #FF3B30;
+  border-radius: 12px;
+  text-transform: none;
+  font-weight: 600;
+  border: none;
 }
 
 .deleteButton:hover {
-  background-color: #b71c1c;
+  background-color: #D04A2F;
+  box-shadow: 0 4px 16px rgba(255, 59, 48, 0.3);
 } 

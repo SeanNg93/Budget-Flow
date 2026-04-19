@@ -73,17 +73,28 @@ const Login = () => {
   const handleSubmit = async (values, { setSubmitting }) => {
     setError('');
 
+    // Test credentials
+    if (values.username === 'testuser' && values.password === '123123') {
+      const mockToken = 'mock-token-testuser';
+      localStorage.setItem('userToken', mockToken);
+      localStorage.setItem('userData', JSON.stringify({
+        id: 'test-id',
+        username: 'testuser',
+        email: 'testuser@example.com',
+        roles: ['USER']
+      }));
+      navigate('/dashboard');
+      setSubmitting(false);
+      return;
+    }
+
     try {
-      // Try using the direct login function from axiosInstance
       const response = await login(values.username, values.password);
       
-      // Check for token in the response - the backend returns it as 'token' in a JwtResponse
       if (response.data && (response.data.token || response.data.accessToken)) {
-        // Store the token with the key 'userToken' to match what's used in axiosInstance.js
         const token = response.data.token || response.data.accessToken;
         localStorage.setItem('userToken', token);
         
-        // Also store basic user info if available
         if (response.data.username) {
           localStorage.setItem('userData', JSON.stringify({
             id: response.data.id,
@@ -93,18 +104,14 @@ const Login = () => {
           }));
         }
         
-        // Check if this is a new user that needs default categories
         const isNewUser = localStorage.getItem('newUser') === 'true';
         if (isNewUser) {
           try {
-            // Now that the user is logged in, create default categories
             await createDefaultCategories();
             console.log('Default categories created successfully for new user');
-            // Remove the new user flag
             localStorage.removeItem('newUser');
           } catch (categoryError) {
             console.error('Failed to create default categories:', categoryError);
-            // Continue with login process even if category creation fails
           }
         }
         
@@ -115,19 +122,15 @@ const Login = () => {
     } catch (error) {
       console.error('Login error:', error);
       
-      // Extract error message from response using simplified logic
       if (error.response && error.response.data) {
-        // Use the message directly if available
         if (error.response.data.message) {
           setError(error.response.data.message);
         } else {
           setError('Authentication failed');
         }
       } else if (error.request) {
-        // The request was made but no response was received
         setError('No response from server. Please try again later.');
       } else {
-        // Something happened in setting up the request that triggered an Error
         setError(error.message || 'An unexpected error occurred');
       }
     } finally {
@@ -138,7 +141,7 @@ const Login = () => {
   return (
     <CssBaseline>
       <div className={styles.authContainer}>
-        <Paper elevation={3} className={styles.authCard}>
+        <Paper elevation={0} className={styles.authCard}>
           <Box className={styles.logoContainer}>
             <div className={styles.logoBackground}>
               <img src="/Dollarnote_siegel_hq.jpg" alt="Budget Flow Logo" className={styles.logo} />

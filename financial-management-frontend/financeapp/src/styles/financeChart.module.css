@@ -1,30 +1,31 @@
 /* Chart Container Styles */
 .chartCard {
-  background-color: var(--card-background);
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.05);
+  background-color: #FFFFFF;
+  border-radius: 24px;
+  padding: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
   transition: all 0.3s ease;
   position: relative;
   max-height: 418px;
   overflow: hidden;
+  border: 1px solid #E6E6E6;
 }
 
 .chartCard:hover {
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
 .filterContainer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
-  padding: 0 10px;
+  margin-bottom: 16px;
+  padding: 0 8px;
   flex-wrap: wrap;
 }
 
 .formControl {
-  min-width: 160px !important;
+  min-width: 180px !important;
   width: 100%;
 }
 
@@ -38,8 +39,8 @@
 
 .chartContainer {
   position: relative;
-  margin-top: 10px;
-  min-height: 240px;
+  margin-top: 16px;
+  min-height: 260px;
   width: 100%;
   display: flex;
   align-items: center;
@@ -52,7 +53,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 240px;
+  height: 260px;
+  color: #6B7280;
 }
 
 /* Chart Header Controls */
@@ -68,23 +70,26 @@
 
 .timeRangeLabel {
   font-size: 14px;
-  font-weight: 500;
-  margin: 0 4px;
+  font-weight: 600;
+  margin: 0 6px;
   min-width: 60px;
   text-align: center;
+  color: #6B7280;
 }
 
 .navButton {
-  padding: 6px;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
 }
 
 .navButton:hover {
-  background-color: rgba(0, 0, 0, 0.04);
+  background-color: rgba(255, 106, 79, 0.06);
 }
 
 .navButton:disabled {
-  opacity: 0.5;
-  color: rgba(0, 0, 0, 0.26);
+  opacity: 0.4;
+  color: #6B7280;
 }
 
 .exportButton {
@@ -93,7 +98,7 @@
 }
 
 .exportButton:hover {
-  background-color: rgba(0, 0, 0, 0.04);
+  background-color: rgba(52, 199, 89, 0.08);
 }
 
 /* Time Range Toggle Styles (legacy) */
@@ -101,22 +106,23 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  margin: 10px 0;
+  margin: 12px 0;
 }
 
 .timeRangeButton {
-  padding: 4px;
+  padding: 6px;
+  border-radius: 8px;
 }
 
 /* Summary Section Styles */
 .summaryContainer {
   display: flex;
   flex-wrap: nowrap;
-  gap: 10px;
-  margin-bottom: 10px;
+  gap: 16px;
+  margin-bottom: 16px;
   justify-content: center;
-  padding: 0 5px;
-  margin-top: 5px;
+  padding: 0 8px;
+  margin-top: 8px;
   width: 100%;
 }
 
@@ -124,15 +130,15 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 10px;
-  border-radius: 8px;
-  background-color: rgba(0, 0, 0, 0.03);
+  padding: 12px;
+  border-radius: 12px;
+  background-color: #F3E7DD;
   flex: 1;
   min-width: 100px;
-  max-width: 130px;
-  margin: 0 5px;
-  padding-left: 12px;
-  padding-right: 12px;
+  max-width: 140px;
+  margin: 0 4px;
+  padding-left: 14px;
+  padding-right: 14px;
   text-align: center;
 }
 
@@ -141,66 +147,73 @@
 }
 
 .summaryLabel {
-  font-size: 11px !important;
-  color: var(--text-secondary);
-  margin-bottom: 4px !important;
+  font-size: 12px !important;
+  color: #6B7280;
+  margin-bottom: 6px !important;
   text-align: center;
+  font-weight: 500;
 }
 
 .summaryValue {
-  font-size: 14px !important;
-  font-weight: 600 !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
   text-align: center;
+  color: #1A1A1A;
 }
 
 /* Smaller fonts for chart section */
 .chartCard h6 {
-  font-size: 0.95rem !important;
+  font-size: 1.1rem !important;
+  font-weight: 700;
+  color: #1A1A1A;
 }
 
 .chartCard .MuiTypography-subtitle2 {
-  font-size: 0.78rem !important;
+  font-size: 0.875rem !important;
+  color: #6B7280;
 }
 
 .chartCard .MuiTypography-caption {
-  font-size: 0.7rem !important;
+  font-size: 0.8rem !important;
+  color: #6B7280;
 }
 
 .chartCard .MuiTypography-body2 {
-  font-size: 0.78rem !important;
+  font-size: 0.875rem !important;
+  color: #6B7280;
 }
 
 /* Fixing dropdown menu issue */
-:global(.MuiSelect-select) {
+:global(.MuiSelectSelect) {
   padding-right: 32px !important;
   width: 100% !important;
-  min-width: 160px !important; /* Increased from 130px */
+  min-width: 180px !important;
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
-  font-size: 0.875rem !important; /* Slightly smaller font */
+  font-size: 0.875rem !important;
 }
 
 :global(.MuiMenuItem-root) {
-  font-size: 0.875rem !important; /* Consistent menu item font size */
-  min-height: 32px !important; /* Slightly smaller height */
+  font-size: 0.875rem !important;
+  min-height: 40px !important;
 }
 
 @media (max-width: 768px) {
   .summaryContainer {
     flex-direction: row;
-    gap: 4px;
+    gap: 8px;
     justify-content: center;
   }
   
   .summaryItem {
     width: 33.33%;
-    padding: 4px 0;
+    padding: 8px 0;
     text-align: center;
   }
   
   .summaryItem:not(:last-child) {
-    border-right: 1px solid #e0e0e0;
+    border-right: 1px solid #E6E6E6;
     border-bottom: none;
   }
 }
@@ -209,17 +222,18 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 16px;
 }
 
 .chartTitle {
-  font-size: 16px !important;
-  font-weight: 600 !important;
+  font-size: 1.1rem !important;
+  font-weight: 700 !important;
+  color: #1A1A1A;
 }
 
 .actionButtons {
   display: flex;
-  gap: 8px;
+  gap: 10px;
 }
 
 /* Main chart content container - ensures vertical centering */

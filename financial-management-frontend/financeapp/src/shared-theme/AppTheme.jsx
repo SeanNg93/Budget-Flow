@@ -2,47 +2,49 @@ import React from 'react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 
 const AppTheme = ({ children, themeComponents = {} }) => {
-  // Create a theme instance with Apple-inspired design
+  // Create a theme instance with SaaS-style design
   const theme = createTheme({
     palette: {
       primary: {
-        main: '#007AFF', // Apple blue
-        light: '#42a5f5',
-        dark: '#0055b3',
+        main: '#FF6A4F', // Soft orange-red
+        light: '#FF8E7A',
+        dark: '#E55A3F',
       },
       secondary: {
-        main: '#FF2D55', // Apple pink/red
-        light: '#ff6b81',
-        dark: '#c4002b',
+        main: '#1A1A1A', // Dark charcoal
+        light: '#404040',
+        dark: '#000000',
       },
       success: {
-        main: '#34C759', // Apple green
+        main: '#34C759', // Green
       },
       error: {
-        main: '#FF3B30', // Apple red
+        main: '#FF3B30', // Red
       },
       warning: {
-        main: '#FF9500', // Apple orange
+        main: '#FF9500', // Orange
       },
       info: {
-        main: '#5AC8FA', // Apple light blue
+        main: '#5AC8FA', // Light blue
       },
       background: {
-        default: '#F2F2F7', // Apple light gray background
+        default: '#F3E7DD', // Warm pastel beige
         paper: '#FFFFFF',   // White for cards and surfaces
       },
       text: {
-        primary: '#000000',
-        secondary: '#8E8E93', // Apple secondary text
+        primary: '#1A1A1A', // Dark charcoal
+        secondary: '#6B7280', // Medium gray
       },
-      divider: 'rgba(0, 0, 0, 0.1)',
+      divider: '#E6E6E6', // Neutral light gray
     },
     typography: {
       fontFamily: [
+        'Inter',
+        'SF Pro Display',
         '-apple-system',
         'BlinkMacSystemFont',
-        'San Francisco',
-        'Helvetica Neue',
+        'Segoe UI',
+        'Roboto',
         'Helvetica',
         'Arial',
         'sans-serif',
@@ -93,11 +95,11 @@ const AppTheme = ({ children, themeComponents = {} }) => {
       },
     },
     shape: {
-      borderRadius: 12,
+      borderRadius: 16,
     },
     shadows: [
       'none',
-      '0px 2px 8px rgba(0, 0, 0, 0.05)',  // Subtle Apple-style shadow
+      '0px 2px 8px rgba(0, 0, 0, 0.05)',  // Subtle shadow
       '0px 4px 12px rgba(0, 0, 0, 0.08)',
       '0px 6px 16px rgba(0, 0, 0, 0.1)',
       // ... rest of the shadows array
@@ -134,8 +136,8 @@ const AppTheme = ({ children, themeComponents = {} }) => {
       MuiCard: {
         styleOverrides: {
           root: {
-            borderRadius: 16,
-            boxShadow: '0px 2px 12px rgba(0, 0, 0, 0.08)',
+            borderRadius: 24,
+            boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.05)',
             overflow: 'hidden',
           },
         },
@@ -164,10 +166,10 @@ const AppTheme = ({ children, themeComponents = {} }) => {
       MuiPaper: {
         styleOverrides: {
           root: {
-            boxShadow: '0px 2px 12px rgba(0, 0, 0, 0.08)',
+            boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.05)',
           },
           rounded: {
-            borderRadius: 16,
+            borderRadius: 24,
           },
         },
       },
@@ -177,28 +179,28 @@ const AppTheme = ({ children, themeComponents = {} }) => {
             boxShadow: '0px 1px 0px rgba(0, 0, 0, 0.1)',
             backgroundColor: 'rgba(255, 255, 255, 0.8)',
             backdropFilter: 'blur(10px)',
-            color: '#000000',
+            color: '#1A1A1A',
           },
         },
       },
       MuiDrawer: {
         styleOverrides: {
           paper: {
-            backgroundColor: '#F2F2F7',
-            borderRight: 'none',
+            backgroundColor: '#FFFFFF',
+            borderRight: '1px solid #E6E6E6',
             boxSizing: 'border-box',
             width: '280px'
           },
           root: {
             width: '280px',
             flexShrink: 0
-          }
+          },
         }
       },
       MuiDivider: {
         styleOverrides: {
           root: {
-            backgroundColor: 'rgba(0, 0, 0, 0.1)',
+            backgroundColor: '#E6E6E6',
           },
         },
       },
@@ -211,13 +213,13 @@ const AppTheme = ({ children, themeComponents = {} }) => {
               backgroundColor: 'rgba(0, 0, 0, 0.05)',
             },
             '&.Mui-selected': {
-              backgroundColor: 'rgba(0, 122, 255, 0.1)',
-              color: '#007AFF',
+              backgroundColor: 'rgba(255, 106, 79, 0.1)',
+              color: '#FF6A4F',
               '&:hover': {
-                backgroundColor: 'rgba(0, 122, 255, 0.15)',
+                backgroundColor: 'rgba(255, 106, 79, 0.15)',
               },
               '& .MuiListItemIcon-root': {
-                color: '#007AFF',
+                color: '#FF6A4F',
               },
             },
           },
@@ -226,101 +228,30 @@ const AppTheme = ({ children, themeComponents = {} }) => {
       MuiTableCell: {
         styleOverrides: {
           root: {
-            borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+            borderBottom: '1px solid #E6E6E6',
             padding: '16px 20px',
           },
           head: {
             fontWeight: 600,
-            color: '#8E8E93',
+            color: '#6B7280',
           },
         },
       },
-      ...themeComponents,
-      MuiCssBaseline: {
+      MuiOutlinedInput: {
         styleOverrides: {
-          html: {
-            scrollbarWidth: "thin",
-            scrollbarColor: "rgba(0, 0, 0, 0.15) transparent",
-            // The overflow and padding help prevent layout shifts with modals
-            overflowY: "scroll !important",
-            paddingRight: "0 !important",
-            paddingLeft: "0 !important",
-            margin: "0 !important"
+          root: {
+            borderRadius: 12,
+            '& .MuiOutlinedInput-notchedOutline': {
+              borderColor: '#E6E6E6',
+            },
+            '&:hover .MuiOutlinedInput-notchedOutline': {
+              borderColor: '#E6E6E6',
+            },
+            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+              borderColor: '#FF6A4F',
+            },
           },
-          body: {
-            overflow: "visible !important",
-            // Prevent automatic padding adjustments from Material UI
-            paddingRight: "0 !important",
-            paddingLeft: "0 !important",
-            margin: "0 !important"
-          },
-          // Customize scrollbars for better appearance
-          "::-webkit-scrollbar": {
-            width: "10px",
-            height: "10px"
-          },
-          "::-webkit-scrollbar-track": {
-            background: "rgba(0, 0, 0, 0.02)"
-          },
-          "::-webkit-scrollbar-thumb": {
-            background: "rgba(0, 0, 0, 0.15)",
-            borderRadius: "6px"
-          },
-          "::-webkit-scrollbar-thumb:hover": {
-            background: "rgba(0, 0, 0, 0.3)"
-          }
-        }
-      },
-      MuiPopover: {
-        defaultProps: {
-          container: document.body,
-          disableScrollLock: true,
-          anchorOrigin: {
-            vertical: 'bottom',
-            horizontal: 'left'
-          },
-          transformOrigin: {
-            vertical: 'top',
-            horizontal: 'left'
-          }
         },
-        styleOverrides: {
-          paper: {
-            marginTop: '2px'
-          }
-        }
-      },
-      MuiMenu: {
-        defaultProps: {
-          disableScrollLock: true,
-          anchorOrigin: {
-            vertical: 'bottom',
-            horizontal: 'left'
-          },
-          transformOrigin: {
-            vertical: 'top',
-            horizontal: 'left'
-          }
-        },
-        styleOverrides: {
-          paper: {
-            marginTop: '2px',
-            minWidth: '200px'
-          },
-          list: {
-            padding: '4px 0'
-          }
-        }
-      },
-      MuiModal: {
-        defaultProps: {
-          disableScrollLock: true
-        }
-      },
-      MuiDialog: {
-        defaultProps: {
-          disableScrollLock: true
-        }
       },
       MuiSelect: {
         defaultProps: {
@@ -355,7 +286,70 @@ const AppTheme = ({ children, themeComponents = {} }) => {
             whiteSpace: 'nowrap'
           }
         }
-      }
+      },
+      ...themeComponents,
+      MuiCssBaseline: {
+        styleOverrides: {
+          html: {
+            scrollbarWidth: "thin",
+            scrollbarColor: "#E6E6E6 transparent",
+            overflowY: "scroll !important",
+            paddingRight: "0 !important",
+            paddingLeft: "0 !important",
+            margin: "0 !important"
+          },
+          body: {
+            overflow: "visible !important",
+            paddingRight: "0 !important",
+            paddingLeft: "0 !important",
+            margin: "0 !important",
+            backgroundColor: '#F3E7DD', // Set default background color
+          },
+          "::-webkit-scrollbar": {
+            width: "10px",
+            height: "10px"
+          },
+          "::-webkit-scrollbar-track": {
+            background: "rgba(0, 0, 0, 0.02)"
+          },
+          "::-webkit-scrollbar-thumb": {
+            background: "#E6E6E6",
+            borderRadius: "6px"
+          },
+          "::-webkit-scrollbar-thumb:hover": {
+            background: "#CCCCCC"
+          }
+        }
+      },
+      MuiPopover: {
+        defaultProps: {
+          container: document.body,
+          disableScrollLock: true,
+          anchorOrigin: {
+            vertical: 'bottom',
+            horizontal: 'left'
+          },
+          transformOrigin: {
+            vertical: 'top',
+            horizontal: 'left'
+          }
+        },
+        styleOverrides: {
+          paper: {
+            marginTop: '2px'
+          }
+        }
+      },
+      MuiModal: {
+        defaultProps: {
+          disableScrollLock: true
+        }
+      },
+      MuiDialog: {
+        defaultProps: {
+          disableScrollLock: true
+        }
+      },
     },
   });
 
@@ -366,4 +360,4 @@ const AppTheme = ({ children, themeComponents = {} }) => {
   );
 };
 
-export default AppTheme; 
+export default AppTheme;

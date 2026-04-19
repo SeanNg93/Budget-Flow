@@ -1,10 +1,8 @@
-/* Auth Module Styles - Following Apple Design Principles */
+/* Auth Module Styles - Following SaaS Design Principles */
 
 /* Container Styles */
 .authContainer {
   min-height: 100vh;
-  padding: 0;
-  background: linear-gradient(135deg, #6e8efb 0%, #ff5858 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -15,6 +13,197 @@
   bottom: 0;
   width: 100%;
   height: 100%;
+  background-color: #F3E7DD; /* Warm pastel beige background */
+}
+
+.authCard {
+  width: 100%;
+  max-width: 400px;
+  padding: 2.5rem;
+  border-radius: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Logo and Title Styles */
+.logoContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.logoBackground {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.logo {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.appTitle {
+  font-size: 1.75rem !important;
+  font-weight: 700 !important;
+  text-align: center;
+  margin-bottom: 0.5rem !important;
+  color: #1A1A1A;
+  letter-spacing: -0.02em;
+}
+
+.appTagline {
+  font-size: 0.9rem !important;
+  text-align: center;
+  margin-bottom: 2rem !important;
+  color: #6B7280;
+}
+
+/* Form Styles */
+.formField {
+  margin-bottom: 1.25rem !important;
+}
+
+.formLabel {
+  margin-bottom: 0.4rem !important;
+  font-weight: 500 !important;
+  color: #1A1A1A !important;
+  font-size: 0.875rem !important;
+}
+
+.inputField {
+  border-radius: 12px !important;
+  background-color: #ffffff !important;
+  border: 1px solid #E6E6E6 !important;
+  padding: 14px 18px !important;
+}
+
+.submitButton {
+  margin-top: 1rem !important;
+  padding: 12px 0 !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+  background-color: #FF6A4F !important;
+  color: #ffffff !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 4px 12px rgba(255, 106, 79, 0.2) !important;
+}
+
+.submitButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(255, 106, 79, 0.3) !important;
+  background-color: #E55A3F !important;
+}
+
+/* Link Styles */
+.authLink {
+  color: #FF6A4F !important;
+  text-decoration: none !important;
+  font-weight: 500 !important;
+  transition: color 0.2s ease !important;
+  font-size: 0.875rem !important;
+}
+
+.authLink:hover {
+  color: #E55A3F !important;
+  text-decoration: underline !important;
+}
+
+/* Message Styles */
+.successMessage, .errorMessage {
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border-radius: 12px;
+  text-align: center;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.successMessage {
+  background-color: rgba(52, 199, 89, 0.1);
+  color: #34c759;
+  border: 1px solid rgba(52, 199, 89, 0.2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.errorMessage {
+  background-color: rgba(255, 59, 48, 0.1);
+  color: #ff3b30;
+  border: 1px solid rgba(255, 59, 48, 0.2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Social Login Buttons */
+.socialButtonsContainer {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.socialButton {
+  min-width: auto !important;
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 50% !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 1px solid #E6E6E6 !important;
+  transition: all 0.2s ease !important;
+  background-color: #ffffff !important;
+}
+
+.socialButton:hover {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+  transform: translateY(-2px);
+}
+
+.dividerText {
+  font-size: 0.875rem !important;
+  color: #6B7280 !important;
+  margin: 1.5rem 0 !important;
+  text-align: center !important;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 600px) {
+  .authCard {
+    max-width: 90%;
+    padding: 2rem;
+  }
+  
+  .appTitle {
+    font-size: 1.5rem !important;
+  }
 }
 
 .authCard {

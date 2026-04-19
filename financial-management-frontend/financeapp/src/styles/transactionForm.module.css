@@ -6,12 +6,12 @@
   padding: 0 4px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
 .formControl {
   width: 100%;
-  margin-bottom: 10px;
+  margin-bottom: 14px;
 }
 
 /* Labels */
@@ -19,45 +19,48 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 3px;
+  margin-bottom: 6px;
 }
 
 .labelText {
   font-weight: 600;
-  color: rgba(0, 0, 0, 0.7);
-  font-size: 0.75rem;
+  color: #1A1A1A;
+  font-size: 0.8rem;
   display: flex;
   align-items: center;
 }
 
 .labelIcon {
-  margin-right: 5px;
-  font-size: 0.9rem;
-  color: #007aff;
+  margin-right: 6px;
+  font-size: 1rem;
+  color: #FF6A4F;
 }
 
 /* Wallet Balance Display */
 .walletBalance {
-  margin-left: 6px;
-  color: rgba(0, 0, 0, 0.6);
-  font-weight: normal;
+  margin-left: 8px;
+  color: #6B7280;
+  font-weight: 500;
   display: inline-flex;
   align-items: center;
-  font-size: 0.7rem;
+  font-size: 0.8rem;
+  background-color: #F3E7DD;
+  padding: 2px 10px;
+  border-radius: 8px;
 }
 
 /* Action Buttons */
 .actionButtonsContainer {
   display: flex;
   align-items: center;
-  gap: 1px;
+  gap: 4px;
 }
 
 .addIconButton,
 .editButton,
 .deleteButton {
-  padding: 3px;
-  border-radius: 4px;
+  padding: 6px;
+  border-radius: 8px;
   transition: all 0.2s ease;
   margin: 0;
 }
@@ -65,67 +68,70 @@
 .addIconButton:hover,
 .editButton:hover,
 .deleteButton:hover {
-  background-color: rgba(0, 0, 0, 0.04);
+  background-color: rgba(255, 106, 79, 0.06);
   transform: scale(1.05);
 }
 
 .addIconButton svg,
 .editButton svg,
 .deleteButton svg {
-  font-size: 1rem;
+  font-size: 1.1rem;
 }
 
 .addIconButton,
 .editButton {
-  color: #007aff;
+  color: #FF6A4F;
 }
 
 .deleteButton {
-  color: #ff3b30;
+  color: #FF3B30;
 }
 
 /* Input & Select Fields */
 .inputField,
 .selectField {
-  border-radius: 8px;
-  background-color: #f5f5f7;
-  font-size: 0.85rem;
+  border-radius: 12px;
+  background-color: #FFFFFF;
+  font-size: 0.875rem;
   transition: all 0.2s ease;
+  border: 1px solid #E6E6E6;
 }
 
 .inputField:hover,
 .selectField:hover {
-  background-color: #ececf0;
+  background-color: #FFFFFF;
+  border-color: #E6E6E6;
 }
 
 .inputField:focus {
-  background-color: #ffffff;
-  box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2);
+  background-color: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(255, 106, 79, 0.1);
+  border-color: #FF6A4F;
 }
 
 /* Ensure MUI input base height */
 .selectField .MuiInputBase-root,
 .inputField .MuiInputBase-root {
-  height: 36px !important;
+  height: 40px !important;
 }
 
 /* Dropdown menu text size */
 .selectField .MuiSelect-select {
-  font-size: 0.8rem;
+  font-size: 0.875rem;
 }
 
 /* Menu Items */
 .MuiMenuItem-root {
-  font-size: 0.8rem !important;
+  font-size: 0.875rem !important;
 }
 
 /* Make sure the font size is applied to menu items globally */
 :global(.MuiMenuItem-root) {
-  font-size: 0.8rem !important;
+  font-size: 0.875rem !important;
 }
 
 :global(.MuiListItemText-primary) {
-  font-size: 0.8rem !important;
+  font-size: 0.875rem !important;
 }
 
 /* Specific Field Adjustments */
@@ -134,41 +140,41 @@
 }
 
 .amountField input {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #007aff;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #FF6A4F;
 }
 
 /* New style for insufficient funds error */
 .insufficientFundsError input {
-  color: #ff3b30;
+  color: #FF3B30;
   font-weight: 700;
   animation: pulseError 1.5s infinite;
 }
 
 .insufficientFundsError .MuiFormHelperText-root {
-  color: #ff3b30;
+  color: #FF3B30;
   font-weight: 600;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
 }
 
 /* Popup for insufficient funds error */
 .fundsErrorPopup {
   position: absolute;
-  top: -75px;
+  top: -80px;
   left: 10px;
-  background-color: #ff3b30;
+  background-color: #FF3B30;
   color: white;
-  padding: 6px 10px;
-  border-radius: 6px;
-  font-size: 0.7rem;
-  font-weight: 500;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(255, 59, 48, 0.2);
   z-index: 100;
   display: flex;
   align-items: center;
-  gap: 5px;
-  max-width: 180px;
+  gap: 6px;
+  max-width: 200px;
   animation: fadeInPopup 0.3s ease;
 }
 
@@ -179,7 +185,7 @@
   left: 15px;
   width: 12px;
   height: 12px;
-  background-color: #ff3b30;
+  background-color: #FF3B30;
   transform: rotate(45deg);
 }
 
@@ -207,165 +213,182 @@
 }
 
 .descriptionField textarea {
-  min-height: 50px;
-  font-size: 0.85rem;
+  min-height: 56px;
+  font-size: 0.875rem;
+  border-radius: 12px;
+  border: 1px solid #E6E6E6;
+  background-color: #FFFFFF;
 }
 
 .dateField {
   width: 100%;
-  background-color: #f5f5f7;
-  border-radius: 8px;
-  font-size: 0.85rem;
+  background-color: #FFFFFF;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  border: 1px solid #E6E6E6;
 }
 
 .dateField .MuiInputBase-root {
-  height: 36px !important;
+  height: 40px !important;
 }
 
 /* Date field specific styles */
 .dateField input {
-  font-size: 0.8rem !important;
-  padding: 8px !important;
+  font-size: 0.875rem !important;
+  padding: 10px !important;
+  color: #1A1A1A;
 }
 
 /* Divider */
 .divider {
-  background-color: rgba(0, 0, 0, 0.06);
-  margin: 10px 0;
+  background-color: #E6E6E6;
+  margin: 14px 0;
   height: 1px;
 }
 
 /* Transaction Type Toggle */
 .typeToggle {
-  border-radius: 6px;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-  transform: scale(0.98);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  transform: scale(1);
   transform-origin: left center;
+  border: 1px solid #E6E6E6;
 }
 
 .typeToggle .MuiToggleButton-root {
   border: none;
-  padding: 6px 14px;
-  font-size: 0.82rem;
+  padding: 8px 18px;
+  font-size: 0.875rem;
   font-weight: 600;
   text-transform: none;
-  min-width: 100px;
+  min-width: 110px;
   transition: all 0.2s ease;
-  height: 36px;
+  height: 40px;
+  border-radius: 12px !important;
 }
 
 .expenseToggle {
-  color: #ff3b30;
-  border-right: 1px solid rgba(0, 0, 0, 0.05) !important;
+  color: #FF3B30;
+  border-right: 1px solid #E6E6E6 !important;
 }
 
 .expenseToggle.Mui-selected {
-  background-color: rgba(255, 59, 48, 0.12) !important;
-  color: #ff3b30 !important;
+  background-color: rgba(255, 59, 48, 0.1) !important;
+  color: #FF3B30 !important;
   font-weight: 700;
 }
 
 .incomeToggle {
-  color: #34c759;
+  color: #34C759;
 }
 
 .incomeToggle.Mui-selected {
-  background-color: rgba(52, 199, 89, 0.12) !important;
-  color: #34c759 !important;
+  background-color: rgba(52, 199, 89, 0.1) !important;
+  color: #34C759 !important;
   font-weight: 700;
 }
 
 /* Dialog Styles */
 .dialogPaper {
-  border-radius: 16px !important;
-  box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.15) !important;
+  border-radius: 24px !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08) !important;
   overflow: hidden;
   max-width: 95%;
+  background-color: #FFFFFF;
 }
 
 .dialogTitle {
   font-weight: 700;
-  padding: 14px 18px 8px;
-  font-size: 1.1rem;
-  background-color: #ffffff;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 1.25rem 1.5rem 0.75rem;
+  font-size: 1.15rem;
+  background-color: #F3E7DD;
+  border-bottom: 1px solid #E6E6E6;
+  color: #1A1A1A;
 }
 
 .dialogContent {
-  padding: 14px 18px;
-  background-color: #ffffff;
+  padding: 1.25rem 1.5rem;
+  background-color: #FFFFFF;
 }
 
 .dialogActions {
-  padding: 8px 18px 14px;
-  background-color: #ffffff;
+  padding: 0.75rem 1.5rem 1.25rem;
+  background-color: #FFFFFF;
 }
 
 /* Buttons */
 .cancelButton {
-  margin-right: 8px;
-  color: #666;
+  margin-right: 10px;
+  color: #6B7280;
   text-transform: none;
-  font-size: 0.8rem;
-  padding: 5px 12px;
-  height: 36px;
-  min-width: 80px;
+  font-size: 0.875rem;
+  padding: 8px 16px;
+  height: 40px;
+  min-width: 90px;
+  border-radius: 12px;
+  border: 1px solid #E6E6E6;
+  font-weight: 600;
+  background-color: #FFFFFF;
+  transition: all 0.2s ease;
+}
+
+.cancelButton:hover {
+  background-color: #F3E7DD;
 }
 
 .saveTransactionButton {
-  background-color: #007aff;
+  background-color: #FF6A4F;
   color: white !important;
-  border-radius: 8px;
-  padding: 6px 16px;
+  border-radius: 12px;
+  padding: 8px 20px;
   font-weight: 600;
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   text-transform: none;
-  box-shadow: none;
+  box-shadow: 0 2px 8px rgba(255, 106, 79, 0.2);
   transition: all 0.2s ease;
   white-space: nowrap;
-  height: 36px;
-  transform: scale(0.98);
-  transform-origin: right center;
-  min-width: 110px;
+  height: 40px;
+  min-width: 120px;
+  border: none;
 }
 
 .saveTransactionButton:hover {
-  background-color: #0062cc;
-  transform: scale(0.97);
-  box-shadow: 0 2px 4px rgba(0, 98, 204, 0.3);
+  background-color: #E55A3F;
+  box-shadow: 0 4px 16px rgba(255, 106, 79, 0.3);
+  transform: translateY(-1px);
 }
 
 /* Error button color override */
 .saveTransactionButton.MuiButton-containedError {
-  background-color: #ff3b30;
+  background-color: #FF3B30;
   color: white !important;
 }
 
 .saveTransactionButton.MuiButton-containedError:hover {
-  background-color: #e0352b;
-  box-shadow: 0 2px 4px rgba(224, 53, 43, 0.3);
+  background-color: #D04A2F;
+  box-shadow: 0 4px 16px rgba(255, 59, 48, 0.3);
   color: white !important;
 }
 
 /* Success button color override (for Income) */
 .saveTransactionButton.MuiButton-containedSuccess {
-  background-color: #34c759;
+  background-color: #34C759;
   color: white !important;
 }
 
 .saveTransactionButton.MuiButton-containedSuccess:hover {
-  background-color: #2eb350;
-  box-shadow: 0 2px 4px rgba(46, 179, 80, 0.3);
+  background-color: #2EB350;
+  box-shadow: 0 4px 16px rgba(52, 199, 89, 0.3);
   color: white !important;
 }
 
 /* Additional dialogs' button styles */
 .dialogActions button {
-  border-radius: 8px;
+  border-radius: 12px;
   text-transform: none;
-  font-weight: 500;
-  font-size: 0.8rem;
+  font-weight: 600;
+  font-size: 0.875rem;
 }
 
 /* Add styles for wrapping the long "Save Transaction" button text */
@@ -373,8 +396,8 @@
   .saveTransactionButton {
     max-width: 140px;
     white-space: normal;
-    font-size: 0.7rem;
-    line-height: 1.1;
+    font-size: 0.8rem;
+    line-height: 1.2;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -383,67 +406,67 @@
 
 /* Category Information Display */
 .categoryInfoText {
-  margin-left: 6px;
-  font-size: 0.65rem !important;
-  font-weight: 400 !important;
-  color: rgba(0, 0, 0, 0.65);
+  margin-left: 8px;
+  font-size: 0.75rem !important;
+  font-weight: 500 !important;
+  color: #6B7280;
   display: inline-flex;
   align-items: center;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 220px;
-  padding: 1px 4px;
-  border-radius: 4px;
-  background-color: rgba(0, 0, 0, 0.03);
+  padding: 2px 8px;
+  border-radius: 6px;
+  background-color: #F3E7DD;
 }
 
 .categoryExceedingText {
-  color: #ff3b30 !important;
-  font-weight: 500 !important;
-  background-color: rgba(255, 59, 48, 0.08);
+  color: #FF3B30 !important;
+  font-weight: 600 !important;
+  background-color: rgba(255, 59, 48, 0.1);
 }
 
 .categoryWarningText {
-  color: #ff9500 !important;
-  background-color: rgba(255, 149, 0, 0.08);
+  color: #FF9500 !important;
+  background-color: rgba(255, 149, 0, 0.1);
 }
 
 .categoryIncomeText {
-  color: #34c759 !important;
-  background-color: rgba(52, 199, 89, 0.08);
+  color: #34C759 !important;
+  background-color: rgba(52, 199, 89, 0.1);
 }
 
 .categoryHighAchievementText {
-  color: #34c759 !important;
-  background-color: rgba(52, 199, 89, 0.18);
-  font-weight: 500 !important;
+  color: #34C759 !important;
+  background-color: rgba(52, 199, 89, 0.15);
+  font-weight: 600 !important;
 }
 
 .categoryInfoBox {
-  margin-top: 4px;
-  margin-bottom: 4px;
+  margin-top: 8px;
+  margin-bottom: 8px;
 }
 
 .categoryAlert {
-  padding: 4px 8px;
-  font-size: 0.75rem;
-  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.8rem;
+  border-radius: 12px;
 }
 
 .categoryAlert .MuiAlert-icon {
-  font-size: 0.9rem;
+  font-size: 1rem;
   align-items: center;
 }
 
 /* Add a class for the insufficient funds alert */
 .insufficientFundsAlert {
   background-color: rgba(255, 59, 48, 0.1);
-  border-left: 4px solid #ff3b30;
-  color: #d32f2f;
-  font-weight: 500;
-  font-size: 0.85rem;
-  border-radius: 6px;
+  border-left: 4px solid #FF3B30;
+  color: #D32F2F;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-radius: 8px;
   animation: fadeInDown 0.5s ease;
 }
 
@@ -460,8 +483,11 @@
 
 /* Shared Wallet Badge */
 .sharedWalletBadge {
-  margin-left: 5px;
-  font-size: 0.7rem;
-  color: rgba(0, 0, 0, 0.6);
+  margin-left: 8px;
+  font-size: 0.75rem;
+  color: #6B7280;
   font-style: italic;
+  background-color: #F3E7DD;
+  padding: 2px 8px;
+  border-radius: 6px;
 }

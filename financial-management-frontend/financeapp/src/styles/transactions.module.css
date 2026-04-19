@@ -6,16 +6,17 @@
 
 .summaryCard {
   height: 100%;
-  border-radius: 12px;
+  border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04) !important;
   transition: all 0.3s ease;
-  background-color: white;
-  border: 1px solid rgba(0, 0, 0, 0.03);
+  background-color: #FFFFFF;
+  border: 1px solid #E6E6E6;
 }
 
 .summaryCard:hover {
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08) !important;
+  transform: translateY(-2px);
 }
 
 .cardContent {
@@ -31,7 +32,7 @@
   justify-content: center;
   width: 48px;
   height: 48px;
-  border-radius: 12px;
+  border-radius: 14px;
   margin-right: 16px;
   flex-shrink: 0;
 }
@@ -45,65 +46,66 @@
 }
 
 .cardLabel {
-  color: rgba(0, 0, 0, 0.6);
-  font-weight: 500;
+  color: #6B7280;
+  font-weight: 600;
   font-size: 0.875rem;
   margin-bottom: 4px;
 }
 
 .cardAmount {
-  font-weight: 600 !important;
+  font-weight: 700 !important;
   font-size: 1.75rem !important;
   letter-spacing: -0.5px;
   line-height: 1.2;
+  color: #1A1A1A;
 }
 
 /* Expense Card Styles */
 .expenseCard .iconContainer {
-  background-color: rgba(244, 67, 54, 0.1);
+  background-color: rgba(255, 59, 48, 0.1);
 }
 
 .expenseIcon {
-  color: #f44336; /* Red */
+  color: #FF3B30;
 }
 
 .expenseAmount {
-  color: #f44336; /* Red */
+  color: #FF3B30;
 }
 
 /* Income Card Styles */
 .incomeCard .iconContainer {
-  background-color: rgba(76, 175, 80, 0.1);
+  background-color: rgba(52, 199, 89, 0.1);
 }
 
 .incomeIcon {
-  color: #4caf50; /* Green */
+  color: #34C759;
 }
 
 .incomeAmount {
-  color: #4caf50; /* Green */
+  color: #34C759;
 }
 
 /* Savings Card Styles */
 .savingsCard .iconContainer {
-  background-color: rgba(33, 150, 243, 0.1);
+  background-color: rgba(255, 106, 79, 0.1);
 }
 
 .savingsIcon {
-  color: #2196f3; /* Blue */
+  color: #FF6A4F;
 }
 
 /* Amount colors based on value */
 .positiveAmount {
-  color: #4caf50; /* Green for positive values */
+  color: #34C759;
 }
 
 .negativeAmount {
-  color: #f44336; /* Red for negative values */
+  color: #FF3B30;
 }
 
 .neutralAmount {
-  color: #757575; /* Grey for zero values */
+  color: #6B7280;
 }
 
 /* Media queries for responsive design */

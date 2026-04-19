@@ -1,6 +1,6 @@
 /* --- Global Scale Adjustments --- */
 :root {
-  --scale-factor: 0.88;
+  --scale-factor: 1;
 }
 
 /* --- Tổng thể trang Dashboard --- */
@@ -10,8 +10,8 @@
   align-items: center;
   justify-content: center;
   background-color: transparent;
-  margin-top: calc(1.9rem * var(--scale-factor));
-  margin-bottom: calc(1.9rem * var(--scale-factor));
+  margin-top: 2rem;
+  margin-bottom: 2rem;
   position: relative;
   z-index: 1;
   width: 100%;
@@ -24,27 +24,18 @@
 
 /* Adding a backdrop container for the whole dashboard content */
 .dashboardBackdrop {
-  background-color: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-radius: calc(15px * var(--scale-factor));
-  box-shadow: 0 7px 30px rgba(0, 0, 0, 0.05);
-  padding: calc(22px * var(--scale-factor));
-  margin-bottom: calc(1.9rem * var(--scale-factor));
+  background-color: #FFFFFF;
+  border-radius: 24px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+  padding: 32px;
+  margin-bottom: 2rem;
   width: 100%;
-  max-width: calc(1400px * var(--scale-factor));
-  min-height: calc((100vh - 95px) * var(--scale-factor));
+  max-width: 1400px;
+  min-height: calc(100vh - 95px);
   display: flex;
   flex-direction: column;
   margin-left: auto !important;
   margin-right: auto !important;
-}
-
-/* For browsers that don't support backdrop-filter */
-@supports not (backdrop-filter: blur(10px)) {
-  .dashboardBackdrop {
-    background-color: rgba(255, 255, 255, 0.95);
-  }
 }
 
 /* Container for all the cards in the dashboard */
@@ -57,35 +48,38 @@
 
 /* --- Thanh điều hướng (Navbar) --- */
 .navbar {
-  background-color: #007bff;
-  color: white;
-  padding: 0.9rem 1.8rem;
+  background-color: #FFFFFF;
+  color: #1A1A1A;
+  padding: 1rem 1.8rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 0px rgba(0, 0, 0, 0.05);
 }
 
 .navbar h1 {
   font-size: 1.35rem;
-  font-weight: bold;
+  font-weight: 700;
   margin: 0;
+  color: #1A1A1A;
 }
 
 .logoutButton {
-  background-color: #dc3545;
+  background-color: #FF6A4F;
   color: white;
   border: none;
-  padding: 0.45rem 0.9rem;
+  padding: 0.6rem 1.2rem;
   font-size: 0.9rem;
-  font-weight: bold;
-  border-radius: 4px;
+  font-weight: 600;
+  border-radius: 12px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(255, 106, 79, 0.2);
 }
 
 .logoutButton:hover {
-  background-color: #c82333;
+  background-color: #E55A3F;
+  box-shadow: 0 4px 12px rgba(255, 106, 79, 0.3);
 }
 
 /* --- Khu vực nội dung chính --- */
@@ -97,12 +91,13 @@
 
 /* --- Sidebar bên trái --- */
 .sidebar {
-  width: 250px;
-  background-color: white;
+  width: 280px;
+  background-color: #FFFFFF;
   padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
   height: fit-content;
+  margin-right: 1.5rem;
 }
 
 .userInfo {
@@ -112,12 +107,13 @@
 
 .userInfo h3 {
   font-size: 1.2rem;
-  font-weight: bold;
+  font-weight: 700;
   margin-bottom: 0.5rem;
+  color: #1A1A1A;
 }
 
 .userInfo p {
-  color: #666;
+  color: #6B7280;
   font-size: 0.9rem;
 }
 
@@ -127,46 +123,48 @@
 }
 
 .sidebarNav li {
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 .sidebarNav a {
   text-decoration: none;
-  color: #007bff;
-  font-weight: bold;
-  padding: 0.5rem 1rem;
+  color: #FF6A4F;
+  font-weight: 600;
+  padding: 0.75rem 1rem;
   display: block;
-  border-radius: 5px;
-  transition: background-color 0.3s ease;
+  border-radius: 12px;
+  transition: all 0.2s ease;
 }
 
 .sidebarNav a:hover {
-  opacity: 0.8;
+  background-color: rgba(255, 106, 79, 0.08);
 }
 
 /* --- Nút Xóa tài khoản --- */
 .deleteAccountButton {
   color: white !important;
-  background-color: #dc3545;
+  background-color: #FF6A4F;
   text-align: center;
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1rem;
   display: block;
-  border-radius: 5px;
-  font-weight: bold;
-  transition: background-color 0.3s ease;
+  border-radius: 12px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(255, 106, 79, 0.2);
 }
 
 .deleteAccountButton:hover {
-  background-color: #c82333;
+  background-color: #E55A3F;
+  box-shadow: 0 4px 12px rgba(255, 106, 79, 0.3);
 }
 
 /* --- Loading state display --- */
 .loading {
   text-align: center;
   font-size: 1.2rem;
-  font-weight: bold;
+  font-weight: 600;
   padding: 2rem;
-  color: #007bff;
+  color: #FF6A4F;
 }
 
 .navbarContent {
@@ -186,34 +184,36 @@
 
 /* Welcome card */
 .welcomeCard {
-  padding: calc(1.4rem * var(--scale-factor));
+  padding: 2rem;
   display: flex;
   flex-direction: column;
-  background-color: #ffffff;
-  border-radius: calc(0.95rem * var(--scale-factor));
-  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.08);
+  background-color: #FFFFFF;
+  border-radius: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
   width: 100%;
-  margin-bottom: calc(1rem * var(--scale-factor));
+  margin-bottom: 1.5rem;
+  border: 1px solid #E6E6E6;
 }
 
 .welcomeContent {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 2rem;
 }
 
 .welcomeImageContainer {
   flex: 0 0 auto;
-  width: 180px;
-  height: 180px;
-  border-radius: 8px;
+  width: 200px;
+  height: 200px;
+  border-radius: 24px;
   overflow: hidden;
   position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
   transition: transform 0.3s ease;
+  border: 1px solid #E6E6E6;
 }
 
 .welcomeImageContainer:hover {
@@ -224,14 +224,14 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 8px;
+  border-radius: 24px;
   transition: all 0.3s ease;
 }
 
 /* Image navigation dots */
 .imageNavDots {
   position: absolute;
-  bottom: 8px;
+  bottom: 12px;
   left: 0;
   right: 0;
   display: flex;
@@ -244,21 +244,20 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background-color: rgba(255, 255, 255, 0.5);
+  background-color: rgba(0, 0, 0, 0.2);
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .imageNavDot:hover {
-  background-color: rgba(255, 255, 255, 0.8);
+  background-color: rgba(0, 0, 0, 0.4);
 }
 
 .activeImageDot {
   width: 10px;
   height: 10px;
-  background-color: white;
-  transform: scale(1.1);
+  background-color: #FF6A4F;
+  transform: scale(1.2);
 }
 
 .welcomeTextContent {
@@ -266,9 +265,9 @@
   flex-direction: column;
   justify-content: center;
   flex: 1;
-  padding: 1.5rem;
+  padding: 0;
   overflow: hidden;
-  min-height: 170px; /* Ensure consistent height during transitions */
+  min-height: 200px;
 }
 
 .tipsSection {
@@ -276,7 +275,7 @@
   flex-direction: column;
   width: 100%;
   height: 100%;
-  min-height: 150px; /* Match approximate height of welcome content */
+  min-height: 150px;
   justify-content: center;
 }
 
@@ -284,13 +283,14 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: calc(0.1rem * var(--scale-factor));
+  margin-bottom: 0.5rem;
 }
 
 .welcomeTitle {
   font-weight: 700;
   letter-spacing: -0.02em;
-  font-size: calc(1.9rem * var(--scale-factor)) !important;
+  font-size: 2rem !important;
+  color: #1A1A1A;
 }
 
 /* Styling for the SplitText component */
@@ -299,8 +299,9 @@
   padding: 0;
   font-weight: 700;
   letter-spacing: -0.02em;
-  font-size: calc(1.9rem * var(--scale-factor));
+  font-size: 2rem;
   line-height: 1.2;
+  color: #1A1A1A;
 }
 
 /* New style for subtitle SplitText components */
@@ -308,8 +309,8 @@
   margin: 0;
   padding: 0;
   font-weight: 400;
-  font-size: calc(0.97rem * var(--scale-factor));
-  color: rgba(0, 0, 0, 0.6);
+  font-size: 1rem;
+  color: #6B7280;
   line-height: 1.3;
 }
 
@@ -322,20 +323,20 @@
 
 /* Inline link style for "Click here" text within the animation */
 .nav-link-highlight {
-  color: #007aff !important;
+  color: #FF6A4F !important;
   text-decoration: underline;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   transition: color 0.2s ease;
 }
 
 .nav-link-highlight:hover {
-  color: #0056b3 !important;
+  color: #E55A3F !important;
 }
 
 /* Style for clickable navigation text */
 .clickable-nav-text {
-  color: #007aff;
+  color: #FF6A4F;
   cursor: pointer;
   text-decoration: underline;
   transition: color 0.2s ease, transform 0.2s ease;
@@ -344,7 +345,7 @@
 }
 
 .clickable-nav-text:hover {
-  color: #0056b3;
+  color: #E55A3F;
   transform: translateY(-1px);
 }
 
@@ -353,57 +354,67 @@
 }
 
 .welcomeSubtitle {
-  margin-top: calc(0.1rem * var(--scale-factor));
-  font-size: calc(0.97rem * var(--scale-factor));
-  margin-bottom: calc(0.1rem * var(--scale-factor));
+  margin-top: 0.5rem;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
   line-height: 1.3;
+  color: #6B7280;
 }
 
 .addButton {
-  border-radius: 0.67rem;
-  padding-left: 1.35rem;
-  padding-right: 1.35rem;
-  padding-top: 0.54rem;
-  padding-bottom: 0.54rem;
+  border-radius: 12px;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
   font-weight: 600;
   box-shadow: none;
+  background-color: #FF6A4F;
+  color: white;
+  transition: all 0.2s ease;
+}
+
+.addButton:hover {
+  background-color: #E55A3F;
+  box-shadow: 0 4px 12px rgba(255, 106, 79, 0.3);
 }
 
 /* Summary cards */
 .summaryCard {
   height: 100%;
   position: relative;
-  border-radius: calc(0.95rem * var(--scale-factor));
+  border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.05);
-  transition: box-shadow 0.3s ease-in-out, border 0.3s ease-in-out;
-  border: 1px solid transparent;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease-in-out;
+  border: 1px solid #E6E6E6;
 }
 
 /* Default glow effect for all cards */
 .summaryCard:hover {
-  box-shadow: 0px 0px 15px rgba(0, 122, 255, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
 }
 
 /* Add specific card classes for targeting in dashboard.jsx */
 .balanceCard:hover {
-  box-shadow: 0px 0px 15px rgba(0, 122, 255, 0.4);
-  border: 1px solid rgba(0, 122, 255, 0.2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(255, 106, 79, 0.3);
 }
 
 .incomeCard:hover {
-  box-shadow: 0px 0px 15px rgba(52, 199, 89, 0.4);
-  border: 1px solid rgba(52, 199, 89, 0.2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(52, 199, 89, 0.3);
 }
 
 .expenseCard:hover {
-  box-shadow: 0px 0px 15px rgba(255, 59, 48, 0.4);
-  border: 1px solid rgba(255, 59, 48, 0.2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(255, 59, 48, 0.3);
 }
 
 .savingsCard:hover {
-  box-shadow: 0px 0px 15px rgba(52, 199, 89, 0.4);
-  border: 1px solid rgba(52, 199, 89, 0.2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(52, 199, 89, 0.3);
 }
 
 .cardTitleContainer {
@@ -413,9 +424,9 @@
 }
 
 .cardTitle {
-  font-weight: 500 !important;
-  font-size: calc(1rem * var(--scale-factor)) !important;
-  color: #1f1f1f;
+  font-weight: 600 !important;
+  font-size: 1rem !important;
+  color: #1A1A1A !important;
 }
 
 .cardHeaderContent {
@@ -434,129 +445,134 @@
 }
 
 .menuPaper {
-  border-radius: 12px !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+  border: 1px solid #E6E6E6 !important;
 }
 
 .menuItem {
   display: flex;
   align-items: center;
-  padding: 8px 16px !important;
-  min-height: 40px;
+  padding: 10px 16px !important;
+  min-height: 44px;
 }
 
 .menuIcon {
   margin-right: 8px;
   font-size: 18px !important;
+  color: #6B7280 !important;
 }
 
 .balanceAmount, .incomeAmount, .expenseAmount, .savingsAmount {
-  font-weight: 600 !important;
-  font-size: calc(1.65rem * var(--scale-factor)) !important;
+  font-weight: 700 !important;
+  font-size: 1.75rem !important;
   letter-spacing: -0.5px;
+  color: #1A1A1A !important;
 }
 
 .incomeAmount {
-  color: #34c759; /* Apple's green color */
+  color: #34C759 !important;
 }
 
 .expenseAmount {
-  color: #ff3b30; /* Apple's red color */
+  color: #FF3B30 !important;
+}
+
+.savingsAmount {
+  color: #1A1A1A !important;
 }
 
 /* Transactions section */
 .transactionsCard {
-  padding: 1.35rem;
+  padding: 2rem;
   display: flex;
   flex-direction: column;
-  border-radius: 0.9rem;
-  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.08);
+  border-radius: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  background-color: #FFFFFF;
+  border: 1px solid #E6E6E6;
 }
 
 .transactionsHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.35rem;
+  margin-bottom: 1.5rem;
 }
 
 .sectionTitle {
-  font-weight: 600;
-  color: #333;
-  font-size: calc(1.33rem * var(--scale-factor)) !important;
+  font-weight: 700;
+  color: #1A1A1A;
+  font-size: 1.25rem !important;
 }
 
 /* Add New button in Recent Transactions */
 .addNewButton {
-  background-color: #007aff;
+  background-color: #FF6A4F;
   color: white;
-  font-weight: 500;
+  font-weight: 600;
   text-transform: none;
-  padding: 4px 12px;
-  border-radius: 4px;
+  padding: 8px 20px;
+  border-radius: 12px;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 7px rgba(0, 122, 255, 0.2), 0 1px 3px rgba(0, 0, 0, 0.05);
-  position: relative;
-  top: 0;
+  box-shadow: 0 2px 8px rgba(255, 106, 79, 0.2);
   border: none;
   z-index: 1;
-  font-size: 0.75rem !important;
-  height: 32px;
-  min-width: 70px;
+  font-size: 0.875rem !important;
+  height: 40px;
+  min-width: 90px;
 }
 
 .addNewButton:hover {
-  background-color: #0062cc;
-  box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3), 0 2px 5px rgba(0, 0, 0, 0.07);
-  transform: none !important;
+  background-color: #E55A3F;
+  box-shadow: 0 4px 16px rgba(255, 106, 79, 0.3);
+  transform: translateY(-1px);
 }
 
 .addNewButton:active {
-  background-color: #005bb5;
-  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.2), 0 1px 3px rgba(0, 0, 0, 0.05);
+  background-color: #D04A2F;
+  transform: translateY(0);
 }
 
 /* Keep existing addTransactionButton for compatibility */
 .addTransactionButton {
-  font-weight: 500;
+  font-weight: 600;
   text-transform: none;
-  padding: 4px 12px;
-  border-radius: 8px;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.2), 0 1px 3px rgba(0, 0, 0, 0.05);
-  position: relative;
-  top: 0;
+  padding: 8px 20px;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(255, 106, 79, 0.2);
+  background-color: #FF6A4F;
+  color: white;
   border: none;
-  backdrop-filter: blur(20px);
-  transform: none !important;
-  font-size: 0.75rem !important;
-  height: 32px;
-  min-width: 70px;
+  font-size: 0.875rem !important;
+  height: 40px;
+  min-width: 90px;
 }
 
 .addTransactionButton:hover {
-  background-color: #0062cc;
-  box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3), 0 2px 5px rgba(0, 0, 0, 0.07);
-  transform: none !important;
+  background-color: #E55A3F;
+  box-shadow: 0 4px 16px rgba(255, 106, 79, 0.3);
+  transform: translateY(-1px);
 }
 
 .addTransactionButton:active {
-  background-color: #005bb5;
-  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.2), 0 1px 3px rgba(0, 0, 0, 0.05);
+  background-color: #D04A2F;
+  transform: translateY(0);
 }
 
 .loadingBox {
   display: flex;
   justify-content: center;
-  padding: 1rem;
+  padding: 2rem;
 }
 
 .tableContainer {
-  margin-top: 16px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-top: 20px;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
   overflow: hidden;
-  border: 1px solid rgba(224, 224, 224, 0.7);
+  border: 1px solid #E6E6E6;
   width: 100%;
   max-width: 100%;
   overflow-x: auto;
@@ -565,10 +581,10 @@
 }
 
 .tableHeaderCell {
-  background-color: #f5f5f5;
-  color: #424242;
-  font-weight: 600;
-  padding: 12px 16px;
+  background-color: #F3E7DD;
+  color: #1A1A1A;
+  font-weight: 700;
+  padding: 14px 18px;
   white-space: nowrap;
 }
 
@@ -577,22 +593,22 @@
 }
 
 .tableRow:hover {
-  background-color: rgba(0, 0, 0, 0.02);
+  background-color: rgba(243, 231, 221, 0.3);
 }
 
 .tableCell {
-  padding: 10px 16px;
+  padding: 12px 18px;
   white-space: nowrap;
-  color: #424242;
-  border-bottom: 1px solid rgba(224, 224, 224, 0.5);
+  color: #1A1A1A;
+  border-bottom: 1px solid #E6E6E6;
 }
 
 .tableCellBold {
-  padding: 12px 16px;
+  padding: 14px 18px;
   font-size: 14px;
   font-weight: 600;
-  color: #333;
-  border-bottom: 1px solid rgba(224, 224, 224, 1);
+  color: #1A1A1A;
+  border-bottom: 1px solid #E6E6E6;
   height: auto;
   max-width: 250px;
   overflow: hidden;
@@ -600,40 +616,38 @@
 }
 
 .incomeTag {
-  background-color: rgba(46, 125, 50, 0.1);
+  background-color: rgba(52, 199, 89, 0.1);
   color: #2e7d32;
-  border-radius: 4px;
-  padding: 4px 8px;
-  font-size: 0.75rem;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.8rem;
   font-weight: 600;
   display: flex;
   align-items: center;
   width: fit-content;
-  letter-spacing: 0.3px;
 }
 
 .expenseTag {
-  background-color: rgba(211, 47, 47, 0.1);
-  color: #d32f2f;
-  border-radius: 4px;
-  padding: 4px 8px;
-  font-size: 0.75rem;
+  background-color: rgba(255, 59, 48, 0.1);
+  color: #c62828;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.8rem;
   font-weight: 600;
   display: flex;
   align-items: center;
   width: fit-content;
-  letter-spacing: 0.3px;
 }
 
 /* Creator avatar in transaction tag */
 .creatorAvatar {
-  width: 20px !important;
-  height: 20px !important;
-  font-size: 0.75rem !important;
-  margin-left: 6px;
-  border: 1px solid #e0e0e0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  background-color: #f8f9fa;
+  width: 24px !important;
+  height: 24px !important;
+  font-size: 0.8rem !important;
+  margin-left: 8px;
+  border: 1px solid #E6E6E6;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  background-color: #F3E7DD;
   overflow: hidden;
   display: flex !important;
   justify-content: center !important;
@@ -642,43 +656,48 @@
 
 /* Tooltip for transaction creator */
 .creatorTooltip {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 500;
-  padding: 6px 10px;
-  background-color: rgba(0, 0, 0, 0.75);
+  padding: 8px 12px;
+  background-color: rgba(26, 26, 26, 0.85);
+  border-radius: 8px;
 }
 
 .emptyTransactionsBox {
-  padding: 2rem;
+  padding: 3rem;
   text-align: center;
-  background-color: rgba(0, 0, 0, 0.02);
-  border-radius: 0.75rem;
+  background-color: #F3E7DD;
+  border-radius: 16px;
+  margin-top: 1rem;
 }
 
 .addFirstTransactionButton {
-  margin-top: 1rem;
-  border-radius: 0.75rem;
+  margin-top: 1.5rem;
+  border-radius: 12px;
   padding-left: 1.5rem;
   padding-right: 1.5rem;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
   font-weight: 600;
   box-shadow: none;
+  background-color: #FF6A4F;
+  color: white;
 }
 
 /* --- Wallet Overview Section --- */
 .walletOverviewCard {
-  background-color: white;
-  border-radius: 11px;
-  padding: 1.35rem;
-  margin-bottom: 0.45rem;
-  box-shadow: 0 2px 9px rgba(0, 0, 0, 0.05);
+  background-color: #FFFFFF;
+  border-radius: 24px;
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
   transition: all 0.2s ease;
   width: 100%;
   margin-left: 0;
   min-height: 418px;
   display: flex;
   flex-direction: column;
+  border: 1px solid #E6E6E6;
 }
 
 .walletOverviewHeader {
@@ -690,7 +709,7 @@
 
 .walletsContainer {
   position: relative;
-  padding: 0 30px;
+  padding: 0 32px;
   width: 100%;
   overflow: visible;
   max-width: 100%;
@@ -701,12 +720,12 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   grid-template-rows: repeat(2, auto);
-  gap: calc(12px * var(--scale-factor));
+  gap: 16px;
   position: relative;
   transition: all 0.3s ease-out;
   width: 100%;
   margin: 0 auto;
-  padding: calc(4px * var(--scale-factor));
+  padding: 4px;
 }
 
 /* Slide animations for wallet pagination */
@@ -763,17 +782,17 @@
 }
 
 .walletItem {
-  background-color: rgba(255, 255, 255, 0.8);
-  border-radius: calc(15px * var(--scale-factor));
-  padding: calc(16px * var(--scale-factor)) calc(20px * var(--scale-factor));
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  background-color: #FFFFFF;
+  border-radius: 20px;
+  padding: 20px 24px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
   display: flex;
   flex-direction: column;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  border: 1px solid rgba(0, 0, 0, 0.03);
+  transition: all 0.2s ease;
+  border: 1px solid #E6E6E6;
   position: relative;
   overflow: hidden;
-  height: calc(145px * var(--scale-factor));
+  height: 150px;
   min-width: auto;
   width: 100%;
   box-sizing: border-box;
@@ -781,7 +800,8 @@
 
 .walletItem:hover {
   transform: translateY(-3px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  border-color: rgba(255, 106, 79, 0.2);
 }
 
 .walletItem::after {
@@ -792,7 +812,7 @@
   height: 80px;
   width: 80px;
   border-radius: 50%;
-  background-color: rgba(0, 122, 255, 0.05);
+  background-color: rgba(255, 106, 79, 0.04);
   transform: translate(25%, -25%);
   z-index: 0;
 }
@@ -801,15 +821,17 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   position: relative;
   z-index: 1;
 }
   
 .walletMenuButton {
-  color: rgba(0, 0, 0, 0.54);
-  padding: 4px;
+  color: #6B7280;
+  padding: 6px;
   margin-right: -8px;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
 }
   
 .walletMenuButton:hover {
@@ -822,9 +844,11 @@
   top: 12px !important;
   right: 12px !important;
   z-index: 2 !important;
-  padding: 4px !important;
-  color: rgba(0, 0, 0, 0.54) !important;
+  padding: 6px !important;
+  color: #6B7280 !important;
   background-color: transparent !important;
+  border-radius: 8px !important;
+  transition: background-color 0.2s ease !important;
 }
   
 .walletMenuButtonCircle:hover {
@@ -832,9 +856,9 @@
 }
 
 .walletName {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: rgba(0, 0, 0, 0.87);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1A1A1A;
   display: flex;
   align-items: center;
   width: 100%;
@@ -849,67 +873,82 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background-color: rgba(255, 106, 79, 0.08);
+  color: #FF6A4F !important;
 }
 
 .walletBalance {
-  font-size: calc(1.4rem * var(--scale-factor)) !important;
-  font-weight: 600;
-  margin: calc(8px * var(--scale-factor)) 0 calc(12px * var(--scale-factor));
+  font-size: 1.5rem !important;
+  font-weight: 700;
+  margin: 12px 0 14px;
   position: relative;
   z-index: 1;
+  color: #1A1A1A !important;
 }
 
 /* Wallet color schemes */
-.walletColor1 .walletIcon, .walletColor1 .walletBalance {
-  color: #007aff; /* Blue */
+.walletColor1 .walletIcon {
+  background-color: rgba(0, 122, 255, 0.08);
+  color: #007aff !important;
 }
 
-.walletColor2 .walletIcon, .walletColor2 .walletBalance {
-  color: #34c759; /* Green */
+.walletColor2 .walletIcon {
+  background-color: rgba(52, 199, 89, 0.08);
+  color: #34c759 !important;
 }
 
-.walletColor3 .walletIcon, .walletColor3 .walletBalance {
-  color: #ff9500; /* Orange */
+.walletColor3 .walletIcon {
+  background-color: rgba(255, 149, 0, 0.08);
+  color: #ff9500 !important;
 }
 
-.walletColor4 .walletIcon, .walletColor4 .walletBalance {
-  color: #ff3b30; /* Red */
+.walletColor4 .walletIcon {
+  background-color: rgba(255, 59, 48, 0.08);
+  color: #ff3b30 !important;
 }
 
-.walletColor5 .walletIcon, .walletColor5 .walletBalance {
-  color: #5856d6; /* Purple */
+.walletColor5 .walletIcon {
+  background-color: rgba(88, 86, 214, 0.08);
+  color: #5856d6 !important;
 }
 
-.walletColor6 .walletIcon, .walletColor6 .walletBalance {
-  color: #af52de; /* Pink/Purple */
+.walletColor6 .walletIcon {
+  background-color: rgba(175, 82, 222, 0.08);
+  color: #af52de !important;
 }
 
-.walletColor7 .walletIcon, .walletColor7 .walletBalance {
-  color: #ff2d55; /* Pink */
+.walletColor7 .walletIcon {
+  background-color: rgba(255, 45, 85, 0.08);
+  color: #ff2d55 !important;
 }
 
-.walletColor8 .walletIcon, .walletColor8 .walletBalance {
-  color: #5ac8fa; /* Light Blue */
+.walletColor8 .walletIcon {
+  background-color: rgba(90, 200, 250, 0.08);
+  color: #5ac8fa !important;
 }
 
-.walletColor9 .walletIcon, .walletColor9 .walletBalance {
-  color: #ffcc00; /* Yellow */
+.walletColor9 .walletIcon {
+  background-color: rgba(255, 204, 0, 0.08);
+  color: #ffcc00 !important;
 }
 
-.walletColor10 .walletIcon, .walletColor10 .walletBalance {
-  color: #4cd964; /* Mint */
+.walletColor10 .walletIcon {
+  background-color: rgba(76, 217, 100, 0.08);
+  color: #4cd964 !important;
 }
 
 .walletType {
-  color: rgba(0, 0, 0, 0.6);
+  color: #6B7280;
   font-size: 0.875rem;
-  margin-top: 4px;
+  margin-top: auto;
   display: flex;
   align-items: center;
   height: 28px;
   line-height: 28px;
+  font-weight: 500;
 }
 
 .walletActions {
@@ -919,27 +958,29 @@
 }
 
 .manageWalletsButton {
-  background-color: #007aff;
+  background-color: #FF6A4F;
   color: white;
-  font-weight: 500;
+  font-weight: 600;
   text-transform: none;
-  padding: 4px 12px;
-  border-radius: 4px;
+  padding: 8px 20px;
+  border-radius: 12px;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 7px rgba(0, 122, 255, 0.2), 0 1px 3px rgba(0, 0, 0, 0.05);
-  font-size: 0.75rem;
-  height: 32px;
-  min-width: 70px;
+  box-shadow: 0 2px 8px rgba(255, 106, 79, 0.2);
+  font-size: 0.875rem;
+  height: 40px;
+  min-width: 90px;
+  border: none;
 }
 
 .manageWalletsButton:hover {
-  background-color: #0062cc;
-  box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3), 0 2px 5px rgba(0, 0, 0, 0.07);
+  background-color: #E55A3F;
+  box-shadow: 0 4px 16px rgba(255, 106, 79, 0.3);
+  transform: translateY(-1px);
 }
 
 .manageWalletsButton:active {
-  background-color: #005bb5;
-  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.2), 0 1px 3px rgba(0, 0, 0, 0.05);
+  background-color: #D04A2F;
+  transform: translateY(0);
 }
 
 .walletNavButton {
@@ -947,31 +988,31 @@
   top: 50%;
   transform: translateY(-50%);
   z-index: 10;
-  background-color: white !important;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12) !important;
-  width: 32px;
-  height: 32px;
+  background-color: #FFFFFF !important;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08) !important;
+  width: 36px;
+  height: 36px;
   transition: all 0.2s ease;
-  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border: 1px solid #E6E6E6 !important;
   border-radius: 50% !important;
 }
 
 .walletNavButton:hover {
-  background-color: white !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+  background-color: #FFFFFF !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12) !important;
   transform: translateY(-50%) scale(1.05);
 }
 
 .walletNavButton:disabled {
-  opacity: 0.5;
-  background-color: rgba(255, 255, 255, 0.7) !important;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1) !important;
+  opacity: 0.4;
+  background-color: #F3E7DD !important;
+  box-shadow: none !important;
 }
 
 .paginationDots {
   display: flex;
   justify-content: center;
-  margin-top: 16px;
+  margin-top: 20px;
   margin-bottom: 8px;
   gap: 8px;
   width: 100%;
@@ -988,13 +1029,13 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background-color: rgba(0, 122, 255, 0.3);
+  background-color: #E6E6E6;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .activeDot {
-  background-color: #007aff;
+  background-color: #FF6A4F;
   transform: scale(1.3);
 }
 
@@ -1022,11 +1063,12 @@
 
 /* --- Recent Transactions Section --- */
 .transactionsCard {
-  background-color: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  background-color: #FFFFFF;
+  border-radius: 24px;
+  padding: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
   margin-top: 0;
+  border: 1px solid #E6E6E6;
 }
 
 .transactionsHeader {
@@ -1037,22 +1079,26 @@
 }
 
 .sectionTitle {
-  font-weight: 600;
-  color: #333;
+  font-weight: 700;
+  color: #1A1A1A;
 }
 
 .addTransactionButton {
-  font-weight: 500;
+  font-weight: 600;
   text-transform: none;
-  padding: 4px 12px;
-  border-radius: 8px;
+  padding: 8px 20px;
+  border-radius: 12px;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.15);
+  box-shadow: 0 2px 8px rgba(255, 106, 79, 0.2);
+  background-color: #FF6A4F;
+  color: white;
+  border: none;
 }
 
 .addTransactionButton:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.25);
+  background-color: #E55A3F;
+  box-shadow: 0 4px 16px rgba(255, 106, 79, 0.3);
+  transform: translateY(-1px);
 }
 
 .loadingBox {
@@ -1066,38 +1112,41 @@
 }
 
 .transactionsNote {
-  font-size: 0.85rem;
-  color: rgba(0, 0, 0, 0.6);
+  font-size: 0.875rem;
+  color: #6B7280;
   margin-top: 0.5rem;
 }
 
 /* Dashboard Menu Styles */
 .dashboardMenuPaper {
-  border-radius: 12px;
-  box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.1);
-  min-width: 160px;
+  border-radius: 16px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+  min-width: 180px;
   margin-top: 8px;
+  border: 1px solid #E6E6E6 !important;
 }
   
 .dashboardMenuItem {
-  padding: 8px 16px;
+  padding: 10px 16px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   font-size: 0.9rem;
+  font-weight: 500;
+  color: #1A1A1A;
 }
   
 .dashboardMenuItem:hover {
-  background-color: rgba(0, 0, 0, 0.04);
+  background-color: rgba(255, 106, 79, 0.06);
 }
   
 .dashboardMenuIcon {
-  color: rgba(0, 0, 0, 0.6);
+  color: #6B7280;
 }
 
 /* Font scaling for all text elements */
 body, button, input, select, textarea {
-  font-size: calc(1rem * var(--scale-factor));
+  font-size: 1rem;
 }
 
 @media (max-width: 767px) {
@@ -1109,8 +1158,8 @@ body, button, input, select, textarea {
   }
   
   .walletItem {
-    height: calc(130px * var(--scale-factor));
-    margin-bottom: calc(8px * var(--scale-factor));
+    height: 140px;
+    margin-bottom: 12px;
     min-width: 0;
   }
 }
@@ -1118,7 +1167,7 @@ body, button, input, select, textarea {
 @media (min-width: 768px) and (max-width: 991px) {
   .walletsList {
     grid-template-columns: repeat(2, 1fr);
-    gap: calc(10px * var(--scale-factor));
+    gap: 14px;
     width: 100%;
   }
 }
@@ -1133,130 +1182,132 @@ body, button, input, select, textarea {
 
 @media (min-width: 1200px) {
   .walletsContainer {
-    padding: 0 0.5rem;
+    padding: 0 1rem;
   }
   
   .walletsList {
     grid-template-columns: repeat(2, 1fr);
-    gap: calc(14px * var(--scale-factor));
+    gap: 16px;
     max-width: 950px;
   }
 }
 
 /* Ensure visibility of the content even with reduced height */
 .walletBalance {
-  font-size: calc(1.4rem * var(--scale-factor)) !important;
-  font-weight: 600;
-  margin: calc(4px * var(--scale-factor)) 0 calc(8px * var(--scale-factor));
+  font-size: 1.5rem !important;
+  font-weight: 700;
+  margin: 12px 0 14px;
   position: relative;
   z-index: 1;
+  color: #1A1A1A !important;
 }
 
 /* Ensure type label is always visible */
 .walletType {
-  font-size: calc(0.8rem * var(--scale-factor));
-  color: rgba(0, 0, 0, 0.6);
+  font-size: 0.875rem;
+  color: #6B7280;
   margin-top: auto;
   position: relative;
   z-index: 1;
   font-weight: 500;
-  padding-top: calc(4px * var(--scale-factor));
+  padding-top: 8px;
 }
 
 /* Transaction Filter Controls */
 .filterButton, .addNewButton, .exportButton {
-  height: 36px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 6px;
-  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  border-radius: 12px;
+  transition: all 0.2s ease;
   text-transform: none;
-  font-weight: 500;
+  font-weight: 600;
   font-size: 0.875rem;
 }
 
 .filterButton {
-  color: #007aff;
-  border-color: rgba(0, 122, 255, 0.5);
+  color: #FF6A4F;
+  border-color: #E6E6E6;
+  background-color: #FFFFFF;
 }
 
 .filterButton:hover {
-  border-color: #007aff;
-  background-color: rgba(0, 122, 255, 0.08);
+  border-color: #FF6A4F;
+  background-color: rgba(255, 106, 79, 0.06);
 }
 
 .filterControls {
   width: 100%;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  background-color: #f8f9fb;
-  border-radius: 8px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  background-color: #F3E7DD;
+  border-radius: 16px;
+  border: 1px solid #E6E6E6;
   box-sizing: border-box;
   overflow: hidden;
   position: relative;
 }
 
 .filterSelect {
-  background-color: white;
-  border-radius: 8px;
-  font-size: 0.8rem;
+  background-color: #FFFFFF;
+  border-radius: 12px;
+  font-size: 0.875rem;
 }
 
 .filterSelect .MuiInputBase-input {
-  font-size: 0.8rem !important;
-  padding: 8px !important;
+  font-size: 0.875rem !important;
+  padding: 10px !important;
 }
 
 .filterSelect .MuiInputBase-root {
-  height: 32px;
+  height: 40px;
 }
 
 /* New styles for date pickers */
 .filterDateField {
-  background-color: white;
-  border-radius: 8px;
-  font-size: 0.8rem;
+  background-color: #FFFFFF;
+  border-radius: 12px;
+  font-size: 0.875rem;
 }
 
 .filterDateField .MuiInputBase-input {
-  font-size: 0.8rem !important;
-  padding: 8px !important;
+  font-size: 0.875rem !important;
+  padding: 10px !important;
 }
 
 .filterDateField .MuiInputBase-root {
-  height: 32px;
+  height: 40px;
 }
 
 .filterDateField .MuiOutlinedInput-notchedOutline {
-  border-color: rgba(0, 0, 0, 0.2);
+  border-color: #E6E6E6;
 }
 
 .filterDateField:hover .MuiOutlinedInput-notchedOutline {
-  border-color: rgba(0, 0, 0, 0.4);
+  border-color: #E6E6E6;
 }
 
 .filterDateField.Mui-focused .MuiOutlinedInput-notchedOutline {
-  border-color: #007aff;
+  border-color: #FF6A4F;
 }
 
 .resetFilterButton {
-  color: #007aff;
+  color: #FF6A4F;
   border: none;
   background-color: transparent;
-  border-radius: 4px;
-  padding: 4px 12px;
-  font-size: 0.75rem;
-  height: 32px;
-  min-width: 70px;
-  font-weight: 500;
+  border-radius: 12px;
+  padding: 8px 16px;
+  font-size: 0.875rem;
+  height: 40px;
+  min-width: 90px;
+  font-weight: 600;
   text-transform: none;
   transition: all 0.2s ease;
 }
 
 .resetFilterButton:hover {
-  background-color: rgba(0, 122, 255, 0.08);
+  background-color: rgba(255, 106, 79, 0.06);
 }
 
 /* Use a more specific selector to override MUI styles */
@@ -1265,41 +1316,38 @@ button.resetFilterButton {
 }
 
 .applyFilterButton {
-  background-color: #007aff;
+  background-color: #FF6A4F;
   color: white;
-  font-weight: 500;
+  font-weight: 600;
   text-transform: none;
-  padding: 4px 12px;
-  border-radius: 4px;
+  padding: 8px 20px;
+  border-radius: 12px;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 7px rgba(0, 122, 255, 0.2), 0 1px 3px rgba(0, 0, 0, 0.05);
-  position: relative;
-  top: 0;
+  box-shadow: 0 2px 8px rgba(255, 106, 79, 0.2);
   border: none;
-  z-index: 1;
-  font-size: 0.75rem;
-  height: 32px;
-  min-width: 70px;
+  font-size: 0.875rem;
+  height: 40px;
+  min-width: 90px;
 }
 
 .applyFilterButton:hover {
-  background-color: #0062cc;
-  box-shadow: 0 4px 10px rgba(0, 122, 255, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1);
+  background-color: #E55A3F;
+  box-shadow: 0 4px 16px rgba(255, 106, 79, 0.3);
   transform: translateY(-1px);
 }
 
 /* More styles for showing active filters */
 .activeFilterChip {
-  font-size: 0.75rem;
-  height: 24px;
-  background-color: #f0f7ff;
-  color: #007aff;
+  font-size: 0.8rem;
+  height: 28px;
+  background-color: rgba(255, 106, 79, 0.08);
+  color: #FF6A4F;
   margin-right: 8px;
-  border: 1px solid rgba(0, 122, 255, 0.2);
+  border: 1px solid rgba(255, 106, 79, 0.15);
 }
 
 .activeFilterChip .MuiChip-deleteIcon {
-  color: #007aff;
+  color: #FF6A4F;
   width: 16px;
   height: 16px;
 }
@@ -1313,53 +1361,55 @@ button.resetFilterButton {
 
 .searchButton {
   z-index: 2;
-  background-color: rgba(0, 0, 0, 0.02);
+  background-color: #F3E7DD;
   border-radius: 50%;
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   transition: all 0.2s ease;
+  border: 1px solid #E6E6E6;
 }
 
 .searchButton:hover {
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: #E6D5C5;
 }
 
 .searchInputContainer {
   position: absolute;
-  right: 32px;
+  right: 36px;
   overflow: hidden;
   width: 0;
   transition: width 0.3s ease, opacity 0.2s ease;
   opacity: 0;
-  background-color: white;
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background-color: #FFFFFF;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   z-index: 1;
-  height: 32px;
+  height: 40px;
   display: flex;
   align-items: center;
+  border: 1px solid #E6E6E6;
 }
 
 .searchOpen {
-  width: 200px;
+  width: 220px;
   opacity: 1;
 }
 
 .searchInput {
-  padding: 4px 12px;
-  font-size: 0.8rem;
+  padding: 6px 14px;
+  font-size: 0.875rem;
   width: 100%;
 }
 
 .clearSearchButton {
-  padding: 2px !important;
-  margin-right: 4px;
+  padding: 4px !important;
+  margin-right: 6px;
 }
 
 .searchResultsInfo {
-  padding: 8px 16px;
-  background-color: rgba(0, 0, 0, 0.02);
-  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 10px 16px;
+  background-color: #F3E7DD;
+  border-top: 1px solid #E6E6E6;
   display: flex;
   justify-content: flex-end;
 }
@@ -1367,19 +1417,19 @@ button.resetFilterButton {
 /* Media queries for responsive search */
 @media (max-width: 599px) {
   .searchOpen {
-    width: 150px;
+    width: 160px;
   }
 }
 
 @media (min-width: 600px) {
   .searchOpen {
-    width: 200px;
+    width: 220px;
   }
 }
 
 @media (min-width: 960px) {
   .searchOpen {
-    width: 250px;
+    width: 260px;
   }
 }
 
@@ -1400,33 +1450,33 @@ button.resetFilterButton {
 }
 
 .editButton:hover {
-  background-color: rgba(25, 118, 210, 0.1);
+  background-color: rgba(255, 106, 79, 0.08);
 }
 
 .deleteButton:hover {
-  background-color: rgba(211, 47, 47, 0.1);
+  background-color: rgba(255, 59, 48, 0.08);
 }
 
 @media (max-width: 768px) {
   .filterControls {
-    padding: 0.75rem;
+    padding: 1rem;
   }
   
   .searchOpen {
-    width: 150px;
+    width: 160px;
   }
 }
 
 .filterTextField {
-  background-color: white;
-  border-radius: 8px;
-  font-size: 0.8rem;
+  background-color: #FFFFFF;
+  border-radius: 12px;
+  font-size: 0.875rem;
   width: 100%;
 }
 
 .filterTextField input {
-  font-size: 0.8rem !important;
-  padding: 8px !important;
+  font-size: 0.875rem !important;
+  padding: 10px !important;
 }
 
 .filterTextField .MuiInputBase-root {
@@ -1434,15 +1484,15 @@ button.resetFilterButton {
 }
 
 .filterTextField .MuiOutlinedInput-notchedOutline {
-  border-color: rgba(0, 0, 0, 0.2);
+  border-color: #E6E6E6;
 }
 
 .filterTextField:hover .MuiOutlinedInput-notchedOutline {
-  border-color: rgba(0, 0, 0, 0.4);
+  border-color: #E6E6E6;
 }
 
 .filterTextField.Mui-focused .MuiOutlinedInput-notchedOutline {
-  border-color: #007aff;
+  border-color: #FF6A4F;
 }
 
 .expandableDescription {
@@ -1453,7 +1503,7 @@ button.resetFilterButton {
 }
 
 .expandableDescription:hover {
-  background-color: rgba(0, 0, 0, 0.04);
+  background-color: rgba(0, 0, 0, 0.02);
 }
 
 .expandedDescription {
@@ -1461,45 +1511,46 @@ button.resetFilterButton {
   max-height: none !important;
   height: auto !important;
   overflow: visible !important;
-  background-color: rgba(0, 0, 0, 0.02) !important;
+  background-color: #F3E7DD !important;
   padding: 16px !important;
   width: 100% !important;
   max-width: 100% !important;
   box-sizing: border-box !important;
   position: relative;
   z-index: 2;
-  border-radius: 4px;
+  border-radius: 12px;
 }
 
 .expandCollapseButton {
   position: absolute;
-  right: 4px;
-  top: 4px;
-  background-color: rgba(0, 0, 0, 0.08);
-  color: rgba(0, 0, 0, 0.6);
-  font-size: 11px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-weight: 500;
+  right: 8px;
+  top: 8px;
+  background-color: #F3E7DD;
+  color: #6B7280;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: 600;
   transition: all 0.2s;
 }
 
 .expandCollapseButton:hover {
-  background-color: rgba(0, 0, 0, 0.15);
+  background-color: #E6D5C5;
 }
 
 .exportButton {
-  color: #43a047;
-  padding: 0.35rem 0.8rem;
+  color: #34C759;
+  padding: 8px 16px;
   min-width: 90px;
   margin-left: 8px;
-  font-size: 0.8rem;
-  height: 32px;
-  border-color: #43a047;
+  font-size: 0.875rem;
+  height: 40px;
+  border-color: #34C759;
+  font-weight: 600;
 }
 
 .exportButton:hover {
-  background-color: rgba(76, 175, 80, 0.08);
+  background-color: rgba(52, 199, 89, 0.08);
 }
 
 .exportButton:disabled {
@@ -1512,17 +1563,17 @@ button.resetFilterButton {
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .timeRangeSelectorWrapper {
   display: flex;
   align-items: center;
-  background-color: #ffffff;
-  border-radius: 8px;
+  background-color: #FFFFFF;
+  border-radius: 12px;
   padding: 6px 12px;
-  box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.05);
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border: 1px solid #E6E6E6;
 }
 
 .timeRangeLabelContainer {
@@ -1534,45 +1585,45 @@ button.resetFilterButton {
 .timeRangeIcon {
   margin-right: 6px;
   font-size: 18px;
-  color: rgba(0, 0, 0, 0.6);
+  color: #6B7280;
 }
 
 .timeRangeLabel {
-  font-weight: 500;
-  color: rgba(0, 0, 0, 0.6);
+  font-weight: 600;
+  color: #6B7280;
 }
 
 .timeRangeToggleGroup {
-  border-radius: 6px;
+  border-radius: 8px;
   overflow: hidden;
 }
 
 .timeRangeToggleButton {
-  min-width: 40px;
+  min-width: 44px;
   border-radius: 0;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  padding: 4px 10px;
-  color: rgba(0, 0, 0, 0.6);
-  border-color: rgba(0, 0, 0, 0.12);
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  color: #6B7280;
+  border-color: #E6E6E6;
 }
 
 .timeRangeToggleButton.Mui-selected {
-  background-color: rgba(0, 122, 255, 0.1);
-  color: #007aff;
-  font-weight: 600;
+  background-color: rgba(255, 106, 79, 0.1);
+  color: #FF6A4F;
+  font-weight: 700;
 }
 
 .timeRangeToggleButton:hover {
-  background-color: rgba(0, 0, 0, 0.04);
+  background-color: rgba(0, 0, 0, 0.02);
 }
 
 .timeRangeToggleButton.Mui-selected:hover {
-  background-color: rgba(0, 122, 255, 0.15);
+  background-color: rgba(255, 106, 79, 0.15);
 }
 
 .loadingIcon {
-  color: rgba(0, 0, 0, 0.4);
+  color: #6B7280;
   margin-left: 10px;
   animation: spin 1.5s linear infinite;
 }
@@ -1592,9 +1643,9 @@ button.resetFilterButton {
   }
   
   .timeRangeToggleButton {
-    min-width: 32px;
-    padding: 3px 8px;
-    font-size: 0.75rem;
+    min-width: 36px;
+    padding: 4px 10px;
+    font-size: 0.8rem;
   }
   
   .timeRangeLabelContainer {
@@ -1611,23 +1662,27 @@ button.resetFilterButton {
   }
   
   .welcomeImageContainer {
-    width: 150px;
-    height: 150px;
-    margin-bottom: 1rem;
+    width: 160px;
+    height: 160px;
+    margin-bottom: 1.5rem;
   }
   
   .welcomeHeader {
     justify-content: center;
   }
+  
+  .dashboardBackdrop {
+    padding: 1.5rem;
+  }
 }
 
 @media (max-width: 480px) {
   .welcomeImageContainer {
-    width: 120px;
-    height: 120px;
+    width: 130px;
+    height: 130px;
   }
   
   .welcomeTitle {
-    font-size: calc(1.6rem * var(--scale-factor)) !important;
+    font-size: 1.5rem !important;
   }
 }
